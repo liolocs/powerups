@@ -1,0 +1,54 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "cli",
+      "dependencies": {
+        "@rcompat/array": "^0.18.0",
+        "@rcompat/cli": "^0.24.0",
+        "@rcompat/fs": "^0.34.0",
+        "@rcompat/io": "^0.10.1",
+        "@rcompat/runtime": "^0.16.0",
+        "nunjucks": "^3.2.4",
+      },
+    },
+  },
+  "packages": {
+    "@rcompat/array": ["@rcompat/array@0.18.0", "", { "dependencies": { "@rcompat/assert": "^0.13.0" } }, "sha512-HAtPty8TimJUreVTbCd/yyj15vJhQRpzLbw8Rgc+f26WykqSu4dYAqNFgRktd7xM148c2qFIPS5vCVoDupCWhw=="],
+
+    "@rcompat/assert": ["@rcompat/assert@0.13.0", "", { "dependencies": { "@rcompat/error": "^0.8.0", "@rcompat/is": "^0.11.0", "@rcompat/type": "^0.17.0" } }, "sha512-uoKwxXwiEyx23bUW5ZqtXtL45+XGzr2UFbffTvbykbty9HCe4+LhiVvMu8v0j1smoEjjCOosTa2/NzD71T7DaQ=="],
+
+    "@rcompat/cli": ["@rcompat/cli@0.24.0", "", { "dependencies": { "@rcompat/fs": "^0.33.0", "@rcompat/io": "^0.10.0", "@rcompat/is": "^0.11.0" } }, "sha512-3rAof5S+guPWMUWVEXBlvw9pC9zVnk9SXkjhywLvxSo4UP5xTlCJAyBuafyJAjS2bcLXflq3QdagwXZW5IPJtw=="],
+
+    "@rcompat/crypto": ["@rcompat/crypto@0.21.0", "", { "dependencies": { "@rcompat/assert": "^0.13.0" } }, "sha512-lh0dHtyqhgXaLk/i1V7KRtcpL2Y4AMm9rH7RhkxsuCUOJTHtiFuaxNH3xDF+WdVV14Ut9T59Gk+jmHY0WkQnKw=="],
+
+    "@rcompat/dict": ["@rcompat/dict@0.10.0", "", { "dependencies": { "@rcompat/assert": "^0.13.0", "@rcompat/is": "^0.11.0" } }, "sha512-nwup8kH/oYoeiLyojmjGmjWei2v1VXCOGaVACwB9h1sR/kq2UYoXbI91/1s9/33E1tz1ApfGBA8yQRkZgIVuZQ=="],
+
+    "@rcompat/error": ["@rcompat/error@0.8.0", "", { "dependencies": { "@rcompat/is": "^0.11.0", "@rcompat/type": "^0.17.0" } }, "sha512-WHEJYkudQFNdoJL2D0lOYL9x6ttTH9iXittUtEhYpM0PQGSsE0qc7KyTI+YB6lwiAK7rzLHzQM+LaUJtYPRuhA=="],
+
+    "@rcompat/fs": ["@rcompat/fs@0.34.0", "", { "dependencies": { "@rcompat/assert": "^0.13.0", "@rcompat/crypto": "^0.21.0", "@rcompat/dict": "^0.10.0", "@rcompat/error": "^0.8.0", "@rcompat/is": "^0.11.0", "@rcompat/symbol": "^0.2.0" } }, "sha512-POeY8+j1EagegsoLDk6KUYNELojWqmG233/uW94Pn8ZLXD5NiOdZErhBEzEX9ocKo2UTWaotVUVSpU1Z2L1QWw=="],
+
+    "@rcompat/io": ["@rcompat/io@0.10.1", "", { "dependencies": { "@rcompat/assert": "^0.13.0" } }, "sha512-QQUnVaw9ShXRp4BO99Og7YYzHzYZYbjnUw/UVdJwWOlXOJETdAlEQy12PHXOY1dcdj3tATiVAjBwjxdW7rEBcA=="],
+
+    "@rcompat/is": ["@rcompat/is@0.11.0", "", {}, "sha512-IcmPYuGEjFlcRApvXk2fy048sfPau78JqAhnvY6ohb14ht6kB4NZNAs9fHIqgQPFOtfTg7yvmdKOrzzNbbfijg=="],
+
+    "@rcompat/runtime": ["@rcompat/runtime@0.16.0", "", { "dependencies": { "@rcompat/dict": "^0.10.0", "@rcompat/error": "^0.8.0", "@rcompat/fs": "^0.33.0", "@rcompat/type": "^0.17.0" } }, "sha512-NfzDu9SJdEEnvB/gXiT6LyYCO9FnsDExKpfSTLBt114Nw0PI0klcTWtQudSa9T8Fg1sPd+S1OpQIr+nPVCWQuQ=="],
+
+    "@rcompat/symbol": ["@rcompat/symbol@0.2.0", "", {}, "sha512-S+tR877M89GqLe7RGCdv+ZrSdhOXovHoohBfrCzsKUEWcrs4Ysh/1mfqYnnhov/7Zti35fbGiQfmyloRm/V/pg=="],
+
+    "@rcompat/type": ["@rcompat/type@0.17.0", "", {}, "sha512-eqwcRA0IkEZom8SIdZzaoagWDz12C2arekhm7FulPEhO7fP6KoMCubOHD1LAM4cHzeGokOowpiUz5uXw/Wtx1w=="],
+
+    "a-sync-waterfall": ["a-sync-waterfall@1.0.1", "", {}, "sha512-RYTOHHdWipFUliRFMCS4X2Yn2X8M87V/OpSqWzKKOGhzqyUxzyVmhHDH9sAvG+ZuQf/TAOFsLCpMw09I1ufUnA=="],
+
+    "asap": ["asap@2.0.6", "", {}, "sha512-BSHWgDSAiKs50o2Re8ppvp3seVHXSRM44cdSsT9FfNEUUZLOGWVCsiWaRPWM1Znn+mqZ1OfVZ3z3DWEzSp7hRA=="],
+
+    "commander": ["commander@5.1.0", "", {}, "sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg=="],
+
+    "nunjucks": ["nunjucks@3.2.4", "", { "dependencies": { "a-sync-waterfall": "^1.0.0", "asap": "^2.0.3", "commander": "^5.1.0" }, "peerDependencies": { "chokidar": "^3.3.0" }, "optionalPeers": ["chokidar"], "bin": { "nunjucks-precompile": "bin/precompile" } }, "sha512-26XRV6BhkgK0VOxfbU5cQI+ICFUtMLixv1noZn1tGU38kQH5A5nmmbk/O45xdyBhD1esk47nKrY0mvQpZIhRjQ=="],
+
+    "@rcompat/cli/@rcompat/fs": ["@rcompat/fs@0.33.2", "", { "dependencies": { "@rcompat/assert": "^0.13.0", "@rcompat/crypto": "^0.21.0", "@rcompat/dict": "^0.10.0", "@rcompat/error": "^0.8.0", "@rcompat/is": "^0.11.0", "@rcompat/symbol": "^0.2.0" } }, "sha512-SWu1TdgzfHLgX8JkgxESwMOtIQ5MmmL9TaqheaI0+hcaEzKK4Slrn2H/daO7PFV4rKu9IHVodB973GfEY6vqMg=="],
+
+    "@rcompat/runtime/@rcompat/fs": ["@rcompat/fs@0.33.2", "", { "dependencies": { "@rcompat/assert": "^0.13.0", "@rcompat/crypto": "^0.21.0", "@rcompat/dict": "^0.10.0", "@rcompat/error": "^0.8.0", "@rcompat/is": "^0.11.0", "@rcompat/symbol": "^0.2.0" } }, "sha512-SWu1TdgzfHLgX8JkgxESwMOtIQ5MmmL9TaqheaI0+hcaEzKK4Slrn2H/daO7PFV4rKu9IHVodB973GfEY6vqMg=="],
+  }
+}

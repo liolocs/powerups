@@ -1,0 +1,13 @@
+{
+  "name": "new-store",
+  "variables": [ "storeName" ],
+  "output": {
+    "path": "frontend/src/stores/{{storeName}}",
+    "files": [
+      {
+        "name": "{{storeName}}.ts",
+        "template": "store.ts.njk"
+      }
+    ]
+  }
+}

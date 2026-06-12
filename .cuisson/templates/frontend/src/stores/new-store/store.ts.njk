@@ -1,0 +1,9 @@
+import { writable } from "svelte/store";
+
+export interface {{storeName}}State {
+}
+
+const initialState: {{storeName}}State = {
+};
+
+export const {{storeName}}Store = writable<{{storeName}}State>(initialState);

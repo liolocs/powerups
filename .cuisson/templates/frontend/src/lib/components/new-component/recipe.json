@@ -1,0 +1,17 @@
+{
+  "name": "new-component",
+  "variables": [ "componentName" ],
+  "output": {
+    "path": "frontend/src/lib/components/{{componentName}}",
+    "files": [
+      {
+        "name": "index.ts",
+        "template": "index.ts.njk"
+      },
+      {
+        "name": "{{componentName}}.svelte",
+        "template": "{{componentName}}.svelte.njk"
+      }
+    ]
+  }
+}

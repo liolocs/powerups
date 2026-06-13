@@ -1,27 +1,38 @@
 import fs from "@rcompat/fs";
-import {difference} from "@rcompat/array"
+import { difference } from "@rcompat/array"
+import outputRecipe from "./outputRecipe";
 
 type Recipe = {
   name: string;
   variables: string[];
   output: {
-    path: string;
     files: {
       name: string;
+      outputPath: string;
       template: string;
     }[];
   };
 };
 
-export default async function launchRecipe(recipeName: string, path: string, args: Record<string, string>) {
+export default async function launchRecipe({
+  recipeDirPath,
+  recipeName,
+  path,
+  args
+}: {
+  recipeDirPath: string,
+  recipeName: string,
+  path: string,
+  args: Record<string, string>
+}) {
   const recipe: Recipe = (await fs.ref(path).import()).default;
-  console.log(`Launching recipe ${recipeName} at ${path}, with args ${args}`);
 
   const hasRequiredVariables = recipe.variables.every((variable) => args.hasOwnProperty(variable));
-  if(!hasRequiredVariables) {
+
+  if (!hasRequiredVariables) {
     console.log(`[x] Recipe ${recipeName} requires variables [${recipe.variables.join(", ")}] to be passed as arguments`);
     return;
   }
 
-  console.log("ok to proceed")
+  await outputRecipe({ recipeDirPath, files: recipe.output.files, variables: args });
 }

@@ -4,8 +4,6 @@ import path from "path";
 import launchRecipe from "./launchRecipe.js";
 import convertStringArgsToObject from "./utils/convertStringArgsToObject.js";
 
-console.log(runtime.args);
-
 const pathToTemplates = path.resolve(import.meta.dirname, "../", "templates");
 const templates = await fs.ref(pathToTemplates);
 
@@ -28,8 +26,15 @@ if (!commands.includes(runtime.args[0])) {
 const hasValidCommand = commandToRecipePathMap.has(runtime.args[0]);
 if (hasValidCommand) {
   const convertedArgs = convertStringArgsToObject(runtime.args.slice(1));
-  
-  await launchRecipe(runtime.args[0], commandToRecipePathMap.get(runtime.args[0])!.path, convertedArgs);
+
+  const recipeDirPath = commandToRecipePathMap.get(runtime.args[0])!.path.split("/").slice(0, -1).join("/");
+
+  await launchRecipe({
+    recipeDirPath,
+    recipeName: runtime.args[0],
+    path: commandToRecipePathMap.get(runtime.args[0])!.path,
+    args: convertedArgs
+  });
 }
 
 runtime.exit(0);

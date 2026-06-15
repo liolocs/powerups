@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"cuisson/internal/discover"
 	"cuisson/internal/render"
@@ -32,7 +31,7 @@ var launchCmd = &cobra.Command{
 			return fmt.Errorf("no recipes found in %s", templatesDir)
 		}
 
-		recipe, exists := recipes[recipeName]
+		entry, exists := recipes[recipeName]
 		if !exists {
 			fmt.Printf("Invalid recipe. Available recipes:\n")
 			for name := range recipes {
@@ -41,7 +40,7 @@ var launchCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Printf("Launching recipe: %s\n", recipe.Name)
+		fmt.Printf("Launching recipe: %s\n", entry.Recipe.Name)
 
 		// Parse --var flags
 		varMap, err := variables.ParseFlags(varFlags)
@@ -50,19 +49,16 @@ var launchCmd = &cobra.Command{
 		}
 
 		// Resolve all required variables (prompting for missing ones)
-		resolved, err := variables.ResolveVariables(recipe.Variables, varMap)
+		resolved, err := variables.ResolveVariables(entry.Recipe.Variables, varMap)
 		if err != nil {
 			return fmt.Errorf("failed to resolve variables: %w", err)
 		}
 
 		fmt.Printf("Variables resolved: %v\n", resolved)
 
-		// Find recipe directory (parent of recipe.json)
-		recipeDir := filepath.Join(templatesDir, recipeName)
-
-		// Render each file
-		for _, rf := range recipe.Output.Files {
-			if err := render.RenderFile(recipeDir, rf, resolved); err != nil {
+		// Render each file using the actual recipe directory
+		for _, rf := range entry.Recipe.Output.Files {
+			if err := render.RenderFile(entry.DirPath, rf, resolved); err != nil {
 				fmt.Printf("[x] Error rendering %s: %v\n", rf.Name, err)
 				// Continue with other files instead of failing entirely
 			}

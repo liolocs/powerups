@@ -25,9 +25,15 @@ type RecipeFile struct {
 	OutputPath string `json:"outputPath"`
 }
 
-// DiscoverRecipes scans a directory for recipe.json files and returns a map of command name to Recipe
-func DiscoverRecipes(templatesDir string) (map[string]Recipe, error) {
-	recipes := make(map[string]Recipe)
+// RecipeEntry holds a recipe and the directory containing its template files
+type RecipeEntry struct {
+	Recipe    Recipe
+	DirPath   string // directory containing recipe.json and template files
+}
+
+// DiscoverRecipes scans a directory for recipe.json files and returns a map of command name to RecipeEntry
+func DiscoverRecipes(templatesDir string) (map[string]RecipeEntry, error) {
+	recipes := make(map[string]RecipeEntry)
 
 	err := filepath.Walk(templatesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -45,7 +51,10 @@ func DiscoverRecipes(templatesDir string) (map[string]Recipe, error) {
 
 			// Command name is the parent directory of recipe.json
 			parentDir := filepath.Base(filepath.Dir(path))
-			recipes[parentDir] = recipe
+			recipes[parentDir] = RecipeEntry{
+				Recipe:  recipe,
+				DirPath: filepath.Dir(path),
+			}
 		}
 		return nil
 	})

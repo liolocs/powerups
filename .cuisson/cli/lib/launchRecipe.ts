@@ -1,5 +1,4 @@
 import fs from "@rcompat/fs";
-import { difference } from "@rcompat/array"
 import outputRecipe from "./outputRecipe";
 
 type Recipe = {

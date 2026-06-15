@@ -1,8 +1,8 @@
 import runtime from "@rcompat/runtime";
 import fs from "@rcompat/fs";
 import path from "path";
-import launchRecipe from "./launchRecipe.js";
-import convertStringArgsToObject from "./utils/convertStringArgsToObject.js";
+import launchRecipe from "./lib/launchRecipe.js";
+import convertStringArgsToObject from "./utils/convert/convertStringArgsToObject.js";
 
 const pathToTemplates = path.resolve(import.meta.dirname, "../", "templates");
 const templates = await fs.ref(pathToTemplates);

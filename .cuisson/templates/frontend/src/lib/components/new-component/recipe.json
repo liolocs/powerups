@@ -10,7 +10,7 @@
       },
       {
         "name": "{{componentName}}.svelte",
-        "template": "new-component.svelte.njk",
+        "template": "new-component.svelte.ts",
         "outputPath": "frontend/src/lib/components/{{componentName}}/{{componentName}}.svelte"
       }
     ]

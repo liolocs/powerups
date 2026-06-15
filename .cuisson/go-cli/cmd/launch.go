@@ -5,11 +5,12 @@ import (
 	"os"
 
 	"cuisson/internal/discover"
+	"cuisson/internal/variables"
 
 	"github.com/spf13/cobra"
 )
 
-var variables []string
+var varFlags []string
 
 // launchCmd is the "launch" subcommand
 var launchCmd = &cobra.Command{
@@ -39,7 +40,20 @@ var launchCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Launching recipe: %s\n", recipe.Name)
-		fmt.Printf("Variables required: %v\n", recipe.Variables)
+
+		// Parse --var flags
+		varMap, err := variables.ParseFlags(varFlags)
+		if err != nil {
+			return fmt.Errorf("failed to parse variables: %w", err)
+		}
+
+		// Resolve all required variables (prompting for missing ones)
+		resolved, err := variables.ResolveVariables(recipe.Variables, varMap)
+		if err != nil {
+			return fmt.Errorf("failed to resolve variables: %w", err)
+		}
+
+		fmt.Printf("Variables resolved: %v\n", resolved)
 
 		return nil
 	},
@@ -47,5 +61,5 @@ var launchCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(launchCmd)
-	launchCmd.Flags().StringArrayVarP(&variables, "var", "v", []string{}, "variable in key=value format (can be repeated)")
+	launchCmd.Flags().StringArrayVarP(&varFlags, "var", "v", []string{}, "variable in key=value format (can be repeated)")
 }

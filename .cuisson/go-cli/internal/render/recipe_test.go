@@ -60,7 +60,7 @@ func TestRenderFile(t *testing.T) {
 	// Override output path to use temp dir
 	recipe.Output.Files[0].OutputPath = filepath.Join(outputPath, "{{name}}.txt")
 
-	if err := RenderFile(recipeDir, recipe.Output.Files[0], variables); err != nil {
+	if err := RenderFile(recipeDir, recipe.Output.Files[0], variables, ""); err != nil {
 		t.Fatalf("RenderFile() error = %v", err)
 	}
 
@@ -75,7 +75,7 @@ func TestRenderFile(t *testing.T) {
 	}
 
 	// Test that existing file is skipped
-	if err := RenderFile(recipeDir, recipe.Output.Files[0], variables); err != nil {
+	if err := RenderFile(recipeDir, recipe.Output.Files[0], variables, ""); err != nil {
 		t.Fatalf("RenderFile() on existing file error = %v", err)
 	}
 

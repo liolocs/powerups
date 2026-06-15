@@ -7,6 +7,7 @@ import (
 )
 
 var templatesDir string
+var outputDir string
 
 // rootCmd is the root cobra command
 var rootCmd = &cobra.Command{
@@ -33,5 +34,7 @@ func init() {
 		if templatesDir == "" {
 			templatesDir = ".cuisson/templates"
 		}
+
+		outputDir = os.Getenv("CUISSON_OUTPUT_DIR")
 	}
 }

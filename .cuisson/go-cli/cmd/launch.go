@@ -58,7 +58,7 @@ var launchCmd = &cobra.Command{
 
 		// Render each file using the actual recipe directory
 		for _, rf := range entry.Recipe.Output.Files {
-			if err := render.RenderFile(entry.DirPath, rf, resolved); err != nil {
+			if err := render.RenderFile(entry.DirPath, rf, resolved, outputDir); err != nil {
 				fmt.Printf("[x] Error rendering %s: %v\n", rf.Name, err)
 				// Continue with other files instead of failing entirely
 			}

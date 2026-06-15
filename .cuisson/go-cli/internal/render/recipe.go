@@ -24,7 +24,7 @@ func FuncMap() template.FuncMap {
 }
 
 // RenderFile renders a template file with the given variables and writes to outputPath
-func RenderFile(recipeDir string, recipeFile discover.RecipeFile, variables map[string]string) error {
+func RenderFile(recipeDir string, recipeFile discover.RecipeFile, variables map[string]string, outputDir string) error {
 	// Read template file
 	templatePath := filepath.Join(recipeDir, recipeFile.Template)
 	tmplContent, err := os.ReadFile(templatePath)
@@ -47,10 +47,15 @@ func RenderFile(recipeDir string, recipeFile discover.RecipeFile, variables map[
 		return fmt.Errorf("failed to execute template %s: %w", recipeFile.Template, err)
 	}
 
+	// Prepend project root if set
+	if outputDir != "" {
+		outputPath = filepath.Join(outputDir, outputPath)
+	}
+
 	// Ensure output directory exists
-	outputDir := filepath.Dir(outputPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory %s: %w", outputDir, err)
+	oOutputDir := filepath.Dir(outputPath)
+	if err := os.MkdirAll(oOutputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory %s: %w", oOutputDir, err)
 	}
 
 	// Write file (skip if exists, like TS version)

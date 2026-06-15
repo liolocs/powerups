@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"cuisson/internal/discover"
+	"cuisson/internal/render"
 	"cuisson/internal/variables"
 
 	"github.com/spf13/cobra"
@@ -54,6 +56,17 @@ var launchCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Variables resolved: %v\n", resolved)
+
+		// Find recipe directory (parent of recipe.json)
+		recipeDir := filepath.Join(templatesDir, recipeName)
+
+		// Render each file
+		for _, rf := range recipe.Output.Files {
+			if err := render.RenderFile(recipeDir, rf, resolved); err != nil {
+				fmt.Printf("[x] Error rendering %s: %v\n", rf.Name, err)
+				// Continue with other files instead of failing entirely
+			}
+		}
 
 		return nil
 	},

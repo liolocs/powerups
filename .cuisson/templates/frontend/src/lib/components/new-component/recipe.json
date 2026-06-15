@@ -1,16 +1,16 @@
 {
   "name": "new-component",
-  "variables": [ "componentName" ],
+  "variables": ["componentName"],
   "output": {
     "files": [
       {
         "name": "index.ts",
-        "template": "index.ts.njk",
+        "template": "index.ts.tmpl",
         "outputPath": "frontend/src/lib/components/{{componentName}}/index.ts"
       },
       {
         "name": "{{componentName}}.svelte",
-        "template": "new-component.svelte.ts",
+        "template": "new-component.svelte.tmpl",
         "outputPath": "frontend/src/lib/components/{{componentName}}/{{componentName}}.svelte"
       }
     ]

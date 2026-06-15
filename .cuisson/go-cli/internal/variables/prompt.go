@@ -22,6 +22,25 @@ func ParseFlags(flags []string) (map[string]string, error) {
 	return result, nil
 }
 
+// ParseNames parses --var name flags into a slice of names
+func ParseNames(flags []string) ([]string, error) {
+	if len(flags) == 0 {
+		return nil, fmt.Errorf("at least one variable name is required")
+	}
+
+	// Deduplicate while preserving order
+	seen := make(map[string]bool)
+	var names []string
+	for _, flag := range flags {
+		if !seen[flag] {
+			seen[flag] = true
+			names = append(names, flag)
+		}
+	}
+
+	return names, nil
+}
+
 // ResolveVariables checks that all required variables are provided, prompting for missing ones
 func ResolveVariables(required []string, provided map[string]string) (map[string]string, error) {
 	result := make(map[string]string)

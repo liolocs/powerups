@@ -96,11 +96,13 @@ cuisson create <recipe-name> --var var1 --var var2 ...
 
 This creates:
 ```
-.cuisson/templates/<recipe-name>/
+~/.cuisson/<project-name>/templates/<recipe-name>/
 ├── recipe.json          # Auto-generated definition
 ├── var1.tmpl            # Placeholder template for var1
 └── var2.tmpl            # Placeholder template for var2
 ```
+
+**Note:** The `~/.cuisson/<project-name>/templates/` directory is centralized per-project, project name is read from `.cuisson.config.json`.
 
 ### Edit `recipe.json`
 

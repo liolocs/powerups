@@ -28,11 +28,11 @@ the user to create a recipe using the `detect-patterns` skill.
 
 ## Step 1: Discover Available Recipes
 
-Before writing any tasks, discover what recipes are available:
+Before writing any tasks, discover what recipes are available (replace `<project-name>` with the project name from .cuisson.config.json):
 
 ```bash
-# List all available recipes by scanning .cuisson/templates/
-find .cuisson/templates -name recipe.json | while read f; do
+# List all available recipes by scanning ~/.cuisson/<project-name>/templates/
+find ~/.cuisson/<project-name>/templates -name recipe.json | while read f; do
   dirname "$f" | xargs basename
 done
 ```

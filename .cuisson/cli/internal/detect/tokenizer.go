@@ -92,14 +92,12 @@ func replaceLiterals(content string) string {
 
 		if escaped {
 			escaped = false
-			result.WriteByte(ch)
 			i++
 			continue
 		}
 
 		if ch == '\\' && inString {
 			escaped = true
-			result.WriteByte(ch)
 			i++
 			continue
 		}
@@ -108,9 +106,8 @@ func replaceLiterals(content string) string {
 			inString = !inString
 			if inString {
 				result.WriteString("__STR__")
-			} else {
-				result.WriteByte(ch)
 			}
+			// Skip both opening and closing quotes
 			i++
 			continue
 		}
@@ -121,6 +118,12 @@ func replaceLiterals(content string) string {
 			for i < len(content) && ((content[i] >= '0' && content[i] <= '9') || content[i] == '.') {
 				i++
 			}
+			continue
+		}
+
+		if inString {
+			// Skip characters inside strings (already replaced with __STR__)
+			i++
 			continue
 		}
 
@@ -188,8 +191,14 @@ func tokenizeTokens(content string) []Token {
 			continue
 		}
 
-		if !inString && (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
-			flushToken()
+		if !inString && (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == ';' || ch == ',' || ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']') {
+			if current.Len() > 0 {
+				flushToken()
+			}
+			// Also emit the delimiter as its own token if it's an operator
+			if isOperator(string(ch)) {
+				tokens = append(tokens, Token{Type: "operator", Value: string(ch)})
+			}
 			continue
 		}
 

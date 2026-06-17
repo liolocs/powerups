@@ -1,6 +1,7 @@
 {
   "name": "new-component",
   "variables": ["componentName"],
+  "intent": ["create a new component", "svelte component with index barrel"],
   "output": {
     "files": [
       {

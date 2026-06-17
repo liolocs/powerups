@@ -8,9 +8,10 @@ import (
 
 // Recipe represents a recipe.json file structure
 type Recipe struct {
-	Name       string `json:"name"`
-	Variables  []string `json:"variables"`
-	Output     Output   `json:"output"`
+	Name      string   `json:"name"`
+	Variables []string `json:"variables"`
+	Intent    []string `json:"intent"`
+	Output    Output   `json:"output"`
 }
 
 // Output represents the output section of a recipe

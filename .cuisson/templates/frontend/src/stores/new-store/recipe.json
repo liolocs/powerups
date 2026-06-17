@@ -1,6 +1,7 @@
 {
   "name": "new-store",
   "variables": ["storeName"],
+  "intent": ["create a new store", "svelte writable store"],
   "output": {
     "files": [
       {

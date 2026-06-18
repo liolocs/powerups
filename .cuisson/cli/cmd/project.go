@@ -66,7 +66,7 @@ var projectCreateCmd = &cobra.Command{
 
 		fmt.Printf("[+] Created project %q\n", name)
 		fmt.Printf("    Templates: %s\n", project.TemplatesDir(name))
-		fmt.Printf("    Config:    %s/.cuisson.config.json\n", cwd)
+		fmt.Printf("    Config:    %s/cuisson.config.json\n", cwd)
 
 		return nil
 	},

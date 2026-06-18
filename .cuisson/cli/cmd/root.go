@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"cuisson/internal/project"
 
@@ -36,8 +37,10 @@ func init() {
 	_ = rootCmd.PersistentFlags().MarkHidden("templates") // env var only, hidden flag
 
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		// Resolve output dir
-		outputDir = os.Getenv("CUISSON_OUTPUT_DIR")
+		// Resolve output dir: explicit env var first, then discover from config file
+		if outputDir == "" {
+			outputDir = resolveOutputDir()
+		}
 
 		// Resolve templates dir: explicit flag/env first, then project config discovery
 		if templatesDir == "" {
@@ -70,6 +73,30 @@ func init() {
 
 			templatesDir = project.TemplatesDir(cfg.Name)
 		}
+	}
+}
+
+// resolveOutputDir discovers the project root from cuisson.config.json and returns it.
+// Falls back to current working directory if no config is found.
+func resolveOutputDir() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	dir := cwd
+	for {
+		configPath := filepath.Join(dir, "cuisson.config.json")
+		if _, err := os.Stat(configPath); err == nil {
+			return dir
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached filesystem root
+			return ""
+		}
+		dir = parent
 	}
 }
 

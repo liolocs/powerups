@@ -21,7 +21,7 @@ func NewManager() (*Manager, error) {
 	return &Manager{homeDir: filepath.Join(home, ".cuisson")}, nil
 }
 
-// CreateProject creates a new project: initializes ~/.cuisson/<name>/templates/ and writes .cuisson.config.json in cwd
+// CreateProject creates a new project: initializes ~/.cuisson/<name>/templates/ and writes cuisson.config.json in cwd
 func (m *Manager) CreateProject(cwd, name string) error {
 	// Check for name conflict
 	if _, err := os.Stat(filepath.Join(m.homeDir, name)); err == nil {
@@ -34,8 +34,8 @@ func (m *Manager) CreateProject(cwd, name string) error {
 		return fmt.Errorf("failed to create templates directory %s: %w", tmplDir, err)
 	}
 
-	// Write .cuisson.config.json in CWD
-	configPath := filepath.Join(cwd, ".cuisson.config.json")
+	// Write cuisson.config.json in CWD
+	configPath := filepath.Join(cwd, "cuisson.config.json")
 	configData, err := json.MarshalIndent(map[string]string{"name": name}, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)

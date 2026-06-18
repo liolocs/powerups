@@ -109,8 +109,8 @@ Cuisson has five subcommands: **`launch`** (generate files), **`create`** (scaff
 | Variable                | Description                                  | Default              |
 |-------------------------|----------------------------------------------|----------------------|
 | `CUISSON_TEMPLATES_DIR` | Path to the templates directory              | `.cuisson/templates` |
-| `CUISSON_OUTPUT_DIR`    | Project root for output file paths           | (current directory)  |
-| `CUISSON_PROJECT_NAME`  | Project name for pattern storage path        | Auto-detected from `.cuisson.config.json` |
+| `CUISSON_OUTPUT_DIR`    | Project root for output file paths           | Auto-discovered from `cuisson.config.json` |
+| `CUISSON_PROJECT_NAME`  | Project name for pattern storage path        | Auto-detected from `cuisson.config.json` |
 
 ## The `detect-patterns` Command
 

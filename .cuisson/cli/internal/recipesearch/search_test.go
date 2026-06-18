@@ -332,8 +332,8 @@ func TestFindTemplatesDir(t *testing.T) {
 	t.Run("from project config", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		// Create .cuisson.config.json in temp dir
-		configPath := filepath.Join(tmpDir, ".cuisson.config.json")
+		// Create cuisson.config.json in temp dir
+		configPath := filepath.Join(tmpDir, "cuisson.config.json")
 		os.WriteFile(configPath, []byte(`{"name": "my-project"}`), 0644)
 
 		// Save original cwd and restore after test

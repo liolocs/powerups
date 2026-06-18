@@ -38,11 +38,8 @@ Output is written to ~/.cuisson/<project-name>/patterns.json and a summary is pr
 to stdout.`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Resolve output directory
-		outputDir := os.Getenv("CUISSON_OUTPUT_DIR")
-		if outputDir == "" {
-			return fmt.Errorf("CUISSON_OUTPUT_DIR environment variable is required")
-		}
+		// outputDir is resolved in root.go PersistentPreRun from CUISSON_OUTPUT_DIR
+		// or auto-discovered from cuisson.config.json
 
 		// Resolve project name from config or cwd
 		projectName, err := resolveProjectName()
@@ -325,7 +322,7 @@ func printSummary(clusters []detect.ClusterResult, outputDir string) {
 	fmt.Printf("\nResults written to %s\n", patternsPath)
 }
 
-// resolveProjectName finds the project name from .cuisson.config.json.
+// resolveProjectName finds the project name from cuisson.config.json.
 func resolveProjectName() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -334,7 +331,7 @@ func resolveProjectName() (string, error) {
 
 	dir := cwd
 	for {
-		configPath := filepath.Join(dir, ".cuisson.config.json")
+		configPath := filepath.Join(dir, "cuisson.config.json")
 		data, err := os.ReadFile(configPath)
 		if err == nil {
 			var cfg struct{ Name string }

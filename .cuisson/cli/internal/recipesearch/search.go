@@ -175,10 +175,10 @@ func FindTemplatesDir() (string, error) {
 		return "", fmt.Errorf("failed to get current directory: %w", err)
 	}
 
-	// Walk up looking for .cuisson.config.json
+	// Walk up looking for cuisson.config.json
 	dir := cwd
 	for {
-		configPath := filepath.Join(dir, ".cuisson.config.json")
+		configPath := filepath.Join(dir, "cuisson.config.json")
 		data, err := os.ReadFile(configPath)
 		if err == nil {
 			var cfg struct{ Name string }
@@ -195,5 +195,5 @@ func FindTemplatesDir() (string, error) {
 		dir = parent
 	}
 
-	return "", fmt.Errorf("templates directory not found. Set CUISSON_TEMPLATES_DIR or run from a project with .cuisson.config.json")
+	return "", fmt.Errorf("templates directory not found. Set CUISSON_TEMPLATES_DIR or run from a project with cuisson.config.json")
 }

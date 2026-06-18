@@ -2,7 +2,11 @@
 
 **Cuisson** (French for "cooking") is a recipe-driven code generator CLI. It uses declarative **recipes** to scaffold and generate project files from templates, with interactive variable prompts and built-in string transformation helpers.
 
+Cuisson also includes a **pattern detection pipeline** that scans your codebase for repetitive file patterns, clusters similar files using token-level analysis and optional tree-sitter AST refinement, and auto-generates recipes from detected clusters.
+
 ## Quick Start
+
+### Generate files from existing recipes
 
 ```bash
 # Install the CLI globally
@@ -16,6 +20,22 @@ cuisson launch new-component --var componentName=MyButton
 
 # Generate a new store
 cuisson launch new-store --var storeName=Counter
+```
+
+### Detect patterns and generate recipes automatically
+
+```bash
+# Scan your codebase for repetitive file patterns
+cuisson detect-patterns --threshold 0.7
+# → Detects clusters of similar files, writes ~/.cuisson/<project>/patterns.json
+
+# Generate a recipe from a detected cluster
+cuisson generate-recipe <cluster-id>
+# → Creates recipe.json + .tmpl files in your templates directory
+
+# Search recipes by intent
+cuisson recipes search --intent "new base ui component"
+# → Finds matching recipes ranked by keyword overlap
 ```
 
 ## Installation
@@ -50,20 +70,29 @@ source ~/.zshrc   # or source ~/.bashrc
 
 ## How It Works
 
-Cuisson has two subcommands: **`launch`** (generate files) and **`create`** (scaffold new recipes).
+Cuisson has five subcommands: **`launch`** (generate files), **`create`** (scaffold new recipes), **`detect-patterns`** (scan codebase for patterns), **`generate-recipe`** (auto-generate recipes from detected clusters), and **`recipes search`** (keyword-based recipe discovery).
 
 ### Directory Structure
 
 ```
 .cuisson/
 ├── cli/                    # Go CLI source code
-│   ├── cmd/                # Cobra commands (root, create, launch)
+│   ├── cmd/                # Cobra commands (root, create, launch,
+│   │                       #   detect-patterns, generate-recipe, recipes)
 │   ├── internal/           # Core logic
 │   │   ├── discover/       # Scans templates dir for recipe.json files
+│   │   ├── detect/         # Pattern detection pipeline (tokenizer, clusterer,
+│   │   │                   #   skeleton extraction with tree-sitter)
+│   │   ├── patterns/       # Pattern storage (read/write patterns.json)
+│   │   ├── recipegen/      # Generates recipes from detected clusters
+│   │   ├── recipesearch/   # Keyword-overlap recipe search engine
 │   │   ├── render/         # Renders .tmpl files with Go text/template
 │   │   └── variables/      # Parses --var flags and prompts for input
 │   ├── Makefile            # Build/install targets
 │   └── main.go             # Entry point
+├── patterns/               # Detected pattern clusters (auto-generated)
+│   └── <project>/
+│       └── patterns.json   # Cluster data from detect-patterns
 └── templates/              # Recipe definitions and template files
     └── frontend/           # Recipes live in subdirectories
         ├── src/stores/new-store/
@@ -81,6 +110,116 @@ Cuisson has two subcommands: **`launch`** (generate files) and **`create`** (sca
 |-------------------------|----------------------------------------------|----------------------|
 | `CUISSON_TEMPLATES_DIR` | Path to the templates directory              | `.cuisson/templates` |
 | `CUISSON_OUTPUT_DIR`    | Project root for output file paths           | (current directory)  |
+| `CUISSON_PROJECT_NAME`  | Project name for pattern storage path        | Auto-detected from `.cuisson.config.json` |
+
+## The `detect-patterns` Command
+
+Scans your codebase for repetitive file patterns, clusters similar files using token-level analysis (with optional tree-sitter AST refinement), and writes results to `~/.cuisson/<project>/patterns.json`.
+
+```bash
+cuisson detect-patterns [--threshold 0.7] [--min-cluster-size 2] [--refine]
+```
+
+### Pipeline stages:
+
+1. **Tokenization** (always) — Strips comments, replaces string/number literals with `__STR__`/`__NUM__` placeholders, generates 3-gram token shingles for each file.
+
+2. **Clustering** (always) — Computes Jaccard similarity between all file pairs, applies union-find algorithm with threshold cutoff to form clusters.
+
+3. **Skeleton extraction** (only with `--refine`) — Lazily loads tree-sitter WASM grammars to parse ASTs, aligns structurally equivalent nodes across cluster members, marks divergent positions as slots.
+
+4. **Output** — Writes `~/.cuisson/<project>/patterns.json` and prints a summary to stdout.
+
+### Flags
+
+| Flag                | Default | Description                                          |
+|---------------------|---------|------------------------------------------------------|
+| `--threshold`       | `0.7`   | Jaccard similarity threshold for clustering (0–1)    |
+| `--min-cluster-size`| `2`     | Minimum files per cluster to report                  |
+| `--refine, -r`      | `false` | Enable tree-sitter AST refinement for higher precision|
+
+### Example
+
+```bash
+# Scan UI components directory
+cuisson detect-patterns --threshold 0.5
+# → Detected 3 pattern clusters (sidebar-footer, sidebar-menu-sub, ...)
+
+# With tree-sitter refinement for slot inference
+cuisson detect-patterns --refine
+# → Detects variable slots (e.g., component names, prop types) from AST analysis
+```
+
+## The `generate-recipe` Command
+
+Reads a detected cluster from `patterns.json`, extracts skeleton templates with inferred slot names, and writes a recipe directory (`recipe.json` + `.tmpl` files) to your templates folder.
+
+```bash
+cuisson generate-recipe <cluster-id> [--output-dir templates/]
+```
+
+### What it generates:
+
+For `cuisson generate-recipe ui-component-1`:
+
+```
+templates/ui-component-1/
+├── recipe.json          # Auto-generated recipe definition with intent
+└── component.svelte.tmpl  # Skeleton template with {{SlotName}} placeholders
+```
+
+### Intent inference rules:
+
+The generator infers `intent` strings from cluster analysis using four rule categories:
+
+1. **File type keywords** — `.svelte` → "component", `.ts` with `writable`/`derived` → "store"/"state management", barrel exports → "export barrel"
+2. **Directory context** — `components/ui/` → "ui component"/"shadcn-style", `stores/` → "store"
+3. **Filename patterns** — button/input/sheet names listed as intent keywords
+4. **Structural patterns** — files with `<script>` + slots → "base component"/"composable"
+
+### Example
+
+```bash
+cuisson generate-recipe ui-component-1 --output-dir .cuisson/templates
+# → Recipe generated at templates/ui-component-1/
+#     recipe.json: .cuisson/templates/ui-component-1/recipe.json
+#     component.svelte.tmpl: .cuisson/templates/ui-component-1/component.svelte.tmpl
+```
+
+## The `recipes search` Command
+
+Search all recipes by keyword overlap on their intent descriptions. Returns full recipe content ranked by match relevance, suitable for AI agent consumption.
+
+```bash
+cuisson recipes search --intent "<query>" [--limit 5]
+```
+
+### How it works:
+
+1. **Query tokenization** — Splits the query into lowercase keywords (handles spaces and common delimiters)
+2. **Recipe scoring** — For each recipe, tokenizes all intent strings into a set of tokens and counts how many query keywords appear
+3. **Ranking** — Sorts results by score descending, applies `--limit` cap
+4. **Output** — Prints human-readable format followed by JSON for machine consumption
+
+### Flags
+
+| Flag              | Default | Description                              |
+|-------------------|---------|------------------------------------------|
+| `--intent, -i`    | (required) | Search query for intent matching      |
+| `--limit, -l`     | `5`     | Maximum number of results to return      |
+
+### Example
+
+```bash
+cuisson recipes search --intent "new base ui component"
+# → [1] new-component (score: 4, files: 2)
+#       intent: "create a base ui component"
+#       intent: "shadcn-style components"
+
+# JSON output for programmatic use
+cuisson recipes search --intent "store" --limit 1
+# → Human-readable list + JSON array below
+```
 
 ## The `launch` Command
 
@@ -209,6 +348,7 @@ The generated `recipe.json` maps each variable to a template file and output pat
 {
   "name": "string",              // Recipe display name
   "variables": ["var1", "var2"], // Required variable names (order matters for prompts)
+  "intent": ["component", "ui component"], // Keywords for recipe search matching
   "output": {
     "files": [
       {
@@ -221,7 +361,39 @@ The generated `recipe.json` maps each variable to a template file and output pat
 }
 ```
 
+### Pattern File Format (`patterns.json`)
+
+Auto-generated by `detect-patterns`:
+
+```json
+{
+  "version": 1,
+  "project": "my-project",
+  "detected_at": "2026-06-17T12:00:00Z",
+  "clusters": [
+    {
+      "id": "ui-component-1",
+      "name": "components",
+      "confidence": 0.85,
+      "member_count": 3,
+      "intent": ["component", "ui component"],
+      "files": [
+        {
+          "path": "src/lib/components/button.svelte",
+          "skeleton_template": "button.svelte.tmpl",
+          "slots": [
+            {"name": "ComponentName", "positions": [1, 2], "inferred_from": "filename"}
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## Architecture Overview
+
+### `launch` pipeline
 
 ```
 cuisson launch <recipe> --var k=v
@@ -239,5 +411,83 @@ cuisson launch <recipe> --var k=v
           ▼
 ┌─────────────────────┐
 │  Render Templates   │  For each file: read .tmpl → execute Go template → write output
+└─────────────────────┘
+```
+
+### `detect-patterns` pipeline
+
+```
+cuisson detect-patterns --threshold 0.7 [--refine]
+        │
+        ▼
+┌─────────────────────┐
+│  Tokenization       │  Strip comments, replace literals → generate shingles
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Clustering         │  Jaccard similarity + union-find → clusters
+└─────────┬───────────┘
+          │ (only with --refine)
+          ▼
+┌─────────────────────┐
+│  Skeleton Extraction│  Tree-sitter AST → align nodes, infer slots
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Write patterns.json│  ~/.cuisson/<project>/patterns.json
+└─────────────────────┘
+```
+
+### `generate-recipe` pipeline
+
+```
+cuisson generate-recipe <cluster-id>
+        │
+        ▼
+┌─────────────────────┐
+│  Read patterns.json │  Load cluster data from ~/.cuisson/<project>/
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Extract Skeletons  │  Parse files → align ASTs → infer slots
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Infer Intent       │  File types + directory context + filename patterns
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Write recipe.json  │  + .tmpl files in templates/<cluster>/
+└─────────────────────┘
+```
+
+### `recipes search` pipeline
+
+```
+cuisson recipes search --intent "query"
+        │
+        ▼
+┌─────────────────────┐
+│  Discover Recipes   │  Walk templates dir, find all recipe.json files
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Tokenize Query     │  Split query into lowercase keywords
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Score & Rank       │  Keyword overlap on intent arrays
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Output Results     │  Human-readable + JSON
 └─────────────────────┘
 ```

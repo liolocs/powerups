@@ -271,7 +271,7 @@ This produces:
 
 ## The `create` Command
 
-The `create` command scaffolds a new recipe directory with a `recipe.json` and placeholder `.tmpl` files.
+The `create` command scaffolds a new recipe directory with a minimal `recipe.json` listing the required variables.
 
 ```bash
 cuisson create <recipe-name> --var <variable-name> [--var <another-var>]
@@ -283,42 +283,27 @@ For `cuisson create my-service --var serviceName --var baseUrl`:
 
 ```
 templates/<recipe-name>/
-├── recipe.json          # Auto-generated recipe definition
-├── serviceName.tmpl     # Placeholder template (contains {{.serviceName}})
-└── baseUrl.tmpl         # Placeholder template (contains {{.baseUrl}})
+└── recipe.json          # Auto-generated recipe definition with variables
 ```
 
-The generated `recipe.json` maps each variable to a template file and output path:
+The generated `recipe.json`:
 
 ```json
 {
   "name": "my-service",
-  "variables": ["serviceName", "baseUrl"],
-  "output": {
-    "files": [
-      {
-        "name": "serviceName",
-        "template": "serviceName.tmpl",
-        "outputPath": "{{serviceName}}"
-      },
-      {
-        "name": "baseUrl",
-        "template": "baseUrl.tmpl",
-        "outputPath": "{{baseUrl}}"
-      }
-    ]
-  }
+  "variables": ["serviceName", "baseUrl"]
 }
 ```
 
 ### Workflow for creating recipes:
 
-1. **Scaffold** the recipe structure:
+1. **Scaffold** the recipe structure with variables:
    ```bash
    cuisson create my-api --var apiName --var endpoint
+   # → Creates .cuisson/templates/my-api/recipe.json with variables list
    ```
 
-2. **Edit** the generated `recipe.json` to set correct output paths and file names:
+2. **Edit** the `recipe.json` to add output file definitions:
    ```json
    {
      "name": "my-api",
@@ -335,7 +320,7 @@ The generated `recipe.json` maps each variable to a template file and output pat
    }
    ```
 
-3. **Edit** the `.tmpl` files with your actual template content, using `{{.variableName}}` syntax and optional helper functions.
+3. **Create** the `.tmpl` template file(s) with your actual content, using `{{.variableName}}` syntax and optional helper functions.
 
 4. **Launch** the recipe to generate files:
    ```bash

@@ -112,6 +112,7 @@ Replace the auto-generated recipe.json with your designed output structure:
 {
   "name": "<recipe-name>",
   "variables": ["var1", "var2"],
+  "intent": ["intent1", "intent2"],
   "output": {
     "files": [
       {
@@ -125,6 +126,7 @@ Replace the auto-generated recipe.json with your designed output structure:
 ```
 
 **Key rules for recipe.json:**
+- `intent` array of strings is used for keyword-based recipe search
 - `variables` array order determines prompt order when running interactively
 - `outputPath` uses `{{varName}}` syntax — cuisson resolves these at runtime
 - Each file in `output.files` maps one `.tmpl` to one output location
@@ -160,6 +162,7 @@ For a Svelte component that generates both the component and an index barrel fil
 {
   "name": "feature-component",
   "variables": ["componentName"],
+  "intent": ["create a new component", "svelte component with index barrel"],
   "output": {
     "files": [
       {

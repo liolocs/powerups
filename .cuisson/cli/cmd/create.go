@@ -38,18 +38,6 @@ var createCmd = &cobra.Command{
 		}
 
 		// Write recipe.json
-		var filesSection strings.Builder
-		for i, varName := range varNames {
-			if i > 0 {
-				filesSection.WriteString(",\n")
-			}
-			filesSection.WriteString(fmt.Sprintf(`      {
-        "name": "%s",
-        "template": "%s.tmpl",
-        "outputPath": "{{%s}}"
-      }`, varName, varName, varName))
-		}
-
 		var varsSection strings.Builder
 		for i, varName := range varNames {
 			if i > 0 {
@@ -60,13 +48,8 @@ var createCmd = &cobra.Command{
 
 		recipeJSON := fmt.Sprintf(`{
   "name": "%s",
-  "variables": [%s],
-  "output": {
-    "files": [
-%s
-    ]
-  }
-}`, recipeName, varsSection.String(), filesSection.String())
+  "variables": [%s]
+}`, recipeName, varsSection.String())
 
 		recipePath := filepath.Join(recipeDir, "recipe.json")
 		if err := os.WriteFile(recipePath, []byte(recipeJSON), 0644); err != nil {
@@ -74,17 +57,6 @@ var createCmd = &cobra.Command{
 		}
 
 		fmt.Printf("[+] Created file %s\n", recipePath)
-
-		// Create .tmpl files for each variable
-		for _, varName := range varNames {
-			tmplContent := fmt.Sprintf(`{{.%s}}`, varName)
-			tmplPath := filepath.Join(recipeDir, fmt.Sprintf("%s.tmpl", varName))
-			if err := os.WriteFile(tmplPath, []byte(tmplContent), 0644); err != nil {
-				return fmt.Errorf("failed to write %s: %w", varName, err)
-			}
-
-			fmt.Printf("[+] Created file %s\n", tmplPath)
-		}
 
 		return nil
 	},

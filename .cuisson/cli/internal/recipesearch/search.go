@@ -12,11 +12,12 @@ import (
 
 // SearchResult represents a single recipe match ranked by relevance.
 type SearchResult struct {
-	Score     int                  `json:"score"`
-	RecipeName string              `json:"recipe_name"`
-	FileCount int                 `json:"file_count"`
-	Intent    []string            `json:"intent"`
-	Recipe    discover.Recipe     `json:"recipe"`
+	Score       int                  `json:"score"`
+	RecipeName  string               `json:"recipe_name"`
+	FileCount   int                  `json:"file_count"`
+	Intent      []string             `json:"intent"`
+	TemplateDir string               `json:"template_dir"`
+	Recipe      discover.Recipe      `json:"recipe"`
 }
 
 // Searcher performs keyword-overlap intent matching across recipe directories.
@@ -53,11 +54,12 @@ func (s *Searcher) Search(query string, limit int) ([]SearchResult, error) {
 		}
 
 		results = append(results, SearchResult{
-			Score:     score,
-			RecipeName: name,
-			FileCount: len(entry.Recipe.Output.Files),
-			Intent:    entry.Recipe.Intent,
-			Recipe:    entry.Recipe,
+			Score:       score,
+			RecipeName:  name,
+			FileCount:   len(entry.Recipe.Output.Files),
+			Intent:      entry.Recipe.Intent,
+			TemplateDir: entry.DirPath,
+			Recipe:      entry.Recipe,
 		})
 	}
 
@@ -146,6 +148,7 @@ func SearchRecipes(templatesDir, query string, limit int) ([]SearchResult, error
 func PrintResults(results []SearchResult) {
 	for i, r := range results {
 		fmt.Printf("\n[%d] %s (score: %d, files: %d)\n", i+1, r.RecipeName, r.Score, r.FileCount)
+		fmt.Printf("    template_dir: %s\n", r.TemplateDir)
 		for _, intent := range r.Intent {
 			fmt.Printf("    intent: %q\n", intent)
 		}

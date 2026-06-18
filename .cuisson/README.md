@@ -199,7 +199,7 @@ cuisson recipes search --intent "<query>" [--limit 5]
 1. **Query tokenization** — Splits the query into lowercase keywords (handles spaces and common delimiters)
 2. **Recipe scoring** — For each recipe, tokenizes all intent strings into a set of tokens and counts how many query keywords appear
 3. **Ranking** — Sorts results by score descending, applies `--limit` cap
-4. **Output** — Prints human-readable format followed by JSON for machine consumption
+4. **Output** — Prints human-readable format (including `template_dir`) followed by JSON for machine consumption
 
 ### Flags
 
@@ -213,12 +213,13 @@ cuisson recipes search --intent "<query>" [--limit 5]
 ```bash
 cuisson recipes search --intent "new base ui component"
 # → [1] new-component (score: 4, files: 2)
+#       template_dir: .cuisson/templates/frontend/src/lib/components/new-component
 #       intent: "create a base ui component"
 #       intent: "shadcn-style components"
 
-# JSON output for programmatic use
+# JSON output for programmatic use (includes template_dir)
 cuisson recipes search --intent "store" --limit 1
-# → Human-readable list + JSON array below
+# → Human-readable list + JSON array below (each result has "template_dir" field)
 ```
 
 ## The `launch` Command

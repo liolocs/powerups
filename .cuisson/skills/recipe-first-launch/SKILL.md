@@ -68,38 +68,44 @@ The CLI outputs ranked results like:
 
 ## Step 2: Scaffold with `cuisson launch`
 
-Once you have a matching recipe, run it with the appropriate variables.
+### 2a. Read recipe.json — MANDATORY FIRST STEP
 
-### Determine variable names
-
-Read the recipe's `recipe.json` to find required variables:
+**Before attempting any launch, read the recipe's `recipe.json` to discover ALL required variables.** This is not optional — skipping it causes trial-and-error failures that waste turns.
 
 ```bash
 cat .cuisson/templates/<recipe-name>/recipe.json
 ```
 
-The `variables` array tells you what to pass. For example:
+Extract the `variables` array. Every single variable listed MUST be passed to `cuisson launch`, even if you don't have a meaningful value yet.
 
-```json
-{
-  "name": "new-component",
-  "variables": ["componentName"],
-  ...
-}
-```
+### 2b. Construct the full launch command with defaults
 
-### Run the launch command
+Build the complete `cuisson launch` command **before running it**, providing every variable from step 2a. Use sensible defaults for variables you don't have specific values for:
+
+| Variable pattern | Default value |
+|------------------|---------------|
+| `withXxx` (boolean flags) | `false` unless the feature explicitly needs it |
+| `*FieldsSchema`, `*Keys` | `""` (empty string) |
+| `entityName`, `componentName`, etc. | The user's requested name |
+| Other string vars | `""` or a minimal sensible default |
+
+**Construct the full command first, then run it. Never guess variables by trial-and-error.**
 
 ```bash
-cuisson launch <recipe-name> --var varName=value [--var anotherVar=anotherValue]
+# Example: api-route has 8 variables — provide ALL of them in one shot
+cuisson launch api-route \
+  --var entityName=author \
+  --var withGet=true \
+  --var withPost=false \
+  --var withPut=false \
+  --var withDelete=false \
+  --var bodyFieldsSchema="" \
+  --var bodyKeys="" \
+  --var pathFieldsSchema="" \
+  --var pathKeys=""
 ```
 
-Example:
-```bash
-cuisson launch new-component --var componentName=DataTable
-```
-
-### Verify the scaffolded output
+### 2c. Verify the scaffolded output
 
 Check that files were created at the expected paths (from `outputPath` in recipe.json):
 
@@ -177,6 +183,19 @@ cuisson create <recipe-name> --var var1 --var var2
 
 After the recipe is created and validated, proceed with Step 2 (launch) and Step 3 (customize).
 
+## Troubleshooting: Launch Fails with "unknown flag" or missing var errors
+
+This is the #1 cause of wasted turns. The pattern:
+
+```
+cuisson launch recipe --var a=b   # fails: missing var c
+cuisson launch recipe --var a=b --var c=d  # fails: missing var e
+cuisson launch recipe --var a=b --var c=d --var e=f  # finally works
+```
+
+**Fix: Always read recipe.json first.** The `variables` array lists every required var.
+Construct the full command with all vars in one shot. See Step 2a–2b above.
+
 ## Decision Flowchart
 
 ```
@@ -213,19 +232,25 @@ Based on existing recipes in this project:
 1. **Always search first** — never guess which recipe to use. The CLI's keyword-overlap
    scoring is the authoritative source for matching.
 
-2. **Read recipe.json before launching** — know what variables are required and what
-   output paths to expect.
+2. **Read recipe.json before launching — MANDATORY** — extract ALL variable names from the
+   `variables` array. Every variable MUST be passed to launch, even with a default value.
+   **Never attempt `cuisson launch` without first reading recipe.json.** Trial-and-error
+   variable discovery wastes turns and causes repeated failures.
 
-3. **Verify after launch** — check that files landed in the right places and all
+3. **Construct the full command before running it** — list every `--var` flag upfront.
+   If a launch fails, read the error to understand what's missing, then retry with
+   the complete set — do not iteratively add one variable at a time.
+
+4. **Verify after launch** — check that files landed in the right places and all
    `{{varName}}` placeholders were resolved.
 
-4. **Edit, don't rewrite** — the scaffold gives you the structure; your job is to fill
+5. **Edit, don't rewrite** — the scaffold gives you the structure; your job is to fill
    in the actual implementation logic.
 
-5. **Flag bad recipes** — if a recipe generates files with unresolved placeholders or
+6. **Flag bad recipes** — if a recipe generates files with unresolved placeholders or
    wrong paths, note it. A bad recipe should be fixed, not worked around.
 
-6. **No recipe? Create one** — don't skip scaffolding just because no recipe exists.
+7. **No recipe? Create one** — don't skip scaffolding just because no recipe exists.
    Use `detect-patterns` to generate one, then proceed.
 
 ## Example: Full Workflow
@@ -240,6 +265,11 @@ cuisson recipes search --intent "new svelte component" --limit 3
 
 **Step 2 — Scaffold:**
 ```bash
+# Read recipe.json first to discover ALL required variables
+cat .cuisson/templates/new-component/recipe.json
+# → variables: ["componentName"]
+
+# Construct full launch command with all vars upfront
 cuisson launch new-component --var componentName=SettingsPage
 # → Creates:
 #    frontend/src/lib/components/SettingsPage/index.ts

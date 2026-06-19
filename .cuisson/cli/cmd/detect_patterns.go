@@ -23,7 +23,7 @@ var detectPatternsCmd = &cobra.Command{
 	Use:   "detect-patterns",
 	Short: "Scan a project for repetitive file patterns and cluster them",
 	Long: `Scans the output directory for repetitive file patterns, clusters similar files,
-and writes results to ~/.cuisson/<project-name>/patterns.json.
+and writes results to ~/.cuisson/projects/<project-name>/patterns.json.
 
 Pipeline:
   Phase 1 — Tokenization (always): strips comments, replaces literals with placeholders,
@@ -34,7 +34,7 @@ Pipeline:
             grammars to parse ASTs, aligns structurally equivalent nodes, marks divergent
             positions as slots.
 
-Output is written to ~/.cuisson/<project-name>/patterns.json and a summary is printed
+Output is written to ~/.cuisson/projects/<project-name>/patterns.json and a summary is printed
 to stdout.`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -318,7 +318,7 @@ func printSummary(clusters []detect.ClusterResult, outputDir string) {
 		}
 	}
 
-	patternsPath := filepath.Join(home, ".cuisson", projectName, "patterns.json")
+	patternsPath := filepath.Join(home, ".cuisson", "projects", projectName, "patterns.json")
 	fmt.Printf("\nResults written to %s\n", patternsPath)
 }
 

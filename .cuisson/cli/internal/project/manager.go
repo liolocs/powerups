@@ -9,23 +9,23 @@ import (
 
 // Manager handles CRUD operations for cuisson projects
 type Manager struct {
-	homeDir string // ~/.cuisson directory
+	homeDir string // ~/.cuisson/projects directory
 }
 
-// NewManager creates a new Manager pointing to the user's .cuisson home directory
+// NewManager creates a new Manager pointing to the user's .cuisson/projects home directory
 func NewManager() (*Manager, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get home directory: %w", err)
 	}
-	return &Manager{homeDir: filepath.Join(home, ".cuisson")}, nil
+	return &Manager{homeDir: filepath.Join(home, ".cuisson", "projects")}, nil
 }
 
-// CreateProject creates a new project: initializes ~/.cuisson/<name>/templates/ and writes cuisson.config.json in cwd
+// CreateProject creates a new project: initializes ~/.cuisson/projects/<name>/templates/ and writes cuisson.config.json in cwd
 func (m *Manager) CreateProject(cwd, name string) error {
 	// Check for name conflict
 	if _, err := os.Stat(filepath.Join(m.homeDir, name)); err == nil {
-		return fmt.Errorf("project %q already exists in ~/.cuisson/", name)
+		return fmt.Errorf("project %q already exists in ~/.cuisson/projects/", name)
 	}
 
 	// Create templates directory with parents
@@ -57,7 +57,7 @@ func (m *Manager) ListProjects() ([]struct {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to read ~/.cuisson/: %w", err)
+		return nil, fmt.Errorf("failed to read ~/.cuisson/projects/: %w", err)
 	}
 
 	var projects []struct {
@@ -83,11 +83,11 @@ func (m *Manager) ListProjects() ([]struct {
 	return projects, nil
 }
 
-// DeleteProject removes a project's templates directory from ~/.cuisson/<name>/
+// DeleteProject removes a project's templates directory from ~/.cuisson/projects/<name>/
 func (m *Manager) DeleteProject(name string) error {
 	projectDir := filepath.Join(m.homeDir, name)
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		return fmt.Errorf("project %q not found in ~/.cuisson/", name)
+		return fmt.Errorf("project %q not found in ~/.cuisson/projects/", name)
 	}
 
 	if err := os.RemoveAll(projectDir); err != nil {
@@ -106,7 +106,7 @@ func (m *Manager) Info(name string) (*struct {
 
 	// Check project exists
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		return nil, fmt.Errorf("project %q not found in ~/.cuisson/", name)
+		return nil, fmt.Errorf("project %q not found in ~/.cuisson/projects/", name)
 	}
 
 	tmplDir := filepath.Join(projectDir, "templates")

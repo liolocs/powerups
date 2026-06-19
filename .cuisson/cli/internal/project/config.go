@@ -39,8 +39,13 @@ func LoadConfig(startDir string) (*Config, error) {
 	}
 }
 
+// ProjectsDir returns the project data directory for a project name (~/.cuisson/projects/<name>)
+func ProjectsDir(projectName string) string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".cuisson", "projects", projectName)
+}
+
 // TemplatesDir returns the centralized template directory for a project name
 func TemplatesDir(projectName string) string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".cuisson", projectName, "templates")
+	return filepath.Join(ProjectsDir(projectName), "templates")
 }

@@ -12,7 +12,7 @@ func StorePath(projectName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	dir := filepath.Join(home, ".cuisson", projectName)
+	dir := filepath.Join(home, ".cuisson", "projects", projectName)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}

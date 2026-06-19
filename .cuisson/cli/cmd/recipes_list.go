@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"cuisson/internal/discover"
+	"cuisson/internal/project"
 
 	"github.com/spf13/cobra"
 )
@@ -77,8 +78,7 @@ func resolveTemplatesDir() (string, error) {
 		if err == nil {
 			var cfg struct{ Name string }
 			if json.Unmarshal(data, &cfg) == nil && cfg.Name != "" {
-				home, _ := os.UserHomeDir()
-				return filepath.Join(home, ".cuisson", cfg.Name, "templates"), nil
+					return project.TemplatesDir(cfg.Name), nil
 			}
 		}
 

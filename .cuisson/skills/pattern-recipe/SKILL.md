@@ -102,7 +102,7 @@ This creates:
 └── var2.tmpl            # Placeholder template for var2
 ```
 
-**Note:** The `~/.cuisson/<project-name>/templates/` directory is centralized per-project, project name is read from `.cuisson.config.json`.
+**Note:** The `~/.cuisson/<project-name>/templates/` directory is centralized per-project, project name is read from `cuisson.config.json`.
 
 ### Edit `recipe.json`
 

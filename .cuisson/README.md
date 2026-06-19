@@ -27,7 +27,7 @@ cuisson launch new-store --var storeName=Counter
 ```bash
 # Scan your codebase for repetitive file patterns
 cuisson detect-patterns --threshold 0.7
-# → Detects clusters of similar files, writes ~/.cuisson/<project>/patterns.json
+# → Detects clusters of similar files, writes ~/.cuisson/projects/<project>/patterns.json
 
 # Generate a recipe from a detected cluster
 cuisson generate-recipe <cluster-id>
@@ -70,7 +70,7 @@ source ~/.zshrc   # or source ~/.bashrc
 
 ## How It Works
 
-Cuisson has five subcommands: **`launch`** (generate files), **`create`** (scaffold new recipes), **`detect-patterns`** (scan codebase for patterns), **`generate-recipe`** (auto-generate recipes from detected clusters), and **`recipes search`** (keyword-based recipe discovery).
+Cuisson has six subcommands: **`launch`** (generate files), **`create`** (scaffold new recipes), **`detect-patterns`** (scan codebase for patterns), **`generate-recipe`** (auto-generate recipes from detected clusters), **`recipes search`** (keyword-based recipe discovery), and **`metrics summary`** (view launch metrics).
 
 ### Directory Structure
 
@@ -78,7 +78,7 @@ Cuisson has five subcommands: **`launch`** (generate files), **`create`** (scaff
 .cuisson/
 ├── cli/                    # Go CLI source code
 │   ├── cmd/                # Cobra commands (root, create, launch,
-│   │                       #   detect-patterns, generate-recipe, recipes)
+│   │                       #   detect-patterns, generate-recipe, recipes, metrics)
 │   ├── internal/           # Core logic
 │   │   ├── discover/       # Scans templates dir for recipe.json files
 │   │   ├── detect/         # Pattern detection pipeline (tokenizer, clusterer,
@@ -90,9 +90,10 @@ Cuisson has five subcommands: **`launch`** (generate files), **`create`** (scaff
 │   │   └── variables/      # Parses --var flags and prompts for input
 │   ├── Makefile            # Build/install targets
 │   └── main.go             # Entry point
-├── patterns/               # Detected pattern clusters (auto-generated)
+├── projects/               # Project data (auto-generated)
 │   └── <project>/
-│       └── patterns.json   # Cluster data from detect-patterns
+│       ├── patterns.json   # Cluster data from detect-patterns
+│       └── metrics.jsonl   # Launch metrics log
 └── templates/              # Recipe definitions and template files
     └── frontend/           # Recipes live in subdirectories
         ├── src/stores/new-store/
@@ -114,7 +115,7 @@ Cuisson has five subcommands: **`launch`** (generate files), **`create`** (scaff
 
 ## The `detect-patterns` Command
 
-Scans your codebase for repetitive file patterns, clusters similar files using token-level analysis (with optional tree-sitter AST refinement), and writes results to `~/.cuisson/<project>/patterns.json`.
+Scans your codebase for repetitive file patterns, clusters similar files using token-level analysis (with optional tree-sitter AST refinement), and writes results to `~/.cuisson/projects/<project>/patterns.json`.
 
 ```bash
 cuisson detect-patterns [--threshold 0.7] [--min-cluster-size 2] [--refine]
@@ -128,7 +129,7 @@ cuisson detect-patterns [--threshold 0.7] [--min-cluster-size 2] [--refine]
 
 3. **Skeleton extraction** (only with `--refine`) — Lazily loads tree-sitter WASM grammars to parse ASTs, aligns structurally equivalent nodes across cluster members, marks divergent positions as slots.
 
-4. **Output** — Writes `~/.cuisson/<project>/patterns.json` and prints a summary to stdout.
+4. **Output** — Writes `~/.cuisson/projects/<project>/patterns.json` and prints a summary to stdout.
 
 ### Flags
 
@@ -220,6 +221,41 @@ cuisson recipes search --intent "new base ui component"
 # JSON output for programmatic use (includes template_dir)
 cuisson recipes search --intent "store" --limit 1
 # → Human-readable list + JSON array below (each result has "template_dir" field)
+```
+
+## The `metrics summary` Command
+
+Displays aggregated metrics from all recorded cuisson launches. Shows per-recipe statistics including number of launches, input/output character counts, files written, and estimated tokens saved.
+
+```bash
+cuisson metrics summary [--project <name>]
+```
+
+### How it works:
+
+1. **Discover** — Scans `~/.cuisson/projects/` for all projects with a `metrics.jsonl` file.
+2. **Aggregate** — Reads each project's JSONL metrics log, groups by recipe name, and computes totals.
+3. **Output** — Prints a formatted table with per-recipe stats and overall totals.
+
+### Flags
+
+| Flag                | Default | Description                              |
+|---------------------|---------|------------------------------------------|
+| `--project, -p`     | (none)  | Show metrics for a specific project only |
+
+### Example
+
+```bash
+cuisson metrics summary
+# → Cuisson Metrics — my-project
+#    Recipe          Launches   Input Chars   Output Chars   Est Tokens Saved
+#    new-component        12       4800          9600           ~2400
+#    new-store             8       3200          6400           ~1600
+#    ------              ----       ---------     ----------     ----------------
+#    Total                20       8000         16000           ~4000
+
+cuisson metrics summary --project my-project
+# → Shows metrics for a single project only
 ```
 
 ## The `launch` Command
@@ -422,7 +458,7 @@ cuisson detect-patterns --threshold 0.7 [--refine]
           │
           ▼
 ┌─────────────────────┐
-│  Write patterns.json│  ~/.cuisson/<project>/patterns.json
+│  Write patterns.json│  ~/.cuisson/projects/<project>/patterns.json
 └─────────────────────┘
 ```
 
@@ -433,7 +469,7 @@ cuisson generate-recipe <cluster-id>
         │
         ▼
 ┌─────────────────────┐
-│  Read patterns.json │  Load cluster data from ~/.cuisson/<project>/
+│  Read patterns.json │  Load cluster data from ~/.cuisson/projects/<project>/
 └─────────┬───────────┘
           │
           ▼

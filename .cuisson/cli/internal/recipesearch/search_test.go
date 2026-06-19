@@ -347,7 +347,7 @@ func TestFindTemplatesDir(t *testing.T) {
 		}
 
 		home, _ := os.UserHomeDir()
-		expected := filepath.Join(home, ".cuisson", "my-project", "templates")
+		expected := filepath.Join(home, ".cuisson", "projects", "my-project", "templates")
 		if dir != expected {
 			t.Errorf("TemplatesDir = %q, want %q", dir, expected)
 		}

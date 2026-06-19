@@ -82,7 +82,7 @@ func TestStorePathCreatesDirectory(t *testing.T) {
 		t.Fatalf("StorePath() error = %v", err)
 	}
 
-	expectedDir := tmpHome + "/.cuisson/my-project"
+	expectedDir := tmpHome + "/.cuisson/projects/my-project"
 	if _, err := os.Stat(expectedDir); os.IsNotExist(err) {
 		t.Errorf("Expected directory %q to be created", expectedDir)
 	}

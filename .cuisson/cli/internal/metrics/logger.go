@@ -29,16 +29,16 @@ type Entry struct {
 
 // Manager handles metrics logging and reading for a base directory.
 type Manager struct {
-	baseDir string // ~/.cuisson directory
+	baseDir string // ~/.cuisson/projects directory
 }
 
-// NewManager creates a new Manager pointing to the user's .cuisson home directory.
+// NewManager creates a new Manager pointing to the user's .cuisson/projects home directory.
 func NewManager() (*Manager, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get home directory: %w", err)
 	}
-	return &Manager{baseDir: filepath.Join(home, ".cuisson")}, nil
+	return &Manager{baseDir: filepath.Join(home, ".cuisson", "projects")}, nil
 }
 
 // NewManagerWithBase creates a Manager with an explicit base directory (for testing).
@@ -46,7 +46,7 @@ func NewManagerWithBase(baseDir string) *Manager {
 	return &Manager{baseDir: baseDir}
 }
 
-// Log appends a metrics entry to ~/.cuisson/<project>/metrics.jsonl.
+// Log appends a metrics entry to ~/.cuisson/projects/<project>/metrics.jsonl.
 // It returns the number of files actually written (written == true).
 func (m *Manager) Log(projectName, recipeName string, inputChars int, files []FileResult) (int, error) {
 	projectDir := filepath.Join(m.baseDir, projectName)

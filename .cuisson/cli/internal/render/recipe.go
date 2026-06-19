@@ -19,6 +19,7 @@ func FuncMap() template.FuncMap {
 		"PascalCase": strcase.ToCamel,
 		"snake_case": strcase.ToSnake,
 		"kebabCase":  strcase.ToKebab,
+		"split":      strings.Split,
 	}
 	return fm
 }

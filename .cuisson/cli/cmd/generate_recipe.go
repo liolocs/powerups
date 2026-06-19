@@ -17,7 +17,7 @@ var generateOutputDir string
 var generateRecipeCmd = &cobra.Command{
 	Use:   "generate-recipe [cluster-id]",
 	Short: "Generate a recipe from a detected pattern cluster",
-	Long: `Reads a detected cluster from ~/.cuisson/<project-name>/patterns.json,
+	Long: `Reads a detected cluster from ~/.cuisson/projects/<project-name>/patterns.json,
 extracts skeleton templates with inferred slot names, and writes a recipe
 directory (recipe.json + .tmpl files) to the templates folder.
 

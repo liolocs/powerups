@@ -2,7 +2,7 @@ package patterns
 
 import "time"
 
-// PatternsFile is the top-level structure written to ~/.cuisson/<project>/patterns.json
+// PatternsFile is the top-level structure written to ~/.cuisson/projects/<project>/patterns.json
 type PatternsFile struct {
 	Version    int       `json:"version"`
 	Project    string    `json:"project"`

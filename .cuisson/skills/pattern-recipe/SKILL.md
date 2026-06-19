@@ -146,6 +146,8 @@ Replace each `.tmpl` file with actual template content. Templates use Go's `text
 - `PascalCase` — `"my_component"` → `"MyComponent"`
 - `snake_case` — `"MyComponent"` → `"my_component"`
 - `kebabCase` — `"MyComponent"` → `"my-component"`
+- `split` — `"a,b,c,d" → ["a", "b", "c", "d"]`
+- `trim` — `" a " → "a"`
 
 **Template best practices:**
 - Write the template as if you're creating ONE instance of the pattern by hand, but replace all variable parts with `{{.varName}}`
@@ -265,3 +267,4 @@ User: "I keep creating the same kind of X"
 3. **Use transformations consistently** — if your codebase uses PascalCase for component names, use `{{.name | PascalCase}}` in templates.
 4. **Don't over-parameterize** — if a "variable" is always the same across instances, hardcode it.
 5. **Test with realistic names** — don't just test with `test1` and `test2`; use names that look like real project code.
+6. **Use the `split` function** — use split to create a more dynamic list of variables and keep templates DRY.

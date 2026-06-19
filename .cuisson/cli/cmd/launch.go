@@ -3,8 +3,12 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"cuisson/internal/discover"
+	"cuisson/internal/metrics"
+	"cuisson/internal/project"
 	"cuisson/internal/render"
 	"cuisson/internal/variables"
 
@@ -56,11 +60,60 @@ var launchCmd = &cobra.Command{
 
 		fmt.Printf("Variables resolved: %v\n", resolved)
 
-		// Render each file using the actual recipe directory
+		// Calculate input characters from resolved variables
+		inputChars := 0
+		for _, v := range resolved {
+			inputChars += len(v)
+		}
+
+		// Get project name for metrics logging
+		var projectName string
+		if outputDir != "" {
+			cfg, err := project.LoadConfig(outputDir)
+			if err == nil {
+				projectName = cfg.Name
+			}
+		}
+
+		// Render each file using the actual recipe directory, tracking output metrics
+		var fileResults []metrics.FileResult
 		for _, rf := range entry.Recipe.Output.Files {
-			if err := render.RenderFile(entry.DirPath, rf, resolved, outputDir); err != nil {
+			written, err := render.RenderFile(entry.DirPath, rf, resolved, outputDir)
+			if err != nil {
 				fmt.Printf("[x] Error rendering %s: %v\n", rf.Name, err)
 				// Continue with other files instead of failing entirely
+			}
+
+			// Resolve the output path to get file size info
+			outputPath := resolveOutputPath(rf.OutputPath, resolved)
+			if outputDir != "" {
+				outputPath = filepath.Join(outputDir, outputPath)
+			}
+
+			var fileChars int
+			if stat, err := os.Stat(outputPath); err == nil {
+				fileChars = int(stat.Size())
+			}
+
+			fileResults = append(fileResults, metrics.FileResult{
+				Path:    outputPath,
+				Chars:   fileChars,
+				Written: written,
+			})
+		}
+
+		// Log metrics if any files were written
+		if projectName != "" {
+			mgr, err := metrics.NewManager()
+			if err != nil {
+				fmt.Printf("[!] Failed to create metrics manager: %v\n", err)
+			} else {
+				writtenCount, err := mgr.Log(projectName, entry.Recipe.Name, inputChars, fileResults)
+				if err != nil {
+					fmt.Printf("[!] Failed to log metrics: %v\n", err)
+				} else if writtenCount > 0 {
+					fmt.Printf("[+] Metrics logged: %d file(s) generated\n", writtenCount)
+				}
 			}
 		}
 
@@ -71,4 +124,13 @@ var launchCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(launchCmd)
 	launchCmd.Flags().StringArrayVarP(&varFlags, "var", "v", []string{}, "variable in key=value format (can be repeated)")
+}
+
+// resolveOutputPath replaces {{var}} patterns in the output path with variable values.
+func resolveOutputPath(path string, variables map[string]string) string {
+	result := path
+	for key, value := range variables {
+		result = strings.ReplaceAll(result, fmt.Sprintf("{{%s}}", key), value)
+	}
+	return result
 }

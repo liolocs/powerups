@@ -60,8 +60,12 @@ func TestRenderFile(t *testing.T) {
 	// Override output path to use temp dir
 	recipe.Output.Files[0].OutputPath = filepath.Join(outputPath, "{{name}}.txt")
 
-	if err := RenderFile(recipeDir, recipe.Output.Files[0], variables, ""); err != nil {
+	written, err := RenderFile(recipeDir, recipe.Output.Files[0], variables, "")
+	if err != nil {
 		t.Fatalf("RenderFile() error = %v", err)
+	}
+	if !written {
+		t.Error("RenderFile() should return true when file is written")
 	}
 
 	// Verify output file exists and has correct content
@@ -75,8 +79,12 @@ func TestRenderFile(t *testing.T) {
 	}
 
 	// Test that existing file is skipped
-	if err := RenderFile(recipeDir, recipe.Output.Files[0], variables, ""); err != nil {
+	written, err = RenderFile(recipeDir, recipe.Output.Files[0], variables, "")
+	if err != nil {
 		t.Fatalf("RenderFile() on existing file error = %v", err)
+	}
+	if written {
+		t.Error("RenderFile() should return false when file already exists")
 	}
 
 	exists, _ := os.Stat(filepath.Join(outputPath, "World.txt"))
@@ -137,5 +145,16 @@ func TestResolveOutputPath(t *testing.T) {
 		if result != tt.expected {
 			t.Errorf("resolveOutputPath(%q) = %q, want %q", tt.input, result, tt.expected)
 		}
+	}
+
+	// Test with multiple variables
+	multiVars := map[string]string{
+		"componentName": "MyComponent",
+		"storeName":     "CounterStore",
+	}
+	result := resolveOutputPath("src/{{componentName}}/stores/{{storeName}}.ts", multiVars)
+	expected := "src/MyComponent/stores/CounterStore.ts"
+	if result != expected {
+		t.Errorf("resolveOutputPath(%q) = %q, want %q", "src/{{componentName}}/stores/{{storeName}}.ts", result, expected)
 	}
 }

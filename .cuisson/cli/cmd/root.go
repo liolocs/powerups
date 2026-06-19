@@ -26,6 +26,12 @@ func Execute() {
 	}
 }
 
+// metricsCmd is the "metrics" parent subcommand group
+var metricsCmd = &cobra.Command{
+	Use:   "metrics",
+	Short: "View cuisson launch metrics",
+}
+
 // commandsThatRequireProject lists subcommands that need a registered project
 var commandsThatRequireProject = map[string]bool{
 	"launch":  true,
@@ -35,6 +41,8 @@ var commandsThatRequireProject = map[string]bool{
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&templatesDir, "templates", "t", "", "path to templates directory (or set CUISSON_TEMPLATES_DIR env var)")
 	_ = rootCmd.PersistentFlags().MarkHidden("templates") // env var only, hidden flag
+
+	rootCmd.AddCommand(metricsCmd)
 
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		// Resolve output dir: explicit env var first, then discover from config file

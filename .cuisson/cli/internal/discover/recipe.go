@@ -8,10 +8,11 @@ import (
 
 // Recipe represents a recipe.json file structure
 type Recipe struct {
-	Name      string   `json:"name"`
-	Variables []string `json:"variables"`
-	Intent    []string `json:"intent"`
-	Output    Output   `json:"output"`
+	Name      string        `json:"name"`
+	Variables []string      `json:"variables"`
+	Intent    []string      `json:"intent"`
+	Output    Output        `json:"output"`
+	Extends   []RecipeChild `json:"extends,omitempty"`
 }
 
 // Output represents the output section of a recipe
@@ -24,6 +25,13 @@ type RecipeFile struct {
 	Name       string `json:"name"`
 	Template   string `json:"template"`
 	OutputPath string `json:"outputPath"`
+}
+
+// RecipeChild represents a child recipe that this recipe extends.
+type RecipeChild struct {
+	Recipe    string            `json:"recipe"`
+	Variables []string          `json:"variables,omitempty"`
+	Map       map[string]string `json:"map,omitempty"`
 }
 
 // RecipeEntry holds a recipe and the directory containing its template files

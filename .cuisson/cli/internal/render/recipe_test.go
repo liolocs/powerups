@@ -391,3 +391,153 @@ func TestResolveCompositionTreeRecursive(t *testing.T) {
 		t.Errorf("nodes[2] variables = %v, want baseName=MiddleValue", nodes[2].Variables)
 	}
 }
+
+func TestCompositionEndToEnd(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create recipe directories
+	componentDir := filepath.Join(tmpDir, "templates", "frontend", "src", "lib", "components", "new-component")
+	storeDir := filepath.Join(tmpDir, "templates", "frontend", "src", "stores", "new-store")
+
+	for _, dir := range []string{componentDir, storeDir} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Create new-component recipe.json and template
+	componentRecipe := `{
+  "name": "new-component",
+  "variables": ["componentName"],
+  "output": {
+    "files": [
+      {
+        "name": "{{componentName}}.svelte",
+        "template": "comp.svelte.tmpl",
+        "outputPath": "frontend/src/lib/components/{{componentName}}/comp.svelte"
+      }
+    ]
+  }
+}`
+	if err := os.WriteFile(filepath.Join(componentDir, "recipe.json"), []byte(componentRecipe), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(componentDir, "comp.svelte.tmpl"), []byte(`export const {{.componentName | PascalCase}} = { name: "{{.componentName}}" };`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create new-store recipe.json and template
+	storeRecipe := `{
+  "name": "new-store",
+  "variables": ["storeName"],
+  "output": {
+    "files": [
+      {
+        "name": "{{storeName}}.ts",
+        "template": "store.ts.tmpl",
+        "outputPath": "frontend/src/stores/{{storeName}}.ts"
+      }
+    ]
+  }
+}`
+	if err := os.WriteFile(filepath.Join(storeDir, "recipe.json"), []byte(storeRecipe), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(storeDir, "store.ts.tmpl"), []byte(`import { writable } from "svelte/store";
+export const {{.storeName}} = writable(null);`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create page recipe with extends
+	pageDir := filepath.Join(tmpDir, "templates", "frontend", "src", "pages", "page")
+	if err := os.MkdirAll(pageDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	pageRecipe := `{
+  "name": "page",
+  "variables": ["widgetName", "storeName"],
+  "extends": [
+    {
+      "recipe": "new-component",
+      "variables": ["componentName"],
+      "map": {"widgetName": "componentName"}
+    },
+    {
+      "recipe": "new-store",
+      "variables": ["storeName"]
+    }
+  ],
+  "output": {
+    "files": [
+      {
+        "name": "page.svelte",
+        "template": "page.svelte.tmpl",
+        "outputPath": "frontend/src/pages/{{widgetName}}.svelte"
+      }
+    ]
+  }
+}`
+	if err := os.WriteFile(filepath.Join(pageDir, "recipe.json"), []byte(pageRecipe), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(pageDir, "page.svelte.tmpl"), []byte(`<script>import {{.widgetName | PascalCase}} from "../lib/components/{{.widgetName}}/comp.svelte";</script><{{.widgetName | PascalCase}} />`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Discover recipes
+	recipes, err := discover.DiscoverRecipes(filepath.Join(tmpDir, "templates"))
+	if err != nil {
+		t.Fatalf("discover error: %v", err)
+	}
+
+	pageEntry, exists := recipes["page"]
+	if !exists {
+		t.Fatal("page recipe not found")
+	}
+
+	// Resolve composition tree
+	nodes, err := resolveCompositionTree(pageEntry, map[string]string{
+		"widgetName":  "MyWidget",
+		"storeName":   "CounterStore",
+	}, recipes)
+	if err != nil {
+		t.Fatalf("resolveCompositionTree() error = %v", err)
+	}
+
+	if len(nodes) != 3 {
+		t.Fatalf("nodes length = %d, want 3", len(nodes))
+	}
+
+	// Render all files from the composition tree
+	outputDir := filepath.Join(tmpDir, "output")
+
+	for _, node := range nodes {
+		for _, rf := range node.Entry.Recipe.Output.Files {
+			written, err := RenderFile(node.Entry.DirPath, rf, node.Variables, outputDir)
+			if err != nil {
+				t.Fatalf("RenderFile() error = %v", err)
+			}
+			if !written {
+				t.Errorf("expected file to be written for %s", rf.Name)
+			}
+		}
+	}
+
+	// Verify all output files exist with correct content
+	checkFile := func(path, expected string) {
+		content, err := os.ReadFile(filepath.Join(outputDir, path))
+		if err != nil {
+			t.Fatalf("Failed to read %s: %v", path, err)
+		}
+		if string(content) != expected {
+			t.Errorf("%s content = %q, want %q", path, string(content), expected)
+		}
+	}
+
+	checkFile("frontend/src/pages/MyWidget.svelte", `<script>import MyWidget from "../lib/components/MyWidget/comp.svelte";</script><MyWidget />`)
+	checkFile("frontend/src/lib/components/MyWidget/comp.svelte", `export const MyWidget = { name: "MyWidget" };`)
+	// {{label}} is literal text — not a Go template variable, just Svelte syntax
+	checkFile("frontend/src/stores/CounterStore.ts", `import { writable } from "svelte/store";
+export const CounterStore = writable(null);`)
+}

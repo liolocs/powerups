@@ -75,31 +75,41 @@ var launchCmd = &cobra.Command{
 			}
 		}
 
-		// Render each file using the actual recipe directory, tracking output metrics
+		// Resolve composition tree (parent + all children in pre-order)
+		nodes, err := render.ResolveCompositionTree(entry, resolved, recipes)
+		if err != nil {
+			return fmt.Errorf("failed to resolve composition: %w", err)
+		}
+
+		// Render each file from each node in the composition tree, tracking output metrics
 		var fileResults []metrics.FileResult
-		for _, rf := range entry.Recipe.Output.Files {
-			written, err := render.RenderFile(entry.DirPath, rf, resolved, outputDir)
-			if err != nil {
-				fmt.Printf("[x] Error rendering %s: %v\n", rf.Name, err)
-				// Continue with other files instead of failing entirely
-			}
+		for _, node := range nodes {
+			fmt.Printf("  Rendering recipe: %s\n", node.Entry.Recipe.Name)
 
-			// Resolve the output path to get file size info
-			outputPath := resolveOutputPath(rf.OutputPath, resolved)
-			if outputDir != "" {
-				outputPath = filepath.Join(outputDir, outputPath)
-			}
+			for _, rf := range node.Entry.Recipe.Output.Files {
+				written, err := render.RenderFile(node.Entry.DirPath, rf, node.Variables, outputDir)
+				if err != nil {
+					fmt.Printf("[x] Error rendering %s/%s: %v\n", node.Entry.Recipe.Name, rf.Name, err)
+					// Continue with other files instead of failing entirely
+				}
 
-			var fileChars int
-			if stat, err := os.Stat(outputPath); err == nil {
-				fileChars = int(stat.Size())
-			}
+				// Resolve the output path to get file size info
+				outputPath := resolveOutputPath(rf.OutputPath, node.Variables)
+				if outputDir != "" {
+					outputPath = filepath.Join(outputDir, outputPath)
+				}
 
-			fileResults = append(fileResults, metrics.FileResult{
-				Path:    outputPath,
-				Chars:   fileChars,
-				Written: written,
-			})
+				var fileChars int
+				if stat, err := os.Stat(outputPath); err == nil {
+					fileChars = int(stat.Size())
+				}
+
+				fileResults = append(fileResults, metrics.FileResult{
+					Path:    outputPath,
+					Chars:   fileChars,
+					Written: written,
+				})
+			}
 		}
 
 		// Log metrics if any files were written

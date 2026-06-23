@@ -158,3 +158,236 @@ func TestResolveOutputPath(t *testing.T) {
 		t.Errorf("resolveOutputPath(%q) = %q, want %q", "src/{{componentName}}/stores/{{storeName}}.ts", result, expected)
 	}
 }
+
+func TestResolveCompositionTree(t *testing.T) {
+	// Create mock recipe entries
+	allRecipes := map[string]discover.RecipeEntry{
+		"new-component": {
+			Recipe: discover.Recipe{
+				Name:      "new-component",
+				Variables: []string{"componentName"},
+			},
+		},
+		"new-store": {
+			Recipe: discover.Recipe{
+				Name:      "new-store",
+				Variables: []string{"storeName"},
+			},
+		},
+	}
+
+	parentEntry := discover.RecipeEntry{
+		Recipe: discover.Recipe{
+			Name:      "page",
+			Variables: []string{"widgetName", "storeName"},
+			Extends: []discover.RecipeChild{
+				{
+					Recipe:    "new-component",
+					Variables: []string{"componentName"},
+					Map:       map[string]string{"widgetName": "componentName"},
+				},
+				{
+					Recipe:    "new-store",
+					Variables: []string{"storeName"},
+				},
+			},
+		},
+	}
+
+	parentVars := map[string]string{
+		"widgetName":  "MyWidget",
+		"storeName":   "CounterStore",
+	}
+
+	nodes, err := resolveCompositionTree(parentEntry, parentVars, allRecipes)
+	if err != nil {
+		t.Fatalf("resolveCompositionTree() error = %v", err)
+	}
+
+	if len(nodes) != 3 {
+		t.Fatalf("nodes length = %d, want 3", len(nodes))
+	}
+
+	// Parent node first (pre-order)
+	if nodes[0].Entry.Recipe.Name != "page" {
+		t.Errorf("nodes[0] name = %q, want %q", nodes[0].Entry.Recipe.Name, "page")
+	}
+
+	// Child 1: new-component with mapped variable
+	if nodes[1].Entry.Recipe.Name != "new-component" {
+		t.Errorf("nodes[1] name = %q, want %q", nodes[1].Entry.Recipe.Name, "new-component")
+	}
+	if nodes[1].Variables["componentName"] != "MyWidget" {
+		t.Errorf("nodes[1] variables = %v, want componentName=MyWidget", nodes[1].Variables)
+	}
+
+	// Child 2: new-store with direct variable (no mapping needed)
+	if nodes[2].Entry.Recipe.Name != "new-store" {
+		t.Errorf("nodes[2] name = %q, want %q", nodes[2].Entry.Recipe.Name, "new-store")
+	}
+	if nodes[2].Variables["storeName"] != "CounterStore" {
+		t.Errorf("nodes[2] variables = %v, want storeName=CounterStore", nodes[2].Variables)
+	}
+}
+
+func TestResolveCompositionTreeUnknownRecipe(t *testing.T) {
+	allRecipes := map[string]discover.RecipeEntry{}
+
+	parentEntry := discover.RecipeEntry{
+		Recipe: discover.Recipe{
+			Name: "page",
+			Extends: []discover.RecipeChild{
+				{Recipe: "nonexistent"},
+			},
+		},
+	}
+
+	parentVars := map[string]string{}
+
+	_, err := resolveCompositionTree(parentEntry, parentVars, allRecipes)
+	if err == nil {
+		t.Fatal("expected error for unknown recipe")
+	}
+
+	expectedMsg := "unknown recipe \"nonexistent\" referenced by \"page\""
+	if err.Error() != expectedMsg {
+		t.Errorf("error = %q, want %q", err.Error(), expectedMsg)
+	}
+}
+
+func TestResolveCompositionTreeMissingVariable(t *testing.T) {
+	allRecipes := map[string]discover.RecipeEntry{
+		"new-component": {
+			Recipe: discover.Recipe{
+				Name:      "new-component",
+				Variables: []string{"componentName"},
+			},
+		},
+	}
+
+	parentEntry := discover.RecipeEntry{
+		Recipe: discover.Recipe{
+			Name:      "page",
+			Variables: []string{"widgetName"},
+			Extends: []discover.RecipeChild{
+				{
+					Recipe:    "new-component",
+					Variables: []string{"componentName"},
+					Map:       map[string]string{"widgetName": "componentName"},
+				},
+			},
+		},
+	}
+
+	parentVars := map[string]string{
+		"widgetName": "MyWidget",
+	}
+
+	nodes, err := resolveCompositionTree(parentEntry, parentVars, allRecipes)
+	if err != nil {
+		t.Fatalf("unexpected error = %v", err)
+	}
+
+	if len(nodes) != 2 {
+		t.Fatalf("nodes length = %d, want 2", len(nodes))
+	}
+
+	if nodes[1].Variables["componentName"] != "MyWidget" {
+		t.Errorf("nodes[1] variables = %v, want componentName=MyWidget", nodes[1].Variables)
+	}
+
+	// Now test missing variable: parent doesn't have the mapped var
+	parentVars2 := map[string]string{
+		"otherName": "value", // wrong name, no mapping will find it
+	}
+
+	parentEntry2 := discover.RecipeEntry{
+		Recipe: discover.Recipe{
+			Name:      "page",
+			Variables: []string{"otherName"},
+			Extends: []discover.RecipeChild{
+				{
+					Recipe:    "new-component",
+					Variables: []string{"componentName"},
+					Map:       map[string]string{"widgetName": "componentName"}, // widgetName not in parent vars
+				},
+			},
+		},
+	}
+
+	_, err = resolveCompositionTree(parentEntry2, parentVars2, allRecipes)
+	if err == nil {
+		t.Fatal("expected error for missing variable")
+	}
+
+	expectedMsg := "child \"new-component\" requires variable \"componentName\", not available in parent"
+	if err.Error() != expectedMsg {
+		t.Errorf("error = %q, want %q", err.Error(), expectedMsg)
+	}
+}
+
+func TestResolveCompositionTreeRecursive(t *testing.T) {
+	allRecipes := map[string]discover.RecipeEntry{
+		"base": {
+			Recipe: discover.Recipe{
+				Name:      "base",
+				Variables: []string{"baseName"},
+			},
+		},
+		"middle": {
+			Recipe: discover.Recipe{
+				Name:      "middle",
+				Variables: []string{"midName"},
+				Extends: []discover.RecipeChild{
+					{
+						Recipe:    "base",
+						Variables: []string{"baseName"},
+						Map:       map[string]string{"midName": "baseName"},
+					},
+				},
+			},
+		},
+	}
+
+	parentEntry := discover.RecipeEntry{
+		Recipe: discover.Recipe{
+			Name:      "top",
+			Variables: []string{"midName"},
+			Extends: []discover.RecipeChild{
+				{
+					Recipe:    "middle",
+					Variables: []string{"midName"},
+				},
+			},
+		},
+	}
+
+	parentVars := map[string]string{
+		"midName": "MiddleValue",
+	}
+
+	nodes, err := resolveCompositionTree(parentEntry, parentVars, allRecipes)
+	if err != nil {
+		t.Fatalf("resolveCompositionTree() error = %v", err)
+	}
+
+	if len(nodes) != 3 {
+		t.Fatalf("nodes length = %d, want 3", len(nodes))
+	}
+
+	if nodes[0].Entry.Recipe.Name != "top" {
+		t.Errorf("nodes[0] = %q, want top", nodes[0].Entry.Recipe.Name)
+	}
+
+	if nodes[1].Entry.Recipe.Name != "middle" {
+		t.Errorf("nodes[1] = %q, want middle", nodes[1].Entry.Recipe.Name)
+	}
+
+	if nodes[2].Entry.Recipe.Name != "base" {
+		t.Errorf("nodes[2] = %q, want base", nodes[2].Entry.Recipe.Name)
+	}
+
+	if nodes[2].Variables["baseName"] != "MiddleValue" {
+		t.Errorf("nodes[2] variables = %v, want baseName=MiddleValue", nodes[2].Variables)
+	}
+}

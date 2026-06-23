@@ -12,6 +12,82 @@ import (
 	"cuisson/internal/discover"
 )
 
+// compositionNode represents a node in the recipe composition tree.
+type compositionNode struct {
+	Entry     discover.RecipeEntry
+	Variables map[string]string
+}
+
+// ResolveCompositionTree is the exported version of resolveCompositionTree.
+func ResolveCompositionTree(
+	parentEntry discover.RecipeEntry,
+	parentVars map[string]string,
+	allRecipes map[string]discover.RecipeEntry,
+) ([]compositionNode, error) {
+	return resolveCompositionTree(parentEntry, parentVars, allRecipes)
+}
+
+// resolveCompositionTree walks the recipe composition tree in pre-order DFS,
+// resolving child variables from parent variables via optional mapping.
+func resolveCompositionTree(
+	parentEntry discover.RecipeEntry,
+	parentVars map[string]string,
+	allRecipes map[string]discover.RecipeEntry,
+) ([]compositionNode, error) {
+	var nodes []compositionNode
+
+	// Add parent node
+	nodes = append(nodes, compositionNode{
+		Entry:     parentEntry,
+		Variables: parentVars,
+	})
+
+	// Process children if any
+	for _, childDef := range parentEntry.Recipe.Extends {
+		childEntry, exists := allRecipes[childDef.Recipe]
+		if !exists {
+			return nil, fmt.Errorf("unknown recipe %q referenced by %q", childDef.Recipe, parentEntry.Recipe.Name)
+		}
+
+		// Resolve child variables from parent variables
+		childVars := make(map[string]string)
+		varsToResolve := childDef.Variables
+		if len(varsToResolve) == 0 {
+			varsToResolve = childEntry.Recipe.Variables
+		}
+
+		for _, varName := range varsToResolve {
+			parentVarName := varName
+			// Map is parent→child: find which parent var maps to this child var
+			if childDef.Map != nil {
+				for pVar, cVar := range childDef.Map {
+					if cVar == varName {
+						parentVarName = pVar
+						break
+					}
+				}
+			}
+
+			val, ok := parentVars[parentVarName]
+			if !ok {
+				return nil, fmt.Errorf("child %q requires variable %q, not available in parent", childDef.Recipe, varName)
+			}
+
+			childVars[varName] = val
+		}
+
+		// Recurse into child's children (pre-order)
+		childNodes, err := resolveCompositionTree(childEntry, childVars, allRecipes)
+		if err != nil {
+			return nil, fmt.Errorf("resolving child %q: %w", childDef.Recipe, err)
+		}
+
+		nodes = append(nodes, childNodes...)
+	}
+
+	return nodes, nil
+}
+
 // FuncMap returns a template.FuncMap with strcase functions
 func FuncMap() template.FuncMap {
 	fm := template.FuncMap{

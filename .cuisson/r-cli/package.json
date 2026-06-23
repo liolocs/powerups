@@ -14,7 +14,7 @@
     "@rcompat/array": "^0.18.0",
     "@rcompat/cli": "^0.25.0",
     "@rcompat/fs": "^0.34.0",
-    "@rcompat/io": "^0.10.1",
+    "@rcompat/io": "^0.11.0",
     "@rcompat/runtime": "^0.16.0",
     "nunjucks": "^3.2.4",
     "proby": "^0.20.0"

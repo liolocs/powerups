@@ -8,7 +8,7 @@
         "@rcompat/array": "^0.18.0",
         "@rcompat/cli": "^0.25.0",
         "@rcompat/fs": "^0.34.0",
-        "@rcompat/io": "^0.10.1",
+        "@rcompat/io": "^0.11.0",
         "@rcompat/runtime": "^0.16.0",
         "nunjucks": "^3.2.4",
         "proby": "^0.20.0",
@@ -32,7 +32,7 @@
 
     "@rcompat/fs": ["@rcompat/fs@0.34.0", "", { "dependencies": { "@rcompat/assert": "^0.13.0", "@rcompat/crypto": "^0.21.0", "@rcompat/dict": "^0.10.0", "@rcompat/error": "^0.8.0", "@rcompat/is": "^0.11.0", "@rcompat/symbol": "^0.2.0" } }, "sha512-POeY8+j1EagegsoLDk6KUYNELojWqmG233/uW94Pn8ZLXD5NiOdZErhBEzEX9ocKo2UTWaotVUVSpU1Z2L1QWw=="],
 
-    "@rcompat/io": ["@rcompat/io@0.10.1", "", { "dependencies": { "@rcompat/assert": "^0.13.0" } }, "sha512-QQUnVaw9ShXRp4BO99Og7YYzHzYZYbjnUw/UVdJwWOlXOJETdAlEQy12PHXOY1dcdj3tATiVAjBwjxdW7rEBcA=="],
+    "@rcompat/io": ["@rcompat/io@0.11.0", "", { "dependencies": { "@rcompat/assert": "^0.14.0" } }, "sha512-KgrHH6aR61FnG+PywmApTnEt8CC5r6yD1ZXL4WM+geRb1Azo7ckG/Cyu1y/xDT031UUPhKQNz0tC7eg0OmCIxA=="],
 
     "@rcompat/is": ["@rcompat/is@0.12.0", "", {}, "sha512-xPdL+K0I1nekue9cV6FZJe48Xcyukvn+fvbL1emesgaNCSW9nHfwRzCQ8DYzusP0r9z95OMfFKFxHWSbZAzrIg=="],
 
@@ -56,8 +56,6 @@
 
     "@rcompat/cli/@rcompat/fs": ["@rcompat/fs@0.35.1", "", { "dependencies": { "@rcompat/assert": "^0.14.0", "@rcompat/crypto": "^0.22.0", "@rcompat/dict": "^0.11.0", "@rcompat/error": "^0.9.0", "@rcompat/is": "^0.12.0", "@rcompat/symbol": "^0.3.0" } }, "sha512-etthpNx63PJVVghCxRpfyhrCaAGyjgQxqNjE+Kdq3YW2ZUmbgbBMzx1rTZ32xV8uh4NvqAa+Yu3ZS7iGEArTpg=="],
 
-    "@rcompat/cli/@rcompat/io": ["@rcompat/io@0.11.0", "", { "dependencies": { "@rcompat/assert": "^0.14.0" } }, "sha512-KgrHH6aR61FnG+PywmApTnEt8CC5r6yD1ZXL4WM+geRb1Azo7ckG/Cyu1y/xDT031UUPhKQNz0tC7eg0OmCIxA=="],
-
     "@rcompat/dict/@rcompat/is": ["@rcompat/is@0.11.0", "", {}, "sha512-IcmPYuGEjFlcRApvXk2fy048sfPau78JqAhnvY6ohb14ht6kB4NZNAs9fHIqgQPFOtfTg7yvmdKOrzzNbbfijg=="],
 
     "@rcompat/env/@rcompat/runtime": ["@rcompat/runtime@0.17.0", "", { "dependencies": { "@rcompat/dict": "^0.11.0", "@rcompat/error": "^0.9.0", "@rcompat/fs": "^0.35.0", "@rcompat/type": "^0.18.0" } }, "sha512-s7riBXY0sh943CF/carRzpEtB5DEjrkbpaEwHOBhAMiOeKkgP+5nFuun1Zwlfyva32I1DP0ssDn0rwR1q7uNqg=="],
@@ -66,13 +64,13 @@
 
     "@rcompat/fs/@rcompat/is": ["@rcompat/is@0.11.0", "", {}, "sha512-IcmPYuGEjFlcRApvXk2fy048sfPau78JqAhnvY6ohb14ht6kB4NZNAs9fHIqgQPFOtfTg7yvmdKOrzzNbbfijg=="],
 
+    "@rcompat/io/@rcompat/assert": ["@rcompat/assert@0.14.0", "", { "dependencies": { "@rcompat/error": "^0.9.0", "@rcompat/is": "^0.12.0", "@rcompat/type": "^0.18.0" } }, "sha512-ipicm2XS9VrnMy3gBghoLSiSrhM1XQmgEWQM/90XDKisdS7rPf0/tUWd61TkJ7/QP/4ADAMFcSmbJ/miCGf2qw=="],
+
     "@rcompat/runtime/@rcompat/fs": ["@rcompat/fs@0.33.2", "", { "dependencies": { "@rcompat/assert": "^0.13.0", "@rcompat/crypto": "^0.21.0", "@rcompat/dict": "^0.10.0", "@rcompat/error": "^0.8.0", "@rcompat/is": "^0.11.0", "@rcompat/symbol": "^0.2.0" } }, "sha512-SWu1TdgzfHLgX8JkgxESwMOtIQ5MmmL9TaqheaI0+hcaEzKK4Slrn2H/daO7PFV4rKu9IHVodB973GfEY6vqMg=="],
 
     "proby/@rcompat/assert": ["@rcompat/assert@0.14.0", "", { "dependencies": { "@rcompat/error": "^0.9.0", "@rcompat/is": "^0.12.0", "@rcompat/type": "^0.18.0" } }, "sha512-ipicm2XS9VrnMy3gBghoLSiSrhM1XQmgEWQM/90XDKisdS7rPf0/tUWd61TkJ7/QP/4ADAMFcSmbJ/miCGf2qw=="],
 
     "proby/@rcompat/fs": ["@rcompat/fs@0.35.1", "", { "dependencies": { "@rcompat/assert": "^0.14.0", "@rcompat/crypto": "^0.22.0", "@rcompat/dict": "^0.11.0", "@rcompat/error": "^0.9.0", "@rcompat/is": "^0.12.0", "@rcompat/symbol": "^0.3.0" } }, "sha512-etthpNx63PJVVghCxRpfyhrCaAGyjgQxqNjE+Kdq3YW2ZUmbgbBMzx1rTZ32xV8uh4NvqAa+Yu3ZS7iGEArTpg=="],
-
-    "proby/@rcompat/io": ["@rcompat/io@0.11.0", "", { "dependencies": { "@rcompat/assert": "^0.14.0" } }, "sha512-KgrHH6aR61FnG+PywmApTnEt8CC5r6yD1ZXL4WM+geRb1Azo7ckG/Cyu1y/xDT031UUPhKQNz0tC7eg0OmCIxA=="],
 
     "proby/@rcompat/runtime": ["@rcompat/runtime@0.17.0", "", { "dependencies": { "@rcompat/dict": "^0.11.0", "@rcompat/error": "^0.9.0", "@rcompat/fs": "^0.35.0", "@rcompat/type": "^0.18.0" } }, "sha512-s7riBXY0sh943CF/carRzpEtB5DEjrkbpaEwHOBhAMiOeKkgP+5nFuun1Zwlfyva32I1DP0ssDn0rwR1q7uNqg=="],
 
@@ -86,8 +84,6 @@
 
     "@rcompat/cli/@rcompat/fs/@rcompat/symbol": ["@rcompat/symbol@0.3.0", "", {}, "sha512-XDXx1Yv4LnrGHCEiJQzOLodtXmyqysSIy9HeMciXVNd9hnq6pJqVr0BKlgVIWZ/oD9q3qsnWwZq2aYUsuwXtiw=="],
 
-    "@rcompat/cli/@rcompat/io/@rcompat/assert": ["@rcompat/assert@0.14.0", "", { "dependencies": { "@rcompat/error": "^0.9.0", "@rcompat/is": "^0.12.0", "@rcompat/type": "^0.18.0" } }, "sha512-ipicm2XS9VrnMy3gBghoLSiSrhM1XQmgEWQM/90XDKisdS7rPf0/tUWd61TkJ7/QP/4ADAMFcSmbJ/miCGf2qw=="],
-
     "@rcompat/env/@rcompat/runtime/@rcompat/dict": ["@rcompat/dict@0.11.0", "", { "dependencies": { "@rcompat/assert": "^0.14.0", "@rcompat/is": "^0.12.0" } }, "sha512-6am3+RocAAVHntsqVYNA3um63pZyVhabC3FeVUIyg/sJDr0Bld9yDr69NBNH1MFME3LIHcX0JkSwBF/K/VcryA=="],
 
     "@rcompat/env/@rcompat/runtime/@rcompat/error": ["@rcompat/error@0.9.0", "", { "dependencies": { "@rcompat/is": "^0.12.0", "@rcompat/type": "^0.18.0" } }, "sha512-AJSflZm2QrfSCyaYiLBYZo3X6PjIzNp2BwclX3rZhkuGVLhm+0JjkJYJ7t3YLw/T1vbTjn2ry4++DYQ1QFdYvA=="],
@@ -95,6 +91,10 @@
     "@rcompat/env/@rcompat/runtime/@rcompat/fs": ["@rcompat/fs@0.35.1", "", { "dependencies": { "@rcompat/assert": "^0.14.0", "@rcompat/crypto": "^0.22.0", "@rcompat/dict": "^0.11.0", "@rcompat/error": "^0.9.0", "@rcompat/is": "^0.12.0", "@rcompat/symbol": "^0.3.0" } }, "sha512-etthpNx63PJVVghCxRpfyhrCaAGyjgQxqNjE+Kdq3YW2ZUmbgbBMzx1rTZ32xV8uh4NvqAa+Yu3ZS7iGEArTpg=="],
 
     "@rcompat/env/@rcompat/runtime/@rcompat/type": ["@rcompat/type@0.18.0", "", {}, "sha512-UTx9QXTWX32BhFhdYFRHh3xVrWovIfxYvbp+w3C2agcBXCRQod1/ne3LpSyXNM53jQPpLoxzXjcTjXGoQSzfIA=="],
+
+    "@rcompat/io/@rcompat/assert/@rcompat/error": ["@rcompat/error@0.9.0", "", { "dependencies": { "@rcompat/is": "^0.12.0", "@rcompat/type": "^0.18.0" } }, "sha512-AJSflZm2QrfSCyaYiLBYZo3X6PjIzNp2BwclX3rZhkuGVLhm+0JjkJYJ7t3YLw/T1vbTjn2ry4++DYQ1QFdYvA=="],
+
+    "@rcompat/io/@rcompat/assert/@rcompat/type": ["@rcompat/type@0.18.0", "", {}, "sha512-UTx9QXTWX32BhFhdYFRHh3xVrWovIfxYvbp+w3C2agcBXCRQod1/ne3LpSyXNM53jQPpLoxzXjcTjXGoQSzfIA=="],
 
     "@rcompat/runtime/@rcompat/fs/@rcompat/is": ["@rcompat/is@0.11.0", "", {}, "sha512-IcmPYuGEjFlcRApvXk2fy048sfPau78JqAhnvY6ohb14ht6kB4NZNAs9fHIqgQPFOtfTg7yvmdKOrzzNbbfijg=="],
 
@@ -119,10 +119,6 @@
     "@rcompat/cli/@rcompat/fs/@rcompat/assert/@rcompat/type": ["@rcompat/type@0.18.0", "", {}, "sha512-UTx9QXTWX32BhFhdYFRHh3xVrWovIfxYvbp+w3C2agcBXCRQod1/ne3LpSyXNM53jQPpLoxzXjcTjXGoQSzfIA=="],
 
     "@rcompat/cli/@rcompat/fs/@rcompat/error/@rcompat/type": ["@rcompat/type@0.18.0", "", {}, "sha512-UTx9QXTWX32BhFhdYFRHh3xVrWovIfxYvbp+w3C2agcBXCRQod1/ne3LpSyXNM53jQPpLoxzXjcTjXGoQSzfIA=="],
-
-    "@rcompat/cli/@rcompat/io/@rcompat/assert/@rcompat/error": ["@rcompat/error@0.9.0", "", { "dependencies": { "@rcompat/is": "^0.12.0", "@rcompat/type": "^0.18.0" } }, "sha512-AJSflZm2QrfSCyaYiLBYZo3X6PjIzNp2BwclX3rZhkuGVLhm+0JjkJYJ7t3YLw/T1vbTjn2ry4++DYQ1QFdYvA=="],
-
-    "@rcompat/cli/@rcompat/io/@rcompat/assert/@rcompat/type": ["@rcompat/type@0.18.0", "", {}, "sha512-UTx9QXTWX32BhFhdYFRHh3xVrWovIfxYvbp+w3C2agcBXCRQod1/ne3LpSyXNM53jQPpLoxzXjcTjXGoQSzfIA=="],
 
     "@rcompat/env/@rcompat/runtime/@rcompat/dict/@rcompat/assert": ["@rcompat/assert@0.14.0", "", { "dependencies": { "@rcompat/error": "^0.9.0", "@rcompat/is": "^0.12.0", "@rcompat/type": "^0.18.0" } }, "sha512-ipicm2XS9VrnMy3gBghoLSiSrhM1XQmgEWQM/90XDKisdS7rPf0/tUWd61TkJ7/QP/4ADAMFcSmbJ/miCGf2qw=="],
 

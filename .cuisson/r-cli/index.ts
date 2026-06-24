@@ -1,19 +1,9 @@
-import cli from "@rcompat/cli";
+import cli from "./lib/cli.js";
 import runtime from "@rcompat/runtime";
 import commands from "./cmd/index.js";
 
+// Register all discovered commands
+cli.registerAll(commands);
 
-if (runtime.args.length === 0) {
-  cli.prompt.intro("Welcome to Recipe cli !")
-  cli.print("\n")
-
-  cli.print(cli.bg.red(cli.fg.white(" ERROR ")), "No command specified.");
-  cli.print("\n")
-  cli.print("\n")
-  cli.print("Available commands are:")
-  cli.print("\n")
-  commands.map(command => cli.print(` - ${command.name}\n`))
-  runtime.exit(1);
-}
-
-runtime.exit(0);
+// Parse CLI args and dispatch to the correct command handler
+cli.parse();

@@ -10,6 +10,7 @@
         "@rcompat/fs": "^0.34.0",
         "@rcompat/io": "^0.11.0",
         "@rcompat/runtime": "^0.16.0",
+        "@rcompat/test": "^0.18.0",
         "nunjucks": "^3.2.4",
         "proby": "^0.20.0",
       },
@@ -39,6 +40,8 @@
     "@rcompat/runtime": ["@rcompat/runtime@0.16.0", "", { "dependencies": { "@rcompat/dict": "^0.10.0", "@rcompat/error": "^0.8.0", "@rcompat/fs": "^0.33.0", "@rcompat/type": "^0.17.0" } }, "sha512-NfzDu9SJdEEnvB/gXiT6LyYCO9FnsDExKpfSTLBt114Nw0PI0klcTWtQudSa9T8Fg1sPd+S1OpQIr+nPVCWQuQ=="],
 
     "@rcompat/symbol": ["@rcompat/symbol@0.2.0", "", {}, "sha512-S+tR877M89GqLe7RGCdv+ZrSdhOXovHoohBfrCzsKUEWcrs4Ysh/1mfqYnnhov/7Zti35fbGiQfmyloRm/V/pg=="],
+
+    "@rcompat/test": ["@rcompat/test@0.18.0", "", { "dependencies": { "@rcompat/is": "^0.12.0" } }, "sha512-MNlSAD8UV+hX4ukQLasdfQzmDJCsbrBt8EEZbV0y0FqV1NK4S0J22gGZWH/AHxjlDUcpUlkcgOEpWOrcqfyPAw=="],
 
     "@rcompat/type": ["@rcompat/type@0.17.0", "", {}, "sha512-eqwcRA0IkEZom8SIdZzaoagWDz12C2arekhm7FulPEhO7fP6KoMCubOHD1LAM4cHzeGokOowpiUz5uXw/Wtx1w=="],
 

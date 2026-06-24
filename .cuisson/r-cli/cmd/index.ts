@@ -1,5 +1,5 @@
 import fs from "@rcompat/fs";
-import type { CommandDef } from "../lib/cli.js";
+import type { CommandDef } from "../lib/cli/cli.js";
 
 const currentDir = import.meta.dirname;
 const commandList = await fs.ref(currentDir).files({ filter: file => !file.name.includes("index.ts")})
@@ -7,14 +7,9 @@ const commandList = await fs.ref(currentDir).files({ filter: file => !file.name.
 const commands: CommandDef[] = []
 
 for (const command of commandList) {
-  const name = command.name.split(".")[0];
-  const mod = await command.import<CommandDef>("default");
+  const mod: CommandDef = await command.import("default");
 
-  // Each command file exports a CommandDef with name, description, flags, and action
-  commands.push({
-    name,
-    ...mod,
-  });
+  commands.push(mod);
 }
 
 export default commands;

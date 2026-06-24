@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test:lib": "bunx --bun proby lib/"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +16,7 @@
     "@rcompat/fs": "^0.34.0",
     "@rcompat/io": "^0.11.0",
     "@rcompat/runtime": "^0.16.0",
+    "@rcompat/test": "^0.18.0",
     "nunjucks": "^3.2.4",
     "proby": "^0.20.0"
   }

@@ -1,8 +1,5 @@
-// lib/cli.ts — Commander-like CLI framework built on @rcompat/cli
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
-
-// ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface FlagDefinition {
   short?: string;   // e.g. "-v"
@@ -25,8 +22,6 @@ export interface ParsedFlags {
   values: Record<string, unknown>;
   positional: string[];
 }
-
-// ─── Flag Parsing ────────────────────────────────────────────────────────────
 
 function parseFlags(
   args: string[],
@@ -131,8 +126,6 @@ function parseFlags(
   return { values, positional };
 }
 
-// ─── Command Builder (fluent API) ────────────────────────────────────────────
-
 export class CommandBuilder {
   private _name = "";
   private _description = "";
@@ -217,8 +210,6 @@ export class CommandBuilder {
   }
 }
 
-// ─── Commander (main class) ──────────────────────────────────────────────────
-
 export class Commander {
   private commands: Map<string, CommandDef> = new Map();
   private _name = "recipe";
@@ -238,13 +229,11 @@ export class Commander {
     return this;
   }
 
-  // Register a single command (or subcommand group)
   register(cmd: CommandDef): this {
     this.commands.set(cmd.name, cmd);
     return this;
   }
 
-  // Register multiple commands at once
   registerAll(cmds: CommandDef[]): this {
     for (const cmd of cmds) {
       this.register(cmd);
@@ -252,14 +241,12 @@ export class Commander {
     return this;
   }
 
-  // Build a new command builder for fluent registration
   command(name: string): CommandBuilder {
     const builder = new CommandBuilder();
     builder._name = name;
     return builder;
   }
 
-  // Parse CLI args and dispatch to the correct command handler
   parse(args?: string[]): void {
     const argv = args ?? runtime.args; // runtime.args is already pre-sliced (Bun.argv.slice(2))
 
@@ -378,8 +365,6 @@ export class Commander {
     return this.commands.get(name);
   }
 }
-
-// ─── Singleton Export ────────────────────────────────────────────────────────
 
 const cliFramework = new Commander("recipe");
 export default cliFramework;

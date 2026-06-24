@@ -105,19 +105,19 @@ r-cli/
 ## Task Breakdown
 
 ### Phase 1: Foundation — CLI framework + project discovery
-- **Task 1:** Rewrite `lib/cli.ts` — Commander-like API built on @rcompat/cli
-- **Task 2:** Rewrite `lib/project.ts` — Project root discovery (.dryai/ walk-up)
-- **Task 3:** Rewrite `index.ts` — Entry point using new CLI framework
+[x] COMPLETED - **Task 1:** Rewrite `lib/cli.ts` — Commander-like API built on @rcompat/cli
+[] - **Task 2:** Rewrite `lib/project.ts` — Project root discovery (.dryai/ walk-up)
+[] - **Task 3:** Rewrite `index.ts` — Entry point using new CLI framework
 
 ### Phase 2: Core library modules
-- **Task 4:** Rewrite `lib/discover.ts` — Recipe discovery from .dryai/recipes/
-- **Task 5:** Rewrite `lib/render.ts` — Template rendering (.ts functions + .nunjucks)
-- **Task 6:** Rewrite `lib/variables.ts` — Variable parsing, prompting, resolution
-- **Task 7:** Write `lib/composition.ts` — Recipe extends/children tree (pre-order DFS)
+[] - **Task 4:** Rewrite `lib/discover.ts` — Recipe discovery from .dryai/recipes/
+[] - **Task 5:** Rewrite `lib/render.ts` — Template rendering (.ts functions + .nunjucks)
+[] - **Task 6:** Rewrite `lib/variables.ts` — Variable parsing, prompting, resolution
+[] - **Task 7:** Write `lib/composition.ts` — Recipe extends/children tree (pre-order DFS)
 
 ### Phase 3: Command implementations
-- **Task 8:** Write `cmd/init.ts` — Initialize .dryai/ in current project
-- **Task 9:** Rewrite `cmd/launch.ts` — Full launch implementation
+[] - **Task 8:** Write `cmd/init.ts` — Initialize .dryai/ in current project
+[] - **Task 9:** Rewrite `cmd/launch.ts` — Full launch implementation
 - **Task 10:** Write `cmd/detect-patterns.ts` — Pattern detection command
 - **Task 11:** Write `cmd/generate-recipe.ts` — Recipe generation command
 

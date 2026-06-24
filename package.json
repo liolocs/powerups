@@ -10,7 +10,9 @@
     "upgrade": "pnpm -r update -i -L",
     "build:packages": "pnpm -r --filter='./packages/**' build",
     "build:apps": "pnpm -r --filter='./apps/**' build",
-    "knip": "knip"
+    "knip": "knip",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
     "@rcompat/test": "^0.18.0",

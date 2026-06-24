@@ -6,7 +6,7 @@ Port all functionality from `cli/` (Go/Cobra) to `r-cli/` (TypeScript/Bun), with
 - Templates use `.ts` files exporting `function(vars) => string` instead of `.tmpl` with Go template syntax
 - Nunjucks templates (`.njk`) remain supported as an alternative
 - All I/O uses `@rcompat/*` packages for runtime agnosticism
-- Local-first architecture: `.templates/` folder in the project root, no global `~/.cuisson`
+- Local-first architecture: `.dryai/` folder in the project root, no global `~/.cuisson`
 
 ## Architecture & Directory Structure
 
@@ -16,25 +16,25 @@ r-cli/
 ├── package.json                # Dependencies (@rcompat/*, nunjucks, proby)
 ├── cmd/                        # CLI command handlers (auto-discovered via cmd/index.ts)
 │   ├── index.ts               # Dynamic import discovery of all .ts files in cmd/
-│   ├── init.ts                # Initialize .templates/ in current project
+│   ├── init.ts                # Initialize .dryai/ in current project
 │   ├── launch.ts              # Launch a recipe by name
 │   ├── generate-recipe.ts     # Generate recipe from detected cluster
 │   ├── detect-patterns.ts     # Scan project for patterns, cluster files
 │   ├── recipes/               # Parent command group
-│   │   ├── list.ts            # List all available recipes in .templates/recipes/
+│   │   ├── list.ts            # List all available recipes in .dryai/recipes/
 │   │   ├── search.ts          # Search by intent keyword overlap
 │   │   └── validate.ts        # Validate recipe composition
 │   └── metrics/               # Parent command group
 │       └── summary.ts         # Show aggregated launch metrics
 ├── lib/                        # Core logic (replaces internal/* from Go CLI)
 │   ├── cli.ts                 # Commander-like API built on @rcompat/cli
-│   ├── project.ts             # Project root discovery (.templates/ walk-up)
-│   ├── discover.ts            # Recipe discovery (scan .templates/recipes/ for recipe.json)
+│   ├── project.ts             # Project root discovery (.dryai/ walk-up)
+│   ├── discover.ts            # Recipe discovery (scan .dryai/recipes/ for recipe.json)
 │   ├── render.ts              # Template rendering engine (.ts + .njk)
 │   ├── variables.ts           # Variable parsing, prompting, resolution
 │   ├── composition.ts         # Recipe extends/children tree resolution (pre-order DFS)
 │   ├── metrics.ts             # Metrics logging (JSONL) and aggregation
-│   ├── patterns.ts            # Pattern store read/write (.templates/patterns.json)
+│   ├── patterns.ts            # Pattern store read/write (.dryai/patterns.json)
 │   ├── detect.ts              # Tokenization, clustering, skeleton extraction
 │   └── search.ts              # Intent-based recipe search
 ├── utils/                      # Shared utilities (already partially exists)
@@ -46,21 +46,21 @@ r-cli/
 
 ### 1. Local-First Architecture & Project Management
 
-No more global `~/.cuisson/projects/`. Everything lives in `.templates/` relative to the project root.
+No more global `~/.cuisson/projects/`. Everything lives in `.dryai/` relative to the project root.
 
 **Project root discovery:**
-- Walk up from CWD looking for `.templates/` directory (replaces `cuisson.config.json` discovery)
-- The first `.templates/` found becomes the project root — all template reads, metrics writes, and pattern storage are relative to it
+- Walk up from CWD looking for `.dryai/` directory (replaces `cuisson.config.json` discovery)
+- The first `.dryai/` found becomes the project root — all template reads, metrics writes, and pattern storage are relative to it
 
 **`init` command:**
-- Creates `.templates/recipes/.gitkeep` (nested so both directories are created and tracked)
-- Creates `.templates/metrics.jsonl` (empty, for appending)
-- Prints confirmation: `[+] Initialized .templates/ in <path>`
+- Creates `.dryai/recipes/.gitkeep` (nested so both directories are created and tracked)
+- Creates `.dryai/metrics.jsonl` (empty, for appending)
+- Prints confirmation: `[+] Initialized .dryai/ in <path>`
 
 **Storage layout:**
 ```
 my-project/
-├── .templates/                    # ← committed with codebase (project root)
+├── .dryai/                    # ← committed with codebase (project root)
 │   ├── recipes/                   # Recipe directories live here
 │   │   ├── new-component/         # One dir per recipe
 │   │   │   ├── recipe.json        # Recipe definition
@@ -74,8 +74,8 @@ my-project/
 ```
 
 **Paths:**
-- Templates: `<project-root>/.templates/recipes/<recipe-name>/`
-- Metrics: `<project-root>/.templates/metrics.jsonl`
+- Templates: `<project-root>/.dryai/recipes/<recipe-name>/`
+- Metrics: `<project-root>/.dryai/metrics.jsonl`
 - Patterns: `<project-root>/.patterns.json`
 
 **Removed commands:** `project create/list/delete/info` — replaced by single `init`. No global project registry.
@@ -93,7 +93,7 @@ program.command("launch <recipe-name>")
   .action(async ({ recipeName, var: vars }) => { ... });
 
 program.command("init")
-  .description("Initialize .templates/ in current project")
+  .description("Initialize .dryai/ in current project")
   .action(async () => { ... });
 
 await program.parse();
@@ -168,40 +168,40 @@ Two-phase pipeline (tree-sitter refinement deferred):
 - **Phase 1 — Tokenization**: Strip comments (single-line `//` and multi-line `/* */`), replace string/number literals with `__STR__`/`__NUM__`, tokenize into keywords/identifiers/operators, generate 3-gram shingles
 - **Phase 2 — Clustering**: Compute Jaccard similarity between all file pairs, union-find grouping with configurable threshold (default 0.7), minimum cluster size (default 2)
 
-Output written to `.templates/patterns.json` with clusters containing file paths, inferred skeleton templates, and slot names.
+Output written to `.dryai/patterns.json` with clusters containing file paths, inferred skeleton templates, and slot names.
 
 ### 6. Metrics (lib/metrics.ts)
 
 Port the JSONL-based metrics logging:
 - Log per-launch: recipe name, input chars, output files (path/chars/written)
 - Aggregate per-project: launches, total input/output chars, estimated tokens saved
-- Discover projects by looking for `.templates/metrics.jsonl`
+- Discover projects by looking for `.dryai/metrics.jsonl`
 
 ## Command Mapping (Go → TypeScript)
 
 | Go CLI | TypeScript r-cli | Notes |
 |--------|-----------------|-------|
-| `project create` | **`init`** | Creates `.templates/`, no global state |
+| `project create` | **`init`** | Creates `.dryai/`, no global state |
 | `project list` | **Removed** | No global project registry |
 | `project delete` | **Removed** | No global project registry |
 | `project info` | **Removed** | No global project registry |
-| `launch <name>` | `launch <name>` | Same behavior, local `.templates/` |
-| `generate-recipe <id>` | `generate-recipe <id>` | Writes to `.templates/recipes/` by default |
-| `detect-patterns` | `detect-patterns` | Writes to `.templates/patterns.json` |
-| `recipes list` | `recipes list` | Scans `.templates/recipes/` |
+| `launch <name>` | `launch <name>` | Same behavior, local `.dryai/` |
+| `generate-recipe <id>` | `generate-recipe <id>` | Writes to `.dryai/recipes/` by default |
+| `detect-patterns` | `detect-patterns` | Writes to `.dryai/patterns.json` |
+| `recipes list` | `recipes list` | Scans `.dryai/recipes/` |
 | `recipes search --intent "..."` | `recipes search --intent "..."` | Same behavior |
 | `recipes validate [name]` | `recipes validate [name]` | Same behavior |
-| `metrics summary [--project]` | `metrics summary [--project]` | Reads from `.templates/metrics.jsonl` |
+| `metrics summary [--project]` | `metrics summary [--project]` | Reads from `.dryai/metrics.jsonl` |
 
 ## Final Command List
 
 | Command | File | Description |
 |---------|------|-------------|
-| `init` | `cmd/init.ts` | Create `.templates/recipes/.gitkeep` + empty metrics.jsonl |
+| `init` | `cmd/init.ts` | Create `.dryai/recipes/.gitkeep` + empty metrics.jsonl |
 | `launch <name>` | `cmd/launch.ts` | Launch recipe, resolve vars, render templates to output dir |
 | `generate-recipe <id>` | `cmd/generate-recipe.ts` | Generate recipe from detected cluster in patterns.json |
 | `detect-patterns` | `cmd/detect-patterns.ts` | Scan source files, cluster by similarity, write patterns.json |
-| `recipes list` | `cmd/recipes/list.ts` | List all recipes in `.templates/recipes/` |
+| `recipes list` | `cmd/recipes/list.ts` | List all recipes in `.dryai/recipes/` |
 | `recipes search --intent "..."` | `cmd/recipes/search.ts` | Search recipes by keyword overlap on intent |
 | `recipes validate [name]` | `cmd/recipes/validate.ts` | Validate composition (circular deps, missing vars, duplicate paths) |
 | `metrics summary [--project]` | `cmd/metrics/summary.ts` | Show aggregated launch metrics from metrics.jsonl |
@@ -209,13 +209,13 @@ Port the JSONL-based metrics logging:
 ## Internal Library Modules (lib/)
 
 - `cli.ts` — Commander-like API built on @rcompat/cli
-- `project.ts` — Project root discovery (walk up for `.templates/`)
-- `discover.ts` — Scan `.templates/recipes/` for recipe.json files
+- `project.ts` — Project root discovery (walk up for `.dryai/`)
+- `discover.ts` — Scan `.dryai/recipes/` for recipe.json files
 - `render.ts` — Template rendering (.ts functions + .nunjucks)
 - `variables.ts` — Parse --var flags, prompt for missing vars
 - `composition.ts` — Resolve extends/children tree (pre-order DFS)
 - `metrics.ts` — JSONL logging and aggregation
-- `patterns.ts` — Read/write `.templates/patterns.json`
+- `patterns.ts` — Read/write `.dryai/patterns.json`
 - `detect.ts` — Tokenization + clustering pipeline
 - `search.ts` — Intent keyword overlap scoring
 
@@ -226,7 +226,7 @@ Port the JSONL-based metrics logging:
 
 ## Output Directory for detect-patterns
 
-Auto-detected from project root (`.templates/`). The command scans the project's source directory — by default it walks up from CWD to find `.templates/`, then scans the sibling source directories (e.g., `src/`). This can be overridden with a `--output-dir` flag.
+Auto-detected from project root (`.dryai/`). The command scans the project's source directory — by default it walks up from CWD to find `.dryai/`, then scans the sibling source directories (e.g., `src/`). This can be overridden with a `--output-dir` flag.
 
 ## What's Included vs. Deferred
 

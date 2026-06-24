@@ -541,6 +541,110 @@ console.log(nodes.map(n => n.entry.recipe.name + ':' + JSON.stringify(n.variable
 ```
 ---
 
+### Task 8: Initialize `.dryai/` in Current Project (`cmd/init.ts`)
+
+**Files:**
+- Create: `r-cli/cmd/init.ts`
+
+**Description:** Initialize a local `.dryai/` directory structure in the current project. This replaces the Go `project create` command with a simpler, local-first approach — no global project registry, no config files. Just creates the directory structure needed for recipe storage and metrics.
+
+**Behavior:**
+1. Walk up from CWD to find an existing `.dryai/` directory (if one exists, print a warning and exit)
+2. Create `.dryai/recipes/.gitkeep` (nested so both `recipes/` and parent dirs are created)
+3. Create `.dryai/metrics.jsonl` (empty file for JSONL append logging)
+4. Print confirmation: `[+] Initialized .dryai/ in <absolute-path-to-dryai-dir>`
+
+**Key differences from Go `project create`:**
+- No project name auto-detection (no package.json parsing, no directory name fallback)
+- No `cuisson.config.json` file written
+- No global `~/.cuisson/projects/` registry
+- Creates `.dryai/` relative to the project root (walk-up from CWD)
+
+**Implementation:**
+
+```typescript
+// cmd/init.ts — Initialize .dryai/ in current project
+import fs from "@rcompat/fs";
+import runtime from "@rcompat/runtime";
+
+export default async function init() {
+  // Walk up from CWD to find existing .dryai/ or determine where to create it
+  const dryAIDir = await findOrCreateDryAI();
+
+  // Check if .dryai/ already exists (would mean we walked up and found one)
+  const dryAIRef = fs.ref(dryAIDir);
+  if (await dryAIRef.exists()) {
+    console.log(`[!] .dryai/ already exists at ${dryAIDir}`);
+    console.log("    If you want to reinitialize, remove it first.");
+    runtime.exit(0);
+  }
+
+  // Create .dryai/recipes/.gitkeep (nested ensures both dirs are created)
+  const gitkeepPath = `${dryAIDir}/recipes/.gitkeep`;
+  await fs.ref(gitkeepPath).write("");
+
+  // Create .dryai/metrics.jsonl (empty, for JSONL append)
+  const metricsPath = `${dryAIDir}/metrics.jsonl`;
+  await fs.ref(metricsPath).write("");
+
+  console.log(`[+] Initialized .dryai/ in ${dryAIDir}`);
+}
+
+async function findOrCreateDryAI(): Promise<string> {
+  // Start from CWD and walk up looking for existing .dryai/
+  let dir = process.cwd();
+
+  while (true) {
+    const candidate = `${dir}/.dryai`;
+
+    try {
+      // Check if .dryai already exists here
+      const stat = await fs.stat(candidate);
+      if (stat?.type === "directory") {
+        return candidate;
+      }
+    } catch {
+      // Doesn't exist, continue walking up
+    }
+
+    const parent = dir.split("/").slice(0, -1).join("/") || "/";
+    if (parent === dir) {
+      // Reached filesystem root — create .dryai/ in CWD
+      return `${process.cwd()}/.dryai`;
+    }
+    dir = parent;
+  }
+}
+```
+
+**Verification:**
+```bash
+# Test init in a fresh directory (should create .dryai/ structure)
+mkdir -p /tmp/test-init && cd /tmp/test-init
+bun run /Users/lioloc/Development/wails3/.cuisson/r-cli/index.ts init
+# Expected output: [+] Initialized .dryai/ in /tmp/test-init/.dryai
+ls -la .dryai/
+# Should show: recipes/  metrics.jsonl
+ls -la .dryai/recipes/
+# Should show: .gitkeep
+
+# Test idempotency (should warn, not fail)
+bun run /Users/lioloc/Development/wails3/.cuisson/r-cli/index.ts init
+# Expected output: [!] .dryai/ already exists at /tmp/test-init/.dryai
+```
+
+**Acceptance Criteria:**
+1. Creates `.dryai/recipes/.gitkeep` and `.dryai/metrics.jsonl` in the target directory
+2. Walks up from CWD to find existing `.dryai/` — if found, prints warning and exits cleanly (exit code 0)
+3. If no existing `.dryai/` found, creates it in the CWD (or highest ancestor before filesystem root)
+4. Prints `[+] Initialized .dryai/ in <path>` on success
+5. Uses `@rcompat/fs` for all filesystem operations
+6. Uses `@rcompat/runtime` for process exit
+7. No project name, no config file, no global state — purely local-first
+8. Works when run from any subdirectory of the project root (walk-up behavior)
+
+---
+
 ## Acceptance Criteria
 
 1. All 8 commands work: `init`, `launch <name>`, `generate-recipe <id>`, `detect-patterns`, `recipes list`, `recipes search --intent "..."`, `recipes validate [name]`, `metrics summary [--project]`

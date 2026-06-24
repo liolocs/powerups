@@ -4,7 +4,7 @@
 
 **Goal:** Port all Go CLI functionality from `cli/` to `r-cli/` (TypeScript/Bun) with local-first architecture, `.ts` template files, and `@rcompat/*` packages.
 
-**Architecture:** Replace Go/Cobra with TypeScript/Bun, replace `~/.cuisson` global state with `.templates/` local-first layout. Templates use `.ts` files exporting `function(vars) => string` instead of Go text/template syntax. All I/O uses `@rcompat/*` packages for runtime agnosticism.
+**Architecture:** Replace Go/Cobra with TypeScript/Bun, replace `~/.cuisson` global state with `.dryai/` local-first layout. Templates use `.ts` files exporting `function(vars) => string` instead of Go text/template syntax. All I/O uses `@rcompat/*` packages for runtime agnosticism.
 
 **Tech Stack:** TypeScript, Bun, `@rcompat/cli`, `@rcompat/fs`, `@rcompat/io`, `@rcompat/runtime`, nunjucks, proby
 
@@ -27,7 +27,7 @@
 - `cli/internal/` — 8 internal packages (discover, render, detect, metrics, patterns, variables, recipegen, recipesearch, validation)
 
 ### Key differences from Go:
-1. **Local-first**: `.templates/` in project root instead of `~/.cuisson/projects/<name>/`
+1. **Local-first**: `.dryai/` in project root instead of `~/.cuisson/projects/<name>/`
 2. **Simpler init**: Single `init` command replaces `project create/list/delete/info`
 3. **Template format**: `.ts` files exporting functions instead of Go text/template
 4. **CLI framework**: `@rcompat/cli` + custom commander-like API instead of Cobra
@@ -42,7 +42,7 @@ r-cli/
 ├── package.json                # Dependencies (exists, needs update)
 ├── cmd/                        # CLI command handlers
 │   ├── index.ts               # Dynamic import discovery (exists, needs update)
-│   ├── init.ts                # NEW: Initialize .templates/ in current project
+│   ├── init.ts                # NEW: Initialize .dryai/ in current project
 │   ├── launch.ts              # EXISTING stub → full implementation
 │   ├── generate-recipe.ts     # NEW: Generate recipe from detected cluster
 │   ├── detect-patterns.ts     # NEW: Scan project for patterns, cluster files
@@ -53,8 +53,8 @@ r-cli/
 │       └── validate.ts        # NEW: Validate recipe composition
 ├── lib/                        # Core logic (NEW structure)
 │   ├── cli.ts                 # NEW: Commander-like API built on @rcompat/cli
-│   ├── project.ts             # NEW: Project root discovery (.templates/ walk-up)
-│   ├── discover.ts            # NEW: Recipe discovery (scan .templates/recipes/)
+│   ├── project.ts             # NEW: Project root discovery (.dryai/ walk-up)
+│   ├── discover.ts            # NEW: Recipe discovery (scan .dryai/recipes/)
 │   ├── render.ts              # NEW: Template rendering engine (.ts + .njk)
 │   ├── variables.ts           # NEW: Variable parsing, prompting, resolution
 │   ├── composition.ts         # NEW: Recipe extends/children tree (pre-order DFS)
@@ -68,7 +68,7 @@ r-cli/
 │   └── filesystem/            # Exists, needs updates
 │       ├── createFile.ts
 │       ├── fileExists.ts
-│       ├── getProjectRoot.ts  # Needs rewrite for .templates/ walk-up
+│       ├── getProjectRoot.ts  # Needs rewrite for .dryai/ walk-up
 │       └── importFile.ts
 └── docs/                      # Design specs (already exists)
 ```
@@ -91,11 +91,11 @@ r-cli/
 
 | Command | File | Description |
 |---------|------|-------------|
-| `init` | `cmd/init.ts` | Create `.templates/recipes/.gitkeep` + empty metrics.jsonl |
+| `init` | `cmd/init.ts` | Create `.dryai/recipes/.gitkeep` + empty metrics.jsonl |
 | `launch <name>` | `cmd/launch.ts` | Launch recipe, resolve vars, render templates to output dir |
 | `generate-recipe <id>` | `cmd/generate-recipe.ts` | Generate recipe from detected cluster in patterns.json |
 | `detect-patterns` | `cmd/detect-patterns.ts` | Scan source files, cluster by similarity, write patterns.json |
-| `recipes list` | `cmd/recipes/list.ts` | List all recipes in `.templates/recipes/` |
+| `recipes list` | `cmd/recipes/list.ts` | List all recipes in `.dryai/recipes/` |
 | `recipes search --intent "..."` | `cmd/recipes/search.ts` | Search recipes by keyword overlap on intent |
 | `recipes validate [name]` | `cmd/recipes/validate.ts` | Validate composition (circular deps, missing vars, duplicate paths) |
 | `metrics summary [--project]` | `cmd/metrics/summary.ts` | Show aggregated launch metrics from metrics.jsonl |
@@ -106,17 +106,17 @@ r-cli/
 
 ### Phase 1: Foundation — CLI framework + project discovery
 - **Task 1:** Rewrite `lib/cli.ts` — Commander-like API built on @rcompat/cli
-- **Task 2:** Rewrite `lib/project.ts` — Project root discovery (.templates/ walk-up)
+- **Task 2:** Rewrite `lib/project.ts` — Project root discovery (.dryai/ walk-up)
 - **Task 3:** Rewrite `index.ts` — Entry point using new CLI framework
 
 ### Phase 2: Core library modules
-- **Task 4:** Rewrite `lib/discover.ts` — Recipe discovery from .templates/recipes/
+- **Task 4:** Rewrite `lib/discover.ts` — Recipe discovery from .dryai/recipes/
 - **Task 5:** Rewrite `lib/render.ts` — Template rendering (.ts functions + .nunjucks)
 - **Task 6:** Rewrite `lib/variables.ts` — Variable parsing, prompting, resolution
 - **Task 7:** Write `lib/composition.ts` — Recipe extends/children tree (pre-order DFS)
 
 ### Phase 3: Command implementations
-- **Task 8:** Write `cmd/init.ts` — Initialize .templates/ in current project
+- **Task 8:** Write `cmd/init.ts` — Initialize .dryai/ in current project
 - **Task 9:** Rewrite `cmd/launch.ts` — Full launch implementation
 - **Task 10:** Write `cmd/detect-patterns.ts` — Pattern detection command
 - **Task 11:** Write `cmd/generate-recipe.ts` — Recipe generation command
@@ -145,12 +145,12 @@ r-cli/
 **Files:**
 - Create: `r-cli/lib/discover.ts`
 
-**Description:** Scan `.templates/recipes/` for `recipe.json` files and return a map of recipe name to RecipeEntry. Ported from Go's `cli/internal/discover/recipe.go`.
+**Description:** Scan `.dryai/recipes/` for `recipe.json` files and return a map of recipe name to RecipeEntry. Ported from Go's `cli/internal/discover/recipe.go`.
 
 **Implementation:**
 
 ```typescript
-// lib/discover.ts — Recipe discovery (scan .templates/recipes/ for recipe.json)
+// lib/discover.ts — Recipe discovery (scan .dryai/recipes/ for recipe.json)
 import fs from "@rcompat/fs";
 
 export interface RecipeFile {
@@ -178,11 +178,11 @@ export interface RecipeEntry {
   dirPath: string; // directory containing recipe.json and template files
 }
 
-export async function discoverRecipes(templatesDir: string): Promise<Record<string, RecipeEntry>> {
+export async function discoverRecipes(dryAIDir: string): Promise<Record<string, RecipeEntry>> {
   const recipes: Record<string, RecipeEntry> = {};
 
   try {
-    const recipesDir = fs.ref(templatesDir).join("recipes");
+    const recipesDir = fs.ref(dryAIDir).join("recipes");
     if (!(await recipesDir.exists())) {
       return recipes;
     }
@@ -203,7 +203,7 @@ export async function discoverRecipes(templatesDir: string): Promise<Record<stri
       };
     }
   } catch (err) {
-    // If templates dir doesn't exist or can't be read, return empty
+    // If .dryai/ dir doesn't exist or can't be read, return empty
   }
 
   return recipes;
@@ -212,7 +212,7 @@ export async function discoverRecipes(templatesDir: string): Promise<Record<stri
 
 **Verification:**
 ```bash
-# With no .templates/ directory, should return empty object
+# With no .dryai/ directory, should return empty object
 cd r-cli && node -e "import {discoverRecipes} from './lib/discover.js'; discoverRecipes('/tmp').then(r => console.log(JSON.stringify(r)))"
 # Output: {}
 ```
@@ -799,20 +799,20 @@ cd r-cli && bun run index.ts unknown-cmd
 **Files:**
 - Create: `r-cli/lib/project.ts`
 
-**Description:** Walk up from CWD looking for `.templates/` directory. The first one found becomes the project root — all template reads, metrics writes, and pattern storage are relative to it.
+**Description:** Walk up from CWD looking for `.dryai/` directory. The first one found becomes the project root — all template reads, metrics writes, and pattern storage are relative to it.
 
 **Implementation:**
 
 ```typescript
-// lib/project.ts — Project root discovery (.templates/ walk-up)
+// lib/project.ts — Project root discovery (.dryai/ walk-up)
 import fs from "@rcompat/fs";
 
 export async function findProjectRoot(startDir?: string): Promise<string | null> {
   let dir = startDir ?? (await fs.cwd());
 
   while (true) {
-    const templatesPath = typeof dir === "string" ? `${dir}/.templates` : (dir as any).path + "/.templates";
-    const ref = fs.ref(templatesPath);
+    const dryAIPath = typeof dir === "string" ? `${dir}/.dryai` : (dir as any).path + "/.dryai";
+    const ref = fs.ref(dryAIPath);
     if (await ref.exists()) {
       return typeof dir === "string" ? dir : dir.path;
     }
@@ -825,28 +825,28 @@ export async function findProjectRoot(startDir?: string): Promise<string | null>
   return null;
 }
 
-export function templatesDir(projectRoot: string): string {
-  return `${projectRoot}/.templates`;
+export function dryAIDir(projectRoot: string): string {
+  return `${projectRoot}/.dryai/`;
 }
 
 export function recipesDir(projectRoot: string): string {
-  return `${projectRoot}/.templates/recipes`;
+  return `${projectRoot}/.dryai/recipes`;
 }
 
 export function metricsPath(projectRoot: string): string {
-  return `${projectRoot}/.templates/metrics.jsonl`;
+  return `${projectRoot}/.dryai/metrics.jsonl`;
 }
 
 export function patternsPath(projectRoot: string): string {
-  return `${projectRoot}/.templates/patterns.json`;
+  return `${projectRoot}/.dryai/patterns.json`;
 }
 ```
 
 **Verification:**
 ```bash
-# Test from a directory with .templates/ parent
+# Test from a directory with .dryai/ parent
 cd r-cli && node -e "import project from './lib/project.js'; project.findProjectRoot().then(r => console.log('root:', r))"
-# Should resolve to the project root containing .templates/
+# Should resolve to the project root containing .dryai/
 ```
 
 ---
@@ -925,11 +925,11 @@ cd r-cli && bun run index.ts launch --help
 ## Acceptance Criteria
 
 1. All 8 commands work: `init`, `launch <name>`, `generate-recipe <id>`, `detect-patterns`, `recipes list`, `recipes search --intent "..."`, `recipes validate [name]`, `metrics summary [--project]`
-2. Project root discovery walks up from CWD looking for `.templates/` directory
-3. Templates use `.ts` files exporting `function(vars) => string` as default format
+2. Project root discovery walks up from CWD looking for `.dryai/` directory
+3. Templates in recipes use `.ts` files exporting `function(vars) => string` as default format
 4. Nunjucks `.njk` templates remain supported as alternative
-5. Metrics logged to `.templates/metrics.jsonl` (local-first, no global state)
-6. Patterns written to `.templates/patterns.json` (local-first, no global state)
+5. Metrics logged to `.dryai/metrics.jsonl` (local-first, no global state)
+6. Patterns written to `.dryai/patterns.json` (local-first, no global state)
 7. Recipe composition resolves extends/children in pre-order DFS with variable mapping
 8. Pattern detection: tokenization (comment stripping, literal replacement, 3-gram shingles) + clustering (Jaccard similarity, union-find)
 9. No tree-sitter WASM dependency (deferred) — skeleton extraction uses filename-based fallback only

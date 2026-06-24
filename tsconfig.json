@@ -1,0 +1,15 @@
+{
+  "extends": "apekit/tsconfig",
+  "compilerOptions": {
+    "customConditions": [
+      "@dryai/source"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "${configDir}/src",
+    "${configDir}/scripts"
+  ]
+}

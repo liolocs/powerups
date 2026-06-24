@@ -1,5 +1,5 @@
 import fs from "@rcompat/fs";
-import type { CommandDef } from "../lib/cli/cli.js";
+import type { CommandDef } from "../lib/cli/types.js";
 
 const currentDir = import.meta.dirname;
 const commandList = await fs.ref(currentDir).files({ filter: file => !file.name.includes("index.ts")})

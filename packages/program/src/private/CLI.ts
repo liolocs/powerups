@@ -1,4 +1,3 @@
-import type { CommandType } from "#Command";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
@@ -9,7 +8,7 @@ export default class CLI {
   name: string;
   description: string;
   version: string;
-  commands: Record<string, CommandType>;
+  commands: Record<string, Command<any>>;
 
   constructor({
     name,
@@ -20,7 +19,7 @@ export default class CLI {
     name: string;
     description: string;
     version: string;
-    commands: CommandType[];
+    commands: Command<any>[];
   }) {
     this.name = name;
     this.description = description;
@@ -28,7 +27,7 @@ export default class CLI {
     this.commands = commands.reduce((acc, command) => {
       acc[command.name] = command;
       return acc;
-    }, {} as Record<string, CommandType>);
+    }, {} as Record<string, Command<any>>);
   }
 
   run(args?: string[]): void {
@@ -51,16 +50,6 @@ export default class CLI {
     command.run({subcommands: commands.slice(1), flags});
   }
 
-  showSubCommandHelp(command: CommandType): void {
-    cli.print(`Usage: ${this.name} ${command.name} <subcommand>\n\n`);
-    cli.print(`${is.defined(command.description)
-      ? command.description : ""}
-    \n`);
-    cli.print("Available Subcommands:\n");
-
-    this._printOptions(command.subcommands!);
-  }
-
   showHelp(): void {
     cli.print("Welcome to dryai!\n\n");
     cli.print(`Usage: ${this.name} <command>\n\n`);
@@ -71,7 +60,7 @@ export default class CLI {
     this._printOptions(commands);
   }
 
-  private _printOptions(commands: CommandType[]): void {
+  private _printOptions(commands: Command<any>[]): void {
     for (const command of commands) {
       cli.print(`  ${command.name.padEnd(20)} ${command.description}\n`);
       cli.print("\n");

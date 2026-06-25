@@ -36,6 +36,9 @@ importers:
 
   packages/program:
     dependencies:
+      '@rcompat/array':
+        specifier: ^0.19.0
+        version: 0.19.0
       '@rcompat/cli':
         specifier: ^0.25.0
         version: 0.25.0
@@ -360,6 +363,9 @@ packages:
     resolution: {integrity: sha512-H7BCt/VnS9hnmMp42eGhZ99izSCRvlnWwy/N71K1/J8QoExwY4262Z8QiEkMDtduRJrztayDxETTckmUuAVL9Q==}
     cpu: [x64]
     os: [win32]
+
+  '@rcompat/array@0.19.0':
+    resolution: {integrity: sha512-p8CUqB5GMI1YvOKVCdPtXaJhhW2UWZdCbnREde6Pa1AqoVTRwBJbTmN7HHyzv+XG4eXjUaQiuELN5ZRgMjsF0A==}
 
   '@rcompat/assert@0.13.0':
     resolution: {integrity: sha512-uoKwxXwiEyx23bUW5ZqtXtL45+XGzr2UFbffTvbykbty9HCe4+LhiVvMu8v0j1smoEjjCOosTa2/NzD71T7DaQ==}
@@ -1116,6 +1122,10 @@ snapshots:
 
   '@oxc-resolver/binding-win32-x64-msvc@11.21.3':
     optional: true
+
+  '@rcompat/array@0.19.0':
+    dependencies:
+      '@rcompat/assert': 0.14.0
 
   '@rcompat/assert@0.13.0':
     dependencies:

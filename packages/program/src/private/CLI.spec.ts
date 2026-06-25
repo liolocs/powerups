@@ -1,5 +1,5 @@
 import test from "@rcompat/test";
-import {default as rcli} from "@rcompat/cli";
+import { default as rcli } from "@rcompat/cli";
 import CLI from "#CLI";
 import Command from "#Command";
 
@@ -49,7 +49,7 @@ test.case("CLI program returns help message with no args", async assert => {
 
   for (const call of rcli.print.calls) {
     for (const message of containedMessages) {
-      if(call[0].includes(message) === true) {
+      if (call[0].includes(message) === true) {
         foundMessages.push(message);
       }
     }
@@ -112,7 +112,7 @@ test.case("CLI program returns subcommands", async assert => {
 
   for (const call of rcli.print.calls) {
     for (const message of containedMessages) {
-      if(call[0].includes(message) === true) {
+      if (call[0].includes(message) === true) {
         foundMessages.push(message);
       }
     }

@@ -1,7 +1,7 @@
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
-import Command from "#Command";
+import type Command from "#Command";
 import parseArgs from "#parseArgs";
 
 export default class CLI {
@@ -33,47 +33,34 @@ export default class CLI {
   run(args?: string[]): void {
     const { flags, commands } = parseArgs(args ?? runtime.args);
 
-    if (is.defined(commands) === false) {
+    if (flags.some(f => f.flag === "--help" || f.flag === "-h")) {
       this.showHelp();
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if(this.commands[commands[0]] === undefined) {
-      console.log("invalid command");
+    if (!is.defined(commands) || commands.length === 0) {
       this.showHelp();
       return;
     }
 
-    const command = new Command(this.commands[commands[0]]!);
+    const command = this.commands[commands[0]];
 
-    command.run({subcommands: commands.slice(1), flags});
+    if (is.defined(command) === false) {
+      cli.print(`Unknown command: ${commands[0]}\n\n`);
+      this.showHelp();
+      return;
+    }
+
+    command.run({ subcommands: commands.slice(1), flags });
   }
 
   showHelp(): void {
-    cli.print("Welcome to dryai!\n\n");
-    cli.print(`Usage: ${this.name} <command>\n\n`);
-    cli.print("Available Commands:\n");
+    cli.print(`${this.name} — ${this.description}\n\n`);
+    cli.print(`Usage: ${this.name} <command> [subcommand] [flags]\n\n`);
+    cli.print("Commands:\n");
 
-    const commands = Object.values(this.commands);
-
-    this._printOptions(commands);
-  }
-
-  private _printOptions(commands: Command<any>[]): void {
-    for (const command of commands) {
-      cli.print(`  ${command.name.padEnd(20)} ${command.description}\n`);
-      cli.print("\n");
-      cli.print("Options:\n");
-
-      for (const flag of command.flags) {
-        const short = is.defined(flag.short) ? `-${flag.short}` : "";
-        const long = is.defined(flag.long) ? `--${flag.long}` : "";
-        const shortAndLong = [short, long].filter(Boolean).join(", ");
-
-        cli.print(`  ${shortAndLong.padEnd(20)} ${flag.description}\n`);
-        cli.print("\n");
-      }
+    for (const command of Object.values(this.commands)) {
+      cli.print(`\n${command.buildHelp()}\n`);
     }
   }
 }

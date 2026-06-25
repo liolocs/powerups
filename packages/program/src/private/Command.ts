@@ -58,8 +58,8 @@ export default class Command<T extends readonly Flag[]> {
   }): void {
     // --help short-circuits everything, always
     if (args?.flags.some(f => f.flag === "--help" || f.flag === "-h")
-        === true) {
-      console.log(this._buildHelp());
+      === true) {
+      console.log(this.buildHelp());
       return;
     }
 
@@ -83,10 +83,10 @@ export default class Command<T extends readonly Flag[]> {
 
     // No args at all — run bare action
     if (!is.defined(args)) {
-      return this.action();
+      // @ts-expect-error — flags are optional
+      return this.action({ flags: {}, subcommands: [] });
     }
 
-    // Validate required flags
     if (this._hasMissingRequiredFlags(args.flags)) {
       throw command_errors.missing_required_flags(this.name);
     }
@@ -98,39 +98,40 @@ export default class Command<T extends readonly Flag[]> {
     return this.action({ flags: matchedFlags, subcommands });
   }
 
-  private _buildHelp(): string {
-  const lines: string[] = [
-    `${this.name} — ${this.description}`,
-    "",
-  ];
+  public buildHelp(): string {
+    const lines: string[] = [
+      `${this.name} — ${this.description}`,
+      "",
+    ];
 
-  if (this.flags.length > 0) {
-    lines.push("Flags:");
+    if (this.flags.length > 0) {
+      lines.push("Flags:");
 
-    for (const flag of this.flags) {
-      const required = flag.required === true ? " (required)" : "";
-      const short = is.defined(flag.short) ? `-${flag.short}` : "";
-      const long = is.defined(flag.long) ? `--${flag.long}` : "";
-      const shortAndLong = [short, long].filter(Boolean).join(", ");
+      for (const flag of this.flags) {
+        const required = flag.required === true ? " (required)" : "";
+        const short = is.defined(flag.short) ? `-${flag.short}` : "";
+        const long = is.defined(flag.long) ? `--${flag.long}` : "";
+        const shortAndLong = [short, long].filter(Boolean).join(", ");
+        const description = flag.description + required;
 
-      lines.push(`  ${shortAndLong.padEnd(20)} ${flag.description}${required}`);
-      lines.push("\n");
+        lines.push(`  ${shortAndLong.padEnd(20)} ${description}`);
+        lines.push("\n");
+      }
+      lines.push("");
     }
-    lines.push("");
-  }
 
-  if (this.subcommands.size > 0) {
-    lines.push("Subcommands:");
-    for (const [name, sub] of this.subcommands) {
-      lines.push(`  ${name}  ${sub.description}`);
+    if (this.subcommands.size > 0) {
+      lines.push("Subcommands:");
+      for (const [name, sub] of this.subcommands) {
+        lines.push(`  ${name}  ${sub.description}`);
+      }
+      // lines.push("");
     }
-    lines.push("");
+
+    lines.push(`  ${"--h, -help".padEnd(20)} Show this help message`);
+
+    return lines.join("\n");
   }
-
-  lines.push("  --help, -h  Show this help message");
-
-  return lines.join("\n");
-}
 
   private _getMatchedFlags({
     passedFlags,

@@ -3,7 +3,7 @@ export default function parseArgs(args: string[]) {
   return {
     flags: flags.map(flag => {
       const [name, value] = flag.split("=");
-      return { name, value };
+      return { flag: name, value };
     }),
     commands: args.filter(arg => !arg.startsWith("-")),
   };

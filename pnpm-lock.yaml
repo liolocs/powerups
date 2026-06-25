@@ -42,12 +42,18 @@ importers:
       '@rcompat/cli':
         specifier: ^0.25.0
         version: 0.25.0
+      '@rcompat/error':
+        specifier: ^0.9.0
+        version: 0.9.0
       '@rcompat/is':
         specifier: ^0.12.0
         version: 0.12.0
       '@rcompat/runtime':
         specifier: ^0.17.0
         version: 0.17.0
+      pema:
+        specifier: ^0.8.2
+        version: 0.8.2
 
 packages:
 
@@ -373,6 +379,9 @@ packages:
   '@rcompat/assert@0.14.0':
     resolution: {integrity: sha512-ipicm2XS9VrnMy3gBghoLSiSrhM1XQmgEWQM/90XDKisdS7rPf0/tUWd61TkJ7/QP/4ADAMFcSmbJ/miCGf2qw==}
 
+  '@rcompat/cli@0.24.0':
+    resolution: {integrity: sha512-3rAof5S+guPWMUWVEXBlvw9pC9zVnk9SXkjhywLvxSo4UP5xTlCJAyBuafyJAjS2bcLXflq3QdagwXZW5IPJtw==}
+
   '@rcompat/cli@0.25.0':
     resolution: {integrity: sha512-jDbkz/0ZfJNKRH78E6MsTM5lKTMyljXVSVPmg7pGsWmAsu/yKzrZvvaPo01YVOr6mAQ3jIfIWBp2y9fNWBYjIg==}
 
@@ -402,6 +411,9 @@ packages:
 
   '@rcompat/fs@0.35.1':
     resolution: {integrity: sha512-etthpNx63PJVVghCxRpfyhrCaAGyjgQxqNjE+Kdq3YW2ZUmbgbBMzx1rTZ32xV8uh4NvqAa+Yu3ZS7iGEArTpg==}
+
+  '@rcompat/io@0.10.1':
+    resolution: {integrity: sha512-QQUnVaw9ShXRp4BO99Og7YYzHzYZYbjnUw/UVdJwWOlXOJETdAlEQy12PHXOY1dcdj3tATiVAjBwjxdW7rEBcA==}
 
   '@rcompat/io@0.11.0':
     resolution: {integrity: sha512-KgrHH6aR61FnG+PywmApTnEt8CC5r6yD1ZXL4WM+geRb1Azo7ckG/Cyu1y/xDT031UUPhKQNz0tC7eg0OmCIxA==}
@@ -794,6 +806,9 @@ packages:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
 
+  pema@0.8.2:
+    resolution: {integrity: sha512-d/bqzXBQ7iTsqcgm0nnxQW8n+XI5fs8+mSJKwlZIFVrX4D1kLtDHxLzcyuAUu+Sf8Z10fbU6BcVeIiHO6TbJ2w==}
+
   picomatch@4.0.4:
     resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
     engines: {node: '>=12'}
@@ -1139,6 +1154,12 @@ snapshots:
       '@rcompat/is': 0.12.0
       '@rcompat/type': 0.18.0
 
+  '@rcompat/cli@0.24.0':
+    dependencies:
+      '@rcompat/fs': 0.33.2
+      '@rcompat/io': 0.10.1
+      '@rcompat/is': 0.11.0
+
   '@rcompat/cli@0.25.0':
     dependencies:
       '@rcompat/fs': 0.35.1
@@ -1194,6 +1215,10 @@ snapshots:
       '@rcompat/error': 0.9.0
       '@rcompat/is': 0.12.0
       '@rcompat/symbol': 0.3.0
+
+  '@rcompat/io@0.10.1':
+    dependencies:
+      '@rcompat/assert': 0.13.0
 
   '@rcompat/io@0.11.0':
     dependencies:
@@ -1666,6 +1691,14 @@ snapshots:
   path-exists@4.0.0: {}
 
   path-key@3.1.1: {}
+
+  pema@0.8.2:
+    dependencies:
+      '@rcompat/assert': 0.13.0
+      '@rcompat/cli': 0.24.0
+      '@rcompat/error': 0.8.0
+      '@rcompat/is': 0.11.0
+      '@rcompat/symbol': 0.2.0
 
   picomatch@4.0.4: {}
 

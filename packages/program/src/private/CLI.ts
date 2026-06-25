@@ -3,6 +3,7 @@ import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
 import Command from "#Command";
+import parseArgs from "#parseArgs";
 
 export default class CLI {
   name: string;
@@ -31,27 +32,23 @@ export default class CLI {
   }
 
   run(args?: string[]): void {
-    const [commandName, ...restArgs] = args ?? runtime.args;
+    const { flags, commands } = parseArgs(args ?? runtime.args);
 
-    if (is.defined(commandName) === false) {
+    if (is.defined(commands) === false) {
       this.showHelp();
       return;
     }
 
-    const command = new Command(this.commands[commandName]);
-
-    if (restArgs.length === 0) {
-      cli.print(
-        cli.bg.red(cli.fg.white(" ERROR ")),
-        "Missing required arguments for the ",
-        `${cli.bg.yellow(" "+commandName+" ")} command.\n`,
-      );
-      cli.print("\n");
-
-      this.showSubCommandHelp(command);
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if(this.commands[commands[0]] === undefined) {
+      console.log("invalid command");
+      this.showHelp();
+      return;
     }
 
-    command.run(restArgs);
+    const command = new Command(this.commands[commands[0]]!);
+
+    command.run({subcommands: commands.slice(1), flags});
   }
 
   showSubCommandHelp(command: CommandType): void {

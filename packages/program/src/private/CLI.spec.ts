@@ -57,3 +57,66 @@ test.case("CLI program returns help message with no args", async assert => {
 
   assert(foundMessages.length).equals(containedMessages.length);
 });
+
+test.case("CLI program returns subcommands", async assert => {
+  const createFlag = {
+    long: "name",
+    short: "n",
+    description: "Project name",
+  };
+
+  const projectSubCommand = new Command({
+    name: "project",
+    description: "Create a new project",
+    flags: [createFlag],
+    subcommands: [],
+    action: () => {
+      return "works";
+    },
+  });
+
+  const createCommand = new Command({
+    name: "create",
+    description: "Create a new project",
+    flags: [],
+    subcommands: [projectSubCommand],
+    action: () => {
+      return "works";
+    },
+  });
+
+  const program = new CLI({
+    name: "dryai",
+    description: "test description",
+    version: "1.0.0",
+    commands: [createCommand],
+  });
+
+  rcli.print = test.spy(rcli.print);
+
+  program.run(["create"]);
+
+  const containedMessages = [
+    "ERROR",
+    "Missing required arguments for the  create  command",
+    "Usage: dryai create <subcommand>",
+    "Available Subcommands:",
+    "create",
+    "Create a new project",
+    "Options:",
+    "-n, --name",
+    "Project name",
+  ];
+
+  const foundMessages = [];
+
+  for (const call of rcli.print.calls) {
+    for (const message of containedMessages) {
+      if(call[0].includes(message) === true) {
+        foundMessages.push(message);
+      }
+    }
+  }
+
+  assert(foundMessages.length).equals(containedMessages.length);
+});

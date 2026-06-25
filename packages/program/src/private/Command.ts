@@ -9,7 +9,7 @@ export interface CommandType {
   description: string;
   flags: Flag[];
   subcommands: CommandType[];
-  action: (flags: Record<string, unknown>) => void;
+  action: (flags: Flag[], args?: string[]) => void;
 }
 
 export default class Command {
@@ -17,7 +17,7 @@ export default class Command {
   description: string;
   flags: Flag[];
   subcommands: CommandType[];
-  action: (flags: Record<string, unknown>) => void;
+  action: CommandType["action"];
 
   constructor({
     name,
@@ -30,7 +30,7 @@ export default class Command {
     description: string;
     flags: Flag[];
     subcommands: CommandType[];
-    action: (flags: Record<string, unknown>) => void;
+    action: CommandType["action"];
   }) {
     this.name = name;
     this.description = description;
@@ -39,7 +39,7 @@ export default class Command {
     this.action = action;
   }
 
-  run(): void {
-    return this.action({});
+  run(args?: string[]): void {
+    return this.action(this.flags, args);
   }
 }

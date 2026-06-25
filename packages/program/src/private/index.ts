@@ -1,5 +1,3 @@
-function program() {
-  console.log("Hello world");
-}
+import CLI from "#CLI";
 
-export default program;
+export default CLI;

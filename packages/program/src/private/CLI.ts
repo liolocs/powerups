@@ -2,12 +2,13 @@ import type { CommandType } from "#Command";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
+import Command from "#Command";
 
 export default class CLI {
   name: string;
   description: string;
   version: string;
-  commands: CommandType[];
+  commands: Record<string, CommandType>;
 
   constructor({
     name,
@@ -23,20 +24,44 @@ export default class CLI {
     this.name = name;
     this.description = description;
     this.version = version;
-    this.commands = commands;
+    this.commands = commands.reduce((acc, command) => {
+      acc[command.name] = command;
+      return acc;
+    }, {} as Record<string, CommandType>);
   }
 
   run(args?: string[]): void {
-    const argv = args ?? runtime.args;
-    const flags = runtime.flags;
+    const [commandName, ...restArgs] = args ?? runtime.args;
 
-    console.log({ argv });
-    console.log({ flags });
-
-    if (argv.length === 0) {
+    if (is.defined(commandName) === false) {
       this.showHelp();
       return;
     }
+
+    const command = new Command(this.commands[commandName]);
+
+    if (restArgs.length === 0) {
+      cli.print(
+        cli.bg.red(cli.fg.white(" ERROR ")),
+        "Missing required arguments for the ",
+        `${cli.bg.yellow(" "+commandName+" ")} command.\n`,
+      );
+      cli.print("\n");
+
+      this.showSubCommandHelp(command);
+    }
+
+    command.run(restArgs);
+  }
+
+  showSubCommandHelp(command: CommandType): void {
+    cli.print(`Usage: ${this.name} ${command.name} <subcommand>\n\n`);
+    cli.print(`${is.defined(command.description)
+      ? command.description : ""}
+    \n`);
+    cli.print("Available Subcommands:\n");
+
+    this._printOptions(command.subcommands!);
   }
 
   showHelp(): void {
@@ -44,7 +69,13 @@ export default class CLI {
     cli.print(`Usage: ${this.name} <command>\n\n`);
     cli.print("Available Commands:\n");
 
-    for (const command of this.commands) {
+    const commands = Object.values(this.commands);
+
+    this._printOptions(commands);
+  }
+
+  private _printOptions(commands: CommandType[]): void {
+    for (const command of commands) {
       cli.print(`  ${command.name.padEnd(20)} ${command.description}\n`);
       cli.print("\n");
       cli.print("Options:\n");

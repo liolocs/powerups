@@ -1,3 +1,4 @@
+import { type Command } from "@dryai/program";
 import fs, { type FileInfo } from "@rcompat/fs";
 
 const currentDir = import.meta.dirname;
@@ -7,10 +8,10 @@ const commandList = await fs.ref(currentDir)
       file.name.includes("index.ts") === false,
   });
 
-const commands: [] = [];
+const commands: Command<any>[] = [];
 
 for (const command of commandList) {
-  const mod = await command.import("default");
+  const mod: Command<any> = await command.import("default");
 
   commands.push(mod);
 }

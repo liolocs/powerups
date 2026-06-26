@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import CLI from "@dryai/program";
-import { type TemplateError } from "@rcompat/error"
+import { type TemplateError } from "@rcompat/error";
 import commands from "./commands/index.js";
 
 const program = new CLI({

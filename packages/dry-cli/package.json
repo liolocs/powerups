@@ -6,7 +6,7 @@
   "license": "MIT",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "build": "npm run clean && tsgo",
+    "build": "npm run clean && tsgo && cp src/app.tsconfig.json lib",
     "clean": "rm -rf ./lib",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

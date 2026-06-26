@@ -1,5 +1,5 @@
 import Command from "#Command";
-import command_errors, { CommandErrorCode } from "#errors/CommandErrors";
+import { CommandErrorCode } from "#errors/CommandErrors";
 import test from "@rcompat/test";
 
 test.case("Command actions with no flags work", assert => {

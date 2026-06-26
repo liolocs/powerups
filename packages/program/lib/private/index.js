@@ -1,5 +1,4 @@
 import CLI from "#CLI";
-import Command from "#Command";
-export { Command };
+export { default as Command } from "#Command";
 export default CLI;
 //# sourceMappingURL=index.js.map

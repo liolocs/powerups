@@ -1,0 +1,1 @@
+{"version":3,"file":"CommandErrors.d.ts","sourceRoot":"","sources":["../../../src/private/errors/CommandErrors.ts"],"names":[],"mappings":"AAKA,QAAA,MAAM,cAAc;mCACa,MAAM;+BAIV,MAAM,UAAU,MAAM;wCAIb,MAAM;CAI1C,CAAC;AAEH,MAAM,MAAM,gBAAgB,GAAG,MAAM,OAAO,cAAc,CAAC;AAE3D,eAAO,MAAM,gBAAgB,EAExB,GAAG,CAAC,IAAI,gBAAgB,GAAG,CAAC,GAAE,CAAC;eAErB,cAAc"}

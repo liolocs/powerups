@@ -117,11 +117,13 @@ export default class Command<T extends readonly Flag[]> {
         lines.push(`  ${shortAndLong.padEnd(20)} ${description}`);
         lines.push("\n");
       }
+
       lines.push("");
     }
 
     if (this.subcommands.size > 0) {
       lines.push("Subcommands:");
+
       for (const [name, sub] of this.subcommands) {
         lines.push(`  ${name}  ${sub.description}`);
       }

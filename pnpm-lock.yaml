@@ -34,6 +34,21 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/dry-cli:
+    dependencies:
+      '@dryai/program':
+        specifier: workspace:^
+        version: link:../program
+      '@rcompat/cli':
+        specifier: ^0.25.0
+        version: 0.25.0
+      '@rcompat/fs':
+        specifier: ^0.35.1
+        version: 0.35.1
+      '@rcompat/runtime':
+        specifier: ^0.17.0
+        version: 0.17.0
+
   packages/program:
     dependencies:
       '@rcompat/array':

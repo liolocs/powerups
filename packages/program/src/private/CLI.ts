@@ -30,7 +30,7 @@ export default class CLI {
     }, {} as Record<string, Command<any>>);
   }
 
-  run(args?: string[]): void {
+  async run(args?: string[]): Promise<void> {
     const { flags, commands } = parseArgs(args ?? runtime.args);
 
     if (flags.some(f => f.flag === "--help" || f.flag === "-h")) {
@@ -51,7 +51,7 @@ export default class CLI {
       return;
     }
 
-    command.run({ subcommands: commands.slice(1), flags });
+    await command.run({ subcommands: commands.slice(1), flags });
   }
 
   showHelp(): void {

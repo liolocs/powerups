@@ -15,7 +15,7 @@ export default class Command {
         this.requiresSubcommand = requiresSubcommand ?? false;
         this.action = action;
     }
-    run(args) {
+    async run(args) {
         // --help short-circuits everything, always
         if (args?.flags.some(f => f.flag === "--help" || f.flag === "-h")
             === true) {
@@ -47,7 +47,7 @@ export default class Command {
         const passedFlags = is.defined(args.flags) ? args.flags : [];
         const matchedFlags = this._getMatchedFlags({ passedFlags });
         const subcommands = is.defined(args.subcommands) ? args.subcommands : [];
-        return this.action({ flags: matchedFlags, subcommands });
+        return await this.action({ flags: matchedFlags, subcommands });
     }
     buildHelp() {
         const lines = [
@@ -72,7 +72,6 @@ export default class Command {
             for (const [name, sub] of this.subcommands) {
                 lines.push(`  ${name}  ${sub.description}`);
             }
-            // lines.push("");
         }
         lines.push(`  ${"--h, -help".padEnd(20)} Show this help message`);
         return lines.join("\n");

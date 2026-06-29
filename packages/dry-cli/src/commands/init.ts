@@ -1,7 +1,8 @@
 import fs from "@rcompat/fs";
+import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import {Command} from "@dryai/program";
-import init_errors from "#errors/initErrors";
+import init_errors from "../private/errors/initErrors.js";
 
 const init = new Command({
   name: "init",
@@ -17,9 +18,9 @@ const init = new Command({
       throw init_errors.dry_folder_exists();
     }
 
-  // look for the .dry folder
-  // if it exists, abort
-  // create the .dry folder if missing
+    await fs.create(dryFolder);
+
+    cli.print("Initialized dryai project");
   },
 });
 

@@ -16,7 +16,7 @@ export default class CLI {
             return acc;
         }, {});
     }
-    run(args) {
+    async run(args) {
         const { flags, commands } = parseArgs(args ?? runtime.args);
         if (flags.some(f => f.flag === "--help" || f.flag === "-h")) {
             this.showHelp();
@@ -32,7 +32,7 @@ export default class CLI {
             this.showHelp();
             return;
         }
-        command.run({ subcommands: commands.slice(1), flags });
+        await command.run({ subcommands: commands.slice(1), flags });
     }
     showHelp() {
         cli.print(`${this.name} — ${this.description}\n\n`);

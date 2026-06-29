@@ -11,7 +11,7 @@ const program = new CLI({
 });
 
 try {
-  program.run();
+  await program.run();
 } catch (err) {
   console.error((err as TemplateError).message);
 }

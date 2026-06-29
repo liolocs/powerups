@@ -18,8 +18,10 @@ type FlagRecord<T extends readonly Flag[]> = {
 };
 
 type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never
-  ? (props?: { flags: FlagRecord<T>; subcommands?: string[] }) => void
-  : (props: { flags: FlagRecord<T>; subcommands?: string[] }) => void;
+  ? (props?: { flags: FlagRecord<T>; subcommands?: string[] }) =>
+      any | Promise<any>
+  : (props: { flags: FlagRecord<T>; subcommands?: string[] }) =>
+      any | Promise<any>;
 
 export default class Command<T extends readonly Flag[]> {
   name: string;
@@ -52,10 +54,10 @@ export default class Command<T extends readonly Flag[]> {
     this.action = action;
   }
 
-  run(args?: {
+  async run(args?: {
     subcommands: string[];
     flags: { flag: string; value: string }[];
-  }): void {
+  }): Promise<void> {
     // --help short-circuits everything, always
     if (args?.flags.some(f => f.flag === "--help" || f.flag === "-h")
       === true) {
@@ -95,7 +97,7 @@ export default class Command<T extends readonly Flag[]> {
     const matchedFlags = this._getMatchedFlags({ passedFlags });
     const subcommands = is.defined(args.subcommands) ? args.subcommands : [];
 
-    return this.action({ flags: matchedFlags, subcommands });
+    return await this.action({ flags: matchedFlags, subcommands });
   }
 
   public buildHelp(): string {
@@ -127,7 +129,6 @@ export default class Command<T extends readonly Flag[]> {
       for (const [name, sub] of this.subcommands) {
         lines.push(`  ${name}  ${sub.description}`);
       }
-      // lines.push("");
     }
 
     lines.push(`  ${"--h, -help".padEnd(20)} Show this help message`);

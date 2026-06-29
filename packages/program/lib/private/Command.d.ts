@@ -12,10 +12,10 @@ type FlagRecord<T extends readonly Flag[]> = {
 type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never ? (props?: {
     flags: FlagRecord<T>;
     subcommands?: string[];
-}) => void : (props: {
+}) => any | Promise<any> : (props: {
     flags: FlagRecord<T>;
     subcommands?: string[];
-}) => void;
+}) => any | Promise<any>;
 export default class Command<T extends readonly Flag[]> {
     name: string;
     description: string;
@@ -37,7 +37,7 @@ export default class Command<T extends readonly Flag[]> {
             flag: string;
             value: string;
         }[];
-    }): void;
+    }): Promise<void>;
     buildHelp(): string;
     private _getMatchedFlags;
     private _hasMissingRequiredFlags;

@@ -2,7 +2,7 @@ import Command from "#Command";
 import { CommandErrorCode } from "#errors/CommandErrors";
 import test from "@rcompat/test";
 
-test.case("Command actions with no flags work", assert => {
+test.case("Command actions with no flags work", async assert => {
   const command = new Command({
     name: "test",
     description: "test description",
@@ -13,10 +13,10 @@ test.case("Command actions with no flags work", assert => {
     },
   });
 
-  assert(command.run()).equals("works");
+  assert(await command.run()).equals("works");
 });
 
-test.case("Command actions with no required flags work", assert => {
+test.case("Command actions with no required flags work", async assert => {
   const flag = {
     name: "name",
     long: "name",
@@ -34,10 +34,10 @@ test.case("Command actions with no required flags work", assert => {
     },
   });
 
-  assert(command.run()).equals("works");
+  assert(await command.run()).equals("works");
 });
 
-test.case("Command actions with missing required flags fail", assert => {
+test.case("Command actions with missing required flags fail", async assert => {
   const flag = {
     name: "name",
     long: "name",
@@ -55,15 +55,15 @@ test.case("Command actions with missing required flags fail", assert => {
     },
   });
 
-  assert(() =>
-    command.run({
+  assert(async () =>
+    await command.run({
       subcommands: [],
       flags: [],
     }))
     .throws(CommandErrorCode.missing_required_flags);
 });
 
-test.case("Command actions with required flags succeed", assert => {
+test.case("Command actions with required flags succeed", async assert => {
   const flag = {
     name: "name",
     long: "name",
@@ -81,15 +81,16 @@ test.case("Command actions with required flags succeed", assert => {
     },
   });
 
-  assert(() =>
-    command.run({
+  assert(async () =>
+    await command.run({
       subcommands: [],
       flags: [{ flag: "-n", value: "John" }],
     }))
     .tries();
 });
 
-test.case("Command actions with subcommands with missing subcommands fail", assert => {
+test.case("Command actions with subcommands with missing subcommands fail",
+  async assert => {
   const create = new Command({
     name: "create",
     description: "create a project",
@@ -107,15 +108,16 @@ test.case("Command actions with subcommands with missing subcommands fail", asse
     action: () => "project",
   });
 
-  assert(() =>
-    command.run({
+    assert(async () =>
+      await command.run({
       subcommands: [],
       flags: [],
     }))
     .throws(CommandErrorCode.missing_required_subcommand);
 });
 
-test.case("Command actions with subcommands with invalid subcommand fail", assert => {
+test.case("Command actions with subcommands with invalid subcommand fail",
+  async assert => {
   const create = new Command({
     name: "create",
     description: "create a project",
@@ -132,8 +134,8 @@ test.case("Command actions with subcommands with invalid subcommand fail", asser
     action: () => "project",
   });
 
-  assert(() =>
-    command.run({
+    assert(async () =>
+      await command.run({
       subcommands: ["destroy"],
       flags: [],
     }))
@@ -141,7 +143,7 @@ test.case("Command actions with subcommands with invalid subcommand fail", asser
 });
 
 test.case("Command actions with subcommands 2 nested subcommands succeed",
-  assert => {
+  async assert => {
     const flag = {
       name: "name",
       long: "name",
@@ -167,8 +169,8 @@ test.case("Command actions with subcommands 2 nested subcommands succeed",
       action: () => "project",
     });
 
-    assert(() =>
-      project.run({
+    assert(async () =>
+      await project.run({
         subcommands: ["create"],
         flags: [{ flag: "-n", value: "newProject" }],
       }))

@@ -1,7 +1,5 @@
 import fs from "@rcompat/fs";
 const currentDir = import.meta.dirname;
-console.log({ currentDir });
-// const parentDir = currentDir.split("/").slice(0, -1).join("/");
 const parentDir = fs.ref(currentDir).up(1).name;
 const isRunningWithTs = parentDir === "src";
 const commandList = await fs.ref(currentDir)

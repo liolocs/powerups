@@ -10,7 +10,7 @@ export default class CLI {
         version: string;
         commands: Command<any>[];
     });
-    run(args?: string[]): void;
+    run(args?: string[]): Promise<void>;
     showHelp(): void;
 }
 //# sourceMappingURL=CLI.d.ts.map

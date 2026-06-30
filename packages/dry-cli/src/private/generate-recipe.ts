@@ -2,12 +2,16 @@ import fs from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
+import generate_recipe_errors from "#errors/generateRecipeErrors";
 
 const recipe = new Command({
   name: "recipe",
   description: "Generate a recipe file",
   flags: [
     { name: "name", long: "name", short: "n", description: "Recipe name", required: true },
+    { name: "intent", long: "intent", short: "i", description: "Comma-separated intent strings" },
+    { name: "variables", long: "variables", short: "v", description: "Comma-separated variable names" },
+    { name: "output", long: "output", short: "o", description: "JSON output specification" },
   ],
   subcommands: [],
   action: async ({ flags }) => {
@@ -17,12 +21,39 @@ const recipe = new Command({
     const name = flags.name!;
     const recipePath = recipesFolder.append(`/${name}.json`);
 
+    const intent = flags.intent
+      ? flags.intent.split(",").map(s => s.trim()).filter(Boolean)
+      : [];
+    const variables = flags.variables
+      ? flags.variables.split(",").map(s => s.trim()).filter(Boolean)
+      : [];
+
+    let output: { files: { name: string; template: string; outputPath: string }[] } = { files: [] };
+
+    if (flags.output) {
+      try {
+        output = JSON.parse(flags.output);
+      } catch {
+        throw generate_recipe_errors.invalid_output_json();
+      }
+    }
+
     await recipePath.writeJSON({
       name,
-      variables: [],
-      intent: [],
-      output: { files: [] },
+      variables,
+      intent,
+      output,
     });
+
+    for (const file of output.files ?? []) {
+      if (file.template) {
+        const templatePath = recipesFolder.append(`/${file.template}`);
+        const hasTemplate = await fs.exists(templatePath);
+        if (!hasTemplate) {
+          await templatePath.write("");
+        }
+      }
+    }
 
     cli.print(`Generated recipe: ${name}`);
   },

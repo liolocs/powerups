@@ -21,3 +21,45 @@ test.case("gen recipe creates a recipe.json file", async assert => {
 
   await dryFolder.remove();
 });
+
+test.case("gen recipe creates template files from output", async assert => {
+  await fs.create(dryFolder);
+
+  const output = JSON.stringify({
+    files: [{
+      name: "button.svelte",
+      template: "button.svelte.tmpl",
+      outputPath: "src/{{ComponentName}}.svelte",
+    }],
+  });
+
+  await generateRecipe.run({
+    subcommands: ["recipe"],
+    flags: [
+      { flag: "--name", value: "ui-component" },
+      { flag: "--intent", value: "component,ui" },
+      { flag: "--variables", value: "ComponentName" },
+      { flag: "--output", value: output },
+    ],
+  });
+
+  const recipePath = recipesFolder.append("/ui-component.json");
+  const templatePath = recipesFolder.append("/button.svelte.tmpl");
+
+  assert(await fs.exists(recipePath)).equals(true);
+  assert(await fs.exists(templatePath)).equals(true);
+
+  const content = await recipePath.json() as {
+    name: string;
+    variables: string[];
+    intent: string[];
+    output: { files: { name: string; template: string; outputPath: string }[] };
+  };
+
+  assert(content.name).equals("ui-component");
+  assert(content.intent).equals(["component", "ui"]);
+  assert(content.variables).equals(["ComponentName"]);
+  assert(content.output.files[0]?.name).equals("button.svelte");
+
+  await dryFolder.remove();
+});

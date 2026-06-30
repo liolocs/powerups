@@ -17,9 +17,20 @@ const recipe = new Command({
   action: async ({ flags }) => {
     const root = await runtime.projectRoot();
     const dryFolder = root.append("/.dry");
-    const recipesFolder = dryFolder.append("/recipes");
+    const hasDryFolder = await fs.exists(dryFolder);
+
+    if (!hasDryFolder) {
+      throw generate_recipe_errors.dry_folder_not_found();
+    }
+
     const name = flags.name!;
+    const recipesFolder = dryFolder.append("/recipes");
     const recipePath = recipesFolder.append(`/${name}.json`);
+    const hasRecipe = await fs.exists(recipePath);
+
+    if (hasRecipe) {
+      throw generate_recipe_errors.recipe_already_exists(name);
+    }
 
     const intent = flags.intent
       ? flags.intent.split(",").map(s => s.trim()).filter(Boolean)

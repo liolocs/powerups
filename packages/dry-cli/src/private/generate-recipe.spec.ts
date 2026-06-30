@@ -63,3 +63,42 @@ test.case("gen recipe creates template files from output", async assert => {
 
   await dryFolder.remove();
 });
+
+test.case("gen recipe errors without .dry folder", async assert => {
+  if (await fs.exists(dryFolder)) {
+    await dryFolder.remove();
+  }
+
+  let threw = false;
+  try {
+    await generateRecipe.run({
+      subcommands: ["recipe"],
+      flags: [{ flag: "--name", value: "should-fail" }],
+    });
+  } catch {
+    threw = true;
+  }
+  assert(threw).equals(true);
+});
+
+test.case("gen recipe errors when recipe already exists", async assert => {
+  await fs.create(dryFolder);
+
+  await generateRecipe.run({
+    subcommands: ["recipe"],
+    flags: [{ flag: "--name", value: "dup-recipe" }],
+  });
+
+  let threw = false;
+  try {
+    await generateRecipe.run({
+      subcommands: ["recipe"],
+      flags: [{ flag: "--name", value: "dup-recipe" }],
+    });
+  } catch {
+    threw = true;
+  }
+  assert(threw).equals(true);
+
+  await dryFolder.remove();
+});

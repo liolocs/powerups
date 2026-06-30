@@ -1,19 +1,45 @@
 import fs from "@rcompat/fs";
 import cli from "@rcompat/cli";
+import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
 import generate_recipe_errors from "#errors/generateRecipeErrors";
 
 const recipe = new Command({
   name: "recipe",
+
   description: "Generate a recipe file",
+
   flags: [
-    { name: "name", long: "name", short: "n", description: "Recipe name", required: true },
-    { name: "intent", long: "intent", short: "i", description: "Comma-separated intent strings" },
-    { name: "variables", long: "variables", short: "v", description: "Comma-separated variable names" },
-    { name: "output", long: "output", short: "o", description: "JSON output specification" },
+    {
+      name: "name",
+      long: "name",
+      short: "n",
+      description: "Recipe name",
+      required: true,
+    },
+    {
+      name: "intent",
+      long: "intent",
+      short: "i",
+      description: "Comma-separated intent strings",
+    },
+    {
+      name: "variables",
+      long: "variables",
+      short: "v",
+      description: "Comma-separated variable names",
+    },
+    {
+      name: "output",
+      long: "output",
+      short: "o",
+      description: "JSON output specification",
+    },
   ],
+
   subcommands: [],
+
   action: async ({ flags }) => {
     const root = await runtime.projectRoot();
     const dryFolder = root.append("/.dry");
@@ -32,16 +58,19 @@ const recipe = new Command({
       throw generate_recipe_errors.recipe_already_exists(name);
     }
 
-    const intent = flags.intent
+    const intent = is.defined(flags.intent) === true
       ? flags.intent.split(",").map(s => s.trim()).filter(Boolean)
       : [];
-    const variables = flags.variables
+    const variables = is.defined(flags.variables) === true
       ? flags.variables.split(",").map(s => s.trim()).filter(Boolean)
       : [];
 
-    let output: { files: { name: string; template: string; outputPath: string }[] } = { files: [] };
+    let output: {
+      files:
+      { name: string; template: string; outputPath: string }[];
+    } = { files: [] };
 
-    if (flags.output) {
+    if (is.defined(flags.output) === true) {
       try {
         output = JSON.parse(flags.output);
       } catch {
@@ -56,8 +85,8 @@ const recipe = new Command({
       output,
     });
 
-    for (const file of output.files ?? []) {
-      if (file.template) {
+    for (const file of is.array(output.files) === true ? output.files : []) {
+      if (is.defined(file.template) === true) {
         const templatePath = recipesFolder.append(`/${file.template}`);
         const hasTemplate = await fs.exists(templatePath);
         if (!hasTemplate) {

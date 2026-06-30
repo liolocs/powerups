@@ -48,6 +48,9 @@ importers:
       '@rcompat/fs':
         specifier: ^0.35.1
         version: 0.35.1
+      '@rcompat/is':
+        specifier: ^0.12.0
+        version: 0.12.0
       '@rcompat/runtime':
         specifier: ^0.17.0
         version: 0.17.0

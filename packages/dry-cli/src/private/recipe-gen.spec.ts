@@ -11,7 +11,7 @@ test.case("gen recipe creates a recipe.json file", async assert => {
   await fs.create(dryFolder);
 
   await generateRecipe.run({
-    subcommands: ["recipe"],
+    subcommands: ["gen"],
     flags: [{ flag: "--name", value: "test-recipe" }],
   });
 
@@ -34,7 +34,7 @@ test.case("gen recipe creates template files from output", async assert => {
   });
 
   await generateRecipe.run({
-    subcommands: ["recipe"],
+    subcommands: ["gen"],
     flags: [
       { flag: "--name", value: "ui-component" },
       { flag: "--intent", value: "component,ui" },
@@ -72,7 +72,7 @@ test.case("gen recipe errors without .dry folder", async assert => {
   let threw = false;
   try {
     await generateRecipe.run({
-      subcommands: ["recipe"],
+      subcommands: ["gen"],
       flags: [{ flag: "--name", value: "should-fail" }],
     });
   } catch {
@@ -85,14 +85,14 @@ test.case("gen recipe errors when recipe already exists", async assert => {
   await fs.create(dryFolder);
 
   await generateRecipe.run({
-    subcommands: ["recipe"],
+    subcommands: ["gen"],
     flags: [{ flag: "--name", value: "dup-recipe" }],
   });
 
   let threw = false;
   try {
     await generateRecipe.run({
-      subcommands: ["recipe"],
+      subcommands: ["gen"],
       flags: [{ flag: "--name", value: "dup-recipe" }],
     });
   } catch {

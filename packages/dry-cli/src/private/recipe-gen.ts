@@ -6,7 +6,7 @@ import { Command } from "@dryai/program";
 import generate_recipe_errors from "#errors/generateRecipeErrors";
 
 const recipe = new Command({
-  name: "recipe",
+  name: "gen",
 
   description: "Generate a recipe file",
 
@@ -100,7 +100,7 @@ const recipe = new Command({
 });
 
 const generateRecipe = new Command({
-  name: "gen",
+  name: "recipe",
   description: "Generate dryai resources",
   flags: [],
   subcommands: [recipe],

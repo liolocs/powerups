@@ -7,6 +7,10 @@ const root = await runtime.projectRoot();
 const dryFolder = root.append("/.dry");
 
 test.case("init generates a .dry folder", async assert => {
+  if (await fs.exists(dryFolder)) {
+    await dryFolder.remove();
+  }
+
   await init.run();
 
   const hasDryFolder = await fs.exists(dryFolder);

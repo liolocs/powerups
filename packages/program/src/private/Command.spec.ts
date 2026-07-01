@@ -1,5 +1,6 @@
 import Command from "#Command";
 import { CommandErrorCode } from "#errors/CommandErrors";
+import { CodeError } from "@rcompat/error";
 import test from "@rcompat/test";
 
 test.case("Command actions with no flags work", async assert => {
@@ -55,12 +56,15 @@ test.case("Command actions with missing required flags fail", async assert => {
     },
   });
 
-  assert(async () =>
+  try {
     await command.run({
       subcommands: [],
       flags: [],
-    }))
-    .throws(CommandErrorCode.missing_required_flags);
+    });
+  } catch (e) {
+    assert((e as CodeError).code)
+      .equals(CommandErrorCode.missing_required_flags);
+  }
 });
 
 test.case("Command actions with required flags succeed", async assert => {
@@ -81,66 +85,78 @@ test.case("Command actions with required flags succeed", async assert => {
     },
   });
 
-  assert(async () =>
+  let error;
+
+  try {
     await command.run({
       subcommands: [],
       flags: [{ flag: "-n", value: "John" }],
-    }))
-    .tries();
+    });
+  } catch (e) {
+    error = e as CodeError
+  }
+
+  assert(error).not.defined()
 });
 
 test.case("Command actions with subcommands with missing subcommands fail",
   async assert => {
-  const create = new Command({
-    name: "create",
-    description: "create a project",
-    flags: [],
-    subcommands: [],
-    action: () => "created",
-  });
-
-  const command = new Command({
-    name: "project",
-    description: "project command",
-    flags: [],
-    subcommands: [create],
-    requiresSubcommand: true,
-    action: () => "project",
-  });
-
-    assert(async () =>
-      await command.run({
-      subcommands: [],
+    const create = new Command({
+      name: "create",
+      description: "create a project",
       flags: [],
-    }))
-    .throws(CommandErrorCode.missing_required_subcommand);
-});
+      subcommands: [],
+      action: () => "created",
+    });
+
+    const command = new Command({
+      name: "project",
+      description: "project command",
+      flags: [],
+      subcommands: [create],
+      requiresSubcommand: true,
+      action: () => "project",
+    });
+
+    try {
+      await command.run({
+        subcommands: [],
+        flags: [],
+      });
+    } catch (e) {
+      assert((e as CodeError).code)
+        .equals(CommandErrorCode.missing_required_subcommand);
+    }
+  });
 
 test.case("Command actions with subcommands with invalid subcommand fail",
   async assert => {
-  const create = new Command({
-    name: "create",
-    description: "create a project",
-    flags: [],
-    subcommands: [],
-    action: () => "created",
-  });
-
-  const command = new Command({
-    name: "project",
-    description: "project command",
-    flags: [],
-    subcommands: [create],
-    action: () => "project",
-  });
-
-    assert(async () =>
-      await command.run({
-      subcommands: ["destroy"],
+    const create = new Command({
+      name: "create",
+      description: "create a project",
       flags: [],
-    }))
-    .throws(CommandErrorCode.invalid_subcommand);
-});
+      subcommands: [],
+      action: () => "created",
+    });
+
+    const command = new Command({
+      name: "project",
+      description: "project command",
+      flags: [],
+      subcommands: [create],
+      action: () => "project",
+    });
+
+    try {
+      await command.run({
+        subcommands: ["destroy"],
+        flags: [],
+      });
+    } catch (e) {
+      assert((e as CodeError).code)
+        .equals(CommandErrorCode.invalid_subcommand);
+    }
+  });
 
 test.case("Command actions with subcommands 2 nested subcommands succeed",
   async assert => {
@@ -169,10 +185,16 @@ test.case("Command actions with subcommands 2 nested subcommands succeed",
       action: () => "project",
     });
 
-    assert(async () =>
+    let error;
+
+    try {
       await project.run({
         subcommands: ["create"],
         flags: [{ flag: "-n", value: "newProject" }],
-      }))
-      .tries();
-});
+      });
+    } catch (e) {
+      error = e as CodeError
+    }
+
+    assert(error).not.defined()
+  });

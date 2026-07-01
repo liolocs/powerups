@@ -1,5 +1,5 @@
 import test from "@rcompat/test";
-import generateRecipe from "#generate-recipe";
+import generateRecipe from "#recipe-gen";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 

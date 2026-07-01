@@ -1,5 +1,5 @@
 import test from "@rcompat/test";
-import generateRecipe from "#recipe-gen";
+import generate from "#recipe/generate";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 
@@ -10,8 +10,8 @@ const recipesFolder = dryFolder.append("/recipes");
 test.case("gen recipe creates a recipe.json file", async assert => {
   await fs.create(dryFolder);
 
-  await generateRecipe.run({
-    subcommands: ["gen"],
+  await generate.run({
+    subcommands: [],
     flags: [{ flag: "--name", value: "test-recipe" }],
   });
 
@@ -33,8 +33,8 @@ test.case("gen recipe creates template files from output", async assert => {
     }],
   });
 
-  await generateRecipe.run({
-    subcommands: ["gen"],
+  await generate.run({
+    subcommands: [],
     flags: [
       { flag: "--name", value: "ui-component" },
       { flag: "--intent", value: "component,ui" },
@@ -71,8 +71,8 @@ test.case("gen recipe errors without .dry folder", async assert => {
 
   let threw = false;
   try {
-    await generateRecipe.run({
-      subcommands: ["gen"],
+    await generate.run({
+      subcommands: [],
       flags: [{ flag: "--name", value: "should-fail" }],
     });
   } catch {
@@ -84,15 +84,15 @@ test.case("gen recipe errors without .dry folder", async assert => {
 test.case("gen recipe errors when recipe already exists", async assert => {
   await fs.create(dryFolder);
 
-  await generateRecipe.run({
-    subcommands: ["gen"],
+  await generate.run({
+    subcommands: [],
     flags: [{ flag: "--name", value: "dup-recipe" }],
   });
 
   let threw = false;
   try {
-    await generateRecipe.run({
-      subcommands: ["gen"],
+    await generate.run({
+      subcommands: [],
       flags: [{ flag: "--name", value: "dup-recipe" }],
     });
   } catch {

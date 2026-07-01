@@ -5,7 +5,7 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
 import generate_recipe_errors from "#errors/generateRecipeErrors";
 
-const recipe = new Command({
+const generate = new Command({
   name: "gen",
 
   description: "Generate a recipe file",
@@ -99,13 +99,4 @@ const recipe = new Command({
   },
 });
 
-const generateRecipe = new Command({
-  name: "recipe",
-  description: "Generate dryai resources",
-  flags: [],
-  subcommands: [recipe],
-  requiresSubcommand: true,
-  action: () => {},
-});
-
-export default generateRecipe;
+export default generate;

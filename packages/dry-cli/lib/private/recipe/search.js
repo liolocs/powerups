@@ -7,6 +7,7 @@ import generate_recipe_errors from "#errors/generateRecipeErrors";
 import recipe_search_errors from "#errors/recipeSearchErrors";
 import tokenize from "#recipe/tokenize";
 import scoreRecipe from "#recipe/score-recipe";
+import { DRY_FOLDER, RECIPES_FOLDER } from "#constants";
 const search = new Command({
     name: "search",
     description: "Search recipes by intent",
@@ -21,12 +22,12 @@ const search = new Command({
     subcommands: [],
     action: async ({ flags }) => {
         const root = await runtime.projectRoot();
-        const dryFolder = root.append("/.dry");
+        const dryFolder = root.append(`/${DRY_FOLDER}`);
         const hasDryFolder = await fs.exists(dryFolder);
         if (!hasDryFolder) {
             throw generate_recipe_errors.dry_folder_not_found();
         }
-        const recipesFolder = dryFolder.append("/recipes");
+        const recipesFolder = dryFolder.append(`/${RECIPES_FOLDER}`);
         const hasRecipesFolder = await fs.exists(recipesFolder);
         if (!hasRecipesFolder) {
             throw recipe_search_errors.no_matching_recipes();

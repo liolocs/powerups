@@ -2,10 +2,11 @@ import test from "@rcompat/test";
 import generate from "#recipe/generate";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
+import { DRY_FOLDER, RECIPES_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
-const dryFolder = root.append("/.dry");
-const recipesFolder = dryFolder.append("/recipes");
+const dryFolder = root.append(`/${DRY_FOLDER}`);
+const recipesFolder = dryFolder.append(`/${RECIPES_FOLDER}`);
 
 test.case("gen recipe creates a recipe.json file", async assert => {
   await fs.create(dryFolder);

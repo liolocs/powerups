@@ -4,6 +4,7 @@ import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
 import generate_recipe_errors from "#errors/generateRecipeErrors";
+import { DRY_FOLDER, RECIPES_FOLDER } from "#constants";
 
 const generate = new Command({
   name: "gen",
@@ -42,7 +43,7 @@ const generate = new Command({
 
   action: async ({ flags }) => {
     const root = await runtime.projectRoot();
-    const dryFolder = root.append("/.dry");
+    const dryFolder = root.append(`/${DRY_FOLDER}`);
     const hasDryFolder = await fs.exists(dryFolder);
 
     if (!hasDryFolder) {
@@ -50,7 +51,7 @@ const generate = new Command({
     }
 
     const name = flags.name!;
-    const recipesFolder = dryFolder.append("/recipes");
+    const recipesFolder = dryFolder.append(`/${RECIPES_FOLDER}`);
     const recipeFolder = recipesFolder.append(`/${name}`);
     const recipePath = recipeFolder.append("/instructions.json");
     const hasRecipe = await fs.exists(recipeFolder);

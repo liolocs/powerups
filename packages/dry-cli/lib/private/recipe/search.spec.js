@@ -4,8 +4,9 @@ import generate from "#recipe/generate";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import captureStdout from "#test-utils/capture-stdout";
+import { DRY_FOLDER } from "#constants";
 const root = await runtime.projectRoot();
-const dryFolder = root.append("/.dry");
+const dryFolder = root.append(`/${DRY_FOLDER}`);
 test.case("search finds matching recipes", async (assert) => {
     if (await fs.exists(dryFolder)) {
         await dryFolder.remove();

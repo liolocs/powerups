@@ -1,40 +1,43 @@
 import test from "@rcompat/test";
 import search from "#recipe/search";
+import generate from "#recipe/generate";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import captureStdout from "#test-utils/capture-stdout";
 
 const root = await runtime.projectRoot();
 const dryFolder = root.append("/.dry");
-const recipesFolder = dryFolder.append("/recipes");
-
 
 test.case("search finds matching recipes", async assert => {
   if (await fs.exists(dryFolder)) {
     await dryFolder.remove();
   }
   await fs.create(dryFolder);
-  await fs.create(recipesFolder);
 
-  await recipesFolder.append("/ui-component.json").writeJSON({
-    name: "ui-component",
-    variables: ["ComponentName"],
-    intent: ["ui", "component"],
-    output: {
-      files: [
-        { name: "button.svelte",
-          template: "button.svelte.tmpl",
-          outputPath: "src/{{ComponentName}}.svelte",
-        },
-      ],
-    },
+  await generate.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "ui-component" },
+      { flag: "--intent", value: "ui,component" },
+      { flag: "--variables", value: "ComponentName" },
+      { flag: "--output", value: JSON.stringify({
+        files: [
+          { name: "button.svelte",
+            template: "button.svelte.tmpl",
+            outputPath: "src/{{ComponentName}}.svelte",
+          },
+        ],
+      }) },
+    ],
   });
 
-  await recipesFolder.append("/api-route.json").writeJSON({
-    name: "api-route",
-    variables: ["RouteName"],
-    intent: ["api", "route"],
-    output: { files: [] },
+  await generate.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "api-route" },
+      { flag: "--intent", value: "api,route" },
+      { flag: "--variables", value: "RouteName" },
+    ],
   });
 
   const output = await captureStdout(() => search.run({
@@ -53,20 +56,24 @@ test.case("search ranks by score descending", async assert => {
     await dryFolder.remove();
   }
   await fs.create(dryFolder);
-  await fs.create(recipesFolder);
 
-  await recipesFolder.append("/focused.json").writeJSON({
-    name: "focused",
-    variables: [],
-    intent: ["component"],
-    output: { files: [] },
+  await generate.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "focused" },
+      { flag: "--intent", value: "component" },
+    ],
   });
 
-  await recipesFolder.append("/broad.json").writeJSON({
-    name: "broad",
-    variables: [],
-    intent: ["component", "ui", "state"],
-    output: { files: [{ name: "a", template: "a", outputPath: "a" }] },
+  await generate.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "broad" },
+      { flag: "--intent", value: "component,ui,state" },
+      { flag: "--output", value: JSON.stringify({
+        files: [{ name: "a", template: "a", outputPath: "a" }],
+      }) },
+    ],
   });
 
   const output = await captureStdout(() => search.run({
@@ -88,13 +95,13 @@ test.case("search errors when no recipes match", async assert => {
     await dryFolder.remove();
   }
   await fs.create(dryFolder);
-  await fs.create(recipesFolder);
 
-  await recipesFolder.append("/ui-component.json").writeJSON({
-    name: "ui-component",
-    variables: [],
-    intent: ["ui", "component"],
-    output: { files: [] },
+  await generate.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "ui-component" },
+      { flag: "--intent", value: "ui,component" },
+    ],
   });
 
   let threw = false;

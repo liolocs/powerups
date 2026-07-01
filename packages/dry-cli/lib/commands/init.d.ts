@@ -1,4 +1,3 @@
-import { Command } from "@dryai/program";
-declare const init: Command<never[]>;
+import init from "../private/init.js";
 export default init;
 //# sourceMappingURL=init.d.ts.map

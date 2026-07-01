@@ -8,7 +8,7 @@ const program = new CLI({
     commands: commands,
 });
 try {
-    program.run();
+    await program.run();
 }
 catch (err) {
     console.error(err.message);

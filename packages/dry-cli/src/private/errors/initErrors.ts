@@ -8,7 +8,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 const init_errors = error.coded({
   dry_folder_exists: () => {
     const errorText =
-      `Dry folder already exists.`;
+      "Dry folder already exists.";
     return t`${errorBGText}${errorText}`;
   },
 });

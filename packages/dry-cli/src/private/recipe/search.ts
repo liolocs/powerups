@@ -52,7 +52,8 @@ const search = new Command({
     }
 
     const recipeFiles = await recipesFolder.files({
-      filter: (file) => file.extension === ".json",
+      recursive: true,
+      filter: (file) => file.name === "instructions.json",
     });
 
     if (recipeFiles.length === 0) {

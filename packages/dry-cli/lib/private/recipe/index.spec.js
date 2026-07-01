@@ -1,5 +1,6 @@
 import test from "@rcompat/test";
 import recipe from "#recipe/index";
+import { CommandErrorCode } from "@dryai/program";
 test.case("recipe command fails without subcommands", async (assert) => {
     let threw = false;
     let errorMessage;
@@ -11,9 +12,9 @@ test.case("recipe command fails without subcommands", async (assert) => {
     }
     catch (e) {
         threw = true;
-        errorMessage = String(e.message);
+        errorMessage = String(e.code);
     }
     assert(threw).equals(true);
-    assert(errorMessage).includes("Missing required subcommand");
+    assert(errorMessage).equals(CommandErrorCode.missing_required_subcommand);
 });
 //# sourceMappingURL=index.spec.js.map

@@ -11,7 +11,7 @@ test.case("gen recipe creates a recipe.json file", async (assert) => {
         subcommands: [],
         flags: [{ flag: "--name", value: "test-recipe" }],
     });
-    const recipePath = recipesFolder.append("/test-recipe.json");
+    const recipePath = recipesFolder.append("/test-recipe/instructions.json");
     const hasRecipe = await fs.exists(recipePath);
     assert(hasRecipe).equals(true);
     await dryFolder.remove();
@@ -34,8 +34,8 @@ test.case("gen recipe creates template files from output", async (assert) => {
             { flag: "--output", value: output },
         ],
     });
-    const recipePath = recipesFolder.append("/ui-component.json");
-    const templatePath = recipesFolder.append("/button.svelte.tmpl");
+    const recipePath = recipesFolder.append("/ui-component/instructions.json");
+    const templatePath = recipesFolder.append("/ui-component/button.svelte.tmpl");
     assert(await fs.exists(recipePath)).equals(true);
     assert(await fs.exists(templatePath)).equals(true);
     const content = await recipePath.json();

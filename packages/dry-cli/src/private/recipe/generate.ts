@@ -51,12 +51,15 @@ const generate = new Command({
 
     const name = flags.name!;
     const recipesFolder = dryFolder.append("/recipes");
-    const recipePath = recipesFolder.append(`/${name}.json`);
-    const hasRecipe = await fs.exists(recipePath);
+    const recipeFolder = recipesFolder.append(`/${name}`);
+    const recipePath = recipeFolder.append("/instructions.json");
+    const hasRecipe = await fs.exists(recipeFolder);
 
     if (hasRecipe) {
       throw generate_recipe_errors.recipe_already_exists(name);
     }
+
+    await fs.create(recipeFolder);
 
     const intent = is.defined(flags.intent) === true
       ? flags.intent.split(",").map(s => s.trim()).filter(Boolean)
@@ -87,7 +90,7 @@ const generate = new Command({
 
     for (const file of is.array(output.files) === true ? output.files : []) {
       if (is.defined(file.template) === true) {
-        const templatePath = recipesFolder.append(`/${file.template}`);
+        const templatePath = recipeFolder.append(`/${file.template}`);
         const hasTemplate = await fs.exists(templatePath);
         if (!hasTemplate) {
           await templatePath.write("");

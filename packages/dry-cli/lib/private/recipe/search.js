@@ -39,7 +39,8 @@ const search = new Command({
             throw recipe_search_errors.no_matching_recipes();
         }
         const recipeFiles = await recipesFolder.files({
-            filter: (file) => file.extension === ".json",
+            recursive: true,
+            filter: (file) => file.name === "instructions.json",
         });
         if (recipeFiles.length === 0) {
             throw recipe_search_errors.no_matching_recipes();

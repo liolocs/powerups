@@ -7,8 +7,8 @@ export default function scoreRecipe(recipe, queryKeywords) {
         }
     }
     let score = 0;
-    for (const qk of queryKeywords) {
-        if (intentTokens.has(qk)) {
+    for (const keyword of queryKeywords) {
+        if (intentTokens.has(keyword)) {
             score++;
         }
     }

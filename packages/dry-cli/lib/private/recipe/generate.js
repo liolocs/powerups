@@ -4,8 +4,8 @@ import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
 import generate_recipe_errors from "#errors/generateRecipeErrors";
-const recipe = new Command({
-    name: "recipe",
+const generate = new Command({
+    name: "gen",
     description: "Generate a recipe file",
     flags: [
         {
@@ -82,13 +82,5 @@ const recipe = new Command({
         cli.print(`Generated recipe: ${name}`);
     },
 });
-const generateRecipe = new Command({
-    name: "gen",
-    description: "Generate dryai resources",
-    flags: [],
-    subcommands: [recipe],
-    requiresSubcommand: true,
-    action: () => { },
-});
-export default generateRecipe;
-//# sourceMappingURL=generate-recipe.js.map
+export default generate;
+//# sourceMappingURL=generate.js.map

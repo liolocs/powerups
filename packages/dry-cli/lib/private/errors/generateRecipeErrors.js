@@ -13,7 +13,7 @@ const generate_recipe_errors = error.coded({
         return t `${errorBGText}${errorText}`;
     },
     invalid_output_json: () => {
-        const errorText = `Invalid JSON for --output flag.`;
+        const errorText = "Invalid JSON for --output flag.";
         return t `${errorBGText}${errorText}`;
     },
 });

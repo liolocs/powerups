@@ -5,53 +5,8 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
 import generate_recipe_errors from "#errors/generateRecipeErrors";
 import recipe_search_errors from "#errors/recipeSearchErrors";
-
-const DELIMITERS = " ,;:.-_()[]{}\"'?!";
-
-function tokenize(input: string): string[] {
-  const lower = input.toLowerCase();
-  const keywords: string[] = [];
-  let current = "";
-
-  for (const ch of lower) {
-    if (DELIMITERS.includes(ch)) {
-      if (current.length > 0) {
-        keywords.push(current);
-        current = "";
-      }
-    } else {
-      current += ch;
-    }
-  }
-
-  if (current.length > 0) {
-    keywords.push(current);
-  }
-
-  return keywords;
-}
-
-function scoreRecipe(
-  recipe: { intent: string[] },
-  queryKeywords: string[],
-): number {
-  const intentTokens = new Set<string>();
-
-  for (const intentStr of recipe.intent) {
-    for (const token of tokenize(intentStr)) {
-      intentTokens.add(token);
-    }
-  }
-
-  let score = 0;
-  for (const qk of queryKeywords) {
-    if (intentTokens.has(qk)) {
-      score++;
-    }
-  }
-
-  return score;
-}
+import tokenize from "#recipe/tokenize";
+import scoreRecipe from "#recipe/score-recipe";
 
 interface SearchResult {
   name: string;
@@ -137,7 +92,10 @@ const search = new Command({
     cli.print("");
 
     results.forEach((result, index) => {
-      cli.print(`  [${index + 1}] ${result.name} (score: ${result.score}, files: ${result.fileCount})`);
+      const score_text = `score: ${result.score}`;
+      const files_text = `files: ${result.fileCount}`;
+      const score_and_files_text = `(${score_text}, ${files_text})`;
+      cli.print(`  [${index + 1}] ${result.name} ${score_and_files_text}`);
     });
   },
 });

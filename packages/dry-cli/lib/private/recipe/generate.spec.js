@@ -1,5 +1,5 @@
 import test from "@rcompat/test";
-import generateRecipe from "#generate-recipe";
+import generate from "#recipe/generate";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 const root = await runtime.projectRoot();
@@ -7,8 +7,8 @@ const dryFolder = root.append("/.dry");
 const recipesFolder = dryFolder.append("/recipes");
 test.case("gen recipe creates a recipe.json file", async (assert) => {
     await fs.create(dryFolder);
-    await generateRecipe.run({
-        subcommands: ["recipe"],
+    await generate.run({
+        subcommands: [],
         flags: [{ flag: "--name", value: "test-recipe" }],
     });
     const recipePath = recipesFolder.append("/test-recipe.json");
@@ -25,8 +25,8 @@ test.case("gen recipe creates template files from output", async (assert) => {
                 outputPath: "src/{{ComponentName}}.svelte",
             }],
     });
-    await generateRecipe.run({
-        subcommands: ["recipe"],
+    await generate.run({
+        subcommands: [],
         flags: [
             { flag: "--name", value: "ui-component" },
             { flag: "--intent", value: "component,ui" },
@@ -51,8 +51,8 @@ test.case("gen recipe errors without .dry folder", async (assert) => {
     }
     let threw = false;
     try {
-        await generateRecipe.run({
-            subcommands: ["recipe"],
+        await generate.run({
+            subcommands: [],
             flags: [{ flag: "--name", value: "should-fail" }],
         });
     }
@@ -63,14 +63,14 @@ test.case("gen recipe errors without .dry folder", async (assert) => {
 });
 test.case("gen recipe errors when recipe already exists", async (assert) => {
     await fs.create(dryFolder);
-    await generateRecipe.run({
-        subcommands: ["recipe"],
+    await generate.run({
+        subcommands: [],
         flags: [{ flag: "--name", value: "dup-recipe" }],
     });
     let threw = false;
     try {
-        await generateRecipe.run({
-            subcommands: ["recipe"],
+        await generate.run({
+            subcommands: [],
             flags: [{ flag: "--name", value: "dup-recipe" }],
         });
     }
@@ -80,4 +80,4 @@ test.case("gen recipe errors when recipe already exists", async (assert) => {
     assert(threw).equals(true);
     await dryFolder.remove();
 });
-//# sourceMappingURL=generate-recipe.spec.js.map
+//# sourceMappingURL=generate.spec.js.map

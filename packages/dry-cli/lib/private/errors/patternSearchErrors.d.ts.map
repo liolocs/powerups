@@ -1,0 +1,1 @@
+{"version":3,"file":"patternSearchErrors.d.ts","sourceRoot":"","sources":["../../../src/private/errors/patternSearchErrors.ts"],"names":[],"mappings":"AAOA,QAAA,MAAM,qBAAqB;;CAMzB,CAAC;AAEH,MAAM,MAAM,sBAAsB,GAAG,MAAM,OAAO,qBAAqB,CAAC;AAExE,eAAO,MAAM,sBAAsB,EAE9B,GAAG,CAAC,IAAI,sBAAsB,GAAG,CAAC,GAAE,CAAC;eAE3B,qBAAqB"}

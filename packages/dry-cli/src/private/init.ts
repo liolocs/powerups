@@ -3,7 +3,7 @@ import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
 import init_errors from "#errors/initErrors";
-import { DRY_FOLDER, CLI_NAME } from "#constants";
+import { MAIN_FOLDER, CLI_NAME } from "#constants";
 
 const init = new Command({
   name: "init",
@@ -12,14 +12,14 @@ const init = new Command({
   subcommands: [],
   action: async () => {
     const root = await runtime.projectRoot();
-    const dryFolder = root.append(`/${DRY_FOLDER}`);
-    const hasDryFolder = await fs.exists(dryFolder);
+    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+    const hasDryFolder = await fs.exists(mainFolder);
 
     if (hasDryFolder) {
       throw init_errors.dry_folder_exists();
     }
 
-    await fs.create(dryFolder);
+    await fs.create(mainFolder);
 
     cli.print(`Initialized ${CLI_NAME} project`);
   },

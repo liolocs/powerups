@@ -1,6 +1,6 @@
 import Command from "#Command";
 import { CommandErrorCode } from "#errors/CommandErrors";
-import { CodeError } from "@rcompat/error";
+import type { CodeError } from "@rcompat/error";
 import test from "@rcompat/test";
 
 test.case("Command actions with no flags work", async assert => {
@@ -93,10 +93,10 @@ test.case("Command actions with required flags succeed", async assert => {
       flags: [{ flag: "-n", value: "John" }],
     });
   } catch (e) {
-    error = e as CodeError
+    error = e as CodeError;
   }
 
-  assert(error).not.defined()
+  assert(error).not.defined();
 });
 
 test.case("Command actions with subcommands with missing subcommands fail",
@@ -193,8 +193,8 @@ test.case("Command actions with subcommands 2 nested subcommands succeed",
         flags: [{ flag: "-n", value: "newProject" }],
       });
     } catch (e) {
-      error = e as CodeError
+      error = e as CodeError;
     }
 
-    assert(error).not.defined()
+    assert(error).not.defined();
   });

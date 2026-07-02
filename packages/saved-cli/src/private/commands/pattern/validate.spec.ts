@@ -24,7 +24,8 @@ async function patternPath(name: string): Promise<FileRef> {
   return patternsFolder.append(`/${name}/instructions.json`);
 }
 
-test.case("validate reports all valid when every pattern conforms", async assert => {
+test.case("validate reports all valid when every pattern conforms",
+  async assert => {
   await reset();
 
   await generate.run({
@@ -76,7 +77,8 @@ test.case("validate --name reports a single valid pattern", async assert => {
   await mainFolder.remove();
 });
 
-test.case("validate reports a schema violation across all patterns", async assert => {
+test.case("validate reports a schema violation across all patterns",
+  async assert => {
   await reset();
 
   await generate.run({
@@ -101,7 +103,8 @@ test.case("validate reports a schema violation across all patterns", async asser
   await mainFolder.remove();
 });
 
-test.case("validate reports a missing template across all patterns", async assert => {
+test.case("validate reports a missing template across all patterns",
+  async assert => {
   await reset();
 
   await generate.run({
@@ -137,7 +140,8 @@ test.case("validate reports a missing template across all patterns", async asser
   await mainFolder.remove();
 });
 
-test.case("validate --name throws invalid_pattern for a missing template", async assert => {
+test.case("validate --name throws invalid_pattern for a missing template",
+  async assert => {
   await reset();
 
   await generate.run({
@@ -176,7 +180,8 @@ test.case("validate --name throws invalid_pattern for a missing template", async
   await mainFolder.remove();
 });
 
-test.case("validate reports multiple missing templates in one pass", async assert => {
+test.case("validate reports multiple missing templates in one pass",
+  async assert => {
   await reset();
 
   await generate.run({
@@ -207,7 +212,8 @@ test.case("validate reports multiple missing templates in one pass", async asser
   await mainFolder.remove();
 });
 
-test.case("validate --name throws pattern_not_found for a missing pattern", async assert => {
+test.case("validate --name throws pattern_not_found for a missing pattern",
+  async assert => {
   await reset();
 
   // Create one real pattern so the patterns folder exists, then target a
@@ -233,7 +239,8 @@ test.case("validate --name throws pattern_not_found for a missing pattern", asyn
   await mainFolder.remove();
 });
 
-test.case("validate throws no_patterns_found without a patterns folder", async assert => {
+test.case("validate throws no_patterns_found without a patterns folder",
+  async assert => {
   await reset();
 
   let error: unknown;

@@ -79,7 +79,7 @@ test.case("CLI program returns help message with --help flag", async assert => {
   assert(allOutput).includes("Usage: dryai <command>");
 });
 
-test.case("CLI program runs an unknown command and shows help", 
+test.case("CLI program runs an unknown command and shows help",
   async assert => {
   const createCommand = new Command({
     name: "create",

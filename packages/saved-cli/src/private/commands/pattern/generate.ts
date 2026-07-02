@@ -4,6 +4,7 @@ import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
 import generate_pattern_errors from "#errors/patternGenerateErrors";
+import { outputSchema, type Instructions } from "#schemas/instruction";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 
 const generate = new Command({
@@ -69,25 +70,18 @@ const generate = new Command({
       ? flags.variables.split(",").map(s => s.trim()).filter(Boolean)
       : [];
 
-    let output: {
-      files:
-      { name: string; template: string; outputPath: string }[];
-    } = { files: [] };
+    let output: Instructions["output"] = { files: [] };
 
     if (is.defined(flags.output) === true) {
       try {
-        output = JSON.parse(flags.output);
+        output = outputSchema.parse(JSON.parse(flags.output));
       } catch {
         throw generate_pattern_errors.invalid_output_json();
       }
     }
 
-    await patternPath.writeJSON({
-      name,
-      variables,
-      intent,
-      output,
-    });
+    const instructions: Instructions = { name, variables, intent, output };
+    await patternPath.writeJSON(instructions);
 
     for (const file of is.array(output.files) === true ? output.files : []) {
       if (is.defined(file.template) === true) {

@@ -7,6 +7,7 @@ import generate_pattern_errors from "#errors/patternGenerateErrors";
 import pattern_search_errors from "#errors/patternSearchErrors";
 import tokenize from "#commands/pattern/tokenize";
 import scoreIntent from "#commands/pattern/score-intent";
+import { instructionsSchema } from "#schemas/instruction";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 
 interface SearchResult {
@@ -64,11 +65,7 @@ const search = new Command({
     const results: SearchResult[] = [];
 
     for (const patternFile of patternFiles) {
-      const pattern = await patternFile.json() as {
-        name: string;
-        intent: string[];
-        output: { files: unknown[] };
-      };
+      const pattern = instructionsSchema.parse(await patternFile.json());
 
       const score = scoreIntent(pattern, queryKeywords);
 

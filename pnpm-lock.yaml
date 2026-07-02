@@ -76,6 +76,30 @@ importers:
         specifier: ^0.8.2
         version: 0.8.2
 
+  packages/saved-cli:
+    dependencies:
+      '@dryai/program':
+        specifier: workspace:^
+        version: link:../program
+      '@rcompat/cli':
+        specifier: ^0.25.0
+        version: 0.25.0
+      '@rcompat/error':
+        specifier: ^0.9.0
+        version: 0.9.0
+      '@rcompat/fs':
+        specifier: ^0.35.1
+        version: 0.35.1
+      '@rcompat/is':
+        specifier: ^0.12.0
+        version: 0.12.0
+      '@rcompat/runtime':
+        specifier: ^0.17.0
+        version: 0.17.0
+      pema:
+        specifier: ^0.8.2
+        version: 0.8.2
+
 packages:
 
   '@emnapi/core@1.11.0':

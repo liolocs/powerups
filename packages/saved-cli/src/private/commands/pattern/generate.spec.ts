@@ -1,5 +1,6 @@
 import test from "@rcompat/test";
 import generate from "#commands/pattern/generate";
+import { instructionsSchema } from "#schemas/instruction";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
@@ -50,12 +51,7 @@ test.case("gen pattern creates template files from output", async assert => {
   assert(await fs.exists(patternPath)).equals(true);
   assert(await fs.exists(templatePath)).equals(true);
 
-  const content = await patternPath.json() as {
-    name: string;
-    variables: string[];
-    intent: string[];
-    output: { files: { name: string; template: string; outputPath: string }[] };
-  };
+  const content = instructionsSchema.parse(await patternPath.json());
 
   assert(content.name).equals("ui-component");
   assert(content.intent).equals(["component", "ui"]);

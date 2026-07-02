@@ -6,6 +6,7 @@ import generate from "#commands/pattern/generate";
 import captureStdout from "#test-utils/capture-stdout";
 import { CodeError } from "@rcompat/error";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
+import { readMetrics } from "#utils/metrics";
 const root = await runtime.projectRoot();
 const mainFolder = root.append(`/${MAIN_FOLDER}`);
 const patternsFolder = mainFolder.append(`/${PATTERNS_FOLDER}`);
@@ -251,5 +252,66 @@ test.case("run errors without .saved folder", async (assert) => {
         threw = true;
     }
     assert(threw).true();
+});
+test.case("run logs metrics to .saved/metrics.jsonl on successful run", async (assert) => {
+    await reset();
+    await generate.run({
+        subcommands: [],
+        flags: [
+            { flag: "--name", value: "metrics-test" },
+            { flag: "--variables", value: "ComponentName" },
+            { flag: "--output", value: JSON.stringify({
+                    files: [{
+                            name: "button.svelte",
+                            template: "button.njk",
+                            outputPath: ".test-output/{{ComponentName}}.svelte",
+                        }],
+                }) },
+        ],
+    });
+    const templatePath = patternsFolder.append("/metrics-test/button.njk");
+    await templatePath.write("<button>{{componentName}}</button>");
+    await run.run({
+        subcommands: ["metrics-test"],
+        flags: [{ flag: "--component-name", value: "Button" }],
+    });
+    const entries = await readMetrics();
+    assert(entries.length).equals(1);
+    assert(entries[0].pattern).equals("metrics-test");
+    // FileRef.write() adds a trailing newline to the template file, so the
+    // rendered output includes it: "<button>Button</button>\n" (24 chars)
+    assert(entries[0].characters).equals("<button>Button</button>\n".length);
+    await mainFolder.remove();
+    await outputDir.remove();
+});
+test.case("run does not log metrics on dry-run", async (assert) => {
+    await reset();
+    await generate.run({
+        subcommands: [],
+        flags: [
+            { flag: "--name", value: "dry-metrics-test" },
+            { flag: "--variables", value: "ComponentName" },
+            { flag: "--output", value: JSON.stringify({
+                    files: [{
+                            name: "button.svelte",
+                            template: "button.njk",
+                            outputPath: ".test-output/{{ComponentName}}.svelte",
+                        }],
+                }) },
+        ],
+    });
+    const templatePath = patternsFolder.append("/dry-metrics-test/button.njk");
+    await templatePath.write("<button>{{componentName}}</button>");
+    await run.run({
+        subcommands: ["dry-metrics-test"],
+        flags: [
+            { flag: "--dry-run", value: "true" },
+            { flag: "--component-name", value: "Button" },
+        ],
+    });
+    const entries = await readMetrics();
+    assert(entries.length).equals(0);
+    await mainFolder.remove();
+    await outputDir.remove();
 });
 //# sourceMappingURL=run.spec.js.map

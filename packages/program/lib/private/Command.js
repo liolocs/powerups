@@ -61,7 +61,6 @@ export default class Command {
         // Header
         lines.push(`${this.name} — ${this.description}`);
         lines.push("");
-        // Usage
         lines.push("USAGE");
         if (this.subcommands.size > 0) {
             lines.push(`  ${this.name} <subcommand> [flags]`);
@@ -70,7 +69,6 @@ export default class Command {
             lines.push(`  ${this.name} [flags]`);
         }
         lines.push("");
-        // Subcommands
         if (this.subcommands.size > 0) {
             lines.push("SUBCOMMANDS");
             const subs = [...this.subcommands.values()];

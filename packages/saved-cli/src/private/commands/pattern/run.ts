@@ -8,6 +8,7 @@ import patternRunErrors from "#errors/patternRunErrors";
 import { instructionsSchema } from "#schemas/instruction";
 import { extractVariables } from "#utils/variables";
 import { resolveOutputPath } from "#utils/output-path";
+import { logRun } from "#utils/metrics";
 import { runTemplate } from "#runners/pattern/index";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 
@@ -65,7 +66,9 @@ const run = new Command({
       f => f.flag === "--dry-run" || f.flag === "-d",
     );
 
-    // 6. Process each output file
+    // 6. Process each output file, accumulating rendered character count
+    let totalCharacters = 0;
+
     for (const file of instructions.output.files) {
       const templatePath = patternFolder.append(`/${file.template}`);
 
@@ -74,6 +77,7 @@ const run = new Command({
       }
 
       const rendered = await runTemplate({ templatePath, variables });
+      totalCharacters += rendered.length;
       const resolvedPath = resolveOutputPath(file.outputPath, variables);
 
       if (isDryRun) {
@@ -85,6 +89,15 @@ const run = new Command({
         await fs.create(targetPath.directory);
         await targetPath.write(rendered);
         cli.print(`Wrote ${resolvedPath}`);
+      }
+    }
+
+    // 7. Log metrics for non-dry-run successful runs (best-effort)
+    if (!isDryRun) {
+      try {
+        await logRun({ pattern: patternName, characters: totalCharacters });
+      } catch {
+        // Metrics are secondary — never crash a successful run
       }
     }
   },

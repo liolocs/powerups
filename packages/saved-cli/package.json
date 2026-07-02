@@ -38,6 +38,7 @@
     "@rcompat/fs": "^0.35.1",
     "@rcompat/is": "^0.12.0",
     "@rcompat/runtime": "^0.17.0",
+    "nunjucks": "^3.2.4",
     "pema": "^0.8.2"
   }
 }

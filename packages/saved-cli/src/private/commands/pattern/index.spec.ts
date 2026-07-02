@@ -1,5 +1,5 @@
 import test from "@rcompat/test";
-import pattern from "#pattern/index";
+import pattern from "#commands/pattern/index";
 import { CommandErrorCode } from "@dryai/program";
 import type { CodeError } from "@rcompat/error";
 

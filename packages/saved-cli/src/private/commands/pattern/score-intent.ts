@@ -1,4 +1,4 @@
-import tokenize from "#pattern/tokenize";
+import tokenize from "#commands/pattern/tokenize";
 
 export default function scoreIntent(
   pattern: { intent: string[] },

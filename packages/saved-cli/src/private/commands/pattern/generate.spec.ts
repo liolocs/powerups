@@ -1,5 +1,5 @@
 import test from "@rcompat/test";
-import generate from "#pattern/generate";
+import generate from "#commands/pattern/generate";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";

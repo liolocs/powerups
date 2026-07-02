@@ -5,8 +5,8 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
 import generate_pattern_errors from "#errors/patternGenerateErrors";
 import pattern_search_errors from "#errors/patternSearchErrors";
-import tokenize from "#pattern/tokenize";
-import scoreIntent from "#pattern/score-intent";
+import tokenize from "#commands/pattern/tokenize";
+import scoreIntent from "#commands/pattern/score-intent";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 
 interface SearchResult {

@@ -1,6 +1,6 @@
 import { Command } from "@dryai/program";
-import generate from "#pattern/generate";
-import search from "#pattern/search";
+import generate from "#commands/pattern/generate";
+import search from "#commands/pattern/search";
 
 const pattern = new Command({
   name: "pattern",

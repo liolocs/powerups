@@ -327,7 +327,9 @@ test.case("run logs metrics to .saved/metrics.jsonl on successful run",
     const entries = await readMetrics();
     assert(entries.length).equals(1);
     assert(entries[0].pattern).equals("metrics-test");
-    assert(entries[0].characters).equals("<button>Button</button>".length);
+    // FileRef.write() adds a trailing newline to the template file, so the
+    // rendered output includes it: "<button>Button</button>\n" (24 chars)
+    assert(entries[0].characters).equals("<button>Button</button>\n".length);
 
     await mainFolder.remove();
     await outputDir.remove();

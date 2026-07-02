@@ -1,4 +1,4 @@
-export const CLI_NAME = "savedai";
+export const CLI_NAME = "SavedAI";
 
 /** Name of the main cli project folder, created at the project root. */
 export const MAIN_FOLDER = ".saved";

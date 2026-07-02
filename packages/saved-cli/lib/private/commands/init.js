@@ -6,7 +6,7 @@ import init_errors from "#errors/initErrors";
 import { MAIN_FOLDER, CLI_NAME } from "#constants";
 const init = new Command({
     name: "init",
-    description: `Initialize a ${CLI_NAME} project`,
+    description: `Initialize a ${CLI_NAME} project in the current directory`,
     flags: [],
     subcommands: [],
     action: async () => {

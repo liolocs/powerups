@@ -15,7 +15,7 @@ const EXCLUDE_FLAGS = ["--dry-run", "-d", "--help", "-h"];
 
 const run = new Command({
   name: "run",
-  description: "Run a pattern, rendering its templates with variables",
+  description: "Run a pattern, rendering templates with variables",
   flags: [
     {
       name: "dry-run",

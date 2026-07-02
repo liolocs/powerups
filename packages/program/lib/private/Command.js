@@ -1,4 +1,5 @@
 import command_errors from "#errors/CommandErrors";
+import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 export default class Command {
     name;
@@ -16,13 +17,8 @@ export default class Command {
         this.action = action;
     }
     async run(args) {
-        // --help short-circuits everything, always
-        if (args?.flags.some(f => f.flag === "--help" || f.flag === "-h")
-            === true) {
-            console.log(this.buildHelp());
-            return;
-        }
-        // Delegate to subcommand if one is provided and matches
+        // Delegate to a matching subcommand first, so that `<cmd> <sub> --help`
+        // reaches the subcommand's own help rather than this command's.
         if (is.truthy(args?.subcommands.length)) {
             const [head, ...tail] = args.subcommands;
             const sub = this.subcommands.get(head);
@@ -36,6 +32,12 @@ export default class Command {
                 throw command_errors.invalid_subcommand(head, this.name);
             }
             // No subcommands at all — fall through to action with positional args
+        }
+        // --help shows this command's help (only when not delegating to a sub)
+        if (args?.flags.some(f => f.flag === "--help" || f.flag === "-h")
+            === true) {
+            cli.print(`${this.buildHelp()}\n`);
+            return;
         }
         // No subcommand — check if one is required
         if (this.subcommands.size > 0 && this.requiresSubcommand === true) {
@@ -55,30 +57,46 @@ export default class Command {
         return await this.action({ flags: matchedFlags, subcommands, rawFlags: passedFlags });
     }
     buildHelp() {
-        const lines = [
-            `${this.name} — ${this.description}`,
-            "",
-        ];
-        if (this.flags.length > 0) {
-            lines.push("Flags:");
-            for (const flag of this.flags) {
-                const required = flag.required === true ? " (required)" : "";
-                const short = is.defined(flag.short) ? `-${flag.short}` : "";
-                const long = is.defined(flag.long) ? `--${flag.long}` : "";
-                const shortAndLong = [short, long].filter(Boolean).join(", ");
-                const description = flag.description + required;
-                lines.push(`  ${shortAndLong.padEnd(20)} ${description}`);
-                lines.push("\n");
+        const lines = [];
+        // Header
+        lines.push(`${this.name} — ${this.description}`);
+        lines.push("");
+        // Usage
+        lines.push("USAGE");
+        if (this.subcommands.size > 0) {
+            lines.push(`  ${this.name} <subcommand> [flags]`);
+        }
+        else {
+            lines.push(`  ${this.name} [flags]`);
+        }
+        lines.push("");
+        // Subcommands
+        if (this.subcommands.size > 0) {
+            lines.push("SUBCOMMANDS");
+            const subs = [...this.subcommands.values()];
+            const width = Math.max(...subs.map(sub => sub.name.length));
+            for (const sub of subs) {
+                lines.push(`  ${sub.name.padEnd(width + 2)}${sub.description}`);
             }
             lines.push("");
         }
-        if (this.subcommands.size > 0) {
-            lines.push("Subcommands:");
-            for (const [name, sub] of this.subcommands) {
-                lines.push(`  ${name}  ${sub.description}`);
-            }
+        // Flags (always includes the implicit help flag)
+        const flagEntries = this.flags.map(flag => {
+            const short = is.defined(flag.short) ? `-${flag.short}` : "";
+            const long = is.defined(flag.long) ? `--${flag.long}` : "";
+            const label = [short, long].filter(Boolean).join(", ");
+            const required = flag.required === true ? " (required)" : "";
+            return { label, desc: `${flag.description}${required}` };
+        });
+        flagEntries.push({
+            label: "-h, --help",
+            desc: `Show help for ${this.name}`,
+        });
+        const flagWidth = Math.max(...flagEntries.map(entry => entry.label.length));
+        lines.push("FLAGS");
+        for (const entry of flagEntries) {
+            lines.push(`  ${entry.label.padEnd(flagWidth + 2)}${entry.desc}`);
         }
-        lines.push(`  ${"--h, -help".padEnd(20)} Show this help message`);
         return lines.join("\n");
     }
     _getMatchedFlags({ passedFlags, }) {

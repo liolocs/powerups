@@ -47,7 +47,7 @@ async function checkPattern(patternFolder: FileRef): Promise<string[]> {
 
 const validate = new Command({
   name: "validate",
-  description: "Validate pattern instructions.json files and their templates",
+  description: "Validate pattern instructions.json files and templates",
   flags: [
     {
       name: "name",

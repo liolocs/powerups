@@ -10,7 +10,7 @@ import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 const generate = new Command({
   name: "gen",
 
-  description: "Generate a pattern file",
+  description: "Generate a new pattern file",
 
   flags: [
     {

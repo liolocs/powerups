@@ -48,11 +48,16 @@ test.case("Command actions with missing required flags fail", async (assert) => 
             return "fails";
         },
     });
-    assert(async () => await command.run({
-        subcommands: [],
-        flags: [],
-    }))
-        .throws(CommandErrorCode.missing_required_flags);
+    try {
+        await command.run({
+            subcommands: [],
+            flags: [],
+        });
+    }
+    catch (e) {
+        assert(e.code)
+            .equals(CommandErrorCode.missing_required_flags);
+    }
 });
 test.case("Command actions with required flags succeed", async (assert) => {
     const flag = {
@@ -71,11 +76,17 @@ test.case("Command actions with required flags succeed", async (assert) => {
             return "fails";
         },
     });
-    assert(async () => await command.run({
-        subcommands: [],
-        flags: [{ flag: "-n", value: "John" }],
-    }))
-        .tries();
+    let error;
+    try {
+        await command.run({
+            subcommands: [],
+            flags: [{ flag: "-n", value: "John" }],
+        });
+    }
+    catch (e) {
+        error = e;
+    }
+    assert(error).not.defined();
 });
 test.case("Command actions with subcommands with missing subcommands fail", async (assert) => {
     const create = new Command({
@@ -93,11 +104,16 @@ test.case("Command actions with subcommands with missing subcommands fail", asyn
         requiresSubcommand: true,
         action: () => "project",
     });
-    assert(async () => await command.run({
-        subcommands: [],
-        flags: [],
-    }))
-        .throws(CommandErrorCode.missing_required_subcommand);
+    try {
+        await command.run({
+            subcommands: [],
+            flags: [],
+        });
+    }
+    catch (e) {
+        assert(e.code)
+            .equals(CommandErrorCode.missing_required_subcommand);
+    }
 });
 test.case("Command actions with subcommands with invalid subcommand fail", async (assert) => {
     const create = new Command({
@@ -114,11 +130,16 @@ test.case("Command actions with subcommands with invalid subcommand fail", async
         subcommands: [create],
         action: () => "project",
     });
-    assert(async () => await command.run({
-        subcommands: ["destroy"],
-        flags: [],
-    }))
-        .throws(CommandErrorCode.invalid_subcommand);
+    try {
+        await command.run({
+            subcommands: ["destroy"],
+            flags: [],
+        });
+    }
+    catch (e) {
+        assert(e.code)
+            .equals(CommandErrorCode.invalid_subcommand);
+    }
 });
 test.case("Command actions with subcommands 2 nested subcommands succeed", async (assert) => {
     const flag = {
@@ -142,10 +163,45 @@ test.case("Command actions with subcommands 2 nested subcommands succeed", async
         subcommands: [create],
         action: () => "project",
     });
-    assert(async () => await project.run({
-        subcommands: ["create"],
-        flags: [{ flag: "-n", value: "newProject" }],
-    }))
-        .tries();
+    let error;
+    try {
+        await project.run({
+            subcommands: ["create"],
+            flags: [{ flag: "-n", value: "newProject" }],
+        });
+    }
+    catch (e) {
+        error = e;
+    }
+    assert(error).not.defined();
+});
+test.case("Command passes rawFlags including undeclared flags", async (assert) => {
+    const flag = {
+        name: "name",
+        long: "name",
+        short: "n",
+        description: "Project name",
+    };
+    let receivedRawFlags;
+    const command = new Command({
+        name: "test",
+        description: "test description",
+        flags: [flag],
+        subcommands: [],
+        action: (props) => {
+            receivedRawFlags = props.rawFlags;
+            return "ok";
+        },
+    });
+    await command.run({
+        subcommands: [],
+        flags: [
+            { flag: "--name", value: "test" },
+            { flag: "--extra-flag", value: "extra-value" },
+        ],
+    });
+    assert(receivedRawFlags).defined();
+    assert(receivedRawFlags.length).equals(2);
+    assert(receivedRawFlags[1].flag).equals("--extra-flag");
 });
 //# sourceMappingURL=Command.spec.js.map

@@ -26,11 +26,16 @@ export default class Command {
         if (is.truthy(args?.subcommands.length)) {
             const [head, ...tail] = args.subcommands;
             const sub = this.subcommands.get(head);
-            if (is.falsy(sub)) {
+            if (is.defined(sub)) {
+                const flags = is.defined(args.flags) ? args.flags : [];
+                return sub.run({ subcommands: tail, flags: flags });
+            }
+            // No matching subcommand found
+            if (this.subcommands.size > 0) {
+                // Has subcommands but the first positional arg doesn't match any
                 throw command_errors.invalid_subcommand(head, this.name);
             }
-            const flags = is.defined(args.flags) ? args.flags : [];
-            return sub.run({ subcommands: tail, flags: flags });
+            // No subcommands at all — fall through to action with positional args
         }
         // No subcommand — check if one is required
         if (this.subcommands.size > 0 && this.requiresSubcommand === true) {
@@ -39,7 +44,7 @@ export default class Command {
         // No args at all — run bare action
         if (!is.defined(args)) {
             // @ts-expect-error — flags are optional
-            return this.action({ flags: {}, subcommands: [] });
+            return this.action({ flags: {}, subcommands: [], rawFlags: [] });
         }
         if (this._hasMissingRequiredFlags(args.flags)) {
             throw command_errors.missing_required_flags(this.name);
@@ -47,7 +52,7 @@ export default class Command {
         const passedFlags = is.defined(args.flags) ? args.flags : [];
         const matchedFlags = this._getMatchedFlags({ passedFlags });
         const subcommands = is.defined(args.subcommands) ? args.subcommands : [];
-        return await this.action({ flags: matchedFlags, subcommands });
+        return await this.action({ flags: matchedFlags, subcommands, rawFlags: passedFlags });
     }
     buildHelp() {
         const lines = [

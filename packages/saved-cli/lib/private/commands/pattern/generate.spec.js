@@ -37,7 +37,8 @@ test.case("gen pattern creates template files from output", async (assert) => {
         ],
     });
     const patternPath = patternsFolder.append("/ui-component/instructions.json");
-    const templatePath = patternsFolder.append("/ui-component/button.svelte.tmpl");
+    const templatePath = patternsFolder
+        .append("/ui-component/button.svelte.tmpl");
     assert(await fs.exists(patternPath)).equals(true);
     assert(await fs.exists(templatePath)).equals(true);
     const content = instructionsSchema.parse(await patternPath.json());

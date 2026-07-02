@@ -198,3 +198,37 @@ test.case("Command actions with subcommands 2 nested subcommands succeed",
 
     assert(error).not.defined();
   });
+
+test.case("Command passes rawFlags including undeclared flags", async assert => {
+  const flag = {
+    name: "name",
+    long: "name",
+    short: "n",
+    description: "Project name",
+  } as const;
+
+  let receivedRawFlags: { flag: string; value: string }[] | undefined;
+
+  const command = new Command({
+    name: "test",
+    description: "test description",
+    flags: [flag],
+    subcommands: [],
+    action: (props) => {
+      receivedRawFlags = props.rawFlags;
+      return "ok";
+    },
+  });
+
+  await command.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "test" },
+      { flag: "--extra-flag", value: "extra-value" },
+    ],
+  });
+
+  assert(receivedRawFlags!).defined();
+  assert(receivedRawFlags!.length).equals(2);
+  assert(receivedRawFlags![1].flag).equals("--extra-flag");
+});

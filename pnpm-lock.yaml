@@ -34,27 +34,6 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  packages/dry-cli:
-    dependencies:
-      '@dryai/program':
-        specifier: workspace:^
-        version: link:../program
-      '@rcompat/cli':
-        specifier: ^0.25.0
-        version: 0.25.0
-      '@rcompat/error':
-        specifier: ^0.9.0
-        version: 0.9.0
-      '@rcompat/fs':
-        specifier: ^0.35.1
-        version: 0.35.1
-      '@rcompat/is':
-        specifier: ^0.12.0
-        version: 0.12.0
-      '@rcompat/runtime':
-        specifier: ^0.17.0
-        version: 0.17.0
-
   packages/program:
     dependencies:
       '@rcompat/array':
@@ -102,6 +81,10 @@ importers:
       pema:
         specifier: ^0.8.2
         version: 0.8.2
+    devDependencies:
+      '@types/nunjucks':
+        specifier: ^3.2.6
+        version: 3.2.6
 
 packages:
 
@@ -513,6 +496,9 @@ packages:
 
   '@types/node@25.9.4':
     resolution: {integrity: sha512-dszCsrKb5U7ZsVZBWiHFklTloVl0mSEnWH/iZXfZUlI4rzCUnsvGmgqfuVRHL54ugE7/wRuxEIXRa2iMZ+BG6g==}
+
+  '@types/nunjucks@3.2.6':
+    resolution: {integrity: sha512-pHiGtf83na1nCzliuAdq8GowYiXvH5l931xZ0YEHaLMNFgynpEqx+IPStlu7UaDkehfvl01e4x/9Tpwhy7Ue3w==}
 
   '@typescript-eslint/eslint-plugin@8.62.0':
     resolution: {integrity: sha512-o+mpz7EYiMzXoySXiKmzlabIvTVqUuK5yLrAedRPRDA0IpPFMUV1IXt6OqljIxX/kumN6EjUYp41Hqelh6p/Dw==}
@@ -1346,6 +1332,8 @@ snapshots:
   '@types/node@25.9.4':
     dependencies:
       undici-types: 7.24.6
+
+  '@types/nunjucks@3.2.6': {}
 
   '@typescript-eslint/eslint-plugin@8.62.0(@typescript-eslint/parser@8.62.0(eslint@10.5.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.5.0(jiti@2.7.0))(typescript@6.0.3)':
     dependencies:

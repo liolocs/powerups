@@ -5,11 +5,10 @@ import summary from "#commands/metrics/summary";
 import captureStdout from "#test-utils/capture-stdout";
 import { CodeError } from "@rcompat/error";
 import { logRun } from "#utils/metrics";
-import { MAIN_FOLDER, METRICS_FILE } from "#constants";
+import { MAIN_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const mainFolder = root.append(`/${MAIN_FOLDER}`);
-const metricsPath = root.append(`/${MAIN_FOLDER}/${METRICS_FILE}`);
 
 async function reset() {
   if (await fs.exists(mainFolder)) {

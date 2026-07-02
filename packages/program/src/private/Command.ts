@@ -10,10 +10,8 @@ export interface Flag {
   required?: boolean;
 }
 
-// Extract flag names as a union of string literals from a tuple of flags
 type FlagNames<T extends readonly Flag[]> = T[number]["name"];
 
-// Build a record of { flagName: string } from the flags tuple
 type FlagRecord<T extends readonly Flag[]> = {
   [K in FlagNames<T>]: string | undefined;
 };
@@ -115,7 +113,6 @@ export default class Command<T extends readonly Flag[]> {
     lines.push(`${this.name} — ${this.description}`);
     lines.push("");
 
-    // Usage
     lines.push("USAGE");
     if (this.subcommands.size > 0) {
       lines.push(`  ${this.name} <subcommand> [flags]`);
@@ -124,7 +121,6 @@ export default class Command<T extends readonly Flag[]> {
     }
     lines.push("");
 
-    // Subcommands
     if (this.subcommands.size > 0) {
       lines.push("SUBCOMMANDS");
       const subs = [...this.subcommands.values()];

@@ -18,10 +18,20 @@ const command_errors = error.coded({
       `Invalid subcommand ${cli.fg.red(name)} for the ${parentText} command.\n`;
     return t`${errorBGText}${errorText}`;
   },
-  missing_required_subcommand: (name: string) => {
+  missing_required_subcommand: (
+    name: string,
+    subcommands: { name: string; description: string }[] = [],
+  ) => {
     const nameText = cli.bg.yellow(" " + name + " ");
-    const errorText =
+    let errorText =
       `Missing required subcommand for the ${nameText} command.\n`;
+    if (subcommands.length > 0) {
+      const width = Math.max(...subcommands.map(sub => sub.name.length));
+      const subList = subcommands
+        .map(sub => `  ${sub.name.padEnd(width + 2)}${sub.description}`)
+        .join("\n");
+      errorText += `\nAvailable subcommands:\n${subList}\n`;
+    }
     return t`${errorBGText}${errorText}`;
   },
 });

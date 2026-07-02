@@ -86,7 +86,13 @@ export default class Command<T extends readonly Flag[]> {
 
     // No subcommand — check if one is required
     if (this.subcommands.size > 0 && this.requiresSubcommand === true) {
-      throw command_errors.missing_required_subcommand(this.name);
+      throw command_errors.missing_required_subcommand(
+        this.name,
+        [...this.subcommands.values()].map(sub => ({
+          name: sub.name,
+          description: sub.description,
+        })),
+      );
     }
 
     // No args at all — run bare action

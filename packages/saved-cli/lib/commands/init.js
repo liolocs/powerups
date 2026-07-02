@@ -1,3 +1,3 @@
-import init from "../private/init.js";
+import init from "../private/commands/init.js";
 export default init;
 //# sourceMappingURL=init.js.map

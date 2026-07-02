@@ -1,5 +1,5 @@
 import { Command } from "@dryai/program";
-import summary from "./summary";
+import summary from "#commands/metrics/summary";
 import { CLI_NAME } from "#constants";
 
 const metrics = new Command({

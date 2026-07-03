@@ -8,12 +8,12 @@ import { logRun } from "#utils/metrics";
 import { MAIN_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
-const mainFolder = root.append(`/${MAIN_FOLDER}`);
+const testRoot = root.append("/tmp");
+const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
 
 async function reset() {
-  if (await fs.exists(mainFolder)) {
-    await mainFolder.remove();
-  }
+  await testRoot.remove();
+  await fs.create(testRoot);
   await fs.create(mainFolder);
 }
 
@@ -23,11 +23,12 @@ test.case("summary prints no-metrics message when file is empty", async assert =
   const output = await captureStdout(() => summary.run({
     subcommands: [],
     flags: [],
+    context: { root: testRoot },
   }));
 
   assert(output).includes("No metrics recorded yet");
 
-  await mainFolder.remove();
+  await testRoot.remove();
 });
 
 test.case("summary prints no-metrics message when file missing", async assert => {
@@ -36,23 +37,25 @@ test.case("summary prints no-metrics message when file missing", async assert =>
   const output = await captureStdout(() => summary.run({
     subcommands: [],
     flags: [],
+    context: { root: testRoot },
   }));
 
   assert(output).includes("No metrics recorded yet");
 
-  await mainFolder.remove();
+  await testRoot.remove();
 });
 
 test.case("summary prints table with aggregated data", async assert => {
   await reset();
 
-  await logRun({ pattern: "ui-component", characters: 3000 });
-  await logRun({ pattern: "ui-component", characters: 1500 });
-  await logRun({ pattern: "api-route", characters: 1200 });
+  await logRun({ pattern: "ui-component", characters: 3000 }, testRoot);
+  await logRun({ pattern: "ui-component", characters: 1500 }, testRoot);
+  await logRun({ pattern: "api-route", characters: 1200 }, testRoot);
 
   const output = await captureStdout(() => summary.run({
     subcommands: [],
     flags: [],
+    context: { root: testRoot },
   }));
 
   // Header
@@ -78,19 +81,19 @@ test.case("summary prints table with aggregated data", async assert => {
   assert(output).includes("5,700");
   assert(output).includes("~1,425");
 
-  await mainFolder.remove();
+  await testRoot.remove();
 });
 
 test.case("summary throws dry_folder_not_found without .saved", async assert => {
-  if (await fs.exists(mainFolder)) {
-    await mainFolder.remove();
-  }
+  await testRoot.remove();
+  await fs.create(testRoot);
 
   let threw = false;
   try {
     await summary.run({
       subcommands: [],
       flags: [],
+      context: { root: testRoot },
     });
   } catch (e) {
     threw = true;
@@ -98,4 +101,6 @@ test.case("summary throws dry_folder_not_found without .saved", async assert => 
     assert((e as CodeError).code).equals("dry_folder_not_found");
   }
   assert(threw).true();
+
+  await testRoot.remove();
 });

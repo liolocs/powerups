@@ -1,0 +1,33 @@
+Brainstorm a plan for "$ARGUMENTS" using {{ CLI_NAME }} patterns.
+
+1. Explore the project context:
+   - Check recent commits, existing files, and docs.
+   - Run `{{ CLI_NAME }} pattern search -q "$ARGUMENTS"` to see if any
+     patterns already relate to this area.
+
+2. Ask the user clarifying questions — one at a time — to understand:
+   - What they are trying to achieve
+   - What constraints apply
+   - What success looks like
+
+3. Identify the key intents (topics, domains, capabilities) this plan touches.
+   For each intent, run `{{ CLI_NAME }} pattern search -q "<intent>"` to
+   understand what patterns already exist.
+
+4. From the search results, determine:
+   - Which existing patterns can be reused for this plan
+   - Which new patterns would need to be created
+   - What work doesn't fit a pattern (one-off tasks)
+
+5. Present the plan in sections, covering:
+   - Overview of the approach
+   - Existing patterns to reuse (with names)
+   - New patterns to create (with suggested names and intents)
+   - Non-pattern work (one-off tasks)
+   - Suggested order of implementation
+
+6. Get user approval on the plan before proceeding.
+
+7. Once approved, save the plan to a spec file (e.g.
+   `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`) and commit it.
+   Then transition to creating an implementation plan.

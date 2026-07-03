@@ -1,0 +1,12 @@
+Search {{ CLI_NAME }} patterns for "$ARGUMENTS".
+
+1. Run `{{ CLI_NAME }} pattern search -q "$ARGUMENTS"`.
+2. If a pattern matches (score > 0):
+   - Run `{{ CLI_NAME }} pattern run <name> --var key=value ... -d` to preview.
+   - Show the user what will be generated and where.
+   - On approval, run without `-d` to write the files.
+3. If no pattern matches:
+   - Generate the new feature as requested.
+   - After generating, ask the user whether they'd like to capture it as a pattern.
+   - If yes, run `{{ CLI_NAME }} pattern gen -n <short-name> -i "$ARGUMENTS" -v "..." -o '...'`,
+     fill in the template, and run `{{ CLI_NAME }} pattern validate -n <name>`.

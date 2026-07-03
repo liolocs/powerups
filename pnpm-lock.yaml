@@ -8,10 +8,6 @@ importers:
 
   .:
     dependencies:
-      proby:
-        specifier: ^0.22.0
-        version: 0.22.0(@rcompat/test@0.20.0)
-    devDependencies:
       '@rcompat/test':
         specifier: ^0.20.0
         version: 0.20.0
@@ -21,6 +17,10 @@ importers:
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260615.1
         version: 7.0.0-dev.20260615.1
+      proby:
+        specifier: ^0.22.0
+        version: 0.22.0(@rcompat/test@0.20.0)
+    devDependencies:
       apekit:
         specifier: 0.0.58
         version: 0.0.58(eslint@10.5.0(jiti@2.7.0))

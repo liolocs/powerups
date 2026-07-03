@@ -13,21 +13,21 @@ const init = new Command({
             name: "harness",
             long: "harness",
             short: "H",
-            description: "Override harness detection (claude|opencode|pi|codex)",
+            description: "Override harness detection ( claude | opencode | pi | codex )",
         },
     ],
     subcommands: [],
-    action: async (props) => {
-        const root = props?.context?.root ?? await runtime.projectRoot();
+    action: async ({ context, flags }) => {
+        const root = context?.root ?? await runtime.projectRoot();
         const mainFolder = root.append(`/${MAIN_FOLDER}`);
         if (await fs.exists(mainFolder)) {
             throw init_errors.dry_folder_exists();
         }
         await fs.create(mainFolder);
         // Run scaffold with optional --harness override
-        const harnessFlag = props?.flags?.harness;
+        const harnessFlag = flags.harness;
         const result = await scaffold(root, harnessFlag, {
-            skipGlobal: props?.context?.skipGlobal,
+            skipGlobal: context?.skipGlobal,
         });
         const green = cli.fg.green;
         const dim = cli.fg.dim;

@@ -5,5 +5,5 @@ import { type FileRef } from "@rcompat/fs";
  * - If the file has an existing BEGIN/END section: replace it in-place.
  * - If the file exists without a section: append the rendered content.
  */
-export declare function writeInstructionFile(projectRoot: FileRef, filename: string, renderedSection: string, cliName: string): Promise<void>;
+export declare function writeToAgentsOrClaudeMD(projectRoot: FileRef, filename: string, renderedSection: string, cliName: string): Promise<void>;
 //# sourceMappingURL=agents.d.ts.map

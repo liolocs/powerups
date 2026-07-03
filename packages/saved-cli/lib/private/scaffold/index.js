@@ -1,7 +1,7 @@
 import fs from "@rcompat/fs";
 import { runTemplate } from "#runners/pattern/index";
 import { detectHarness } from "#scaffold/detect";
-import { writeInstructionFile } from "#scaffold/agents";
+import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { writeCommandFile } from "#scaffold/write";
 import { CLI_NAME, MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 const SCAFFOLD_DIR = import.meta.dirname;
@@ -41,7 +41,7 @@ export async function scaffold(projectRoot, harnessFlag, options) {
         templatePath: fs.ref(`${SCAFFOLD_DIR}/agents.njk`),
         variables,
     });
-    await writeInstructionFile(projectRoot, config.instructionFile, agentsRendered, CLI_NAME);
+  await writeToAgentsOrClaudeMD(projectRoot, config.instructionFile, agentsRendered, CLI_NAME);
     filesWritten.push(config.instructionFile);
     // 4. Write command files (if this harness supports them)
     if (config.commandDir !== null) {

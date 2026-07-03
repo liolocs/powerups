@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { writeInstructionFile } from "#scaffold/agents";
+import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { runTemplate } from "#runners/pattern/index";
 import { CLI_NAME, MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 
@@ -21,7 +21,7 @@ test.case("creates AGENTS.md when absent", async assert => {
   await fs.create(testRoot);
 
   const rendered = await renderAgents();
-  await writeInstructionFile(testRoot, "AGENTS.md", rendered, CLI_NAME);
+  await writeToAgentsOrClaudeMD(testRoot, "AGENTS.md", rendered, CLI_NAME);
 
   const content = await testRoot.append("/AGENTS.md").text();
   assert(content.includes(`<!-- BEGIN ${CLI_NAME} -->`)).equals(true);
@@ -35,7 +35,7 @@ test.case("creates CLAUDE.md when absent", async assert => {
   await fs.create(testRoot);
 
   const rendered = await renderAgents();
-  await writeInstructionFile(testRoot, "CLAUDE.md", rendered, CLI_NAME);
+  await writeToAgentsOrClaudeMD(testRoot, "CLAUDE.md", rendered, CLI_NAME);
 
   const content = await testRoot.append("/CLAUDE.md").text();
   assert(content.includes(`<!-- BEGIN ${CLI_NAME} -->`)).equals(true);
@@ -49,7 +49,7 @@ test.case("appends to existing file without section", async assert => {
   await testRoot.append("/AGENTS.md").write("# Existing project\n\nSome content.");
 
   const rendered = await renderAgents();
-  await writeInstructionFile(testRoot, "AGENTS.md", rendered, CLI_NAME);
+  await writeToAgentsOrClaudeMD(testRoot, "AGENTS.md", rendered, CLI_NAME);
 
   const content = await testRoot.append("/AGENTS.md").text();
   assert(content.includes("# Existing project")).equals(true);
@@ -65,7 +65,7 @@ test.case("replaces existing section (idempotent)", async assert => {
   await testRoot.append("/AGENTS.md").write(oldContent);
 
   const rendered = await renderAgents();
-  await writeInstructionFile(testRoot, "AGENTS.md", rendered, CLI_NAME);
+  await writeToAgentsOrClaudeMD(testRoot, "AGENTS.md", rendered, CLI_NAME);
 
   const content = await testRoot.append("/AGENTS.md").text();
   assert(content.includes("# Project")).equals(true);
@@ -84,7 +84,7 @@ test.case("works for CLAUDE.md same as AGENTS.md", async assert => {
   await testRoot.append("/CLAUDE.md").write(oldContent);
 
   const rendered = await renderAgents();
-  await writeInstructionFile(testRoot, "CLAUDE.md", rendered, CLI_NAME);
+  await writeToAgentsOrClaudeMD(testRoot, "CLAUDE.md", rendered, CLI_NAME);
 
   const content = await testRoot.append("/CLAUDE.md").text();
   assert(content.includes("# My Claude")).equals(true);

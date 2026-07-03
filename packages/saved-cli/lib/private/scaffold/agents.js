@@ -5,7 +5,7 @@ import fs from "@rcompat/fs";
  * - If the file has an existing BEGIN/END section: replace it in-place.
  * - If the file exists without a section: append the rendered content.
  */
-export async function writeInstructionFile(projectRoot, filename, renderedSection, cliName) {
+export async function writeToAgentsOrClaudeMD(projectRoot, filename, renderedSection, cliName) {
     const filePath = projectRoot.append(`/${filename}`);
     const beginMarker = `<!-- BEGIN ${cliName} -->`;
     const endMarker = `<!-- END ${cliName} -->`;

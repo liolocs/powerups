@@ -49,7 +49,7 @@ export default class Command {
         // No args at all — run bare action
         if (!is.defined(args)) {
             // @ts-expect-error — flags are optional
-            return this.action({ flags: {}, subcommands: [], rawFlags: [] });
+            return this.action({ flags: {}, subcommands: [], rawFlags: [], context: args?.context });
         }
         if (this._hasMissingRequiredFlags(args.flags)) {
             throw command_errors.missing_required_flags(this.name);
@@ -57,7 +57,7 @@ export default class Command {
         const passedFlags = is.defined(args.flags) ? args.flags : [];
         const matchedFlags = this._getMatchedFlags({ passedFlags });
         const subcommands = is.defined(args.subcommands) ? args.subcommands : [];
-        return await this.action({ flags: matchedFlags, subcommands, rawFlags: passedFlags });
+        return await this.action({ flags: matchedFlags, subcommands, rawFlags: passedFlags, context: args?.context });
     }
     buildHelp() {
         const lines = [];

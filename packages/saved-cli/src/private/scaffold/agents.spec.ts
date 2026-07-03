@@ -7,7 +7,7 @@ import { CLI_NAME, MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
-const scaffoldDir = root.append("/src/private/scaffold");
+const scaffoldDir = fs.ref(import.meta.dirname);
 
 async function renderAgents(): Promise<string> {
   return await runTemplate({

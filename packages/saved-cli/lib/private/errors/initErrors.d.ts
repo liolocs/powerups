@@ -2,7 +2,7 @@ declare const init_errors: {
     dry_folder_exists: () => import("@rcompat/error").TemplateError;
     no_harness_detected: () => import("@rcompat/error").TemplateError;
     invalid_harness: (value: string) => import("@rcompat/error").TemplateError;
-    claude_md_exists_not_symlink: () => import("@rcompat/error").TemplateError;
+    multiple_harnesses_detected: (harnesses: string[]) => import("@rcompat/error").TemplateError;
     agents_section_render_failed: (detail: string) => import("@rcompat/error").TemplateError;
 };
 export type InitErrorCode = keyof typeof init_errors;

@@ -1,27 +1,28 @@
 import fs, { type FileRef } from "@rcompat/fs";
 
 /**
- * Write the rendered AGENTS.md section to the project root.
- * - If AGENTS.md doesn't exist: create it with the rendered content.
- * - If AGENTS.md has an existing BEGIN/END section: replace it in-place.
- * - If AGENTS.md exists without a section: append the rendered content.
+ * Write the rendered instruction section to a file (AGENTS.md or CLAUDE.md).
+ * - If the file doesn't exist: create it with the rendered content.
+ * - If the file has an existing BEGIN/END section: replace it in-place.
+ * - If the file exists without a section: append the rendered content.
  */
-export async function writeAgentsMd(
+export async function writeInstructionFile(
   projectRoot: FileRef,
+  filename: string,
   renderedSection: string,
   cliName: string,
 ): Promise<void> {
-  const agentsPath = projectRoot.append("/AGENTS.md");
+  const filePath = projectRoot.append(`/${filename}`);
   const beginMarker = `<!-- BEGIN ${cliName} -->`;
   const endMarker = `<!-- END ${cliName} -->`;
 
-  if (!(await fs.exists(agentsPath))) {
+  if (!(await fs.exists(filePath))) {
     // Create new file
-    await agentsPath.write(renderedSection);
+    await filePath.write(renderedSection);
     return;
   }
 
-  const existing = await agentsPath.text();
+  const existing = await filePath.text();
 
   // Check for existing section
   const beginIdx = existing.indexOf(beginMarker);
@@ -31,13 +32,12 @@ export async function writeAgentsMd(
       // Replace the existing section in-place
       const before = existing.substring(0, beginIdx);
       const after = existing.substring(endIdx + endMarker.length);
-      const newContent = before + renderedSection + after;
-      await agentsPath.write(newContent);
+      await filePath.write(before + renderedSection + after);
       return;
     }
   }
 
   // Append to existing file
   const separator = existing.endsWith("\n") ? "\n" : "\n\n";
-  await agentsPath.write(existing + separator + renderedSection);
+  await filePath.write(existing + separator + renderedSection);
 }

@@ -1,9 +1,9 @@
 import { type FileRef } from "@rcompat/fs";
 /**
- * Write the rendered AGENTS.md section to the project root.
- * - If AGENTS.md doesn't exist: create it with the rendered content.
- * - If AGENTS.md has an existing BEGIN/END section: replace it in-place.
- * - If AGENTS.md exists without a section: append the rendered content.
+ * Write the rendered instruction section to a file (AGENTS.md or CLAUDE.md).
+ * - If the file doesn't exist: create it with the rendered content.
+ * - If the file has an existing BEGIN/END section: replace it in-place.
+ * - If the file exists without a section: append the rendered content.
  */
-export declare function writeAgentsMd(projectRoot: FileRef, renderedSection: string, cliName: string): Promise<void>;
+export declare function writeInstructionFile(projectRoot: FileRef, filename: string, renderedSection: string, cliName: string): Promise<void>;
 //# sourceMappingURL=agents.d.ts.map

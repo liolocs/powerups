@@ -1,108 +1,83 @@
 import fs, { type FileRef } from "@rcompat/fs";
-import { instructionsSchema, type Instructions } from "#schemas/instruction";
 import { runTemplate } from "#runners/pattern/index";
-import { resolveOutputPath } from "#utils/output-path";
-import { detectHarnesses, type Harness } from "#scaffold/detect";
-import { writeAgentsMd } from "#scaffold/agents";
-import { linkClaudeMd } from "#scaffold/claude-md";
+import { detectHarness, type Harness } from "#scaffold/detect";
+import { writeInstructionFile } from "#scaffold/agents";
 import { writeCommandFile } from "#scaffold/write";
-import init_errors from "#errors/initErrors";
 import { CLI_NAME, MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 
 const SCAFFOLD_DIR = import.meta.dirname;
 
 export interface ScaffoldResult {
-  harnesses: Harness[];
+  harness: Harness;
   filesWritten: string[];
 }
 
 /**
- * Map an output file's path to the harness it belongs to.
- * AGENTS.md → always (null = all harnesses).
- * .claude/ → claude, .opencode/ → opencode, .pi/ → pi.
+ * Per-harness configuration: instruction file, command directory, frontmatter.
  */
-function fileHarness(outputPath: string): Harness | null {
-  if (outputPath === "AGENTS.md") return null;
-  if (outputPath.startsWith(".claude/")) return "claude";
-  if (outputPath.startsWith(".opencode/")) return "opencode";
-  if (outputPath.startsWith(".pi/")) return "pi";
-  return null;
-}
+const HARNESS_CONFIG: Record<Harness, {
+  instructionFile: string;
+  commandDir: string | null;
+  frontmatter: boolean;
+}> = {
+  claude: { instructionFile: "CLAUDE.md", commandDir: ".claude/commands", frontmatter: false },
+  opencode: { instructionFile: "AGENTS.md", commandDir: ".opencode/commands", frontmatter: true },
+  pi: { instructionFile: "AGENTS.md", commandDir: ".pi/prompts", frontmatter: false },
+  codex: { instructionFile: "AGENTS.md", commandDir: null, frontmatter: false },
+};
+
+const COMMANDS = [
+  {
+    template: "new-feature.njk",
+    name: `new-${CLI_NAME}-feature`,
+    description: `Search and run ${CLI_NAME} patterns for new features`,
+  },
+  {
+    template: "brainstorm.njk",
+    name: `new-${CLI_NAME}-brainstorm`,
+    description: `Brainstorm a plan using ${CLI_NAME} patterns`,
+  },
+];
 
 /**
- * Run the full scaffold: detect harnesses, render templates, write files.
+ * Run the full scaffold: detect one harness, render templates, write files.
  */
 export async function scaffold(
   projectRoot: FileRef,
-  harnessFlags: string[],
+  harnessFlag: string | undefined,
   options?: { skipGlobal?: boolean },
 ): Promise<ScaffoldResult> {
-  // 1. Detect harnesses
-  const harnesses = await detectHarnesses(projectRoot, harnessFlags, options);
+  // 1. Detect harness (single)
+  const harness = await detectHarness(projectRoot, harnessFlag, options);
+  const config = HARNESS_CONFIG[harness];
 
-  if (harnesses.length === 0) {
-    throw init_errors.no_harness_detected();
-  }
-
-  // 2. Load bundled instructions.json
-  const instructionsPath = fs.ref(`${SCAFFOLD_DIR}/instructions.json`);
-  const instructions: Instructions = instructionsSchema.parse(
-    await instructionsPath.json(),
-  );
-
-  // 3. Build render variables from constants
-  const variables = {
-    CLI_NAME,
-    MAIN_FOLDER,
-    PATTERNS_FOLDER,
-  };
-
+  // 2. Build render variables from constants
+  const variables = { CLI_NAME, MAIN_FOLDER, PATTERNS_FOLDER };
   const filesWritten: string[] = [];
-  const harnessSet = new Set<Harness>(harnesses);
 
-  // 4. Process each output file
-  for (const file of instructions.output.files) {
-    const harness = fileHarness(file.outputPath);
+  // 3. Write instruction file (AGENTS.md or CLAUDE.md)
+  const agentsRendered = await runTemplate({
+    templatePath: fs.ref(`${SCAFFOLD_DIR}/agents.njk`),
+    variables,
+  });
+  await writeInstructionFile(projectRoot, config.instructionFile, agentsRendered, CLI_NAME);
+  filesWritten.push(config.instructionFile);
 
-    // Skip files that belong to a harness not in our set
-    if (harness !== null && !harnessSet.has(harness)) {
-      continue;
+  // 4. Write command files (if this harness supports them)
+  if (config.commandDir !== null) {
+    for (const cmd of COMMANDS) {
+      const rendered = await runTemplate({
+        templatePath: fs.ref(`${SCAFFOLD_DIR}/${cmd.template}`),
+        variables,
+      });
+      const outputPath = `${config.commandDir}/${cmd.name}.md`;
+      const opts = config.frontmatter
+        ? { frontmatter: `description: "${cmd.description}"` }
+        : undefined;
+      await writeCommandFile(projectRoot, outputPath, rendered, opts);
+      filesWritten.push(outputPath);
     }
-
-    // Resolve outputPath with constants
-    const resolvedPath = resolveOutputPath(file.outputPath, variables);
-
-    // Render the template
-    const templatePath = fs.ref(`${SCAFFOLD_DIR}/${file.template}`);
-    const rendered = await runTemplate({ templatePath, variables });
-
-    // Handle AGENTS.md specially
-    if (file.outputPath === "AGENTS.md") {
-      await writeAgentsMd(projectRoot, rendered, CLI_NAME);
-      filesWritten.push("AGENTS.md");
-      continue;
-    }
-
-    // Handle opencode frontmatter
-    const opts = file.outputPath.startsWith(".opencode/")
-      ? {
-          frontmatter: `description: "${
-            file.template === "new-feature.njk"
-              ? `Search and run ${CLI_NAME} patterns for new features`
-              : `Brainstorm a plan using ${CLI_NAME} patterns`
-          }"`,
-        }
-      : undefined;
-
-    await writeCommandFile(projectRoot, resolvedPath, rendered, opts);
-    filesWritten.push(resolvedPath);
   }
 
-  // 5. Handle CLAUDE.md symlink (only if claude in harness set)
-  if (harnessSet.has("claude")) {
-    await linkClaudeMd(projectRoot);
-    filesWritten.push("CLAUDE.md");
-  }
-
-  return { harnesses, filesWritten };
+  return { harness, filesWritten };
 }

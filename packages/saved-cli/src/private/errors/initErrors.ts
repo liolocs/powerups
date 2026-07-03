@@ -24,10 +24,12 @@ const init_errors = error.coded({
       `Valid values: claude, opencode, pi, codex.`;
     return t`${errorBGText}${errorText}`;
   },
-  claude_md_exists_not_symlink: () => {
+  multiple_harnesses_detected: (harnesses: string[]) => {
+    const harnessText = cli.bg.yellow(" " + harnesses.join(", ") + " ");
     const errorText =
-      `CLAUDE.md exists and is not a symlink.\n` +
-      `Remove it or replace it with a symlink to AGENTS.md, then re-run init.`;
+      `Multiple harnesses detected: ${harnessText}.\n` +
+      `Specify one with --harness=<claude|opencode|pi|codex>.\n` +
+      `Example: savedai init --harness=claude`;
     return t`${errorBGText}${errorText}`;
   },
   agents_section_render_failed: (detail: string) => {

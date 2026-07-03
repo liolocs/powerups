@@ -7,12 +7,12 @@ import generate from "#commands/pattern/generate";
 import captureStdout, { captureStdoutOrError, } from "#test-utils/capture-stdout";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 const root = await runtime.projectRoot();
-const mainFolder = root.append(`/${MAIN_FOLDER}`);
+const testRoot = root.append("/tmp");
+const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
 const patternsFolder = mainFolder.append(`/${PATTERNS_FOLDER}`);
 async function reset() {
-    if (await fs.exists(mainFolder)) {
-        await mainFolder.remove();
-    }
+    await testRoot.remove();
+    await fs.create(testRoot);
     await fs.create(mainFolder);
 }
 async function patternPath(name) {
@@ -33,37 +33,43 @@ test.case("validate reports all valid when every pattern conforms", async (asser
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     await generate.run({
         subcommands: [],
         flags: [{ flag: "--name", value: "api-route" }],
+        context: { root: testRoot },
     });
     const output = await captureStdout(() => validate.run({
         subcommands: [],
         flags: [],
+        context: { root: testRoot },
     }));
     assert(output).includes("Validated 2 pattern(s)");
     assert(output).includes("All valid");
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("validate --name reports a single valid pattern", async (assert) => {
     await reset();
     await generate.run({
         subcommands: [],
         flags: [{ flag: "--name", value: "ui-component" }],
+        context: { root: testRoot },
     });
     const output = await captureStdout(() => validate.run({
         subcommands: [],
         flags: [{ flag: "--name", value: "ui-component" }],
+        context: { root: testRoot },
     }));
     assert(output).includes("ui-component is valid");
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("validate reports a schema violation across all patterns", async (assert) => {
     await reset();
     await generate.run({
         subcommands: [],
         flags: [{ flag: "--name", value: "bad-schema" }],
+        context: { root: testRoot },
     });
     // Corrupt: name must be a string.
     const path = await patternPath("bad-schema");
@@ -71,12 +77,13 @@ test.case("validate reports a schema violation across all patterns", async (asse
     const { output, error } = await captureStdoutOrError(() => validate.run({
         subcommands: [],
         flags: [],
+        context: { root: testRoot },
     }));
     assert(error instanceof CodeError).true();
     assert(error.code).equals("validation_failed");
     assert(output).includes("bad-schema");
     assert(output).includes(".name");
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("validate reports a missing template across all patterns", async (assert) => {
     await reset();
@@ -92,6 +99,7 @@ test.case("validate reports a missing template across all patterns", async (asse
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     // Remove the template file that generate created.
     const templatePath = patternsFolder.append("/missing-template/button.svelte.tmpl");
@@ -99,12 +107,13 @@ test.case("validate reports a missing template across all patterns", async (asse
     const { output, error } = await captureStdoutOrError(() => validate.run({
         subcommands: [],
         flags: [],
+        context: { root: testRoot },
     }));
     assert(error instanceof CodeError).true();
     assert(error.code).equals("validation_failed");
     assert(output).includes("missing-template");
     assert(output).includes("missing template file: button.svelte.tmpl");
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("validate --name throws invalid_pattern for a missing template", async (assert) => {
     await reset();
@@ -120,6 +129,7 @@ test.case("validate --name throws invalid_pattern for a missing template", async
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     const templatePath = patternsFolder.append("/missing-template/button.svelte.tmpl");
     await templatePath.remove();
@@ -128,6 +138,7 @@ test.case("validate --name throws invalid_pattern for a missing template", async
         await validate.run({
             subcommands: [],
             flags: [{ flag: "--name", value: "missing-template" }],
+            context: { root: testRoot },
         });
     }
     catch (error_) {
@@ -136,7 +147,7 @@ test.case("validate --name throws invalid_pattern for a missing template", async
     assert(error instanceof CodeError).true();
     assert(error.code).equals("invalid_pattern");
     assert(error.message).includes("button.svelte.tmpl");
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("validate reports multiple missing templates in one pass", async (assert) => {
     await reset();
@@ -151,17 +162,19 @@ test.case("validate reports multiple missing templates in one pass", async (asse
                     ],
                 }) },
         ],
+        context: { root: testRoot },
     });
     await patternsFolder.append("/many-missing/a.tmpl").remove();
     await patternsFolder.append("/many-missing/b.tmpl").remove();
     const { output, error } = await captureStdoutOrError(() => validate.run({
         subcommands: [],
         flags: [],
+        context: { root: testRoot },
     }));
     assert(error instanceof CodeError).true();
     assert(output).includes("missing template file: a.tmpl");
     assert(output).includes("missing template file: b.tmpl");
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("validate --name throws pattern_not_found for a missing pattern", async (assert) => {
     await reset();
@@ -170,12 +183,14 @@ test.case("validate --name throws pattern_not_found for a missing pattern", asyn
     await generate.run({
         subcommands: [],
         flags: [{ flag: "--name", value: "real-pattern" }],
+        context: { root: testRoot },
     });
     let error;
     try {
         await validate.run({
             subcommands: [],
             flags: [{ flag: "--name", value: "nope" }],
+            context: { root: testRoot },
         });
     }
     catch (error_) {
@@ -183,7 +198,7 @@ test.case("validate --name throws pattern_not_found for a missing pattern", asyn
     }
     assert(error instanceof CodeError).true();
     assert(error.code).equals("pattern_not_found");
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("validate throws no_patterns_found without a patterns folder", async (assert) => {
     await reset();
@@ -192,6 +207,7 @@ test.case("validate throws no_patterns_found without a patterns folder", async (
         await validate.run({
             subcommands: [],
             flags: [],
+            context: { root: testRoot },
         });
     }
     catch (error_) {
@@ -199,22 +215,23 @@ test.case("validate throws no_patterns_found without a patterns folder", async (
     }
     assert(error instanceof CodeError).true();
     assert(error.code).equals("no_patterns_found");
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("validate errors without .saved folder", async (assert) => {
-    if (await fs.exists(mainFolder)) {
-        await mainFolder.remove();
-    }
+    await testRoot.remove();
+    await fs.create(testRoot);
     let threw = false;
     try {
         await validate.run({
             subcommands: [],
             flags: [],
+            context: { root: testRoot },
         });
     }
     catch {
         threw = true;
     }
     assert(threw).equals(true);
+    await testRoot.remove();
 });
 //# sourceMappingURL=validate.spec.js.map

@@ -6,11 +6,11 @@ import runtime from "@rcompat/runtime";
 import captureStdout from "#test-utils/capture-stdout";
 import { MAIN_FOLDER } from "#constants";
 const root = await runtime.projectRoot();
-const mainFolder = root.append(`/${MAIN_FOLDER}`);
+const testRoot = root.append("/tmp");
+const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
 test.case("search finds matching patterns", async (assert) => {
-    if (await fs.exists(mainFolder)) {
-        await mainFolder.remove();
-    }
+    await testRoot.remove();
+    await fs.create(testRoot);
     await fs.create(mainFolder);
     await generate.run({
         subcommands: [],
@@ -27,6 +27,7 @@ test.case("search finds matching patterns", async (assert) => {
                     ],
                 }) },
         ],
+        context: { root: testRoot },
     });
     await generate.run({
         subcommands: [],
@@ -35,19 +36,20 @@ test.case("search finds matching patterns", async (assert) => {
             { flag: "--intent", value: "api,route" },
             { flag: "--variables", value: "RouteName" },
         ],
+        context: { root: testRoot },
     });
     const output = await captureStdout(() => search.run({
         subcommands: [],
         flags: [{ flag: "--query", value: "component" }],
+        context: { root: testRoot },
     }));
     assert(output).includes("ui-component");
     assert(output).includes("score: 1");
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("search ranks by score descending", async (assert) => {
-    if (await fs.exists(mainFolder)) {
-        await mainFolder.remove();
-    }
+    await testRoot.remove();
+    await fs.create(testRoot);
     await fs.create(mainFolder);
     await generate.run({
         subcommands: [],
@@ -55,6 +57,7 @@ test.case("search ranks by score descending", async (assert) => {
             { flag: "--name", value: "focused" },
             { flag: "--intent", value: "component" },
         ],
+        context: { root: testRoot },
     });
     await generate.run({
         subcommands: [],
@@ -65,21 +68,22 @@ test.case("search ranks by score descending", async (assert) => {
                     files: [{ name: "a", template: "a", outputPath: "a" }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     const output = await captureStdout(() => search.run({
         subcommands: [],
         flags: [{ flag: "--query", value: "component ui" }],
+        context: { root: testRoot },
     }));
     const focusedPos = output.indexOf("focused");
     const broadPos = output.indexOf("broad");
     // broad should appear first (score 2) then focused (score 1)
     assert(focusedPos > broadPos).true();
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("search errors when no patterns match", async (assert) => {
-    if (await fs.exists(mainFolder)) {
-        await mainFolder.remove();
-    }
+    await testRoot.remove();
+    await fs.create(testRoot);
     await fs.create(mainFolder);
     await generate.run({
         subcommands: [],
@@ -87,34 +91,37 @@ test.case("search errors when no patterns match", async (assert) => {
             { flag: "--name", value: "ui-component" },
             { flag: "--intent", value: "ui,component" },
         ],
+        context: { root: testRoot },
     });
     let threw = false;
     try {
         await search.run({
             subcommands: [],
             flags: [{ flag: "--query", value: "nonexistent" }],
+            context: { root: testRoot },
         });
     }
     catch {
         threw = true;
     }
     assert(threw).equals(true);
-    await mainFolder.remove();
+    await testRoot.remove();
 });
 test.case("search errors without .dry folder", async (assert) => {
-    if (await fs.exists(mainFolder)) {
-        await mainFolder.remove();
-    }
+    await testRoot.remove();
+    await fs.create(testRoot);
     let threw = false;
     try {
         await search.run({
             subcommands: [],
             flags: [{ flag: "--query", value: "component" }],
+            context: { root: testRoot },
         });
     }
     catch {
         threw = true;
     }
     assert(threw).equals(true);
+    await testRoot.remove();
 });
 //# sourceMappingURL=search.spec.js.map

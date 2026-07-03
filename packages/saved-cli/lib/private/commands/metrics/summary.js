@@ -10,14 +10,14 @@ const summary = new Command({
     description: "Show aggregated metrics for all pattern runs",
     flags: [],
     subcommands: [],
-    action: async () => {
-        const root = await runtime.projectRoot();
+    action: async (props) => {
+        const root = props?.context?.root ?? await runtime.projectRoot();
         const mainFolder = root.append(`/${MAIN_FOLDER}`);
         const hasDryFolder = await fs.exists(mainFolder);
         if (!hasDryFolder) {
             throw metricsErrors.dry_folder_not_found();
         }
-        const entries = await readMetrics();
+        const entries = await readMetrics(root);
         if (entries.length === 0) {
             cli.print("No metrics recorded yet. Run a pattern to start collecting metrics.");
             return;

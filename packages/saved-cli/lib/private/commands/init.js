@@ -9,8 +9,8 @@ const init = new Command({
     description: `Initialize a ${CLI_NAME} project in the current directory`,
     flags: [],
     subcommands: [],
-    action: async () => {
-        const root = await runtime.projectRoot();
+    action: async (props) => {
+        const root = props?.context?.root ?? await runtime.projectRoot();
         const mainFolder = root.append(`/${MAIN_FOLDER}`);
         const hasDryFolder = await fs.exists(mainFolder);
         if (hasDryFolder) {

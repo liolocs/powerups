@@ -24,14 +24,14 @@ const run = new Command({
         },
     ],
     subcommands: [],
-    action: async ({ flags, subcommands, rawFlags }) => {
+    action: async ({ flags, subcommands, rawFlags, context }) => {
         // 1. Extract pattern name from positional args
         const patternName = subcommands?.[0];
         if (!is.defined(patternName)) {
             throw patternRunErrors.missing_pattern_name();
         }
         // 2. Locate .saved folder
-        const root = await runtime.projectRoot();
+        const root = context?.root ?? await runtime.projectRoot();
         const mainFolder = root.append(`/${MAIN_FOLDER}`);
         const hasDryFolder = await fs.exists(mainFolder);
         if (!hasDryFolder) {
@@ -75,7 +75,7 @@ const run = new Command({
         // 7. Log metrics for non-dry-run successful runs (best-effort)
         if (!isDryRun) {
             try {
-                await logRun({ pattern: patternName, characters: totalCharacters });
+                await logRun({ pattern: patternName, characters: totalCharacters }, root);
             }
             catch {
                 // Metrics are secondary — never crash a successful run

@@ -8,20 +8,14 @@ import { CodeError } from "@rcompat/error";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 import { readMetrics } from "#utils/metrics";
 const root = await runtime.projectRoot();
-const mainFolder = root.append(`/${MAIN_FOLDER}`);
+const testRoot = root.append("/tmp");
+const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
 const patternsFolder = mainFolder.append(`/${PATTERNS_FOLDER}`);
-// Dedicated test output directory — never write into the real package `src/`
-// folder (projectRoot resolves to packages/saved-cli, whose own source lives
-// under src/). Removing src/ wholesale would delete the package source.
-const outputDir = root.append("/.test-output");
+const outputDir = testRoot.append("/.test-output");
 async function reset() {
-    if (await fs.exists(mainFolder)) {
-        await mainFolder.remove();
-    }
+    await testRoot.remove();
+    await fs.create(testRoot);
     await fs.create(mainFolder);
-    if (await fs.exists(outputDir)) {
-        await outputDir.remove();
-    }
 }
 test.case("run writes rendered .njk template files to outputPath", async (assert) => {
     await reset();
@@ -40,6 +34,7 @@ test.case("run writes rendered .njk template files to outputPath", async (assert
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     // Write the .njk template content
     const templatePath = patternsFolder.append("/ui-component/button.njk");
@@ -48,15 +43,14 @@ test.case("run writes rendered .njk template files to outputPath", async (assert
     await run.run({
         subcommands: ["ui-component"],
         flags: [{ flag: "--component-name", value: "Button" }],
+        context: { root: testRoot },
     });
     // Verify the file was written. @rcompat/fs .write() ensures files end
     // with a trailing newline, so trim before comparing rendered content.
-    const outputPath = root.append("/.test-output/Button.svelte");
+    const outputPath = testRoot.append("/.test-output/Button.svelte");
     assert(await fs.exists(outputPath)).true();
     assert((await outputPath.text()).trimEnd()).equals("<button>Button</button>");
-    // Cleanup: only the test output dir + .saved, never the real src/
-    await mainFolder.remove();
-    await outputDir.remove();
+    await testRoot.remove();
 });
 test.case("run writes rendered .ts template files to outputPath", async (assert) => {
     await reset();
@@ -73,6 +67,7 @@ test.case("run writes rendered .ts template files to outputPath", async (assert)
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     // Write the .ts template
     const templatePath = patternsFolder.append("/ts-pattern/component.ts");
@@ -82,12 +77,12 @@ test.case("run writes rendered .ts template files to outputPath", async (assert)
     await run.run({
         subcommands: ["ts-pattern"],
         flags: [{ flag: "--component-name", value: "Button" }],
+        context: { root: testRoot },
     });
-    const outputPath = root.append("/.test-output/Button.ts");
+    const outputPath = testRoot.append("/.test-output/Button.ts");
     assert(await fs.exists(outputPath)).true();
     assert((await outputPath.text()).trimEnd()).equals("export const Button = 'Button';");
-    await mainFolder.remove();
-    await outputDir.remove();
+    await testRoot.remove();
 });
 test.case("run --dry-run prints to stdout without writing files", async (assert) => {
     await reset();
@@ -104,6 +99,7 @@ test.case("run --dry-run prints to stdout without writing files", async (assert)
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     const templatePath = patternsFolder.append("/dry-run-test/button.njk");
     await templatePath.write("<button>{{componentName}}</button>");
@@ -113,14 +109,14 @@ test.case("run --dry-run prints to stdout without writing files", async (assert)
             { flag: "--dry-run", value: "true" },
             { flag: "--component-name", value: "Button" },
         ],
+        context: { root: testRoot },
     }));
     assert(output).includes("=== .test-output/Button.svelte ===");
     assert(output).includes("<button>Button</button>");
     // Verify no file was written
-    const outputPath = root.append("/.test-output/Button.svelte");
+    const outputPath = testRoot.append("/.test-output/Button.svelte");
     assert(await fs.exists(outputPath)).false();
-    await mainFolder.remove();
-    await outputDir.remove();
+    await testRoot.remove();
 });
 test.case("run throws pattern_not_found for missing pattern", async (assert) => {
     await reset();
@@ -128,12 +124,14 @@ test.case("run throws pattern_not_found for missing pattern", async (assert) => 
     await generate.run({
         subcommands: [],
         flags: [{ flag: "--name", value: "real" }],
+        context: { root: testRoot },
     });
     let threw = false;
     try {
         await run.run({
             subcommands: ["nonexistent"],
             flags: [],
+            context: { root: testRoot },
         });
     }
     catch (e) {
@@ -142,8 +140,7 @@ test.case("run throws pattern_not_found for missing pattern", async (assert) => 
         assert(e.code).equals("pattern_not_found");
     }
     assert(threw).true();
-    await mainFolder.remove();
-    await outputDir.remove();
+    await testRoot.remove();
 });
 test.case("run throws missing_pattern_name with no positional arg", async (assert) => {
     await reset();
@@ -152,6 +149,7 @@ test.case("run throws missing_pattern_name with no positional arg", async (asser
         await run.run({
             subcommands: [],
             flags: [],
+            context: { root: testRoot },
         });
     }
     catch (e) {
@@ -160,8 +158,7 @@ test.case("run throws missing_pattern_name with no positional arg", async (asser
         assert(e.code).equals("missing_pattern_name");
     }
     assert(threw).true();
-    await mainFolder.remove();
-    await outputDir.remove();
+    await testRoot.remove();
 });
 test.case("run throws missing_variable when required variable not provided", async (assert) => {
     await reset();
@@ -178,6 +175,7 @@ test.case("run throws missing_variable when required variable not provided", asy
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     const templatePath = patternsFolder.append("/needs-vars/button.njk");
     await templatePath.write("<button>{{componentName}} {{theme}}</button>");
@@ -186,6 +184,7 @@ test.case("run throws missing_variable when required variable not provided", asy
         await run.run({
             subcommands: ["needs-vars"],
             flags: [{ flag: "--component-name", value: "Button" }],
+            context: { root: testRoot },
             // Missing --theme
         });
     }
@@ -196,8 +195,7 @@ test.case("run throws missing_variable when required variable not provided", asy
         assert(e.message).includes("theme");
     }
     assert(threw).true();
-    await mainFolder.remove();
-    await outputDir.remove();
+    await testRoot.remove();
 });
 test.case("run throws template_not_found when template file is missing", async (assert) => {
     await reset();
@@ -214,6 +212,7 @@ test.case("run throws template_not_found when template file is missing", async (
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     // Remove the template file
     const templatePath = patternsFolder.append("/missing-tmpl/button.njk");
@@ -223,6 +222,7 @@ test.case("run throws template_not_found when template file is missing", async (
         await run.run({
             subcommands: ["missing-tmpl"],
             flags: [{ flag: "--component-name", value: "Button" }],
+            context: { root: testRoot },
         });
     }
     catch (e) {
@@ -231,27 +231,24 @@ test.case("run throws template_not_found when template file is missing", async (
         assert(e.code).equals("template_not_found");
     }
     assert(threw).true();
-    await mainFolder.remove();
-    await outputDir.remove();
+    await testRoot.remove();
 });
 test.case("run errors without .saved folder", async (assert) => {
-    if (await fs.exists(mainFolder)) {
-        await mainFolder.remove();
-    }
-    if (await fs.exists(outputDir)) {
-        await outputDir.remove();
-    }
+    await testRoot.remove();
+    await fs.create(testRoot);
     let threw = false;
     try {
         await run.run({
             subcommands: ["anything"],
             flags: [],
+            context: { root: testRoot },
         });
     }
     catch {
         threw = true;
     }
     assert(threw).true();
+    await testRoot.remove();
 });
 test.case("run logs metrics to .saved/metrics.jsonl on successful run", async (assert) => {
     await reset();
@@ -268,21 +265,22 @@ test.case("run logs metrics to .saved/metrics.jsonl on successful run", async (a
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     const templatePath = patternsFolder.append("/metrics-test/button.njk");
     await templatePath.write("<button>{{componentName}}</button>");
     await run.run({
         subcommands: ["metrics-test"],
         flags: [{ flag: "--component-name", value: "Button" }],
+        context: { root: testRoot },
     });
-    const entries = await readMetrics();
+    const entries = await readMetrics(testRoot);
     assert(entries.length).equals(1);
     assert(entries[0].pattern).equals("metrics-test");
     // FileRef.write() adds a trailing newline to the template file, so the
     // rendered output includes it: "<button>Button</button>\n" (24 chars)
     assert(entries[0].characters).equals("<button>Button</button>\n".length);
-    await mainFolder.remove();
-    await outputDir.remove();
+    await testRoot.remove();
 });
 test.case("run does not log metrics on dry-run", async (assert) => {
     await reset();
@@ -299,6 +297,7 @@ test.case("run does not log metrics on dry-run", async (assert) => {
                         }],
                 }) },
         ],
+        context: { root: testRoot },
     });
     const templatePath = patternsFolder.append("/dry-metrics-test/button.njk");
     await templatePath.write("<button>{{componentName}}</button>");
@@ -308,10 +307,10 @@ test.case("run does not log metrics on dry-run", async (assert) => {
             { flag: "--dry-run", value: "true" },
             { flag: "--component-name", value: "Button" },
         ],
+        context: { root: testRoot },
     });
-    const entries = await readMetrics();
+    const entries = await readMetrics(testRoot);
     assert(entries.length).equals(0);
-    await mainFolder.remove();
-    await outputDir.remove();
+    await testRoot.remove();
 });
 //# sourceMappingURL=run.spec.js.map

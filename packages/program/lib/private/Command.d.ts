@@ -16,6 +16,9 @@ type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never ? (prop
         flag: string;
         value: string;
     }[];
+    context?: {
+        root?: any;
+    };
 }) => any | Promise<any> : (props: {
     flags: FlagRecord<T>;
     subcommands?: string[];
@@ -23,6 +26,9 @@ type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never ? (prop
         flag: string;
         value: string;
     }[];
+    context?: {
+        root?: any;
+    };
 }) => any | Promise<any>;
 export default class Command<T extends readonly Flag[]> {
     name: string;
@@ -45,6 +51,9 @@ export default class Command<T extends readonly Flag[]> {
             flag: string;
             value: string;
         }[];
+        context?: {
+            root?: any;
+        };
     }): Promise<void>;
     buildHelp(): string;
     private _getMatchedFlags;

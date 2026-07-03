@@ -1,4 +1,4 @@
-import fs from "@rcompat/fs";
+import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
@@ -16,8 +16,8 @@ const summary = new Command({
   description: "Show aggregated metrics for all pattern runs",
   flags: [],
   subcommands: [],
-  action: async () => {
-    const root = await runtime.projectRoot();
+  action: async (props) => {
+    const root: FileRef = props?.context?.root ?? await runtime.projectRoot();
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
     const hasDryFolder = await fs.exists(mainFolder);
 
@@ -25,7 +25,7 @@ const summary = new Command({
       throw metricsErrors.dry_folder_not_found();
     }
 
-    const entries: MetricsEntry[] = await readMetrics();
+    const entries: MetricsEntry[] = await readMetrics(root);
 
     if (entries.length === 0) {
       cli.print("No metrics recorded yet. Run a pattern to start collecting metrics.");

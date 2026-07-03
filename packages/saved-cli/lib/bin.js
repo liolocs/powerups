@@ -9,6 +9,7 @@ const program = new CLI({
     commands: commands,
     examples: [
         `$ ${CLI_NAME} init`,
+        `$ ${CLI_NAME} init --harness=claude`,
         `$ ${CLI_NAME} pattern gen my-pattern`,
         `$ ${CLI_NAME} pattern run my-pattern --var name=foo`,
         `$ ${CLI_NAME} pattern search "summarize a pdf"`,

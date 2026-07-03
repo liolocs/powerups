@@ -6,8 +6,8 @@ import { MAIN_FOLDER, METRICS_FILE } from "#constants";
  * Creates the file if it doesn't exist. Best-effort — callers should
  * wrap in try/catch if logging failures must not crash the run.
  */
-export async function logRun({ pattern, characters }) {
-    const root = await runtime.projectRoot();
+export async function logRun({ pattern, characters }, rootOverride) {
+    const root = rootOverride ?? await runtime.projectRoot();
     const metricsPath = root.append(`/${MAIN_FOLDER}/${METRICS_FILE}`);
     const entry = {
         timestamp: new Date().toISOString(),
@@ -28,8 +28,8 @@ export async function logRun({ pattern, characters }) {
  * Returns an empty array if the file doesn't exist.
  * Skips blank lines and lines that fail JSON.parse.
  */
-export async function readMetrics() {
-    const root = await runtime.projectRoot();
+export async function readMetrics(rootOverride) {
+    const root = rootOverride ?? await runtime.projectRoot();
     const metricsPath = root.append(`/${MAIN_FOLDER}/${METRICS_FILE}`);
     if (!(await fs.exists(metricsPath))) {
         return [];

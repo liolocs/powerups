@@ -1,4 +1,4 @@
-import fs from "@rcompat/fs";
+import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { MAIN_FOLDER, METRICS_FILE } from "#constants";
 
@@ -15,8 +15,9 @@ export interface MetricsEntry {
  */
 export async function logRun(
   { pattern, characters }: Omit<MetricsEntry, "timestamp">,
+  rootOverride?: FileRef,
 ): Promise<void> {
-  const root = await runtime.projectRoot();
+  const root = rootOverride ?? await runtime.projectRoot();
   const metricsPath = root.append(`/${MAIN_FOLDER}/${METRICS_FILE}`);
 
   const entry: MetricsEntry = {
@@ -41,8 +42,8 @@ export async function logRun(
  * Returns an empty array if the file doesn't exist.
  * Skips blank lines and lines that fail JSON.parse.
  */
-export async function readMetrics(): Promise<MetricsEntry[]> {
-  const root = await runtime.projectRoot();
+export async function readMetrics(rootOverride?: FileRef): Promise<MetricsEntry[]> {
+  const root = rootOverride ?? await runtime.projectRoot();
   const metricsPath = root.append(`/${MAIN_FOLDER}/${METRICS_FILE}`);
 
   if (!(await fs.exists(metricsPath))) {

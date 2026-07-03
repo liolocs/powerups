@@ -17,9 +17,9 @@ type FlagRecord<T extends readonly Flag[]> = {
 };
 
 type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never
-  ? (props?: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[] }) =>
+  ? (props?: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; skipGlobal?: boolean } }) =>
       any | Promise<any>
-  : (props: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[] }) =>
+  : (props: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; skipGlobal?: boolean } }) =>
       any | Promise<any>;
 
 export default class Command<T extends readonly Flag[]> {
@@ -56,6 +56,7 @@ export default class Command<T extends readonly Flag[]> {
   async run(args?: {
     subcommands: string[];
     flags: { flag: string; value: string }[];
+    context?: { root?: any; skipGlobal?: boolean };
   }): Promise<void> {
     // Delegate to a matching subcommand first, so that `<cmd> <sub> --help`
     // reaches the subcommand's own help rather than this command's.
@@ -98,7 +99,7 @@ export default class Command<T extends readonly Flag[]> {
     // No args at all — run bare action
     if (!is.defined(args)) {
       // @ts-expect-error — flags are optional
-      return this.action({ flags: {}, subcommands: [], rawFlags: [] });
+      return this.action({ flags: {}, subcommands: [], rawFlags: [], context: args?.context });
     }
 
     if (this._hasMissingRequiredFlags(args.flags)) {
@@ -109,7 +110,7 @@ export default class Command<T extends readonly Flag[]> {
     const matchedFlags = this._getMatchedFlags({ passedFlags });
     const subcommands = is.defined(args.subcommands) ? args.subcommands : [];
 
-    return await this.action({ flags: matchedFlags, subcommands, rawFlags: passedFlags });
+    return await this.action({ flags: matchedFlags, subcommands, rawFlags: passedFlags, context: args?.context });
   }
 
   public buildHelp(): string {

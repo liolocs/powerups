@@ -1,4 +1,4 @@
-import fs from "@rcompat/fs";
+import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
@@ -42,8 +42,8 @@ const generate = new Command({
 
   subcommands: [],
 
-  action: async ({ flags }) => {
-    const root = await runtime.projectRoot();
+  action: async ({ flags, context }) => {
+    const root: FileRef = context?.root ?? await runtime.projectRoot();
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
     const hasDryFolder = await fs.exists(mainFolder);
 

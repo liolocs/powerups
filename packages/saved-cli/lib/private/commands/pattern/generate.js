@@ -37,8 +37,8 @@ const generate = new Command({
         },
     ],
     subcommands: [],
-    action: async ({ flags }) => {
-        const root = await runtime.projectRoot();
+    action: async ({ flags, context }) => {
+        const root = context?.root ?? await runtime.projectRoot();
         const mainFolder = root.append(`/${MAIN_FOLDER}`);
         const hasDryFolder = await fs.exists(mainFolder);
         if (!hasDryFolder) {

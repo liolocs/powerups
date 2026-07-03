@@ -5,19 +5,23 @@ import runtime from "@rcompat/runtime";
 import { MAIN_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
-const mainFolder = root.append(`/${MAIN_FOLDER}`);
+const testRoot = root.append("/tmp");
+const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
 
 test.case(`init generates a ${MAIN_FOLDER} folder`, async assert => {
-  if (await fs.exists(mainFolder)) {
-    await mainFolder.remove();
-  }
+  await testRoot.remove();
+  await fs.create(testRoot);
 
-  await init.run();
+  await init.run({
+    subcommands: [],
+    flags: [],
+    context: { root: testRoot },
+  });
 
   const hasDryFolder = await fs.exists(mainFolder);
   assert(hasDryFolder).equals(true);
 
-  await mainFolder.remove();
+  await testRoot.remove();
 
   const hasDryFolderAgain = await fs.exists(mainFolder);
   assert(hasDryFolderAgain).equals(false);

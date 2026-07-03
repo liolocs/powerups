@@ -1,41 +1,26 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
+import { CLI_NAME } from "#constants";
 
 const t = error.template;
 
-const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
+const errorLabel = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const init_errors = error.coded({
   dry_folder_exists: () => {
-    const errorText = "Dry folder already exists.";
-    return t`${errorBGText}${errorText}`;
+    return t`${errorLabel} ${CLI_NAME} project already initialized.`;
   },
   no_harness_detected: () => {
-    const errorText =
-      `No AI coding harness detected.\n` +
-      `Specify one with --harness=<claude|opencode|pi|codex>.\n` +
-      `Example: savedai init --harness=claude`;
-    return t`${errorBGText}${errorText}`;
+    return t`${errorLabel} No AI coding harness detected.\n\n  Specify one with --harness=<claude|opencode|pi|codex>\n  Example: ${CLI_NAME} init --harness=claude`;
   },
   invalid_harness: (value: string) => {
-    const valueText = cli.bg.yellow(" " + value + " ");
-    const errorText =
-      `Invalid harness ${valueText}.\n` +
-      `Valid values: claude, opencode, pi, codex.`;
-    return t`${errorBGText}${errorText}`;
+    return t`${errorLabel} Invalid harness: ${cli.fg.yellow(value)}\n\n  Valid values: claude, opencode, pi, codex`;
   },
   multiple_harnesses_detected: (harnesses: string[]) => {
-    const harnessText = cli.bg.yellow(" " + harnesses.join(", ") + " ");
-    const errorText =
-      `Multiple harnesses detected: ${harnessText}.\n` +
-      `Specify one with --harness=<claude|opencode|pi|codex>.\n` +
-      `Example: savedai init --harness=claude`;
-    return t`${errorBGText}${errorText}`;
+    return t`${errorLabel} Multiple harnesses detected: ${cli.fg.yellow(harnesses.join(", "))}\n\n  Specify one with --harness=<claude|opencode|pi|codex>\n  Example: ${CLI_NAME} init --harness=claude`;
   },
   agents_section_render_failed: (detail: string) => {
-    const errorText =
-      `Failed to render AGENTS.md section: ${detail}`;
-    return t`${errorBGText}${errorText}`;
+    return t`${errorLabel} Failed to render instruction section: ${detail}`;
   },
 });
 

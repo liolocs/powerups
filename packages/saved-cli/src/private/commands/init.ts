@@ -34,10 +34,13 @@ const init = new Command({
       skipGlobal: props?.context?.skipGlobal,
     });
 
-    cli.print(`Initialized ${CLI_NAME} project`);
-    cli.print(`Detected harness: ${result.harness}`);
+    const green = cli.fg.green;
+    const dim = cli.fg.dim;
+
+    cli.print(`${green("✓")} Initialized ${CLI_NAME} project\n`);
+    cli.print(`  ${dim("harness:")} ${result.harness}\n`);
     for (const file of result.filesWritten) {
-      cli.print(`Wrote ${file}`);
+      cli.print(`  ${dim("wrote:")} ${file}\n`);
     }
   },
 });

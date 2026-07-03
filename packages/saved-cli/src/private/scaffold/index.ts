@@ -35,9 +35,10 @@ function fileHarness(outputPath: string): Harness | null {
 export async function scaffold(
   projectRoot: FileRef,
   harnessFlags: string[],
+  options?: { skipGlobal?: boolean },
 ): Promise<ScaffoldResult> {
   // 1. Detect harnesses
-  const harnesses = await detectHarnesses(projectRoot, harnessFlags);
+  const harnesses = await detectHarnesses(projectRoot, harnessFlags, options);
 
   if (harnesses.length === 0) {
     throw init_errors.no_harness_detected();

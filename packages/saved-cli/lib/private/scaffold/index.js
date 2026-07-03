@@ -28,9 +28,9 @@ function fileHarness(outputPath) {
 /**
  * Run the full scaffold: detect harnesses, render templates, write files.
  */
-export async function scaffold(projectRoot, harnessFlags) {
+export async function scaffold(projectRoot, harnessFlags, options) {
     // 1. Detect harnesses
-    const harnesses = await detectHarnesses(projectRoot, harnessFlags);
+    const harnesses = await detectHarnesses(projectRoot, harnessFlags, options);
     if (harnesses.length === 0) {
         throw init_errors.no_harness_detected();
     }

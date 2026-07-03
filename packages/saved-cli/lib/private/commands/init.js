@@ -32,7 +32,9 @@ const init = new Command({
             harnessFlags.push(...props.flags.harness.split(",").map(s => s.trim()).filter(Boolean));
         }
         // Run scaffold
-        const result = await scaffold(root, harnessFlags);
+        const result = await scaffold(root, harnessFlags, {
+            skipGlobal: props?.context?.skipGlobal,
+        });
         cli.print(`Initialized ${CLI_NAME} project`);
         cli.print(`Detected harness(es): ${result.harnesses.join(", ")}`);
         for (const file of result.filesWritten) {

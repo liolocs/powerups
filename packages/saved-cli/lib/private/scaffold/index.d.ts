@@ -7,5 +7,7 @@ export interface ScaffoldResult {
 /**
  * Run the full scaffold: detect harnesses, render templates, write files.
  */
-export declare function scaffold(projectRoot: FileRef, harnessFlags: string[]): Promise<ScaffoldResult>;
+export declare function scaffold(projectRoot: FileRef, harnessFlags: string[], options?: {
+    skipGlobal?: boolean;
+}): Promise<ScaffoldResult>;
 //# sourceMappingURL=index.d.ts.map

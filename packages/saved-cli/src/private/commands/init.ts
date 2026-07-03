@@ -37,7 +37,9 @@ const init = new Command({
     }
 
     // Run scaffold
-    const result = await scaffold(root, harnessFlags);
+    const result = await scaffold(root, harnessFlags, {
+      skipGlobal: props?.context?.skipGlobal,
+    });
 
     cli.print(`Initialized ${CLI_NAME} project`);
     cli.print(`Detected harness(es): ${result.harnesses.join(", ")}`);

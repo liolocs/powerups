@@ -37,6 +37,7 @@
     "@rcompat/cli": "^0.25.0",
     "@rcompat/error": "^0.9.0",
     "@rcompat/fs": "^0.35.1",
+    "@rcompat/io": "^0.11.0",
     "@rcompat/is": "^0.12.0",
     "@rcompat/runtime": "^0.17.0",
     "nunjucks": "^3.2.4",
@@ -44,5 +45,8 @@
   },
   "devDependencies": {
     "@types/nunjucks": "^3.2.6"
+  },
+  "bin": {
+    "saved": "./lib/bin.js"
   }
 }

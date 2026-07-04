@@ -36,7 +36,7 @@ const HARNESS_CONFIG: Record<Harness, {
   },
   pi: {
     instructionFile: "AGENTS.md",
-    commandDir: ".pi/prompts",
+    commandDir: ".pi/skills",
     frontmatter: false,
   },
   codex: {
@@ -49,12 +49,12 @@ const HARNESS_CONFIG: Record<Harness, {
 const COMMANDS = [
   {
     template: "new-feature.njk",
-    name: `new-${CLI_NAME}-feature`,
+    name: `${CLI_NAME}-feature`,
     description: `Search and run ${CLI_NAME} patterns for new features`,
   },
   {
     template: "brainstorm.njk",
-    name: `new-${CLI_NAME}-brainstorm`,
+    name: `${CLI_NAME}-brainstorm`,
     description: `Brainstorm a plan using ${CLI_NAME} patterns`,
   },
 ];
@@ -114,7 +114,7 @@ export async function scaffold(
       });
       const outputPath = `${config.commandDir}/${cmd.name}.md`;
       const opts = is.defined(config.frontmatter)
-        ? { frontmatter: `description: "${cmd.description}"` }
+        ? { frontmatter: `name: ${cmd.name}\ndescription: "${cmd.description}"` }
         : undefined;
       await writeCommandFile(projectRoot, outputPath, rendered, opts);
 

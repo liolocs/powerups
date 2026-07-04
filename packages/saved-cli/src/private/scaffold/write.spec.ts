@@ -12,9 +12,9 @@ test.case("writes command file with constants substituted", async assert => {
   await fs.create(testRoot);
 
   const rendered = `Search ${CLI_NAME} patterns for "$ARGUMENTS".`;
-  await writeCommandFile(testRoot, ".claude/commands/new-" + CLI_NAME + "-feature.md", rendered);
+  await writeCommandFile(testRoot, ".claude/commands/" + CLI_NAME + "-feature.md", rendered);
 
-  const content = await testRoot.append("/.claude/commands/new-" + CLI_NAME + "-feature.md").text();
+  const content = await testRoot.append("/.claude/commands/" + CLI_NAME + "-feature.md").text();
   assert(content.includes(CLI_NAME)).equals(true);
   assert(content.includes("{{CLI_NAME}}")).equals(false);
 
@@ -26,9 +26,9 @@ test.case("creates parent directories", async assert => {
   await fs.create(testRoot);
 
   const rendered = "test content";
-  await writeCommandFile(testRoot, ".pi/prompts/new-" + CLI_NAME + "-feature.md", rendered);
+  await writeCommandFile(testRoot, ".pi/skills/" + CLI_NAME + "-feature.md", rendered);
 
-  assert(await fs.exists(testRoot.append("/.pi/prompts/new-" + CLI_NAME + "-feature.md"))).equals(true);
+  assert(await fs.exists(testRoot.append("/.pi/skills/" + CLI_NAME + "-feature.md"))).equals(true);
 
   await testRoot.remove();
 });
@@ -38,14 +38,15 @@ test.case("injects opencode frontmatter when provided", async assert => {
   await fs.create(testRoot);
 
   const rendered = `Search ${CLI_NAME} patterns for "$ARGUMENTS".`;
-  const path = ".opencode/commands/new-" + CLI_NAME + "-feature.md";
+  const path = ".opencode/commands/" + CLI_NAME + "-feature.md";
   await writeCommandFile(testRoot, path, rendered, {
-    frontmatter: `description: "Search and run ${CLI_NAME} patterns for new features"`,
+    frontmatter: `name: ${CLI_NAME}-feature\ndescription: "Search and run ${CLI_NAME} patterns for new features"`,
   });
 
   const content = await testRoot.append("/" + path).text();
   assert(content.startsWith("---\n")).equals(true);
   assert(content.includes("description:")).equals(true);
+  assert(content.includes("name:")).equals(true);
   assert(content.includes(CLI_NAME)).equals(true);
 
   await testRoot.remove();

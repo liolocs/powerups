@@ -13,5 +13,8 @@
     "types": [
       "primate"
     ]
-  }
+  },
+  "exclude": [
+    "${configDir}/scripts/**/*"
+  ]
 }

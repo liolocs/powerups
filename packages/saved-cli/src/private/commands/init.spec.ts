@@ -47,9 +47,9 @@ test.case("init --harness=claude scaffolds claude files only", async assert => {
   // AGENTS.md NOT created (claude uses CLAUDE.md)
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(false);
   // Command files created
-  const cmdPath = `.claude/commands/new-${CLI_NAME}-feature.md`;
+  const cmdPath = `.claude/commands/${CLI_NAME}-feature.md`;
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
-  const brainstormPath = `.claude/commands/new-${CLI_NAME}-brainstorm.md`;
+  const brainstormPath = `.claude/commands/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
   // No other harness dirs
   assert(await fs.exists(testRoot.append("/.opencode"))).equals(false);
@@ -72,7 +72,7 @@ test.case("init --harness=opencode scaffolds opencode files only", async assert 
   // CLAUDE.md NOT created
   assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(false);
   // Command files with frontmatter
-  const cmdPath = `.opencode/commands/new-${CLI_NAME}-feature.md`;
+  const cmdPath = `.opencode/commands/${CLI_NAME}-feature.md`;
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
   // No other harness dirs
   assert(await fs.exists(testRoot.append("/.claude"))).equals(false);
@@ -92,9 +92,9 @@ test.case("init --harness=pi scaffolds pi files only", async assert => {
 
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
   assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(false);
-  const cmdPath = `.pi/prompts/new-${CLI_NAME}-feature.md`;
+  const cmdPath = `.pi/skills/${CLI_NAME}-feature.md`;
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
-  const brainstormPath = `.pi/prompts/new-${CLI_NAME}-brainstorm.md`;
+  const brainstormPath = `.pi/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
   // No other harness dirs
   assert(await fs.exists(testRoot.append("/.claude"))).equals(false);
@@ -204,7 +204,7 @@ test.case("init detects pi from .pi/ dir", async assert => {
     context: { root: testRoot, skipGlobal: true },
   });
 
-  assert(await fs.exists(testRoot.append("/.pi/prompts"))).equals(true);
+  assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
 
   await testRoot.remove();
@@ -242,7 +242,7 @@ test.case("init --harness resolves multiple detection ambiguity", async assert =
     context: { root: testRoot },
   });
 
-  assert(await fs.exists(testRoot.append("/.pi/prompts"))).equals(true);
+  assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
   assert(await fs.exists(testRoot.append("/.claude/commands"))).equals(false);
 
   await testRoot.remove();
@@ -347,7 +347,7 @@ test.case("init can be re-run immediately after detection error", async assert =
   });
 
   assert(await fs.exists(mainFolder)).equals(true);
-  assert(await fs.exists(testRoot.append("/.pi/prompts"))).equals(true);
+  assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
 
   await testRoot.remove();
 });
@@ -441,7 +441,7 @@ test.case("init writes command files with constants substituted", async assert =
     context: { root: testRoot },
   });
 
-  const cmdPath = `.claude/commands/new-${CLI_NAME}-feature.md`;
+  const cmdPath = `.claude/commands/${CLI_NAME}-feature.md`;
   const content = await testRoot.append(`/${cmdPath}`).text();
   assert(content.includes(CLI_NAME)).equals(true);
   assert(content.includes("{{CLI_NAME}}")).equals(false);
@@ -458,10 +458,11 @@ test.case("init injects opencode frontmatter", async assert => {
     context: { root: testRoot },
   });
 
-  const cmdPath = `.opencode/commands/new-${CLI_NAME}-feature.md`;
+  const cmdPath = `.opencode/commands/${CLI_NAME}-feature.md`;
   const content = await testRoot.append(`/${cmdPath}`).text();
   assert(content.startsWith("---\n")).equals(true);
   assert(content.includes("description:")).equals(true);
+  assert(content.includes("name:")).equals(true);
 
   await testRoot.remove();
 });

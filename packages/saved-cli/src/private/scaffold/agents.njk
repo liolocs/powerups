@@ -33,6 +33,33 @@ the recommended format for new patterns. Nunjucks `.njk` templates
 template is impractical. Validate before considering it done:
 `{{ CLI_NAME }} pattern validate -n <name>`
 
+### `.ts` template format (recommended)
+
+A `.ts` template is a TypeScript module that `export default`s a function.
+At run time `{{ CLI_NAME }}` calls that function with the pattern's declared
+variables (keyed by name, all strings) and writes the returned string to the
+file's `outputPath`.
+
+```ts
+// ui-component/button.ts
+export default ({ componentName, theme }: Record<string, string>) =>
+  `<button class="${theme}">${componentName}</button>`;
+```
+
+- The default export must be a function `(vars: Record<string, string>) => string`.
+  It receives every declared variable as a string and returns the full file
+  contents as a string.
+- Keep it a pure function of `vars` — do not import project code or read the
+  filesystem. Compute the output string from `vars` alone.
+- It runs natively on Bun/Deno; on Node it is executed in a child process with
+  `--experimental-strip-types` (Node 22.6+), so write it as ESM with no
+  side effects at module top level.
+- If the module has no default function (or it isn't a function), `pattern run`
+  fails with `Invalid .ts template: must export a default function that returns a
+  string`. Note: `pattern validate` only checks that the template file exists —
+  it does not import or execute it, so run the pattern once to confirm the
+  default export works.
+
 ### Pattern schema (`{{ MAIN_FOLDER }}/{{ PATTERNS_FOLDER }}/<name>/instructions.json`)
 
 ```json

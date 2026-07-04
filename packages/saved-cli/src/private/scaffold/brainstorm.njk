@@ -45,10 +45,14 @@ Brainstorm a plan for "$ARGUMENTS" using {{ CLI_NAME }} patterns.
    `{{ CLI_NAME }} pattern gen -n <short-name> -i "<intent>" -v "<vars>" -o '<files-json>'`
    Then author the template at
    `{{ MAIN_FOLDER }}/{{ PATTERNS_FOLDER }}/<name>/<template>`. Prefer a `.ts`
-   file with a default-export function `(vars) => string` — this is the
-   recommended format for new patterns. Nunjucks `.njk` templates
-   (`{{ '{{var}}' }}` syntax) are supported but should only be used when a
-   `.ts` template is impractical. Validate with
+   file with a default-export function `(vars: Record<string, string>) => string` —
+   this is the recommended format for new patterns. The CLI calls that function
+   with the pattern's declared variables (keyed by name, all strings) and
+   writes the returned string to `outputPath`; keep it a pure function of `vars`
+   (no imports, no filesystem access). Example:
+   `export default ({ name }: Record<string, string>) => \`# ${name}\`;`.
+   Nunjucks `.njk` templates (`{{ '{{var}}' }}` syntax) are supported but should
+   only be used when a `.ts` template is impractical. Validate with
    `{{ CLI_NAME }} pattern validate -n <name>`.
 
 6. Present the plan in sections, covering:

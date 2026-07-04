@@ -4,6 +4,11 @@ Brainstorm a plan for "$ARGUMENTS" using {{ CLI_NAME }} patterns.
    - Check recent commits, existing files, and docs.
    - Run `{{ CLI_NAME }} pattern search -q "$ARGUMENTS"` to see if any
      patterns already relate to this area.
+   - If the search returns "No matching patterns found", check whether
+     `{{ MAIN_FOLDER }}/{{ PATTERNS_FOLDER }}/` exists and contains any
+     `instructions.json` files. This distinguishes "no patterns exist yet"
+     (greenfield — the first patterns in the project) from "patterns exist
+     but none match this request."
 
 2. Ask the user clarifying questions — one at a time — to understand:
    - What they are trying to achieve
@@ -11,23 +16,53 @@ Brainstorm a plan for "$ARGUMENTS" using {{ CLI_NAME }} patterns.
    - What success looks like
 
 3. Identify the key intents (topics, domains, capabilities) this plan touches.
-   For each intent, run `{{ CLI_NAME }} pattern search -q "<intent>"` to
-   understand what patterns already exist.
+   For each intent, run `{{ CLI_NAME }} pattern search -q "<intent>"` to find
+   existing patterns that may be reusable.
 
 4. From the search results, determine:
-   - Which existing patterns can be reused for this plan
-   - Which new patterns would need to be created
-   - What work doesn't fit a pattern (one-off tasks)
+   - Which existing patterns can be reused for this plan (list by name)
+   - What work doesn't fit any existing pattern
 
-5. Present the plan in sections, covering:
+5. For work that doesn't fit an existing pattern, classify each piece as a
+   one-off task or a pattern capture candidate.
+
+   A task is a good pattern capture candidate if:
+   - It generates files with a repeating structure (same file types, same wiring)
+   - It will likely be done again with different variable values
+   - The structure is stable enough that parameterizing it adds value
+
+   A task is one-off if:
+   - It's project configuration (tsconfig, path aliases, package.json)
+   - It's a bridge or adapter specific to this project's setup
+   - It's content (locale strings, copy text, data files)
+   - It's a one-time wiring or edit
+
+   IMPORTANT: Follow the build-first principle. Do NOT plan to create
+   patterns before the concrete implementation exists and is verified.
+   Instead, plan the concrete implementation (what files to write, what they
+   contain). Mark repeatable parts as pattern capture candidates — to be
+   captured AFTER the implementation is verified working, using:
+   `{{ CLI_NAME }} pattern gen -n <short-name> -i "<intent>" -v "<vars>" -o '<files-json>'`
+   Then author the template at
+   `{{ MAIN_FOLDER }}/{{ PATTERNS_FOLDER }}/<name>/<template>` (Nunjucks
+   `{{ '{{var}}' }}` syntax or a `.ts` default-export function) and validate
+   with `{{ CLI_NAME }} pattern validate -n <name>`.
+
+6. Present the plan in sections, covering:
    - Overview of the approach
    - Existing patterns to reuse (with names)
-   - New patterns to create (with suggested names and intents)
+   - Concrete implementation steps (what files to write or modify)
+   - Pattern capture candidates (to capture after implementation is verified,
+     with suggested name, intent keywords, and variables)
    - Non-pattern work (one-off tasks)
    - Suggested order of implementation
 
-6. Get user approval on the plan before proceeding.
+   Present only the final plan. Do not include your reasoning process, internal
+   notes, or chain-of-thought in the output.
 
-7. Once approved, save the plan to a spec file (e.g.
-   `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`) and commit it.
-   Then transition to creating an implementation plan.
+7. Get user approval on the plan before proceeding.
+
+8. Once approved, save the plan to a spec file at
+   `docs/{{ CLI_NAME }}/specs/YYYY-MM-DD-<topic>-design.md` and commit it.
+   Then transition to implementation by following the `{{ CLI_NAME }}-feature`
+   command workflow.

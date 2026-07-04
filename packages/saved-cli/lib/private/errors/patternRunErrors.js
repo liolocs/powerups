@@ -1,14 +1,15 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
+import { CLI_NAME } from "#constants";
 const t = error.template;
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 const pattern_run_errors = error.coded({
     dry_folder_not_found: () => {
-        const errorText = `Dry folder not found. Run "dryai init" first.`;
+        const errorText = `Dry folder not found. Run "${CLI_NAME} init" first.`;
         return t `${errorBGText}${errorText}`;
     },
     missing_pattern_name: () => {
-        const errorText = "Pattern name required.\nUsage: dryai pattern run <pattern-name> [variables]";
+        const errorText = `Pattern name required.\nUsage: ${CLI_NAME} pattern run <pattern-name> [variables]`;
         return t `${errorBGText}${errorText}`;
     },
     pattern_not_found: (name) => {

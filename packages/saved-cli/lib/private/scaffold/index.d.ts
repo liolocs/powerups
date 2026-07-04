@@ -4,10 +4,15 @@ export interface ScaffoldResult {
     harness: Harness;
     filesWritten: string[];
 }
-/**
- * Run the full scaffold: detect one harness, render templates, write files.
- */
+export interface RollbackInfo {
+    remove: string[];
+    restore: {
+        path: string;
+        content: string;
+    }[];
+}
 export declare function scaffold(projectRoot: FileRef, harnessFlag: string | undefined, options?: {
     skipGlobal?: boolean;
+    rollback?: RollbackInfo;
 }): Promise<ScaffoldResult>;
 //# sourceMappingURL=index.d.ts.map

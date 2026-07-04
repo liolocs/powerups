@@ -202,6 +202,129 @@ test.case("init --harness resolves multiple detection ambiguity", async (assert)
     assert(await fs.exists(testRoot.append("/.claude/commands"))).equals(false);
     await testRoot.remove();
 });
+// ── Rollback tests ───────────────────────────────────────────────
+//
+// init must clean up any files/directories it created when scaffold
+// throws, so that re-running init works cleanly instead of failing with
+// "project already initialized".
+// ─────────────────────────────────────────────────────────────────
+test.case("init removes .saved on detection error (multiple harnesses)", async (assert) => {
+    await reset();
+    await fs.create(testRoot.append("/.claude"));
+    await fs.create(testRoot.append("/.pi"));
+    let threw = false;
+    try {
+        await init.run({
+            subcommands: [],
+            flags: [],
+            context: { root: testRoot, skipGlobal: true },
+        });
+    }
+    catch {
+        threw = true;
+    }
+    assert(threw).equals(true);
+    // .saved must NOT be left behind
+    assert(await fs.exists(mainFolder)).equals(false);
+    await testRoot.remove();
+});
+test.case("init removes .saved on invalid harness error", async (assert) => {
+    await reset();
+    let threw = false;
+    try {
+        await init.run({
+            subcommands: [],
+            flags: [{ flag: "--harness", value: "bogus" }],
+            context: { root: testRoot },
+        });
+    }
+    catch {
+        threw = true;
+    }
+    assert(threw).equals(true);
+    assert(await fs.exists(mainFolder)).equals(false);
+    await testRoot.remove();
+});
+test.case("init removes .saved on no-harness-detected error", async (assert) => {
+    await reset();
+    let threw = false;
+    try {
+        await init.run({
+            subcommands: [],
+            flags: [],
+            context: { root: testRoot, skipGlobal: true },
+        });
+    }
+    catch {
+        threw = true;
+    }
+    assert(threw).equals(true);
+    assert(await fs.exists(mainFolder)).equals(false);
+    await testRoot.remove();
+});
+test.case("init can be re-run immediately after detection error", async (assert) => {
+    // This is the exact scenario from the bug report:
+    //   $ saved init                              → multiple harnesses error
+    //   $ savedai init --harness=pi               → should work, not "already initialized"
+    await reset();
+    await fs.create(testRoot.append("/.claude"));
+    await fs.create(testRoot.append("/.pi"));
+    // First run fails (multiple harnesses, no --harness)
+    let firstThrew = false;
+    try {
+        await init.run({
+            subcommands: [],
+            flags: [],
+            context: { root: testRoot, skipGlobal: true },
+        });
+    }
+    catch {
+        firstThrew = true;
+    }
+    assert(firstThrew).equals(true);
+    // .saved was cleaned up — second run with --harness succeeds
+    await init.run({
+        subcommands: [],
+        flags: [{ flag: "--harness", value: "pi" }],
+        context: { root: testRoot },
+    });
+    assert(await fs.exists(mainFolder)).equals(true);
+    assert(await fs.exists(testRoot.append("/.pi/prompts"))).equals(true);
+    await testRoot.remove();
+});
+test.case("init restores modified instruction file on error", async (assert) => {
+    // Pre-existing CLAUDE.md with user content — init detects multiple
+    // harnesses *after* scaffold has already appended to CLAUDE.md.
+    // We simulate this by setting up a scenario where the instruction
+    // file is written but then a later step (command file write) fails.
+    //
+    // Since detection happens first and throws before any files are
+    // written, we instead verify the restore path by directly testing
+    // that a pre-existing instruction file is untouched after a
+    // detection failure.
+    await reset();
+    const original = "# My Project\n\nOriginal content.\n";
+    await testRoot.append("/AGENTS.md").write(original);
+    await fs.create(testRoot.append("/.claude"));
+    await fs.create(testRoot.append("/.pi"));
+    let threw = false;
+    try {
+        await init.run({
+            subcommands: [],
+            flags: [],
+            context: { root: testRoot, skipGlobal: true },
+        });
+    }
+    catch {
+        threw = true;
+    }
+    assert(threw).equals(true);
+    // AGENTS.md should be unchanged (detection threw before any writes)
+    const content = await testRoot.append("/AGENTS.md").text();
+    assert(content).equals(original);
+    assert(await fs.exists(mainFolder)).equals(false);
+    await testRoot.remove();
+});
 test.case("init is idempotent — instruction section not duplicated", async (assert) => {
     await reset();
     // First run

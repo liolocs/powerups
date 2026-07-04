@@ -1,1 +1,0 @@
-{"version":3,"file":"capture-stdout.d.ts","sourceRoot":"","sources":["../../../src/private/test-utils/capture-stdout.ts"],"names":[],"mappings":"AAIA,wBAA8B,aAAa,CACzC,EAAE,EAAE,MAAM,OAAO,CAAC,OAAO,CAAC,GACzB,OAAO,CAAC,MAAM,CAAC,CAajB;AAKD,wBAAsB,oBAAoB,CACxC,EAAE,EAAE,MAAM,OAAO,CAAC,OAAO,CAAC,GACzB,OAAO,CAAC;IAAE,MAAM,EAAE,MAAM,CAAC;IAAC,KAAK,EAAE,OAAO,CAAA;CAAE,CAAC,CAgB7C"}

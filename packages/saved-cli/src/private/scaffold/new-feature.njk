@@ -9,4 +9,6 @@ Search {{ CLI_NAME }} patterns for "$ARGUMENTS".
    - Generate the new feature as requested.
    - After generating, ask the user whether they'd like to capture it as a pattern.
    - If yes, run `{{ CLI_NAME }} pattern gen -n <short-name> -i "$ARGUMENTS" -v "..." -o '...'`,
-     fill in the template, and run `{{ CLI_NAME }} pattern validate -n <name>`.
+     fill in the template (prefer a `.ts` file with a default-export function
+     `(vars) => string`; use `.njk` only when a `.ts` template is impractical),
+     and run `{{ CLI_NAME }} pattern validate -n <name>`.

@@ -1,1 +1,0 @@
-{"version":3,"file":"write.d.ts","sourceRoot":"","sources":["../../../src/private/scaffold/write.ts"],"names":[],"mappings":"AAAA,OAAW,EAAE,KAAK,OAAO,EAAE,MAAM,aAAa,CAAC;AAE/C,UAAU,YAAY;IACpB,WAAW,CAAC,EAAE,MAAM,CAAC;CACtB;AAED;;;;GAIG;AACH,wBAAsB,gBAAgB,CACpC,WAAW,EAAE,OAAO,EACpB,YAAY,EAAE,MAAM,EACpB,OAAO,EAAE,MAAM,EACf,OAAO,CAAC,EAAE,YAAY,GACrB,OAAO,CAAC,IAAI,CAAC,CAYf"}

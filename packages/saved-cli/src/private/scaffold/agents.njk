@@ -24,11 +24,13 @@ If the user confirms, capture it:
 {{ CLI_NAME }} pattern gen -n <short-name> \
   -i "<intent keywords>" \
   -v "var1,var2" \
-  -o '{"files":[{"name":"...","template":"out.njk","outputPath":"..."}]}'
+  -o '{"files":[{"name":"...","template":"out.ts","outputPath":"..."}]}'
 ```
-Then fill in the template at `{{ MAIN_FOLDER }}/{{ PATTERNS_FOLDER }}/<name>/<template>`
-(Nunjucks `{{ '{{var}}' }}` syntax, or a `.ts` file with a default-export function
-`(vars) => string`). Validate before considering it done:
+Then fill in the template at `{{ MAIN_FOLDER }}/{{ PATTERNS_FOLDER }}/<name>/<template>`.
+Prefer a `.ts` file with a default-export function `(vars) => string` — this is
+the recommended format for new patterns. Nunjucks `.njk` templates
+(`{{ '{{var}}' }}` syntax) are supported but should only be used when a `.ts`
+template is impractical. Validate before considering it done:
 `{{ CLI_NAME }} pattern validate -n <name>`
 
 ### Pattern schema (`{{ MAIN_FOLDER }}/{{ PATTERNS_FOLDER }}/<name>/instructions.json`)

@@ -45,7 +45,7 @@ const HARNESS_CONFIG: Record<Harness, {
   },
 };
 
-const COMMANDS = [
+const SKILLS_TO_SCAFFOLD = [
   {
     template: "saved-feature.njk",
     name: `${CLI_NAME}-feature`,
@@ -68,16 +68,14 @@ export async function scaffold(
   harnessFlag: string | undefined,
   options?: { skipGlobal?: boolean; rollback?: RollbackInfo },
 ): Promise<ScaffoldResult> {
-  // 1. Detect harness (single)
   const harness = await detectHarness(projectRoot, harnessFlag, options);
   const config = HARNESS_CONFIG[harness];
 
-  // 2. Build render variables from constants
   const variables = { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER };
   const filesWritten: string[] = [];
   const rollback = options?.rollback;
 
-  // 3. Write instruction file (AGENTS.md or CLAUDE.md)
+  // output is either (AGENTS.md or CLAUDE.md)
   const agentsRendered = await runTemplate({
     templatePath: fs.ref(`${SCAFFOLD_DIR}/agents.njk`),
     variables,
@@ -109,16 +107,19 @@ export async function scaffold(
 
   filesWritten.push(config.instructionFile);
 
-  // 4. Write skill files
-  for (const cmd of COMMANDS) {
+  for (const skill of SKILLS_TO_SCAFFOLD) {
     const rendered = await runTemplate({
-      templatePath: fs.ref(`${SCAFFOLD_DIR}/${cmd.template}`),
+      templatePath: fs.ref(`${SCAFFOLD_DIR}/${skill.template}`),
       variables,
     });
-    const outputPath = `${config.skillDir}/${cmd.name}.md`;
+
+    const outputPath = `${config.skillDir}/${skill.name}.md`;
+
     const opts = is.defined(config.frontmatter) && is.truthy(config.frontmatter)
-      ? { frontmatter: `name: ${cmd.name}\ndescription: "${cmd.description}"` }
-      : undefined;
+      ? {
+        frontmatter: `name: ${skill.name}\ndescription: "${skill.description}"`,
+      } : undefined;
+
     await writeSkillFile(projectRoot, outputPath, rendered, opts);
 
     if (is.defined(rollback)) {

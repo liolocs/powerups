@@ -293,3 +293,182 @@ test.case("validate errors without .saved folder", async assert => {
 
   await testRoot.remove();
 });
+
+test.case("validate reports missing subpattern in includes", async assert => {
+  await reset();
+
+  await generate.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "parent" },
+      { flag: "--output", value: JSON.stringify({
+        files: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+
+  // Manually add includes referencing a nonexistent subpattern
+  const path = await patternPath("parent");
+  await path.writeJSON({
+    name: "parent",
+    variables: [],
+    intent: [],
+    output: {
+      files: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
+    },
+    includes: [{ name: "nonexistent", variables: {} }],
+  });
+
+  const { output, error } = await captureStdoutOrError(() => validate.run({
+    subcommands: [],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  assert(error instanceof CodeError).true();
+  assert((error as CodeError).code).equals("validation_failed");
+  assert(output).includes("parent");
+  assert(output).includes("subpattern not found: nonexistent");
+
+  await testRoot.remove();
+});
+
+test.case("validate reports circular reference in includes", async assert => {
+  await reset();
+
+  // Create two patterns that reference each other
+  await generate.run({
+    subcommands: [],
+    flags: [{ flag: "--name", value: "cycle-a" }],
+    context: { root: testRoot },
+  });
+  await generate.run({
+    subcommands: [],
+    flags: [{ flag: "--name", value: "cycle-b" }],
+    context: { root: testRoot },
+  });
+
+  await (await patternPath("cycle-a")).writeJSON({
+    name: "cycle-a",
+    variables: [],
+    intent: [],
+    output: { files: [] },
+    includes: [{ name: "cycle-b", variables: {} }],
+  });
+  await (await patternPath("cycle-b")).writeJSON({
+    name: "cycle-b",
+    variables: [],
+    intent: [],
+    output: { files: [] },
+    includes: [{ name: "cycle-a", variables: {} }],
+  });
+
+  const { output, error } = await captureStdoutOrError(() => validate.run({
+    subcommands: [],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  assert(error instanceof CodeError).true();
+  assert((error as CodeError).code).equals("validation_failed");
+  assert(output).includes("circular reference");
+
+  await testRoot.remove();
+});
+
+test.case("validate --name reports invalid composition for a single pattern", async assert => {
+  await reset();
+
+  await generate.run({
+    subcommands: [],
+    flags: [{ flag: "--name", value: "bad-parent" }],
+    context: { root: testRoot },
+  });
+
+  await (await patternPath("bad-parent")).writeJSON({
+    name: "bad-parent",
+    variables: [],
+    intent: [],
+    output: { files: [] },
+    includes: [{ name: "nonexistent", variables: {} }],
+  });
+
+  let error: unknown;
+  try {
+    await validate.run({
+      subcommands: [],
+      flags: [{ flag: "--name", value: "bad-parent" }],
+      context: { root: testRoot },
+    });
+  } catch (error_) {
+    error = error_;
+  }
+
+  assert(error instanceof CodeError).true();
+  assert((error as CodeError).code).equals("invalid_pattern");
+  assert((error as Error).message).includes("subpattern not found: nonexistent");
+
+  await testRoot.remove();
+});
+
+test.case("validate passes valid composite pattern", async assert => {
+  await reset();
+
+  // Create a valid child pattern
+  await generate.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "valid-child" },
+      { flag: "--variables", value: "componentName" },
+      { flag: "--output", value: JSON.stringify({
+        files: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+  // Write the child template
+  await patternsFolder.append("/valid-child/c.njk").write("test");
+
+  // Create a valid parent pattern
+  await generate.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "valid-parent" },
+      { flag: "--variables", value: "theme" },
+      { flag: "--output", value: JSON.stringify({
+        files: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+  // Write the parent template
+  await patternsFolder.append("/valid-parent/b.njk").write("test");
+
+  // Add includes to the parent
+  await (await patternPath("valid-parent")).writeJSON({
+    name: "valid-parent",
+    variables: ["theme"],
+    intent: [],
+    output: {
+      files: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
+    },
+    includes: [
+      {
+        name: "valid-child",
+        variables: { componentName: "Button", theme: "{{theme}}" },
+      },
+    ],
+  });
+
+  const output = await captureStdout(() => validate.run({
+    subcommands: [],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  assert(output).includes("Validated 2 pattern(s)");
+  assert(output).includes("All valid");
+
+  await testRoot.remove();
+});

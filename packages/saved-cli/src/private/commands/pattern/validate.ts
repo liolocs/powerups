@@ -5,44 +5,12 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@dryai/program";
 import generate_pattern_errors from "#errors/patternGenerateErrors";
 import pattern_validate_errors from "#errors/patternValidateErrors";
-import { instructionsSchema, type Instructions } from "#schemas/instruction";
+import { checkPattern } from "#utils/check-pattern";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
 
 interface ValidationFailure {
   name: string;
   issues: string[];
-}
-
-// Validate one pattern folder: schema conformance + referenced template files.
-// Returns the list of humanized issues (empty = valid). Never throws on a
-// validation failure — callers decide whether to throw.
-async function checkPattern(patternFolder: FileRef): Promise<string[]> {
-  const patternPath = patternFolder.append("/instructions.json");
-  const issues: string[] = [];
-
-  if (!(await fs.exists(patternPath))) {
-    return ["instructions.json not found"];
-  }
-
-  let instructions: Instructions;
-  try {
-    instructions = instructionsSchema.parse(await patternPath.json());
-  } catch (error_) {
-    // pema ParseError.message is already humanized with the field path,
-    // e.g. ".output.files.0.name: expected string, got `123` (number)".
-    issues.push(error_ instanceof Error ? error_.message : String(error_));
-    // Schema is broken -> template refs are unreliable, stop here.
-    return issues;
-  }
-
-  for (const file of instructions.output.files) {
-    const templatePath = patternFolder.append(`/${file.template}`);
-    if (!(await fs.exists(templatePath))) {
-      issues.push(`missing template file: ${file.template}`);
-    }
-  }
-
-  return issues;
 }
 
 const validate = new Command({
@@ -81,7 +49,10 @@ const validate = new Command({
         throw pattern_validate_errors.pattern_not_found(flags.name);
       }
 
-      const issues = await checkPattern(patternFolder);
+      const issues = await checkPattern({
+        rootPatternDir: patternsFolder,
+        currentPatternDir: patternFolder,
+      });
 
       if (issues.length > 0) {
         throw pattern_validate_errors.invalid_pattern(
@@ -108,7 +79,10 @@ const validate = new Command({
 
     for (const patternFile of patternFiles) {
       const name = patternFile.directory.name;
-      const issues = await checkPattern(patternFile.directory);
+      const issues = await checkPattern({
+        rootPatternDir: patternsFolder,
+        currentPatternDir: patternFile.directory,
+      });
 
       if (issues.length > 0) {
         failures.push({ name, issues });

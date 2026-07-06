@@ -1,20 +1,20 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { writeCommandFile } from "#scaffold/write";
+import { writeSkillFile } from "#scaffold/write";
 import { CLI_NAME } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 
-test.case("writes command file with constants substituted", async assert => {
+test.case("writes skill file with constants substituted", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
-  const rendered = `Search ${CLI_NAME} outputs for "$ARGUMENTS".`;
-  await writeCommandFile(testRoot, ".claude/commands/" + CLI_NAME + "-feature.md", rendered);
+  const rendered = `Search and run ${CLI_NAME} outputs for new features.`;
+  await writeSkillFile(testRoot, ".claude/skills/" + CLI_NAME + "-feature.md", rendered);
 
-  const content = await testRoot.append("/.claude/commands/" + CLI_NAME + "-feature.md").text();
+  const content = await testRoot.append("/.claude/skills/" + CLI_NAME + "-feature.md").text();
   assert(content.includes(CLI_NAME)).equals(true);
   assert(content.includes("{{CLI_NAME}}")).equals(false);
 
@@ -26,7 +26,7 @@ test.case("creates parent directories", async assert => {
   await fs.create(testRoot);
 
   const rendered = "test content";
-  await writeCommandFile(testRoot, ".pi/skills/" + CLI_NAME + "-feature.md", rendered);
+  await writeSkillFile(testRoot, ".pi/skills/" + CLI_NAME + "-feature.md", rendered);
 
   assert(await fs.exists(testRoot.append("/.pi/skills/" + CLI_NAME + "-feature.md"))).equals(true);
 
@@ -37,9 +37,9 @@ test.case("injects opencode frontmatter when provided", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
-  const rendered = `Search ${CLI_NAME} outputs for "$ARGUMENTS".`;
-  const path = ".opencode/commands/" + CLI_NAME + "-feature.md";
-  await writeCommandFile(testRoot, path, rendered, {
+  const rendered = `Search and run ${CLI_NAME} outputs for new features.`;
+  const path = ".opencode/skills/" + CLI_NAME + "-feature.md";
+  await writeSkillFile(testRoot, path, rendered, {
     frontmatter: `name: ${CLI_NAME}-feature\ndescription: "Search and run ${CLI_NAME} outputs for new features"`,
   });
 
@@ -57,9 +57,9 @@ test.case("no frontmatter when not provided", async assert => {
   await fs.create(testRoot);
 
   const rendered = "plain content";
-  await writeCommandFile(testRoot, ".claude/commands/test.md", rendered);
+  await writeSkillFile(testRoot, ".claude/skills/test.md", rendered);
 
-  const content = await testRoot.append("/.claude/commands/test.md").text();
+  const content = await testRoot.append("/.claude/skills/test.md").text();
   assert(content.startsWith("---\n")).equals(false);
   assert(content.trim()).equals("plain content");
 

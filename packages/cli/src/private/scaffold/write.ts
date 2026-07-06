@@ -5,11 +5,11 @@ interface WriteOptions {
 }
 
 /**
- * Write a rendered command file to the project root.
+ * Write a rendered skill file to the project root.
  * Creates parent directories as needed.
  * If frontmatter is provided, prepends it as YAML frontmatter.
  */
-export async function writeCommandFile(
+export async function writeSkillFile(
   projectRoot: FileRef,
   relativePath: string,
   content: string,

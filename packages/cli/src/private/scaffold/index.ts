@@ -3,7 +3,7 @@ import is from "@rcompat/is";
 import { runTemplate } from "#runners/output/index";
 import { detectHarness, type Harness } from "#scaffold/detect";
 import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
-import { writeCommandFile } from "#scaffold/write";
+import { writeSkillFile } from "#scaffold/write";
 import { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
 
 const SCAFFOLD_DIR = import.meta.dirname;
@@ -20,42 +20,46 @@ export interface RollbackInfo {
 
 const HARNESS_CONFIG: Record<Harness, {
   instructionFile: string;
-  commandDir: string | null;
+  skillDir: string;
   frontmatter: boolean;
 }> = {
   claude: {
     instructionFile: "CLAUDE.md",
-    commandDir: ".claude/commands",
+    skillDir: ".claude/skills",
     frontmatter: false,
   },
   opencode: {
-    instructionFile:
-      "AGENTS.md",
-    commandDir: ".opencode/commands",
+    instructionFile: "AGENTS.md",
+    skillDir: ".opencode/skills",
     frontmatter: true,
   },
   pi: {
     instructionFile: "AGENTS.md",
-    commandDir: ".pi/skills",
+    skillDir: ".pi/skills",
     frontmatter: false,
   },
   codex: {
     instructionFile: "AGENTS.md",
-    commandDir: null,
+    skillDir: ".codex/skills",
     frontmatter: false,
   },
 };
 
 const COMMANDS = [
   {
-    template: "new-feature.njk",
+    template: "saved-feature.njk",
     name: `${CLI_NAME}-feature`,
     description: `Search and run ${CLI_NAME} outputs for new features`,
   },
   {
-    template: "brainstorm.njk",
+    template: "saved-brainstorm.njk",
     name: `${CLI_NAME}-brainstorm`,
     description: `Brainstorm a plan using ${CLI_NAME} outputs`,
+  },
+  {
+    template: "saved-output.njk",
+    name: `${CLI_NAME}-output`,
+    description: `Analyze existing code and capture repeatable patterns as ${CLI_NAME} outputs`,
   },
 ];
 
@@ -105,25 +109,23 @@ export async function scaffold(
 
   filesWritten.push(config.instructionFile);
 
-  // 4. Write command files (if this harness supports them)
-  if (config.commandDir !== null) {
-    for (const cmd of COMMANDS) {
-      const rendered = await runTemplate({
-        templatePath: fs.ref(`${SCAFFOLD_DIR}/${cmd.template}`),
-        variables,
-      });
-      const outputPath = `${config.commandDir}/${cmd.name}.md`;
-      const opts = is.defined(config.frontmatter)
-        ? { frontmatter: `name: ${cmd.name}\ndescription: "${cmd.description}"` }
-        : undefined;
-      await writeCommandFile(projectRoot, outputPath, rendered, opts);
+  // 4. Write skill files
+  for (const cmd of COMMANDS) {
+    const rendered = await runTemplate({
+      templatePath: fs.ref(`${SCAFFOLD_DIR}/${cmd.template}`),
+      variables,
+    });
+    const outputPath = `${config.skillDir}/${cmd.name}.md`;
+    const opts = is.defined(config.frontmatter) && is.truthy(config.frontmatter)
+      ? { frontmatter: `name: ${cmd.name}\ndescription: "${cmd.description}"` }
+      : undefined;
+    await writeSkillFile(projectRoot, outputPath, rendered, opts);
 
-      if (is.defined(rollback)) {
-        rollback.remove.push(outputPath);
-      }
-
-      filesWritten.push(outputPath);
+    if (is.defined(rollback)) {
+      rollback.remove.push(outputPath);
     }
+
+    filesWritten.push(outputPath);
   }
 
   return { harness, filesWritten };

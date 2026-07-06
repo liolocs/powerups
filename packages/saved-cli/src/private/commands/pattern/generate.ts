@@ -80,7 +80,7 @@ const generate = new Command({
       }
     }
 
-    const instructions: Instructions = { name, variables, intent, output };
+    const instructions = { name, variables, intent, output };
     await patternPath.writeJSON(instructions);
 
     for (const file of is.array(output.files) === true ? output.files : []) {

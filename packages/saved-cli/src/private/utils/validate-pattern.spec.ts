@@ -19,7 +19,7 @@ async function reset() {
 async function writePattern(name: string, instructions: Record<string, unknown>) {
   const dir = patternsFolder.append(`/${name}`);
   await fs.create(dir);
-  await dir.append("/instructions.json").writeJSON(instructions);
+  await dir.append("/instructions.json").writeJSON(instructions as never);
 }
 
 test.case("valid tree with no includes returns no issues", async assert => {

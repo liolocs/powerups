@@ -66,6 +66,8 @@ test.case("gen pattern creates template files from output", async assert => {
   assert(content.intent).equals(["component", "ui"]);
   assert(content.variables).equals(["ComponentName"]);
   assert(content.output.files[0]?.name).equals("button.svelte");
+  // Generated patterns do not include the optional "includes" field
+  assert(content.includes).undefined();
 
   await testRoot.remove();
 });

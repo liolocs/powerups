@@ -3,12 +3,12 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
-import generate_pattern_errors from "#errors/patternGenerateErrors";
-import pattern_search_errors from "#errors/patternSearchErrors";
-import tokenize from "#commands/pattern/tokenize";
-import scoreIntent from "#commands/pattern/score-intent";
+import generate_output_errors from "#errors/outputGenerateErrors";
+import output_search_errors from "#errors/outputSearchErrors";
+import tokenize from "#commands/output/tokenize";
+import scoreIntent from "#commands/output/score-intent";
 import { instructionsSchema } from "#schemas/instruction";
-import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
+import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
 
 interface SearchResult {
   name: string;
@@ -18,7 +18,7 @@ interface SearchResult {
 
 const search = new Command({
   name: "search",
-  description: "Search patterns by intent",
+  description: "Search outputs by intent",
   flags: [
     {
       name: "query",
@@ -34,14 +34,14 @@ const search = new Command({
     const hasDryFolder = await fs.exists(mainFolder);
 
     if (!hasDryFolder) {
-      throw generate_pattern_errors.dry_folder_not_found();
+      throw generate_output_errors.dry_folder_not_found();
     }
 
-    const patternsFolder = mainFolder.append(`/${PATTERNS_FOLDER}`);
-    const hasPatternsFolder = await fs.exists(patternsFolder);
+    const outputsFolder = mainFolder.append(`/${OUTPUTS_FOLDER}`);
+    const hasOutputsFolder = await fs.exists(outputsFolder);
 
-    if (!hasPatternsFolder) {
-      throw pattern_search_errors.no_matching_patterns();
+    if (!hasOutputsFolder) {
+      throw output_search_errors.no_matching_outputs();
     }
 
     const query = is.defined(flags.query) && flags.query.length > 0
@@ -50,43 +50,43 @@ const search = new Command({
     const queryKeywords = tokenize(query);
 
     if (queryKeywords.length === 0) {
-      throw pattern_search_errors.no_matching_patterns();
+      throw output_search_errors.no_matching_outputs();
     }
 
-    const patternFiles = await patternsFolder.files({
+    const outputFiles = await outputsFolder.files({
       recursive: true,
       filter: (file) => file.name === "instructions.json",
     });
 
-    if (patternFiles.length === 0) {
-      throw pattern_search_errors.no_matching_patterns();
+    if (outputFiles.length === 0) {
+      throw output_search_errors.no_matching_outputs();
     }
 
     const results: SearchResult[] = [];
 
-    for (const patternFile of patternFiles) {
-      const pattern = instructionsSchema.parse(await patternFile.json());
+    for (const outputFile of outputFiles) {
+      const output = instructionsSchema.parse(await outputFile.json());
 
-      const score = scoreIntent(pattern, queryKeywords);
+      const score = scoreIntent(output, queryKeywords);
 
       if (score === 0) {
         continue;
       }
 
       results.push({
-        name: pattern.name,
+        name: output.name,
         score,
-        fileCount: pattern.output.files.length,
+        fileCount: output.output.files.length,
       });
     }
 
     if (results.length === 0) {
-      throw pattern_search_errors.no_matching_patterns();
+      throw output_search_errors.no_matching_outputs();
     }
 
     results.sort((a, b) => b.score - a.score);
 
-    cli.print(`Found ${results.length} matching pattern(s):`);
+    cli.print(`Found ${results.length} matching output(s):`);
     cli.print("Highest rank first");
     cli.print("");
 

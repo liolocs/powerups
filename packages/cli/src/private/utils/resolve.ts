@@ -10,28 +10,28 @@ export interface RenderTask {
 }
 
 /**
- * Resolve a pattern (and all its subpatterns) into a flat list of render tasks.
- * Assumes the tree has already been validated by checkPattern.
+ * Resolve a output (and all its suboutputs) into a flat list of render tasks.
+ * Assumes the tree has already been validated by checkOutput.
  *
  * For each output file: creates a RenderTask with the template path, the
- * current pattern's resolved variables, and the output path (overridden if
+ * current output's resolved variables, and the output path (overridden if
  * the parent specified one for this file name).
  *
- * For each subpattern: resolves the variable mapping (replacing {{parentVar}}
+ * For each suboutput: resolves the variable mapping (replacing {{parentVar}}
  * tokens with parent variable values), then recurses.
  */
-export async function resolvePattern(args: {
-  patternName: string;
+export async function resolveOutput(args: {
+  outputName: string;
   variables: VariableResult;
-  patternsFolder: FileRef;
+  outputsFolder: FileRef;
   overrides?: Record<string, string>;
 }): Promise<RenderTask[]> {
-  const { patternName, variables, patternsFolder } = args;
+  const { outputName, variables, outputsFolder } = args;
   const overrides = args.overrides ?? {};
 
-  const patternFolder = patternsFolder.append(`/${patternName}`);
-  const patternPath = patternFolder.append("/instructions.json");
-  const instructions = instructionsSchema.parse(await patternPath.json());
+  const outputFolder = outputsFolder.append(`/${outputName}`);
+  const outputPath = outputFolder.append("/instructions.json");
+  const instructions = instructionsSchema.parse(await outputPath.json());
 
   const tasks: RenderTask[] = [];
 
@@ -39,13 +39,13 @@ export async function resolvePattern(args: {
   for (const file of instructions.output.files) {
     const outputPath = overrides[file.name] ?? file.outputPath;
     tasks.push({
-      templatePath: patternFolder.append(`/${file.template}`),
+      templatePath: outputFolder.append(`/${file.template}`),
       variables,
       outputPath,
     });
   }
 
-  // Subpatterns
+  // Suboutputs
   if (instructions.includes) {
     for (const ref of instructions.includes) {
       // Resolve variable mapping: replace {{parentVar}} tokens with parent values
@@ -54,10 +54,10 @@ export async function resolvePattern(args: {
         subVariables[key] = resolveTemplateString(value, variables);
       }
 
-      const childTasks = await resolvePattern({
-        patternName: ref.name,
+      const childTasks = await resolveOutput({
+        outputName: ref.name,
         variables: subVariables,
-        patternsFolder,
+        outputsFolder,
         overrides: ref.files ?? {},
       });
 

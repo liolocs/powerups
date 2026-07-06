@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { runTemplate } from "#runners/pattern/index";
+import { runTemplate } from "#runners/output/index";
 import { CodeError } from "@rcompat/error";
 
 const root = await runtime.projectRoot();

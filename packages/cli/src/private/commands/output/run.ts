@@ -3,22 +3,22 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
-import generatePatternErrors from "#errors/patternGenerateErrors";
-import patternRunErrors from "#errors/patternRunErrors";
+import generateOutputErrors from "#errors/outputGenerateErrors";
+import outputRunErrors from "#errors/outputRunErrors";
 import { instructionsSchema } from "#schemas/instruction";
 import { extractVariables } from "#utils/variables";
 import { resolveOutputPath } from "#utils/output-path";
-import { checkPattern } from "#utils/check-pattern";
-import { resolvePattern } from "#utils/resolve";
+import { checkOutput } from "#utils/check-output";
+import { resolveOutput } from "#utils/resolve";
 import { logRun } from "#utils/metrics";
-import { runTemplate } from "#runners/pattern/index";
-import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
+import { runTemplate } from "#runners/output/index";
+import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
 
 const EXCLUDE_FLAGS = ["--dry-run", "-d", "--help", "-h"];
 
 const run = new Command({
   name: "run",
-  description: "Run a pattern, rendering templates with variables",
+  description: "Run a output, rendering templates with variables",
   flags: [
     {
       name: "dry-run",
@@ -29,10 +29,10 @@ const run = new Command({
   ],
   subcommands: [],
   action: async ({ flags, subcommands, rawFlags, context }) => {
-    // 1. Extract pattern name from positional args
-    const patternName = subcommands?.[0];
-    if (!is.defined(patternName)) {
-      throw patternRunErrors.missing_pattern_name();
+    // 1. Extract output name from positional args
+    const outputName = subcommands?.[0];
+    if (!is.defined(outputName)) {
+      throw outputRunErrors.missing_output_name();
     }
 
     // 2. Locate .saved folder
@@ -41,30 +41,30 @@ const run = new Command({
     const hasDryFolder = await fs.exists(mainFolder);
 
     if (!hasDryFolder) {
-      throw generatePatternErrors.dry_folder_not_found();
+      throw generateOutputErrors.dry_folder_not_found();
     }
 
-    // 3. Resolve pattern folders
-    const patternsFolder = mainFolder.append(`/${PATTERNS_FOLDER}`);
-    const patternFolder = patternsFolder.append(`/${patternName}`);
+    // 3. Resolve output folders
+    const outputsFolder = mainFolder.append(`/${OUTPUTS_FOLDER}`);
+    const outputFolder = outputsFolder.append(`/${outputName}`);
 
-    if (!(await fs.exists(patternFolder))) {
-      throw patternRunErrors.pattern_not_found(patternName);
+    if (!(await fs.exists(outputFolder))) {
+      throw outputRunErrors.output_not_found(outputName);
     }
 
-    // 4. Validate pattern (schema, templates, subpattern tree)
-    const issues = await checkPattern({
-      rootPatternDir: patternsFolder,
-      currentPatternDir: patternFolder,
+    // 4. Validate output (schema, templates, suboutput tree)
+    const issues = await checkOutput({
+      rootOutputDir: outputsFolder,
+      currentOutputDir: outputFolder,
     });
 
     if (issues.length > 0) {
-      throw patternRunErrors.invalid_composition(issues);
+      throw outputRunErrors.invalid_composition(issues);
     }
 
     // 5. Load & parse instructions (safe — validated)
-    const patternPath = patternFolder.append("/instructions.json");
-    const instructions = instructionsSchema.parse(await patternPath.json());
+    const outputPath = outputFolder.append("/instructions.json");
+    const instructions = instructionsSchema.parse(await outputPath.json());
 
     // 6. Extract & validate variables
     const variables = extractVariables(
@@ -78,11 +78,11 @@ const run = new Command({
       f => f.flag === "--dry-run" || f.flag === "-d",
     );
 
-    // 8. Resolve pattern tree → flat list of render tasks
-    const tasks = await resolvePattern({
-      patternName,
+    // 8. Resolve output tree → flat list of render tasks
+    const tasks = await resolveOutput({
+      outputName,
       variables,
-      patternsFolder,
+      outputsFolder,
     });
 
     // 9. Process each render task
@@ -90,7 +90,7 @@ const run = new Command({
 
     for (const task of tasks) {
       if (!(await fs.exists(task.templatePath))) {
-        throw patternRunErrors.template_not_found(task.templatePath.name);
+        throw outputRunErrors.template_not_found(task.templatePath.name);
       }
 
       const rendered = await runTemplate({
@@ -115,7 +115,7 @@ const run = new Command({
     // 10. Log metrics for non-dry-run successful runs (best-effort)
     if (!isDryRun) {
       try {
-        await logRun({ pattern: patternName, characters: totalCharacters }, root);
+        await logRun({ output: outputName, characters: totalCharacters }, root);
       } catch {
         // Metrics are secondary — never crash a successful run
       }

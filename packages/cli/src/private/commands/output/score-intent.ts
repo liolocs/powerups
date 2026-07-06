@@ -1,12 +1,12 @@
-import tokenize from "#commands/pattern/tokenize";
+import tokenize from "#commands/output/tokenize";
 
 export default function scoreIntent(
-  pattern: { intent: string[] },
+  output: { intent: string[] },
   queryKeywords: string[],
 ): number {
   const intentTokens = new Set<string>();
 
-  for (const intentStr of pattern.intent) {
+  for (const intentStr of output.intent) {
     for (const token of tokenize(intentStr)) {
       intentTokens.add(token);
     }

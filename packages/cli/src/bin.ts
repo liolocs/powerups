@@ -12,9 +12,9 @@ const program = new CLI({
   examples: [
     `$ ${CLI_NAME} init`,
     `$ ${CLI_NAME} init --harness=claude`,
-    `$ ${CLI_NAME} pattern gen my-pattern`,
-    `$ ${CLI_NAME} pattern run my-pattern --var name=foo`,
-    `$ ${CLI_NAME} pattern search "summarize a pdf"`,
+    `$ ${CLI_NAME} output gen my-output`,
+    `$ ${CLI_NAME} output run my-output --var name=foo`,
+    `$ ${CLI_NAME} output search "summarize a pdf"`,
   ],
 });
 

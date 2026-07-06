@@ -18,8 +18,8 @@ async function reset() {
 test.case("logRun creates metrics file and appends entries", async assert => {
   await reset();
 
-  await logRun({ pattern: "ui-component", characters: 500 }, testRoot);
-  await logRun({ pattern: "api-route", characters: 1200 }, testRoot);
+  await logRun({ output: "ui-component", characters: 500 }, testRoot);
+  await logRun({ output: "api-route", characters: 1200 }, testRoot);
 
   assert(await fs.exists(metricsPath)).true();
   const content = await metricsPath.text();
@@ -27,12 +27,12 @@ test.case("logRun creates metrics file and appends entries", async assert => {
   assert(lines.length).equals(2);
 
   const first = JSON.parse(lines[0]) as MetricsEntry;
-  assert(first.pattern).equals("ui-component");
+  assert(first.output).equals("ui-component");
   assert(first.characters).equals(500);
   assert(typeof first.timestamp).equals("string");
 
   const second = JSON.parse(lines[1]) as MetricsEntry;
-  assert(second.pattern).equals("api-route");
+  assert(second.output).equals("api-route");
   assert(second.characters).equals(1200);
 
   await testRoot.remove();
@@ -41,17 +41,17 @@ test.case("logRun creates metrics file and appends entries", async assert => {
 test.case("readMetrics returns parsed entries", async assert => {
   await reset();
 
-  await logRun({ pattern: "ui-component", characters: 500 }, testRoot);
-  await logRun({ pattern: "ui-component", characters: 300 }, testRoot);
-  await logRun({ pattern: "api-route", characters: 1200 }, testRoot);
+  await logRun({ output: "ui-component", characters: 500 }, testRoot);
+  await logRun({ output: "ui-component", characters: 300 }, testRoot);
+  await logRun({ output: "api-route", characters: 1200 }, testRoot);
 
   const entries = await readMetrics(testRoot);
   assert(entries.length).equals(3);
-  assert(entries[0].pattern).equals("ui-component");
+  assert(entries[0].output).equals("ui-component");
   assert(entries[0].characters).equals(500);
-  assert(entries[1].pattern).equals("ui-component");
+  assert(entries[1].output).equals("ui-component");
   assert(entries[1].characters).equals(300);
-  assert(entries[2].pattern).equals("api-route");
+  assert(entries[2].output).equals("api-route");
   assert(entries[2].characters).equals(1200);
 
   await testRoot.remove();
@@ -72,16 +72,16 @@ test.case("readMetrics skips blank and corrupt lines", async assert => {
 
   // Write a file with blank lines and corrupt JSON mixed in
   await metricsPath.write(
-    '{"timestamp":"2025-01-01T00:00:00.000Z","pattern":"good","characters":100}\n' +
+    '{"timestamp":"2025-01-01T00:00:00.000Z","output":"good","characters":100}\n' +
     "\n" +
     "{not valid json}\n" +
-    '{"timestamp":"2025-01-02T00:00:00.000Z","pattern":"also-good","characters":200}\n',
+    '{"timestamp":"2025-01-02T00:00:00.000Z","output":"also-good","characters":200}\n',
   );
 
   const entries = await readMetrics(testRoot);
   assert(entries.length).equals(2);
-  assert(entries[0].pattern).equals("good");
-  assert(entries[1].pattern).equals("also-good");
+  assert(entries[0].output).equals("good");
+  assert(entries[1].output).equals("also-good");
 
   await testRoot.remove();
 });
@@ -89,10 +89,10 @@ test.case("readMetrics skips blank and corrupt lines", async assert => {
 test.case("logRun appends to existing file without overwriting", async assert => {
   await reset();
 
-  await logRun({ pattern: "first", characters: 10 }, testRoot);
+  await logRun({ output: "first", characters: 10 }, testRoot);
   const afterFirst = await metricsPath.text();
 
-  await logRun({ pattern: "second", characters: 20 }, testRoot);
+  await logRun({ output: "second", characters: 20 }, testRoot);
   const afterSecond = await metricsPath.text();
 
   // The first entry must still be present after the second write

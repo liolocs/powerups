@@ -1,14 +1,14 @@
 import test from "@rcompat/test";
-import generate from "#commands/pattern/generate";
+import generate from "#commands/output/generate";
 import { instructionsSchema } from "#schemas/instruction";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
+import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
-const patternsFolder = mainFolder.append(`/${PATTERNS_FOLDER}`);
+const outputsFolder = mainFolder.append(`/${OUTPUTS_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
@@ -16,23 +16,23 @@ async function reset() {
   await fs.create(mainFolder);
 }
 
-test.case("gen pattern creates an instructions.json file", async assert => {
+test.case("gen output creates an instructions.json file", async assert => {
   await reset();
 
   await generate.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "test-pattern" }],
+    flags: [{ flag: "--name", value: "test-output" }],
     context: { root: testRoot },
   });
 
-  const patternPath = patternsFolder.append("/test-pattern/instructions.json");
-  const hasPattern = await fs.exists(patternPath);
-  assert(hasPattern).equals(true);
+  const outputPath = outputsFolder.append("/test-output/instructions.json");
+  const hasOutput = await fs.exists(outputPath);
+  assert(hasOutput).equals(true);
 
   await testRoot.remove();
 });
 
-test.case("gen pattern creates template files from output", async assert => {
+test.case("gen output creates template files from output", async assert => {
   await reset();
 
   const output = JSON.stringify({
@@ -54,25 +54,25 @@ test.case("gen pattern creates template files from output", async assert => {
     context: { root: testRoot },
   });
 
-  const patternPath = patternsFolder.append("/ui-component/instructions.json");
-  const templatePath = patternsFolder.append("/ui-component/button.svelte.tmpl");
+  const outputPath = outputsFolder.append("/ui-component/instructions.json");
+  const templatePath = outputsFolder.append("/ui-component/button.svelte.tmpl");
 
-  assert(await fs.exists(patternPath)).equals(true);
+  assert(await fs.exists(outputPath)).equals(true);
   assert(await fs.exists(templatePath)).equals(true);
 
-  const content = instructionsSchema.parse(await patternPath.json());
+  const content = instructionsSchema.parse(await outputPath.json());
 
   assert(content.name).equals("ui-component");
   assert(content.intent).equals(["component", "ui"]);
   assert(content.variables).equals(["ComponentName"]);
   assert(content.output.files[0]?.name).equals("button.svelte");
-  // Generated patterns do not include the optional "includes" field
+  // Generated outputs do not include the optional "includes" field
   assert(content.includes).undefined();
 
   await testRoot.remove();
 });
 
-test.case("gen pattern errors without .dry folder", async assert => {
+test.case("gen output errors without .dry folder", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
@@ -91,12 +91,12 @@ test.case("gen pattern errors without .dry folder", async assert => {
   await testRoot.remove();
 });
 
-test.case("gen pattern errors when pattern already exists", async assert => {
+test.case("gen output errors when output already exists", async assert => {
   await reset();
 
   await generate.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "dup-pattern" }],
+    flags: [{ flag: "--name", value: "dup-output" }],
     context: { root: testRoot },
   });
 
@@ -104,7 +104,7 @@ test.case("gen pattern errors when pattern already exists", async assert => {
   try {
     await generate.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "dup-pattern" }],
+      flags: [{ flag: "--name", value: "dup-output" }],
       context: { root: testRoot },
     });
   } catch {

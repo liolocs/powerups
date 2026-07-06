@@ -27,13 +27,13 @@ test.case("parses instructions with includes", async assert => {
 
 test.case("parses instructions without includes (backward compat)", async assert => {
   const result = instructionsSchema.parse({
-    name: "simple-pattern",
+    name: "simple-output",
     variables: ["ComponentName"],
     intent: [],
     output: { files: [] },
   });
 
-  assert(result.name).equals("simple-pattern");
+  assert(result.name).equals("simple-output");
   assert(result.includes).undefined();
 });
 

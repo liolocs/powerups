@@ -11,7 +11,7 @@ test.case("writes command file with constants substituted", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
-  const rendered = `Search ${CLI_NAME} patterns for "$ARGUMENTS".`;
+  const rendered = `Search ${CLI_NAME} outputs for "$ARGUMENTS".`;
   await writeCommandFile(testRoot, ".claude/commands/" + CLI_NAME + "-feature.md", rendered);
 
   const content = await testRoot.append("/.claude/commands/" + CLI_NAME + "-feature.md").text();
@@ -37,10 +37,10 @@ test.case("injects opencode frontmatter when provided", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
-  const rendered = `Search ${CLI_NAME} patterns for "$ARGUMENTS".`;
+  const rendered = `Search ${CLI_NAME} outputs for "$ARGUMENTS".`;
   const path = ".opencode/commands/" + CLI_NAME + "-feature.md";
   await writeCommandFile(testRoot, path, rendered, {
-    frontmatter: `name: ${CLI_NAME}-feature\ndescription: "Search and run ${CLI_NAME} patterns for new features"`,
+    frontmatter: `name: ${CLI_NAME}-feature\ndescription: "Search and run ${CLI_NAME} outputs for new features"`,
   });
 
   const content = await testRoot.append("/" + path).text();

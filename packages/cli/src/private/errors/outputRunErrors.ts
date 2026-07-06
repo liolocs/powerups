@@ -7,21 +7,21 @@ const t = error.template;
 
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
-const pattern_run_errors = error.coded({
+const output_run_errors = error.coded({
   dry_folder_not_found: () => {
     const errorText = `Dry folder not found. Run "${CLI_NAME} init" first.`;
     return t`${errorBGText}${errorText}`;
   },
 
-  missing_pattern_name: () => {
+  missing_output_name: () => {
     const errorText =
-      `Pattern name required.\nUsage: ${CLI_NAME} pattern run <pattern-name> [variables]`;
+      `Output name required.\nUsage: ${CLI_NAME} output run <output-name> [variables]`;
     return t`${errorBGText}${errorText}`;
   },
 
-  pattern_not_found: (name: string) => {
+  output_not_found: (name: string) => {
     const nameText = cli.bg.yellow(" " + name + " ");
-    const errorText = `Pattern ${nameText} not found.`;
+    const errorText = `Output ${nameText} not found.`;
     return t`${errorBGText}${errorText}`;
   },
 
@@ -67,15 +67,15 @@ const pattern_run_errors = error.coded({
   invalid_composition: (issues: string[]) => {
     const issueList = issues.map(i => `  - ${i}`).join("\n");
     const errorText =
-      `Pattern composition is invalid:\n${issueList}`;
+      `Output composition is invalid:\n${issueList}`;
     return t`${errorBGText}${errorText}`;
   },
 });
 
-export type PatternRunErrorCode = keyof typeof pattern_run_errors;
+export type OutputRunErrorCode = keyof typeof output_run_errors;
 
-export const PatternRunErrorCode = Object.fromEntries(
-  Object.keys(pattern_run_errors).map(k => [k, k]),
-) as { [K in PatternRunErrorCode]: K };
+export const OutputRunErrorCode = Object.fromEntries(
+  Object.keys(output_run_errors).map(k => [k, k]),
+) as { [K in OutputRunErrorCode]: K };
 
-export default pattern_run_errors;
+export default output_run_errors;

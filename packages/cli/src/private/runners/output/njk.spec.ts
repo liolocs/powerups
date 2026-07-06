@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import njkRunner from "#runners/pattern/njk";
+import njkRunner from "#runners/output/njk";
 import { CodeError } from "@rcompat/error";
 
 const root = await runtime.projectRoot();

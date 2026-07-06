@@ -2,17 +2,17 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { CodeError } from "@rcompat/error";
-import validate from "#commands/pattern/validate";
-import generate from "#commands/pattern/generate";
+import validate from "#commands/output/validate";
+import generate from "#commands/output/generate";
 import captureStdout, {
   captureStdoutOrError,
 } from "#test-utils/capture-stdout";
-import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
+import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const patternsFolder: FileRef = mainFolder.append(`/${PATTERNS_FOLDER}`);
+const outputsFolder: FileRef = mainFolder.append(`/${OUTPUTS_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
@@ -20,11 +20,11 @@ async function reset() {
   await fs.create(mainFolder);
 }
 
-async function patternPath(name: string): Promise<FileRef> {
-  return patternsFolder.append(`/${name}/instructions.json`);
+async function outputPath(name: string): Promise<FileRef> {
+  return outputsFolder.append(`/${name}/instructions.json`);
 }
 
-test.case("validate reports all valid when every pattern conforms",
+test.case("validate reports all valid when every output conforms",
   async assert => {
   await reset();
 
@@ -56,13 +56,13 @@ test.case("validate reports all valid when every pattern conforms",
     context: { root: testRoot },
   }));
 
-  assert(output).includes("Validated 2 pattern(s)");
+    assert(output).includes("Validated 2 output(s)");
   assert(output).includes("All valid");
 
   await testRoot.remove();
 });
 
-test.case("validate --name reports a single valid pattern", async assert => {
+test.case("validate --name reports a single valid output", async assert => {
   await reset();
 
   await generate.run({
@@ -82,7 +82,7 @@ test.case("validate --name reports a single valid pattern", async assert => {
   await testRoot.remove();
 });
 
-test.case("validate reports a schema violation across all patterns",
+test.case("validate reports a schema violation across all outputs",
   async assert => {
   await reset();
 
@@ -93,7 +93,7 @@ test.case("validate reports a schema violation across all patterns",
   });
 
   // Corrupt: name must be a string.
-  const path = await patternPath("bad-schema");
+    const path = await outputPath("bad-schema");
   await path.writeJSON({ name: 123 });
 
   const { output, error } = await captureStdoutOrError(() => validate.run({
@@ -110,7 +110,7 @@ test.case("validate reports a schema violation across all patterns",
   await testRoot.remove();
 });
 
-test.case("validate reports a missing template across all patterns",
+test.case("validate reports a missing template across all outputs",
   async assert => {
   await reset();
 
@@ -130,7 +130,7 @@ test.case("validate reports a missing template across all patterns",
   });
 
   // Remove the template file that generate created.
-  const templatePath = patternsFolder.append(
+    const templatePath = outputsFolder.append(
     "/missing-template/button.svelte.tmpl",
   );
   await templatePath.remove();
@@ -149,7 +149,7 @@ test.case("validate reports a missing template across all patterns",
   await testRoot.remove();
 });
 
-test.case("validate --name throws invalid_pattern for a missing template",
+test.case("validate --name throws invalid_output for a missing template",
   async assert => {
   await reset();
 
@@ -168,7 +168,7 @@ test.case("validate --name throws invalid_pattern for a missing template",
     context: { root: testRoot },
   });
 
-  const templatePath = patternsFolder.append(
+    const templatePath = outputsFolder.append(
     "/missing-template/button.svelte.tmpl",
   );
   await templatePath.remove();
@@ -185,7 +185,7 @@ test.case("validate --name throws invalid_pattern for a missing template",
   }
 
   assert(error instanceof CodeError).true();
-  assert((error as CodeError).code).equals("invalid_pattern");
+    assert((error as CodeError).code).equals("invalid_output");
   assert((error as Error).message).includes("button.svelte.tmpl");
 
   await testRoot.remove();
@@ -209,8 +209,8 @@ test.case("validate reports multiple missing templates in one pass",
     context: { root: testRoot },
   });
 
-  await patternsFolder.append("/many-missing/a.tmpl").remove();
-  await patternsFolder.append("/many-missing/b.tmpl").remove();
+    await outputsFolder.append("/many-missing/a.tmpl").remove();
+    await outputsFolder.append("/many-missing/b.tmpl").remove();
 
   const { output, error } = await captureStdoutOrError(() => validate.run({
     subcommands: [],
@@ -225,15 +225,15 @@ test.case("validate reports multiple missing templates in one pass",
   await testRoot.remove();
 });
 
-test.case("validate --name throws pattern_not_found for a missing pattern",
+test.case("validate --name throws output_not_found for a missing output",
   async assert => {
   await reset();
 
-  // Create one real pattern so the patterns folder exists, then target a
+    // Create one real output so the outputs folder exists, then target a
   // nonexistent name.
   await generate.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "real-pattern" }],
+    flags: [{ flag: "--name", value: "real-output" }],
     context: { root: testRoot },
   });
 
@@ -249,12 +249,12 @@ test.case("validate --name throws pattern_not_found for a missing pattern",
   }
 
   assert(error instanceof CodeError).true();
-  assert((error as CodeError).code).equals("pattern_not_found");
+    assert((error as CodeError).code).equals("output_not_found");
 
   await testRoot.remove();
 });
 
-test.case("validate throws no_patterns_found without a patterns folder",
+test.case("validate throws no_outputs_found without a outputs folder",
   async assert => {
   await reset();
 
@@ -270,7 +270,7 @@ test.case("validate throws no_patterns_found without a patterns folder",
   }
 
   assert(error instanceof CodeError).true();
-  assert((error as CodeError).code).equals("no_patterns_found");
+    assert((error as CodeError).code).equals("no_outputs_found");
 
   await testRoot.remove();
 });
@@ -294,7 +294,7 @@ test.case("validate errors without .saved folder", async assert => {
   await testRoot.remove();
 });
 
-test.case("validate reports missing subpattern in includes", async assert => {
+test.case("validate reports missing suboutput in includes", async assert => {
   await reset();
 
   await generate.run({
@@ -308,8 +308,8 @@ test.case("validate reports missing subpattern in includes", async assert => {
     context: { root: testRoot },
   });
 
-  // Manually add includes referencing a nonexistent subpattern
-  const path = await patternPath("parent");
+  // Manually add includes referencing a nonexistent suboutput
+  const path = await outputPath("parent");
   await path.writeJSON({
     name: "parent",
     variables: [],
@@ -329,7 +329,7 @@ test.case("validate reports missing subpattern in includes", async assert => {
   assert(error instanceof CodeError).true();
   assert((error as CodeError).code).equals("validation_failed");
   assert(output).includes("parent");
-  assert(output).includes("subpattern not found: nonexistent");
+  assert(output).includes("suboutput not found: nonexistent");
 
   await testRoot.remove();
 });
@@ -337,7 +337,7 @@ test.case("validate reports missing subpattern in includes", async assert => {
 test.case("validate reports circular reference in includes", async assert => {
   await reset();
 
-  // Create two patterns that reference each other
+  // Create two outputs that reference each other
   await generate.run({
     subcommands: [],
     flags: [{ flag: "--name", value: "cycle-a" }],
@@ -349,14 +349,14 @@ test.case("validate reports circular reference in includes", async assert => {
     context: { root: testRoot },
   });
 
-  await (await patternPath("cycle-a")).writeJSON({
+  await (await outputPath("cycle-a")).writeJSON({
     name: "cycle-a",
     variables: [],
     intent: [],
     output: { files: [] },
     includes: [{ name: "cycle-b", variables: {} }],
   });
-  await (await patternPath("cycle-b")).writeJSON({
+  await (await outputPath("cycle-b")).writeJSON({
     name: "cycle-b",
     variables: [],
     intent: [],
@@ -377,7 +377,7 @@ test.case("validate reports circular reference in includes", async assert => {
   await testRoot.remove();
 });
 
-test.case("validate --name reports invalid composition for a single pattern", async assert => {
+test.case("validate --name reports invalid composition for a single output", async assert => {
   await reset();
 
   await generate.run({
@@ -386,7 +386,7 @@ test.case("validate --name reports invalid composition for a single pattern", as
     context: { root: testRoot },
   });
 
-  await (await patternPath("bad-parent")).writeJSON({
+  await (await outputPath("bad-parent")).writeJSON({
     name: "bad-parent",
     variables: [],
     intent: [],
@@ -406,16 +406,16 @@ test.case("validate --name reports invalid composition for a single pattern", as
   }
 
   assert(error instanceof CodeError).true();
-  assert((error as CodeError).code).equals("invalid_pattern");
-  assert((error as Error).message).includes("subpattern not found: nonexistent");
+  assert((error as CodeError).code).equals("invalid_output");
+  assert((error as Error).message).includes("suboutput not found: nonexistent");
 
   await testRoot.remove();
 });
 
-test.case("validate passes valid composite pattern", async assert => {
+test.case("validate passes valid composite output", async assert => {
   await reset();
 
-  // Create a valid child pattern
+  // Create a valid child output
   await generate.run({
     subcommands: [],
     flags: [
@@ -428,9 +428,9 @@ test.case("validate passes valid composite pattern", async assert => {
     context: { root: testRoot },
   });
   // Write the child template
-  await patternsFolder.append("/valid-child/c.njk").write("test");
+  await outputsFolder.append("/valid-child/c.njk").write("test");
 
-  // Create a valid parent pattern
+  // Create a valid parent output
   await generate.run({
     subcommands: [],
     flags: [
@@ -443,10 +443,10 @@ test.case("validate passes valid composite pattern", async assert => {
     context: { root: testRoot },
   });
   // Write the parent template
-  await patternsFolder.append("/valid-parent/b.njk").write("test");
+  await outputsFolder.append("/valid-parent/b.njk").write("test");
 
   // Add includes to the parent
-  await (await patternPath("valid-parent")).writeJSON({
+  await (await outputPath("valid-parent")).writeJSON({
     name: "valid-parent",
     variables: ["theme"],
     intent: [],
@@ -467,7 +467,7 @@ test.case("validate passes valid composite pattern", async assert => {
     context: { root: testRoot },
   }));
 
-  assert(output).includes("Validated 2 pattern(s)");
+  assert(output).includes("Validated 2 output(s)");
   assert(output).includes("All valid");
 
   await testRoot.remove();

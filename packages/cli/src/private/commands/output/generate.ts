@@ -3,21 +3,21 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
-import generate_pattern_errors from "#errors/patternGenerateErrors";
+import generate_output_errors from "#errors/outputGenerateErrors";
 import { outputSchema, type Instructions } from "#schemas/instruction";
-import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
+import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
 
 const generate = new Command({
   name: "gen",
 
-  description: "Generate a new pattern file",
+  description: "Generate a new output file",
 
   flags: [
     {
       name: "name",
       long: "name",
       short: "n",
-      description: "Pattern name",
+      description: "Output name",
       required: true,
     },
     {
@@ -48,20 +48,20 @@ const generate = new Command({
     const hasDryFolder = await fs.exists(mainFolder);
 
     if (!hasDryFolder) {
-      throw generate_pattern_errors.dry_folder_not_found();
+      throw generate_output_errors.dry_folder_not_found();
     }
 
     const name = flags.name!;
-    const patternsFolder = mainFolder.append(`/${PATTERNS_FOLDER}`);
-    const patternFolder = patternsFolder.append(`/${name}`);
-    const patternPath = patternFolder.append("/instructions.json");
-    const hasPattern = await fs.exists(patternFolder);
+    const outputsFolder = mainFolder.append(`/${OUTPUTS_FOLDER}`);
+    const outputFolder = outputsFolder.append(`/${name}`);
+    const outputPath = outputFolder.append("/instructions.json");
+    const hasOutput = await fs.exists(outputFolder);
 
-    if (hasPattern) {
-      throw generate_pattern_errors.pattern_already_exists(name);
+    if (hasOutput) {
+      throw generate_output_errors.output_already_exists(name);
     }
 
-    await fs.create(patternFolder);
+    await fs.create(outputFolder);
 
     const intent = is.defined(flags.intent) === true
       ? flags.intent.split(",").map(s => s.trim()).filter(Boolean)
@@ -76,16 +76,16 @@ const generate = new Command({
       try {
         output = outputSchema.parse(JSON.parse(flags.output));
       } catch {
-        throw generate_pattern_errors.invalid_output_json();
+        throw generate_output_errors.invalid_output_json();
       }
     }
 
     const instructions = { name, variables, intent, output };
-    await patternPath.writeJSON(instructions);
+    await outputPath.writeJSON(instructions);
 
     for (const file of is.array(output.files) === true ? output.files : []) {
       if (is.defined(file.template) === true) {
-        const templatePath = patternFolder.append(`/${file.template}`);
+        const templatePath = outputFolder.append(`/${file.template}`);
         const hasTemplate = await fs.exists(templatePath);
         if (!hasTemplate) {
           await templatePath.write("");
@@ -93,7 +93,7 @@ const generate = new Command({
       }
     }
 
-    cli.print(`Generated pattern: ${name}`);
+    cli.print(`Generated output: ${name}`);
   },
 });
 

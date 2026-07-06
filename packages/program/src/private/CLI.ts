@@ -39,7 +39,7 @@ export default class CLI {
 
     // Top-level flags only apply when no command is given. When a command is
     // present, everything (including -h / -v) delegates to that command so its
-    // own short flags (e.g. `pattern gen -v`) are never shadowed.
+    // own short flags (e.g. `output gen -v`) are never shadowed.
     if (!is.defined(commands) || commands.length === 0) {
       if (flags.some(f => f.flag === "--version" || f.flag === "-v")) {
         cli.print(`${this.name} ${this.version}\n`);

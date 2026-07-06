@@ -1,54 +1,54 @@
 import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { validatePatternTree } from "#utils/validate-pattern";
-import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
+import { validateOutputTree } from "#utils/validate-output";
+import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const patternsFolder: FileRef = mainFolder.append(`/${PATTERNS_FOLDER}`);
+const outputsFolder: FileRef = mainFolder.append(`/${OUTPUTS_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(patternsFolder);
+  await fs.create(outputsFolder);
 }
 
-async function writePattern(name: string, instructions: Record<string, unknown>) {
-  const dir = patternsFolder.append(`/${name}`);
+async function writeOutput(name: string, instructions: Record<string, unknown>) {
+  const dir = outputsFolder.append(`/${name}`);
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
 
 test.case("valid tree with no includes returns no issues", async assert => {
   await reset();
-  await writePattern("simple", {
+  await writeOutput("simple", {
     name: "simple",
     variables: ["ComponentName"],
     intent: [],
     output: { files: [] },
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/simple"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/simple"),
   });
 
   assert(issues.length).equals(0);
   await testRoot.remove();
 });
 
-test.case("valid tree with one subpattern returns no issues", async assert => {
+test.case("valid tree with one suboutput returns no issues", async assert => {
   await reset();
-  await writePattern("button", {
+  await writeOutput("button", {
     name: "button",
     variables: ["componentName", "theme"],
     intent: [],
     output: { files: [] },
   });
-  await writePattern("all-components", {
+  await writeOutput("all-components", {
     name: "all-components",
     variables: ["theme"],
     intent: [],
@@ -61,31 +61,31 @@ test.case("valid tree with one subpattern returns no issues", async assert => {
     ],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/all-components"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/all-components"),
   });
 
   assert(issues.length).equals(0);
   await testRoot.remove();
 });
 
-test.case("valid nested subpatterns (A->B->C) returns no issues", async assert => {
+test.case("valid nested suboutputs (A->B->C) returns no issues", async assert => {
   await reset();
-  await writePattern("c", {
+  await writeOutput("c", {
     name: "c",
     variables: ["val"],
     intent: [],
     output: { files: [] },
   });
-  await writePattern("b", {
+  await writeOutput("b", {
     name: "b",
     variables: ["val"],
     intent: [],
     output: { files: [] },
     includes: [{ name: "c", variables: { val: "{{val}}" } }],
   });
-  await writePattern("a", {
+  await writeOutput("a", {
     name: "a",
     variables: ["val"],
     intent: [],
@@ -93,18 +93,18 @@ test.case("valid nested subpatterns (A->B->C) returns no issues", async assert =
     includes: [{ name: "b", variables: { val: "{{val}}" } }],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/a"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/a"),
   });
 
   assert(issues.length).equals(0);
   await testRoot.remove();
 });
 
-test.case("missing subpattern reports issue", async assert => {
+test.case("missing suboutput reports issue", async assert => {
   await reset();
-  await writePattern("parent", {
+  await writeOutput("parent", {
     name: "parent",
     variables: [],
     intent: [],
@@ -112,26 +112,26 @@ test.case("missing subpattern reports issue", async assert => {
     includes: [{ name: "nonexistent", variables: {} }],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/parent"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/parent"),
   });
 
   assert(issues.length).equals(1);
-  assert(issues[0]).includes("subpattern not found: nonexistent");
+  assert(issues[0]).includes("suboutput not found: nonexistent");
   await testRoot.remove();
 });
 
 test.case("circular reference (A->B->A) reports issue with chain", async assert => {
   await reset();
-  await writePattern("a-cycle", {
+  await writeOutput("a-cycle", {
     name: "a-cycle",
     variables: [],
     intent: [],
     output: { files: [] },
     includes: [{ name: "b-cycle", variables: {} }],
   });
-  await writePattern("b-cycle", {
+  await writeOutput("b-cycle", {
     name: "b-cycle",
     variables: [],
     intent: [],
@@ -139,9 +139,9 @@ test.case("circular reference (A->B->A) reports issue with chain", async assert 
     includes: [{ name: "a-cycle", variables: {} }],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/a-cycle"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/a-cycle"),
   });
 
   assert(issues.some(i => i.includes("circular reference"))).true();
@@ -151,21 +151,21 @@ test.case("circular reference (A->B->A) reports issue with chain", async assert 
 
 test.case("deep circular reference (A->B->C->B) reports issue with chain", async assert => {
   await reset();
-  await writePattern("deep-a", {
+  await writeOutput("deep-a", {
     name: "deep-a",
     variables: [],
     intent: [],
     output: { files: [] },
     includes: [{ name: "deep-b", variables: {} }],
   });
-  await writePattern("deep-b", {
+  await writeOutput("deep-b", {
     name: "deep-b",
     variables: [],
     intent: [],
     output: { files: [] },
     includes: [{ name: "deep-c", variables: {} }],
   });
-  await writePattern("deep-c", {
+  await writeOutput("deep-c", {
     name: "deep-c",
     variables: [],
     intent: [],
@@ -173,9 +173,9 @@ test.case("deep circular reference (A->B->C->B) reports issue with chain", async
     includes: [{ name: "deep-b", variables: {} }],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/deep-a"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/deep-a"),
   });
 
   assert(issues.some(i => i.includes("circular reference"))).true();
@@ -185,20 +185,20 @@ test.case("deep circular reference (A->B->C->B) reports issue with chain", async
 
 test.case("diamond shape (A->B, A->C, C->B) is not a cycle", async assert => {
   await reset();
-  await writePattern("diamond-b", {
+  await writeOutput("diamond-b", {
     name: "diamond-b",
     variables: [],
     intent: [],
     output: { files: [] },
   });
-  await writePattern("diamond-c", {
+  await writeOutput("diamond-c", {
     name: "diamond-c",
     variables: [],
     intent: [],
     output: { files: [] },
     includes: [{ name: "diamond-b", variables: {} }],
   });
-  await writePattern("diamond-a", {
+  await writeOutput("diamond-a", {
     name: "diamond-a",
     variables: [],
     intent: [],
@@ -209,9 +209,9 @@ test.case("diamond shape (A->B, A->C, C->B) is not a cycle", async assert => {
     ],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/diamond-a"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/diamond-a"),
   });
 
   assert(issues.length).equals(0);
@@ -220,13 +220,13 @@ test.case("diamond shape (A->B, A->C, C->B) is not a cycle", async assert => {
 
 test.case("unmapped variable reports issue", async assert => {
   await reset();
-  await writePattern("child-needs-vars", {
+  await writeOutput("child-needs-vars", {
     name: "child-needs-vars",
     variables: ["componentName", "theme"],
     intent: [],
     output: { files: [] },
   });
-  await writePattern("parent-missing-map", {
+  await writeOutput("parent-missing-map", {
     name: "parent-missing-map",
     variables: [],
     intent: [],
@@ -236,9 +236,9 @@ test.case("unmapped variable reports issue", async assert => {
     ],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/parent-missing-map"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/parent-missing-map"),
   });
 
   assert(issues.some(i => i.includes("unmapped variable: theme"))).true();
@@ -248,13 +248,13 @@ test.case("unmapped variable reports issue", async assert => {
 
 test.case("invalid parentVar reference reports issue", async assert => {
   await reset();
-  await writePattern("ref-child", {
+  await writeOutput("ref-child", {
     name: "ref-child",
     variables: ["val"],
     intent: [],
     output: { files: [] },
   });
-  await writePattern("ref-parent", {
+  await writeOutput("ref-parent", {
     name: "ref-parent",
     variables: ["theme"],
     intent: [],
@@ -264,9 +264,9 @@ test.case("invalid parentVar reference reports issue", async assert => {
     ],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/ref-parent"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/ref-parent"),
   });
 
   assert(issues.some(i => i.includes("invalid reference"))).true();
@@ -274,9 +274,9 @@ test.case("invalid parentVar reference reports issue", async assert => {
   await testRoot.remove();
 });
 
-test.case("override file name not in subpattern reports issue", async assert => {
+test.case("override file name not in suboutput reports issue", async assert => {
   await reset();
-  await writePattern("override-child", {
+  await writeOutput("override-child", {
     name: "override-child",
     variables: [],
     intent: [],
@@ -284,7 +284,7 @@ test.case("override file name not in subpattern reports issue", async assert => 
       files: [{ name: "real-file", template: "t.njk", outputPath: "out.ts" }],
     },
   });
-  await writePattern("override-parent", {
+  await writeOutput("override-parent", {
     name: "override-parent",
     variables: [],
     intent: [],
@@ -298,9 +298,9 @@ test.case("override file name not in subpattern reports issue", async assert => 
     ],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/override-parent"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/override-parent"),
   });
 
   assert(issues.some(i => i.includes("override file not found"))).true();
@@ -308,15 +308,15 @@ test.case("override file name not in subpattern reports issue", async assert => 
   await testRoot.remove();
 });
 
-test.case("same subpattern referenced twice validates both independently", async assert => {
+test.case("same suboutput referenced twice validates both independently", async assert => {
   await reset();
-  await writePattern("dual-child", {
+  await writeOutput("dual-child", {
     name: "dual-child",
     variables: ["componentName"],
     intent: [],
     output: { files: [] },
   });
-  await writePattern("dual-parent", {
+  await writeOutput("dual-parent", {
     name: "dual-parent",
     variables: [],
     intent: [],
@@ -327,21 +327,21 @@ test.case("same subpattern referenced twice validates both independently", async
     ],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/dual-parent"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/dual-parent"),
   });
 
   assert(issues.length).equals(0);
   await testRoot.remove();
 });
 
-test.case("subpattern with unparseable instructions reports issue and skips recursion", async assert => {
+test.case("suboutput with unparseable instructions reports issue and skips recursion", async assert => {
   await reset();
-  const childDir = patternsFolder.append("/broken-child");
+  const childDir = outputsFolder.append("/broken-child");
   await fs.create(childDir);
   await childDir.append("/instructions.json").writeJSON({ name: 123 });
-  await writePattern("broken-parent", {
+  await writeOutput("broken-parent", {
     name: "broken-parent",
     variables: [],
     intent: [],
@@ -349,9 +349,9 @@ test.case("subpattern with unparseable instructions reports issue and skips recu
     includes: [{ name: "broken-child", variables: {} }],
   });
 
-  const issues = await validatePatternTree({
-    rootPatternDir: patternsFolder,
-    currentPatternDir: patternsFolder.append("/broken-parent"),
+  const issues = await validateOutputTree({
+    rootOutputDir: outputsFolder,
+    currentOutputDir: outputsFolder.append("/broken-parent"),
   });
 
   assert(issues.length).equals(1);

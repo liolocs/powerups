@@ -1,9 +1,9 @@
 import is from "@rcompat/is";
 import type { FileRef } from "@rcompat/fs";
 import type { VariableResult } from "#utils/variables";
-import patternRunErrors from "#errors/patternRunErrors";
-import tsRunner from "#runners/pattern/ts";
-import njkRunner from "#runners/pattern/njk";
+import outputRunErrors from "#errors/outputRunErrors";
+import tsRunner from "#runners/output/ts";
+import njkRunner from "#runners/output/njk";
 
 export interface TemplateContext {
   templatePath: FileRef;
@@ -22,7 +22,7 @@ export async function runTemplate(ctx: TemplateContext): Promise<string> {
   const runner = runners[ext];
 
   if (!is.defined(runner)) {
-    throw patternRunErrors.unsupported_template_type(ext, ctx.templatePath);
+    throw outputRunErrors.unsupported_template_type(ext, ctx.templatePath);
   }
 
   return runner(ctx);

@@ -48,9 +48,9 @@ test.case("summary prints no-metrics message when file missing", async assert =>
 test.case("summary prints table with aggregated data", async assert => {
   await reset();
 
-  await logRun({ pattern: "ui-component", characters: 3000 }, testRoot);
-  await logRun({ pattern: "ui-component", characters: 1500 }, testRoot);
-  await logRun({ pattern: "api-route", characters: 1200 }, testRoot);
+  await logRun({ output: "ui-component", characters: 3000 }, testRoot);
+  await logRun({ output: "ui-component", characters: 1500 }, testRoot);
+  await logRun({ output: "api-route", characters: 1200 }, testRoot);
 
   const output = await captureStdout(() => summary.run({
     subcommands: [],
@@ -59,12 +59,12 @@ test.case("summary prints table with aggregated data", async assert => {
   }));
 
   // Header
-  assert(output).includes("Pattern");
+  assert(output).includes("Output");
   assert(output).includes("Runs");
   assert(output).includes("Characters");
   assert(output).includes("Est. Tokens Saved");
 
-  // Pattern rows — ui-component first (more characters, sorted descending)
+  // Output rows — ui-component first (more characters, sorted descending)
   assert(output).includes("ui-component");
   assert(output).includes("api-route");
 

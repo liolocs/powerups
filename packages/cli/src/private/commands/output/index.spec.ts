@@ -1,14 +1,14 @@
 import test from "@rcompat/test";
-import pattern from "#commands/pattern/index";
+import output from "#commands/output/index";
 import { CommandErrorCode } from "@saved/program";
 import type { CodeError } from "@rcompat/error";
 
-test.case("pattern command fails without subcommands", async assert => {
+test.case("output command fails without subcommands", async assert => {
   let threw = false;
   let errorMessage: string | undefined;
 
   try {
-    await pattern.run({
+    await output.run({
       subcommands: [],
       flags: [],
     });

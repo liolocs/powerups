@@ -6,16 +6,16 @@ const t = error.template;
 
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
-const generate_pattern_errors = error.coded({
+const generate_output_errors = error.coded({
   dry_folder_not_found: () => {
     const errorText =
       `Dry folder not found. Run "${CLI_NAME} init" first.`;
     return t`${errorBGText}${errorText}`;
   },
-  pattern_already_exists: (name: string) => {
+  output_already_exists: (name: string) => {
     const nameText = cli.bg.yellow(" " + name + " ");
     const errorText =
-      `Pattern ${nameText} already exists.`;
+      `Output ${nameText} already exists.`;
     return t`${errorBGText}${errorText}`;
   },
   invalid_output_json: () => {
@@ -25,10 +25,10 @@ const generate_pattern_errors = error.coded({
   },
 });
 
-export type GeneratePatternErrorCode = keyof typeof generate_pattern_errors;
+export type GenerateOutputErrorCode = keyof typeof generate_output_errors;
 
-export const GeneratePatternErrorCode = Object.fromEntries(
-  Object.keys(generate_pattern_errors).map(k => [k, k]),
-) as { [K in GeneratePatternErrorCode]: K };
+export const GenerateOutputErrorCode = Object.fromEntries(
+  Object.keys(generate_output_errors).map(k => [k, k]),
+) as { [K in GenerateOutputErrorCode]: K };
 
-export default generate_pattern_errors;
+export default generate_output_errors;

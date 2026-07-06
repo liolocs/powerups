@@ -4,7 +4,7 @@ import { MAIN_FOLDER, METRICS_FILE } from "#constants";
 
 export interface MetricsEntry {
   timestamp: string;
-  pattern: string;
+  output: string;
   characters: number;
 }
 
@@ -14,7 +14,7 @@ export interface MetricsEntry {
  * wrap in try/catch if logging failures must not crash the run.
  */
 export async function logRun(
-  { pattern, characters }: Omit<MetricsEntry, "timestamp">,
+  { output, characters }: Omit<MetricsEntry, "timestamp">,
   rootOverride?: FileRef,
 ): Promise<void> {
   const root = rootOverride ?? await runtime.projectRoot();
@@ -22,7 +22,7 @@ export async function logRun(
 
   const entry: MetricsEntry = {
     timestamp: new Date().toISOString(),
-    pattern,
+    output,
     characters,
   };
   const line = JSON.stringify(entry);

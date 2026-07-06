@@ -1,4 +1,4 @@
-import patternRunErrors from "#errors/patternRunErrors";
+import outputRunErrors from "#errors/outputRunErrors";
 
 export interface VariableResult {
   [key: string]: string;
@@ -64,7 +64,7 @@ export function extractVariables(
       k => k.toLowerCase() === declared.toLowerCase(),
     );
     if (!matched) {
-      throw patternRunErrors.missing_variable(
+      throw outputRunErrors.missing_variable(
         declared,
         toKebabCase(declared),
       );

@@ -1,10 +1,10 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
-import { runTemplate } from "#runners/pattern/index";
+import { runTemplate } from "#runners/output/index";
 import { detectHarness, type Harness } from "#scaffold/detect";
 import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { writeCommandFile } from "#scaffold/write";
-import { CLI_NAME, MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
+import { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
 
 const SCAFFOLD_DIR = import.meta.dirname;
 
@@ -50,12 +50,12 @@ const COMMANDS = [
   {
     template: "new-feature.njk",
     name: `${CLI_NAME}-feature`,
-    description: `Search and run ${CLI_NAME} patterns for new features`,
+    description: `Search and run ${CLI_NAME} outputs for new features`,
   },
   {
     template: "brainstorm.njk",
     name: `${CLI_NAME}-brainstorm`,
-    description: `Brainstorm a plan using ${CLI_NAME} patterns`,
+    description: `Brainstorm a plan using ${CLI_NAME} outputs`,
   },
 ];
 
@@ -69,7 +69,7 @@ export async function scaffold(
   const config = HARNESS_CONFIG[harness];
 
   // 2. Build render variables from constants
-  const variables = { CLI_NAME, MAIN_FOLDER, PATTERNS_FOLDER };
+  const variables = { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER };
   const filesWritten: string[] = [];
   const rollback = options?.rollback;
 

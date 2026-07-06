@@ -10,7 +10,7 @@ export const outputSchema = p({
   files: p.array(fileSchema),
 });
 
-const subpatternSchema = p({
+const suboutputSchema = p({
   name: p.string,
   variables: p.record(p.string, p.string),
   files: p.record(p.string, p.string).optional(),
@@ -21,8 +21,8 @@ export const instructionsSchema = p({
   variables: p.array(p.string),
   intent: p.array(p.string),
   output: outputSchema,
-  includes: p.array(subpatternSchema).optional(),
+  includes: p.array(suboutputSchema).optional(),
 });
 
 export type Instructions = (typeof instructionsSchema)["infer"];
-export type SubpatternRef = (typeof subpatternSchema)["infer"];
+export type SuboutputRef = (typeof suboutputSchema)["infer"];

@@ -1,27 +1,27 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
-import { validatePatternTree } from "#utils/validate-pattern";
+import { validateOutputTree } from "#utils/validate-output";
 
 /**
- * Full pattern validation: schema conformance, template file existence,
- * and subpattern tree integrity. Returns a list of issue strings
+ * Full output validation: schema conformance, template file existence,
+ * and suboutput tree integrity. Returns a list of issue strings
  * (empty = valid). Never throws on a validation failure.
  */
-export async function checkPattern(args: {
-  rootPatternDir: FileRef;
-  currentPatternDir: FileRef;
+export async function checkOutput(args: {
+  rootOutputDir: FileRef;
+  currentOutputDir: FileRef;
 }): Promise<string[]> {
-  const { rootPatternDir, currentPatternDir } = args;
-  const patternPath = currentPatternDir.append("/instructions.json");
+  const { rootOutputDir, currentOutputDir } = args;
+  const outputPath = currentOutputDir.append("/instructions.json");
   const issues: string[] = [];
 
-  if (!(await fs.exists(patternPath))) {
+  if (!(await fs.exists(outputPath))) {
     return ["instructions.json not found"];
   }
 
   let instructions: Instructions;
   try {
-    instructions = instructionsSchema.parse(await patternPath.json());
+    instructions = instructionsSchema.parse(await outputPath.json());
   } catch (error_) {
     // pema ParseError.message is already humanized with the field path.
     issues.push(error_ instanceof Error ? error_.message : String(error_));
@@ -30,16 +30,16 @@ export async function checkPattern(args: {
   }
 
   for (const file of instructions.output.files) {
-    const templatePath = currentPatternDir.append(`/${file.template}`);
+    const templatePath = currentOutputDir.append(`/${file.template}`);
     if (!(await fs.exists(templatePath))) {
       issues.push(`missing template file: ${file.template}`);
     }
   }
 
-  // Validate subpattern tree
-  const treeIssues = await validatePatternTree({
-    rootPatternDir,
-    currentPatternDir,
+  // Validate suboutput tree
+  const treeIssues = await validateOutputTree({
+    rootOutputDir,
+    currentOutputDir,
   });
   issues.push(...treeIssues);
 

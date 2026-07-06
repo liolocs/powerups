@@ -6,14 +6,14 @@ import metricsErrors from "#errors/metricsErrors";
 import { readMetrics, type MetricsEntry } from "#utils/metrics";
 import { MAIN_FOLDER } from "#constants";
 
-interface PatternAggregate {
+interface OutputAggregate {
   runs: number;
   characters: number;
 }
 
 const summary = new Command({
   name: "summary",
-  description: "Show aggregated metrics for all pattern runs",
+  description: "Show aggregated metrics for all output runs",
   flags: [],
   subcommands: [],
   action: async (props) => {
@@ -28,24 +28,24 @@ const summary = new Command({
     const entries: MetricsEntry[] = await readMetrics(root);
 
     if (entries.length === 0) {
-      cli.print("No metrics recorded yet. Run a pattern to start collecting metrics.");
+      cli.print("No metrics recorded yet. Run a output to start collecting metrics.");
       return;
     }
 
-    // Aggregate by pattern name
-    const byPattern = new Map<string, PatternAggregate>();
+    // Aggregate by output name
+    const byOutput = new Map<string, OutputAggregate>();
 
     for (const entry of entries) {
-      const existing = byPattern.get(entry.pattern) ?? { runs: 0, characters: 0 };
+      const existing = byOutput.get(entry.output) ?? { runs: 0, characters: 0 };
       existing.runs += 1;
       existing.characters += entry.characters;
-      byPattern.set(entry.pattern, existing);
+      byOutput.set(entry.output, existing);
     }
 
     // Build rows, sorted by characters descending
-    const rows = [...byPattern.entries()]
-      .map(([pattern, agg]) => ({
-        pattern,
+    const rows = [...byOutput.entries()]
+      .map(([output, agg]) => ({
+        output,
         runs: agg.runs,
         characters: agg.characters,
         estTokens: Math.round(agg.characters / 4),
@@ -58,11 +58,11 @@ const summary = new Command({
     const totalEstTokens = Math.round(totalCharacters / 4);
 
     // Column definitions
-    const headers = ["Pattern", "Runs", "Characters", "Est. Tokens Saved"];
+    const headers = ["Output", "Runs", "Characters", "Est. Tokens Saved"];
 
     // Build string rows for width calculation
     const dataRows = rows.map(r => [
-      r.pattern,
+      r.output,
       r.runs.toLocaleString(),
       r.characters.toLocaleString(),
       `~${r.estTokens.toLocaleString()}`,
@@ -83,9 +83,9 @@ const summary = new Command({
       ),
     );
 
-    // Row formatter: pattern left-aligned, numbers right-aligned
-    const formatRow = (pattern: string, runs: string, chars: string, tokens: string) =>
-      `${pattern.padEnd(colWidths[0])}   ${runs.padStart(colWidths[1])}   ${chars.padStart(colWidths[2])}   ${tokens.padStart(colWidths[3])}`;
+    // Row formatter: output left-aligned, numbers right-aligned
+    const formatRow = (output: string, runs: string, chars: string, tokens: string) =>
+      `${output.padEnd(colWidths[0])}   ${runs.padStart(colWidths[1])}   ${chars.padStart(colWidths[2])}   ${tokens.padStart(colWidths[3])}`;
 
     // Print table
     cli.print(formatRow(headers[0], headers[1], headers[2], headers[3]));

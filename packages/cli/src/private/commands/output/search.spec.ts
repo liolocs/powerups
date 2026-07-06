@@ -1,6 +1,6 @@
 import test from "@rcompat/test";
-import search from "#commands/pattern/search";
-import generate from "#commands/pattern/generate";
+import search from "#commands/output/search";
+import generate from "#commands/output/generate";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import captureStdout from "#test-utils/capture-stdout";
@@ -10,7 +10,7 @@ const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
 
-test.case("search finds matching patterns", async assert => {
+test.case("search finds matching outputs", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
@@ -96,7 +96,7 @@ test.case("search ranks by score descending", async assert => {
   await testRoot.remove();
 });
 
-test.case("search errors when no patterns match", async assert => {
+test.case("search errors when no outputs match", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);

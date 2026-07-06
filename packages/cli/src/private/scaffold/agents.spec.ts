@@ -2,8 +2,8 @@ import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
-import { runTemplate } from "#runners/pattern/index";
-import { CLI_NAME, MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
+import { runTemplate } from "#runners/output/index";
+import { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -12,7 +12,7 @@ const scaffoldDir = fs.ref(import.meta.dirname);
 async function renderAgents(): Promise<string> {
   return await runTemplate({
     templatePath: scaffoldDir.append("/agents.njk"),
-    variables: { CLI_NAME, MAIN_FOLDER, PATTERNS_FOLDER },
+    variables: { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER },
   });
 }
 
@@ -26,7 +26,7 @@ test.case("creates AGENTS.md when absent", async assert => {
   const content = await testRoot.append("/AGENTS.md").text();
   assert(content.includes(`<!-- BEGIN ${CLI_NAME} -->`)).equals(true);
   assert(content.includes(`<!-- END ${CLI_NAME} -->`)).equals(true);
-  assert(content.includes("Subpatterns")).equals(true);
+  assert(content.includes("Suboutputs")).equals(true);
   assert(content.includes(`"includes"`)).equals(true);
   assert(content.includes("{{parentVar}}")).equals(true);
   assert(content.includes("{{modelName}}")).equals(true);

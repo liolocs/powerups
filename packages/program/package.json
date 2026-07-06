@@ -1,5 +1,5 @@
 {
-  "name": "@dryai/program",
+  "name": "@saved/program",
   "version": "0.0.1",
   "author": "lioloc@pm.me",
   "description": "Program for creating a cli",
@@ -21,13 +21,13 @@
   ],
   "imports": {
     "#*": {
-      "@dryai/source": "./src/private/*.ts",
+      "@saved/source": "./src/private/*.ts",
       "default": "./lib/private/*.js"
     }
   },
   "exports": {
     ".": {
-      "@dryai/source": "./src/public/index.ts",
+      "@saved/source": "./src/public/index.ts",
       "default": "./lib/public/index.js"
     }
   },

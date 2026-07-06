@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
-import { Command } from "@dryai/program";
+import { Command } from "@saved/program";
 import init_errors from "#errors/initErrors";
 import { scaffold, type RollbackInfo } from "#scaffold/index";
 import { MAIN_FOLDER, CLI_NAME } from "#constants";

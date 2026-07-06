@@ -1,4 +1,4 @@
-import { Command } from "@dryai/program";
+import { Command } from "@saved/program";
 import summary from "#commands/metrics/summary";
 import { CLI_NAME } from "#constants";
 

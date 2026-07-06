@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@dryai/program";
+import { Command } from "@saved/program";
 import generatePatternErrors from "#errors/patternGenerateErrors";
 import patternRunErrors from "#errors/patternRunErrors";
 import { instructionsSchema } from "#schemas/instruction";

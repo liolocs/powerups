@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Dev linker for @dryai/dry-cli.
+ * Dev linker for @saved/dry-cli.
  *
  * Run with bun (from anywhere in the repo):
  *
@@ -17,7 +17,7 @@
  *   5. Verifies with `which <CLI_NAME>`.
  *
  * Idempotent: safe to re-run. If you edit source, just re-run the build
- * (`pnpm --filter @dryai/dry-cli build`); the global symlink already points here.
+ * (`pnpm --filter @saved/dry-cli build`); the global symlink already points here.
  */
 import fs from "@rcompat/fs";
 import io from "@rcompat/io";
@@ -74,7 +74,7 @@ async function main(): Promise<void> {
   // 3. Ensure the compiled entry exists; build if missing.
   const binRef = pkgDir.append("/lib/bin.js");
   if (await binRef.exists()) {
-    log("✓ lib/bin.js already built (rebuild with `pnpm --filter @dryai/dry-cli build`)\n");
+    log("✓ lib/bin.js already built (rebuild with `pnpm --filter @saved/dry-cli build`)\n");
   } else {
     log("• building lib/bin.js ...\n");
     await run("pnpm run build", pkgDir.path);
@@ -82,7 +82,7 @@ async function main(): Promise<void> {
   }
 
   // 4. Link globally so <CLI_NAME> is on PATH (via PNPM_HOME).
-  log(`• linking ${pkg.name ?? "@dryai/dry-cli"} globally ...\n`);
+  log(`• linking ${pkg.name ?? "@saved/dry-cli"} globally ...\n`);
   await run("pnpm link --global", pkgDir.path);
 
   // 5. Verify it resolved on PATH.

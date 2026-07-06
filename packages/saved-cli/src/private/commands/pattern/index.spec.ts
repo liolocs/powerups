@@ -1,6 +1,6 @@
 import test from "@rcompat/test";
 import pattern from "#commands/pattern/index";
-import { CommandErrorCode } from "@dryai/program";
+import { CommandErrorCode } from "@saved/program";
 import type { CodeError } from "@rcompat/error";
 
 test.case("pattern command fails without subcommands", async assert => {

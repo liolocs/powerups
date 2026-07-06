@@ -2,7 +2,7 @@
   "extends": "apekit/tsconfig",
   "compilerOptions": {
     "customConditions": [
-      "@dryai/source"
+      "@saved/source"
     ],
     "types": [
       "node"

@@ -1,5 +1,5 @@
 {
-  "name": "@dryai/monorepo",
+  "name": "@saved/monorepo",
   "type": "module",
   "main": "index.js",
   "license": "MIT",

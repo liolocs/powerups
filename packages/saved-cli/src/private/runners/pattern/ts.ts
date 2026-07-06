@@ -63,16 +63,16 @@ async function childProcessImport(
 
   // Write temp runner .mjs
   const tmpFile = fs.ref(
-    `${os.tmpdir()}/dryai-runner-${Date.now()}.mjs`,
+    `${os.tmpdir()}/saved-runner-${Date.now()}.mjs`,
   );
 
   const runnerContent = [
-    `const mod = await import(process.env.DRYAI_TEMPLATE);`,
+    `const mod = await import(process.env.SAVED_TEMPLATE);`,
     `if (typeof mod.default !== "function") {`,
     `  process.stderr.write("Template must export a default function");`,
     `  process.exit(1);`,
     `}`,
-    `const vars = JSON.parse(process.env.DRYAI_VARS);`,
+    `const vars = JSON.parse(process.env.SAVED_VARS);`,
     `process.stdout.write(String(mod.default(vars)));`,
   ].join("\n");
 
@@ -85,8 +85,8 @@ async function childProcessImport(
       {
         env: {
           ...process.env,
-          DRYAI_TEMPLATE: templatePath.path,
-          DRYAI_VARS: JSON.stringify(variables),
+          SAVED_TEMPLATE: templatePath.path,
+          SAVED_VARS: JSON.stringify(variables),
         },
       },
     );

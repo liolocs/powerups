@@ -1,4 +1,4 @@
-import { Command } from "@dryai/program";
+import { Command } from "@saved/program";
 import generate from "#commands/pattern/generate";
 import run from "#commands/pattern/run";
 import search from "#commands/pattern/search";

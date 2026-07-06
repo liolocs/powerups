@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
-import { Command } from "@dryai/program";
+import { Command } from "@saved/program";
 import metricsErrors from "#errors/metricsErrors";
 import { readMetrics, type MetricsEntry } from "#utils/metrics";
 import { MAIN_FOLDER } from "#constants";

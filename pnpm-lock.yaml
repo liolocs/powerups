@@ -57,9 +57,6 @@ importers:
 
   packages/saved-cli:
     dependencies:
-      '@dryai/program':
-        specifier: workspace:^
-        version: link:../program
       '@rcompat/cli':
         specifier: ^0.25.0
         version: 0.25.0
@@ -78,6 +75,9 @@ importers:
       '@rcompat/runtime':
         specifier: ^0.17.0
         version: 0.17.0
+      '@saved/program':
+        specifier: workspace:^
+        version: link:../program
       nunjucks:
         specifier: ^3.2.4
         version: 3.2.4

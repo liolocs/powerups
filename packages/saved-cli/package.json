@@ -1,8 +1,8 @@
 {
-  "name": "@dryai/dry-cli",
+  "name": "@saved/cli",
   "version": "0.0.1",
   "author": "lioloc@pm.me",
-  "description": "CLI for dryai",
+  "description": "CLI for saved.dev",
   "license": "MIT",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
@@ -22,18 +22,18 @@
   ],
   "imports": {
     "#*": {
-      "@dryai/source": "./src/private/*.ts",
+      "@saved/source": "./src/private/*.ts",
       "default": "./lib/private/*.js"
     }
   },
   "exports": {
     ".": {
-      "@dryai/source": "./src/public/index.ts",
+      "@saved/source": "./src/public/index.ts",
       "default": "./lib/public/index.js"
     }
   },
   "dependencies": {
-    "@dryai/program": "workspace:^",
+    "@saved/program": "workspace:^",
     "@rcompat/cli": "^0.25.0",
     "@rcompat/error": "^0.9.0",
     "@rcompat/fs": "^0.35.1",

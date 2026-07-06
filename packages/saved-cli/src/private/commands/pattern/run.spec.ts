@@ -235,7 +235,7 @@ test.case("run throws missing_variable when required variable not provided",
     await testRoot.remove();
   });
 
-test.case("run throws template_not_found when template file is missing",
+test.case("run throws invalid_composition when template file is missing",
   async assert => {
     await reset();
 
@@ -269,7 +269,8 @@ test.case("run throws template_not_found when template file is missing",
     } catch (e) {
       threw = true;
       assert(e instanceof CodeError).true();
-      assert((e as CodeError).code).equals("template_not_found");
+      assert((e as CodeError).code).equals("invalid_composition");
+      assert((e as Error).message).includes("missing template file");
     }
     assert(threw).true();
 
@@ -370,3 +371,361 @@ test.case("run does not log metrics on dry-run", async assert => {
 
   await testRoot.remove();
 });
+
+test.case("run composite pattern writes files from parent and subpatterns",
+  async assert => {
+    await reset();
+
+    // Create child pattern (button component)
+    await generate.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "shadcn-button" },
+        { flag: "--variables", value: "componentName,theme" },
+        { flag: "--output", value: JSON.stringify({
+          files: [{
+            name: "component",
+            template: "component.njk",
+            outputPath: ".test-output/{{componentName}}.tsx",
+          }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+    await patternsFolder.append("/shadcn-button/component.njk")
+      .write("export const {{componentName}} = '{{theme}}';");
+
+    // Create parent pattern (all components) with includes
+    await generate.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "shadcn-all" },
+        { flag: "--variables", value: "theme" },
+        { flag: "--output", value: JSON.stringify({
+          files: [{
+            name: "barrel",
+            template: "barrel.njk",
+            outputPath: ".test-output/index.ts",
+          }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+    await patternsFolder.append("/shadcn-all/barrel.njk")
+      .write("export { Button, Input } from './';");
+
+    // Add includes to parent
+    await patternsFolder.append("/shadcn-all/instructions.json").writeJSON({
+      name: "shadcn-all",
+      variables: ["theme"],
+      intent: [],
+      output: {
+        files: [{
+          name: "barrel",
+          template: "barrel.njk",
+          outputPath: ".test-output/index.ts",
+        }],
+      },
+      includes: [
+        {
+          name: "shadcn-button",
+          variables: { componentName: "Button", theme: "{{theme}}" },
+        },
+        {
+          name: "shadcn-button",
+          variables: { componentName: "Input", theme: "{{theme}}" },
+        },
+      ],
+    });
+
+    await run.run({
+      subcommands: ["shadcn-all"],
+      flags: [{ flag: "--theme", value: "dark" }],
+      context: { root: testRoot },
+    });
+
+    // Parent's barrel file
+    const barrelPath = testRoot.append("/.test-output/index.ts");
+    assert(await fs.exists(barrelPath)).true();
+    assert((await barrelPath.text()).trimEnd())
+      .equals("export { Button, Input } from './';");
+
+    // Subpattern files (Button and Input)
+    const buttonPath = testRoot.append("/.test-output/Button.tsx");
+    assert(await fs.exists(buttonPath)).true();
+    assert((await buttonPath.text()).trimEnd())
+      .equals("export const Button = 'dark';");
+
+    const inputPath = testRoot.append("/.test-output/Input.tsx");
+    assert(await fs.exists(inputPath)).true();
+    assert((await inputPath.text()).trimEnd())
+      .equals("export const Input = 'dark';");
+
+    await testRoot.remove();
+  });
+
+test.case("run composite pattern with --dry-run prints all outputs without writing",
+  async assert => {
+    await reset();
+
+    await generate.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "dry-child" },
+        { flag: "--variables", value: "componentName" },
+        { flag: "--output", value: JSON.stringify({
+          files: [{
+            name: "comp",
+            template: "comp.njk",
+            outputPath: ".test-output/{{componentName}}.ts",
+          }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+    await patternsFolder.append("/dry-child/comp.njk")
+      .write("const {{componentName}} = 1;");
+
+    await generate.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "dry-parent" },
+        { flag: "--output", value: JSON.stringify({
+          files: [{
+            name: "barrel", template: "barrel.njk", outputPath: ".test-output/index.ts" }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+    await patternsFolder.append("/dry-parent/barrel.njk").write("barrel");
+
+    await patternsFolder.append("/dry-parent/instructions.json").writeJSON({
+      name: "dry-parent",
+      variables: [],
+      intent: [],
+      output: {
+        files: [{
+          name: "barrel", template: "barrel.njk", outputPath: ".test-output/index.ts",
+        }],
+      },
+      includes: [
+        { name: "dry-child", variables: { componentName: "Button" } },
+      ],
+    });
+
+    const output = await captureStdout(() => run.run({
+      subcommands: ["dry-parent"],
+      flags: [{ flag: "--dry-run", value: "true" }],
+      context: { root: testRoot },
+    }));
+
+    // Parent output
+    assert(output).includes("=== .test-output/index.ts ===");
+    assert(output).includes("barrel");
+    // Subpattern output
+    assert(output).includes("=== .test-output/Button.ts ===");
+    assert(output).includes("const Button = 1;");
+
+    // Verify no files were written
+    assert(await fs.exists(testRoot.append("/.test-output/index.ts"))).false();
+    assert(await fs.exists(testRoot.append("/.test-output/Button.ts"))).false();
+
+    await testRoot.remove();
+  });
+
+test.case("run composite pattern throws invalid_composition for missing subpattern",
+  async assert => {
+    await reset();
+
+    await generate.run({
+      subcommands: [],
+      flags: [{ flag: "--name", value: "bad-parent" }],
+      context: { root: testRoot },
+    });
+    await patternsFolder.append("/bad-parent/instructions.json").writeJSON({
+      name: "bad-parent",
+      variables: [],
+      intent: [],
+      output: { files: [] },
+      includes: [{ name: "nonexistent", variables: {} }],
+    });
+
+    let threw = false;
+    try {
+      await run.run({
+        subcommands: ["bad-parent"],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e) {
+      threw = true;
+      assert(e instanceof CodeError).true();
+      assert((e as CodeError).code).equals("invalid_composition");
+      assert((e as Error).message).includes("subpattern not found: nonexistent");
+    }
+    assert(threw).true();
+
+    await testRoot.remove();
+  });
+
+test.case("run composite pattern throws invalid_composition for circular reference",
+  async assert => {
+    await reset();
+
+    await generate.run({
+      subcommands: [],
+      flags: [{ flag: "--name", value: "cycle-a" }],
+      context: { root: testRoot },
+    });
+    await generate.run({
+      subcommands: [],
+      flags: [{ flag: "--name", value: "cycle-b" }],
+      context: { root: testRoot },
+    });
+
+    await patternsFolder.append("/cycle-a/instructions.json").writeJSON({
+      name: "cycle-a",
+      variables: [],
+      intent: [],
+      output: { files: [] },
+      includes: [{ name: "cycle-b", variables: {} }],
+    });
+    await patternsFolder.append("/cycle-b/instructions.json").writeJSON({
+      name: "cycle-b",
+      variables: [],
+      intent: [],
+      output: { files: [] },
+      includes: [{ name: "cycle-a", variables: {} }],
+    });
+
+    let threw = false;
+    try {
+      await run.run({
+        subcommands: ["cycle-a"],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e) {
+      threw = true;
+      assert(e instanceof CodeError).true();
+      assert((e as CodeError).code).equals("invalid_composition");
+      assert((e as Error).message).includes("circular reference");
+    }
+    assert(threw).true();
+
+    await testRoot.remove();
+  });
+
+test.case("run composite pattern with output path override writes to overridden location",
+  async assert => {
+    await reset();
+
+    await generate.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "override-child" },
+        { flag: "--variables", value: "componentName" },
+        { flag: "--output", value: JSON.stringify({
+          files: [{
+            name: "comp",
+            template: "comp.njk",
+            outputPath: ".test-output/original/{{componentName}}.tsx",
+          }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+    await patternsFolder.append("/override-child/comp.njk")
+      .write("const {{componentName}} = 1;");
+
+    await generate.run({
+      subcommands: [],
+      flags: [{ flag: "--name", value: "override-parent" }],
+      context: { root: testRoot },
+    });
+    await patternsFolder.append("/override-parent/instructions.json").writeJSON({
+      name: "override-parent",
+      variables: [],
+      intent: [],
+      output: { files: [] },
+      includes: [
+        {
+          name: "override-child",
+          variables: { componentName: "Button" },
+          files: { comp: ".test-output/overridden/{{componentName}}.tsx" },
+        },
+      ],
+    });
+
+    await run.run({
+      subcommands: ["override-parent"],
+      flags: [],
+      context: { root: testRoot },
+    });
+
+    // File written to overridden path, not original
+    const overriddenPath = testRoot.append("/.test-output/overridden/Button.tsx");
+    assert(await fs.exists(overriddenPath)).true();
+
+    // Original path should NOT exist
+    const originalPath = testRoot.append("/.test-output/original/Button.tsx");
+    assert(await fs.exists(originalPath)).false();
+
+    await testRoot.remove();
+  });
+
+test.case("run composite pattern with same subpattern twice writes both sets of files",
+  async assert => {
+    await reset();
+
+    await generate.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "dual-child" },
+        { flag: "--variables", value: "componentName" },
+        { flag: "--output", value: JSON.stringify({
+          files: [{
+            name: "comp",
+            template: "comp.njk",
+            outputPath: ".test-output/{{componentName}}.tsx",
+          }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+    await patternsFolder.append("/dual-child/comp.njk")
+      .write("export const {{componentName}} = 1;");
+
+    await generate.run({
+      subcommands: [],
+      flags: [{ flag: "--name", value: "dual-parent" }],
+      context: { root: testRoot },
+    });
+    await patternsFolder.append("/dual-parent/instructions.json").writeJSON({
+      name: "dual-parent",
+      variables: [],
+      intent: [],
+      output: { files: [] },
+      includes: [
+        { name: "dual-child", variables: { componentName: "Primary" } },
+        { name: "dual-child", variables: { componentName: "Secondary" } },
+      ],
+    });
+
+    await run.run({
+      subcommands: ["dual-parent"],
+      flags: [],
+      context: { root: testRoot },
+    });
+
+    const primaryPath = testRoot.append("/.test-output/Primary.tsx");
+    const secondaryPath = testRoot.append("/.test-output/Secondary.tsx");
+    assert(await fs.exists(primaryPath)).true();
+    assert(await fs.exists(secondaryPath)).true();
+    assert((await primaryPath.text()).trimEnd())
+      .equals("export const Primary = 1;");
+    assert((await secondaryPath.text()).trimEnd())
+      .equals("export const Secondary = 1;");
+
+    await testRoot.remove();
+  });

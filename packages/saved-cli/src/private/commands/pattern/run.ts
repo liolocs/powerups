@@ -8,6 +8,8 @@ import patternRunErrors from "#errors/patternRunErrors";
 import { instructionsSchema } from "#schemas/instruction";
 import { extractVariables } from "#utils/variables";
 import { resolveOutputPath } from "#utils/output-path";
+import { checkPattern } from "#utils/check-pattern";
+import { resolvePattern } from "#utils/resolve";
 import { logRun } from "#utils/metrics";
 import { runTemplate } from "#runners/pattern/index";
 import { MAIN_FOLDER, PATTERNS_FOLDER } from "#constants";
@@ -42,43 +44,61 @@ const run = new Command({
       throw generatePatternErrors.dry_folder_not_found();
     }
 
-    // 3. Load instructions.json
+    // 3. Resolve pattern folders
     const patternsFolder = mainFolder.append(`/${PATTERNS_FOLDER}`);
     const patternFolder = patternsFolder.append(`/${patternName}`);
-    const patternPath = patternFolder.append("/instructions.json");
 
     if (!(await fs.exists(patternFolder))) {
       throw patternRunErrors.pattern_not_found(patternName);
     }
 
+    // 4. Validate pattern (schema, templates, subpattern tree)
+    const issues = await checkPattern({
+      rootPatternDir: patternsFolder,
+      currentPatternDir: patternFolder,
+    });
+
+    if (issues.length > 0) {
+      throw patternRunErrors.invalid_composition(issues);
+    }
+
+    // 5. Load & parse instructions (safe — validated)
+    const patternPath = patternFolder.append("/instructions.json");
     const instructions = instructionsSchema.parse(await patternPath.json());
 
-    // 4. Extract & validate variables
+    // 6. Extract & validate variables
     const variables = extractVariables(
       rawFlags ?? [],
       instructions.variables,
       EXCLUDE_FLAGS,
     );
 
-    // 5. Detect --dry-run via rawFlags (not flags, since the Command class
-    //    can't distinguish "not passed" from "passed without value")
+    // 7. Detect --dry-run via rawFlags
     const isDryRun = (rawFlags ?? []).some(
       f => f.flag === "--dry-run" || f.flag === "-d",
     );
 
-    // 6. Process each output file, accumulating rendered character count
+    // 8. Resolve pattern tree → flat list of render tasks
+    const tasks = await resolvePattern({
+      patternName,
+      variables,
+      patternsFolder,
+    });
+
+    // 9. Process each render task
     let totalCharacters = 0;
 
-    for (const file of instructions.output.files) {
-      const templatePath = patternFolder.append(`/${file.template}`);
-
-      if (!(await fs.exists(templatePath))) {
-        throw patternRunErrors.template_not_found(file.template);
+    for (const task of tasks) {
+      if (!(await fs.exists(task.templatePath))) {
+        throw patternRunErrors.template_not_found(task.templatePath.name);
       }
 
-      const rendered = await runTemplate({ templatePath, variables });
+      const rendered = await runTemplate({
+        templatePath: task.templatePath,
+        variables: task.variables,
+      });
       totalCharacters += rendered.length;
-      const resolvedPath = resolveOutputPath(file.outputPath, variables);
+      const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
 
       if (isDryRun) {
         cli.print(`=== ${resolvedPath} ===`);
@@ -92,7 +112,7 @@ const run = new Command({
       }
     }
 
-    // 7. Log metrics for non-dry-run successful runs (best-effort)
+    // 10. Log metrics for non-dry-run successful runs (best-effort)
     if (!isDryRun) {
       try {
         await logRun({ pattern: patternName, characters: totalCharacters }, root);

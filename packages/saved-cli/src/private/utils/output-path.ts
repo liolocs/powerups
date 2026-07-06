@@ -1,4 +1,5 @@
 import type { VariableResult } from "#utils/variables";
+import { resolveTemplateString } from "#utils/resolve-template-string";
 
 /**
  * Resolve {{var}} tokens in an outputPath string using the variables record.
@@ -9,10 +10,5 @@ export function resolveOutputPath(
   outputPath: string,
   variables: VariableResult,
 ): string {
-  return outputPath.replace(/\{\{(\w+)\}\}/g, (match, token: string) => {
-    const key = Object.keys(variables).find(
-      k => k.toLowerCase() === token.toLowerCase(),
-    );
-    return key !== undefined ? variables[key] : match;
-  });
+  return resolveTemplateString(outputPath, variables);
 }

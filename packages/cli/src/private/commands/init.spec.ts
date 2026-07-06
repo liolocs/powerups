@@ -73,7 +73,7 @@ test.case("init --harness=opencode scaffolds opencode files only", async assert 
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
   // CLAUDE.md NOT created
   assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(false);
-  // Command files with frontmatter
+  // Command files created
   const cmdPath = `.opencode/skills/${CLI_NAME}-feature.md`;
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
   const brainstormPath = `.opencode/skills/${CLI_NAME}-brainstorm.md`;
@@ -494,20 +494,29 @@ test.case("init writes saved-output skill file for each harness", async assert =
   }
 });
 
-test.case("init injects opencode frontmatter", async assert => {
-  await reset();
+test.case("init injects frontmatter into skill files for every harness", async assert => {
+  for (const harness of ["claude", "opencode", "pi", "codex"] as const) {
+    await reset();
 
-  await init.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "opencode" }],
-    context: { root: testRoot },
-  });
+    await init.run({
+      subcommands: [],
+      flags: [{ flag: "--harness", value: harness }],
+      context: { root: testRoot },
+    });
 
-  const cmdPath = `.opencode/skills/${CLI_NAME}-feature.md`;
-  const content = await testRoot.append(`/${cmdPath}`).text();
-  assert(content.startsWith("---\n")).equals(true);
-  assert(content.includes("description:")).equals(true);
-  assert(content.includes("name:")).equals(true);
+    const skillDirs: Record<string, string> = {
+      claude: ".claude/skills",
+      opencode: ".opencode/skills",
+      pi: ".pi/skills",
+      codex: ".codex/skills",
+    };
 
-  await testRoot.remove();
+    const cmdPath = `${skillDirs[harness]}/${CLI_NAME}-feature.md`;
+    const content = await testRoot.append(`/${cmdPath}`).text();
+    assert(content.startsWith("---\n")).equals(true);
+    assert(content.includes("description:")).equals(true);
+    assert(content.includes(`name: ${CLI_NAME}-feature`)).equals(true);
+
+    await testRoot.remove();
+  }
 });

@@ -1,29 +1,22 @@
 import fs, { type FileRef } from "@rcompat/fs";
 
-interface WriteOptions {
-  frontmatter?: string;
-}
-
 /**
  * Write a rendered skill file to the project root.
  * Creates parent directories as needed.
- * If frontmatter is provided, prepends it as YAML frontmatter.
+ *
+ * Skill files carry their own YAML frontmatter (name + description) in the
+ * rendered template, so no frontmatter injection is performed here — the
+ * content is written verbatim.
  */
 export async function writeSkillFile(
   projectRoot: FileRef,
   relativePath: string,
   content: string,
-  options?: WriteOptions,
 ): Promise<void> {
   const targetPath = projectRoot.append(`/${relativePath}`);
 
   // Create parent directories
   await fs.create(targetPath.directory);
 
-  // Prepend frontmatter if provided
-  const finalContent = options?.frontmatter
-    ? `---\n${options.frontmatter}\n---\n${content}`
-    : content;
-
-  await targetPath.write(finalContent);
+  await targetPath.write(content);
 }

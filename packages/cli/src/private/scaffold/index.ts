@@ -21,45 +21,40 @@ export interface RollbackInfo {
 const HARNESS_CONFIG: Record<Harness, {
   instructionFile: string;
   skillDir: string;
-  frontmatter: boolean;
 }> = {
   claude: {
     instructionFile: "CLAUDE.md",
     skillDir: ".claude/skills",
-    frontmatter: false,
   },
   opencode: {
     instructionFile: "AGENTS.md",
     skillDir: ".opencode/skills",
-    frontmatter: true,
   },
   pi: {
     instructionFile: "AGENTS.md",
     skillDir: ".pi/skills",
-    frontmatter: false,
   },
   codex: {
     instructionFile: "AGENTS.md",
     skillDir: ".codex/skills",
-    frontmatter: false,
   },
 };
 
+// Each template carries its own YAML frontmatter (name + description), so the
+// harness no longer needs to inject frontmatter conditionally — every skill
+// file gets the same frontmatter regardless of the target harness.
 const SKILLS_TO_SCAFFOLD = [
   {
     template: "saved-feature.njk",
     name: `${CLI_NAME}-feature`,
-    description: `Search and run ${CLI_NAME} outputs for new features`,
   },
   {
     template: "saved-brainstorm.njk",
     name: `${CLI_NAME}-brainstorm`,
-    description: `Brainstorm a plan using ${CLI_NAME} outputs`,
   },
   {
     template: "saved-output.njk",
     name: `${CLI_NAME}-output`,
-    description: `Analyze existing code and capture repeatable patterns as ${CLI_NAME} outputs`,
   },
 ];
 
@@ -115,12 +110,7 @@ export async function scaffold(
 
     const outputPath = `${config.skillDir}/${skill.name}.md`;
 
-    const opts = is.defined(config.frontmatter) && is.truthy(config.frontmatter)
-      ? {
-        frontmatter: `name: ${skill.name}\ndescription: "${skill.description}"`,
-      } : undefined;
-
-    await writeSkillFile(projectRoot, outputPath, rendered, opts);
+    await writeSkillFile(projectRoot, outputPath, rendered);
 
     if (is.defined(rollback)) {
       rollback.remove.push(outputPath);

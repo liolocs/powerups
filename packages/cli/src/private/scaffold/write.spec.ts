@@ -33,35 +33,15 @@ test.case("creates parent directories", async assert => {
   await testRoot.remove();
 });
 
-test.case("injects opencode frontmatter when provided", async assert => {
+test.case("writes content verbatim (frontmatter lives in the template)", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
-  const rendered = `Search and run ${CLI_NAME} outputs for new features.`;
-  const path = ".opencode/skills/" + CLI_NAME + "-feature.md";
-  await writeSkillFile(testRoot, path, rendered, {
-    frontmatter: `name: ${CLI_NAME}-feature\ndescription: "Search and run ${CLI_NAME} outputs for new features"`,
-  });
-
-  const content = await testRoot.append("/" + path).text();
-  assert(content.startsWith("---\n")).equals(true);
-  assert(content.includes("description:")).equals(true);
-  assert(content.includes("name:")).equals(true);
-  assert(content.includes(CLI_NAME)).equals(true);
-
-  await testRoot.remove();
-});
-
-test.case("no frontmatter when not provided", async assert => {
-  await testRoot.remove();
-  await fs.create(testRoot);
-
-  const rendered = "plain content";
+  const rendered = "---\nname: test\ndescription: \"desc\"\n---\nplain content";
   await writeSkillFile(testRoot, ".claude/skills/test.md", rendered);
 
   const content = await testRoot.append("/.claude/skills/test.md").text();
-  assert(content.startsWith("---\n")).equals(false);
-  assert(content.trim()).equals("plain content");
+  assert(content.trim()).equals(rendered);
 
   await testRoot.remove();
 });

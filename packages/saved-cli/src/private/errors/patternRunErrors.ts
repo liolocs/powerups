@@ -63,6 +63,13 @@ const pattern_run_errors = error.coded({
     const errorText = `Error executing template ${template}: ${message}`;
     return t`${errorBGText}${errorText}`;
   },
+
+  invalid_composition: (issues: string[]) => {
+    const issueList = issues.map(i => `  - ${i}`).join("\n");
+    const errorText =
+      `Pattern composition is invalid:\n${issueList}`;
+    return t`${errorBGText}${errorText}`;
+  },
 });
 
 export type PatternRunErrorCode = keyof typeof pattern_run_errors;

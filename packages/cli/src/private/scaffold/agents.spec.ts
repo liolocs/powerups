@@ -26,6 +26,10 @@ test.case("creates AGENTS.md when absent", async assert => {
   const content = await testRoot.append("/AGENTS.md").text();
   assert(content.includes(`<!-- BEGIN ${CLI_NAME} -->`)).equals(true);
   assert(content.includes(`<!-- END ${CLI_NAME} -->`)).equals(true);
+  assert(content.includes("Subpatterns")).equals(true);
+  assert(content.includes(`"includes"`)).equals(true);
+  assert(content.includes("{{parentVar}}")).equals(true);
+  assert(content.includes("{{modelName}}")).equals(true);
 
   await testRoot.remove();
 });

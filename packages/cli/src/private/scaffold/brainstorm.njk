@@ -55,6 +55,12 @@ Brainstorm a plan for "$ARGUMENTS" using {{ CLI_NAME }} patterns.
    only be used when a `.ts` template is impractical. Validate with
    `{{ CLI_NAME }} pattern validate -n <name>`.
 
+   Subpatterns: Do NOT plan subpattern decomposition upfront. Plan
+   concrete, standalone patterns. If two planned patterns clearly share
+   a file structure, note it as a future subpattern extraction candidate
+   — to be extracted after both patterns are built and verified working.
+   See the main instruction file for subpattern mechanics.
+
 6. Present the plan in sections, covering:
    - Overview of the approach
    - Existing patterns to reuse (with names)

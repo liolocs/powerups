@@ -71,9 +71,67 @@ export default ({ componentName, theme }: Record<string, string>) =>
     "files": [
       { "name": "string", "template": "string", "outputPath": "string" }
     ]
-  }
+  },
+  "includes": [
+    {
+      "name": "subpattern-name",
+      "variables": { "subVar": "{{ '{{parentVar}}' }}", "other": "literal" },
+      "files": { "originalName": "overridden/path" }
+    }
+  ]
 }
 ```
+
+`includes` is optional — see [Subpatterns](#subpatterns) below.
+
+### Subpatterns
+
+A subpattern is a regular pattern that another pattern includes via the
+`includes` field. When a pattern runs, it renders its own files, then resolves
+each included subpattern — mapping the subpattern's declared variables to values
+from the parent (using `{{ '{{parentVar}}' }}` tokens or literals), optionally
+overriding output paths, and rendering the subpattern's templates. Subpatterns
+are just patterns — they live in their own folder under
+`{{ MAIN_FOLDER }}/{{ PATTERNS_FOLDER }}/`, have their own `instructions.json`
+and templates, and can be run standalone or included by multiple parents.
+
+#### Worked example
+
+- *Before:* You have an `api-route` pattern that generates a route handler, a
+types file, and a test. Later you build a `graphql-resolver` pattern that also
+needs a types file with the same structure.
+- *Extraction:* Create a standalone `types` pattern
+  (`{{ CLI_NAME }} pattern gen -n types ...`). Add it to both parents'
+  `instructions.json`:
+
+```json
+"includes": [
+  {
+    "name": "types",
+    "variables": { "entityName": "{{ '{{modelName}}' }}" },
+    "files": { "types": "src/types/{{ '{{entityName}}' }}.ts" }
+  }
+]
+```
+
+- The `variables` map says: "pass the parent's `modelName` as the subpattern's
+  `entityName`." The `files` map says: "write the subpattern's `types` file to
+  this path instead of its default."
+- Validate: `{{ CLI_NAME }} pattern validate -n api-route`
+
+#### When to extract subpatterns
+
+Create patterns first. Extract subpatterns only when a concrete use case
+demands it — you often don't know what should be a subpattern until you are
+faced with the actual repetition. Extract when:
+
+- You are duplicating the same template files across multiple patterns
+- A pattern is generating files for two distinct concerns that change
+  independently
+- You find yourself copying a subset of one pattern's output into another
+
+Do NOT preemptively decompose a pattern into subpatterns upfront. Build the
+full pattern, verify it works, then extract when repetition emerges.
 
 ### Quick reference
 

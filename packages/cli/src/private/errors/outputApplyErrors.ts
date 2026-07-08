@@ -1,0 +1,119 @@
+import error from "@rcompat/error";
+import cli from "@rcompat/cli";
+import type { FileRef } from "@rcompat/fs";
+import { CLI_NAME, capitalize } from "#constants";
+
+const t = error.template;
+
+const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
+
+export default function createOutputApplyErrors(domain: string) {
+  return error.coded({
+    dry_folder_not_found: () => {
+      const errorText = `Dry folder not found. Run "${CLI_NAME} init" first.`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    missing_name: () => {
+      const errorText =
+        `${capitalize(domain)} name required.\nUsage: ${CLI_NAME} ${domain} apply <name> [variables]`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    not_found: (name: string) => {
+      const nameText = cli.bg.yellow(" " + name + " ");
+      const errorText = `${capitalize(domain)} ${nameText} not found.`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    missing_variable: (variable: string, flagName: string) => {
+      const errorText =
+        `Missing required variable: ${variable}\n` +
+        `Provide it with --${flagName}=<value>`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    template_not_found: (template: string) => {
+      const errorText = `Template file not found: ${template}`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    unsupported_template_type: (ext: string, templatePath: FileRef) => {
+      const errorText =
+        `Unsupported template type: ${ext}\n` +
+        `Only .ts, .njk, and .json templates are supported.\n` +
+        `Template: ${templatePath.name}`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    invalid_ts_template: (templatePath: FileRef) => {
+      const errorText =
+        `Invalid .ts template: ${templatePath.name}\n` +
+        `Must export a default function that returns a string.`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    unsupported_runtime: (name: string) => {
+      const errorText =
+        `Unsupported runtime: ${name}\n` +
+        `.ts templates require bun, deno, or node with --experimental-strip-types.`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    template_execution_error: (template: string, message: string) => {
+      const errorText = `Error executing template ${template}: ${message}`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    invalid_composition: (issues: string[]) => {
+      const issueList = issues.map(i => `  - ${i}`).join("\n");
+      const errorText =
+        `${capitalize(domain)} composition is invalid:\n${issueList}`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    destination_file_exists: (path: string) => {
+      const pathText = cli.bg.yellow(" " + path + " ");
+      const errorText =
+        `Destination file ${pathText} already exists.\n` +
+        `Ask the user whether to overwrite, then re-run with --overwrite.`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    modify_target_not_found: (path: string) => {
+      const errorText = `Target file for modification not found: ${path}`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    modify_anchor_not_found: (anchor: string, path: string) => {
+      const errorText = `Anchor "${anchor}" not found in: ${path}`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    modify_anchor_ambiguous: (anchor: string, path: string) => {
+      const errorText = `Anchor "${anchor}" appears multiple times in: ${path}`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    modify_template_invalid_json: (template: string) => {
+      const errorText = `Modify template did not produce valid JSON: ${template}`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    git_repo_required: () => {
+      const errorText = "Git repository required. Run \"git init\" first.";
+      return t`${errorBGText}${errorText}`;
+    },
+
+    worktree_creation_failed: (message: string) => {
+      const errorText = `Failed to create git worktree: ${message}`;
+      return t`${errorBGText}${errorText}`;
+    },
+
+    worktree_apply_failed: (errors: string[]) => {
+      const errorList = errors.map(e => `  - ${e}`).join("\n");
+      const errorText = `Apply failed in worktree, no changes made:\n${errorList}`;
+      return t`${errorBGText}${errorText}`;
+    },
+  });
+}

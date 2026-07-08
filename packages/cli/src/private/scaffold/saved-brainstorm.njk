@@ -1,18 +1,19 @@
 ---
 name: {{ CLI_NAME }}-brainstorm
-description: "Brainstorm a plan using {{ CLI_NAME }} outputs"
+description: "Brainstorm a plan using {{ CLI_NAME }} templates and features"
 ---
-Brainstorm a plan using {{ CLI_NAME }} outputs.
+Brainstorm a plan using {{ CLI_NAME }} templates and features.
 
 1. Explore the project context:
    - Check recent commits, existing files, and docs.
-   - Run `{{ CLI_NAME }} output search -q "<what the user wants to plan>"` to see if any
-     outputs already relate to this area.
-   - If the search returns "No matching outputs found", check whether
-     `{{ MAIN_FOLDER }}/{{ OUTPUTS_FOLDER }}/` exists and contains any
-     `instructions.json` files. This distinguishes "no outputs exist yet"
-     (greenfield — the first outputs in the project) from "outputs exist
-     but none match this request."
+   - Run `{{ CLI_NAME }} template search -q "<what the user wants to plan>"` and
+     `{{ CLI_NAME }} feature search -q "<what the user wants to plan>"` to see if
+     any templates or features already relate to this area.
+   - If the searches return "No matching templates/features found", check whether
+     `{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/` or
+     `{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ FEATURE_FOLDER }}/` exist and
+     contain any `instructions.json` files. This distinguishes "nothing exists
+     yet" (greenfield) from "items exist but none match this request."
 
 2. Ask the user clarifying questions — one at a time — to understand:
    - What they are trying to achieve
@@ -20,20 +21,27 @@ Brainstorm a plan using {{ CLI_NAME }} outputs.
    - What success looks like
 
 3. Identify the key intents (topics, domains, capabilities) this plan touches.
-   For each intent, run `{{ CLI_NAME }} output search -q "<intent>"` to find
-   existing outputs that may be reusable.
+   For each intent, run `{{ CLI_NAME }} template search -q "<intent>"` and
+   `{{ CLI_NAME }} feature search -q "<intent>"` to find existing items that
+   may be reusable.
 
 4. From the search results, determine:
-   - Which existing outputs can be reused for this plan (list by name)
-   - What work doesn't fit any existing output
+   - Which existing templates or features can be reused for this plan (list by name)
+   - What work doesn't fit any existing item
 
-5. For work that doesn't fit an existing output, classify each piece as a
-   one-off task or a output capture candidate.
+5. For work that doesn't fit an existing item, classify each piece as:
+   - A one-off task
+   - A template capture candidate (recurring pattern with different variables)
+   - A feature capture candidate (one-time addition to the project)
 
-   A task is a good output capture candidate if:
+   A task is a good template capture candidate if:
    - It generates files with a repeating structure (same file types, same wiring)
    - It will likely be done again with different variable values
    - The structure is stable enough that parameterizing it adds value
+
+   A task is a good feature capture candidate if:
+   - It's a one-time addition to the project (e.g., add a dependency, set up auth)
+   - It generates files that could be re-applied to a fresh project
 
    A task is one-off if:
    - It's project configuration (tsconfig, path aliases, package.json)
@@ -42,36 +50,39 @@ Brainstorm a plan using {{ CLI_NAME }} outputs.
    - It's a one-time wiring or edit
 
    IMPORTANT: Follow the build-first principle. Do NOT plan to create
-   outputs before the concrete implementation exists and is verified.
-   Instead, plan the concrete implementation (what files to write, what they
-   contain). Mark repeatable parts as output capture candidates — to be
+   templates or features before the concrete implementation exists and is
+   verified. Instead, plan the concrete implementation (what files to write,
+   what they contain). Mark repeatable parts as capture candidates — to be
    captured AFTER the implementation is verified working, using:
-   `{{ CLI_NAME }} output gen -n <short-name> -i "<intent>" -v "<vars>" -o '<files-json>'`
+   `{{ CLI_NAME }} template create -n <short-name> -i "<intent>" -v "<vars>" -o '<files-json>'`
+   or `{{ CLI_NAME }} feature create -n <short-name> -i "<intent>" -v "<vars>" -o '<files-json>'`
    Then author the template at
-   `{{ MAIN_FOLDER }}/{{ OUTPUTS_FOLDER }}/<name>/<template>`. Prefer a `.ts`
-   file with a default-export function `(vars: Record<string, string>) => string` —
-   this is the recommended format for new outputs. The CLI calls that function
-   with the output's declared variables (keyed by name, all strings) and
-   writes the returned string to `outputPath`; keep it a pure function of `vars`
-   (no imports, no filesystem access). Example:
+   `{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/<name>/<template>`
+   (or `{{ FEATURE_FOLDER }}` for features). Prefer a `.ts` file with a
+   default-export function `(vars: Record<string, string>) => string` —
+   the recommended format for new templates/features. The CLI calls that
+   function with the declared variables (keyed by name, all strings) and
+   writes the returned string to `outputPath`; keep it a pure function of
+   `vars` (no imports, no filesystem access). Example:
    `export default ({ name }: Record<string, string>) => \`# ${name}\`;`.
    Nunjucks `.njk` templates (`{{ '{{var}}' }}` syntax) are supported but should
    only be used when a `.ts` template is impractical. Validate with
-   `{{ CLI_NAME }} output validate -n <name>`.
+   `{{ CLI_NAME }} template validate -n <name>` (or `feature validate`).
 
-   Suboutputs: Do NOT plan suboutput decomposition upfront. Plan
-   concrete, standalone outputs. If two planned outputs clearly share
-   a file structure, note it as a future suboutput extraction candidate
-   — to be extracted after both outputs are built and verified working.
-   See the main instruction file for suboutput mechanics.
+   Subtemplates: Do NOT plan subtemplate decomposition upfront. Plan
+   concrete, standalone templates. If two planned templates clearly share
+   a file structure, note it as a future subtemplate extraction candidate
+   — to be extracted after both templates are built and verified working.
+   See the main instruction file for subtemplate mechanics.
 
 6. Present the plan in sections, covering:
    - Overview of the approach
-   - Existing outputs to reuse (with names)
+   - Existing templates/features to reuse (with names)
    - Concrete implementation steps (what files to write or modify)
-   - Output capture candidates (to capture after implementation is verified,
+   - Template capture candidates (to capture after implementation is verified,
      with suggested name, intent keywords, and variables)
-   - Non-output work (one-off tasks)
+   - Feature capture candidates (to capture after implementation is verified)
+   - Non-template/feature work (one-off tasks)
    - Suggested order of implementation
 
    Present only the final plan. Do not include your reasoning process, internal
@@ -82,4 +93,4 @@ Brainstorm a plan using {{ CLI_NAME }} outputs.
 8. Once approved, save the plan to a spec file at
    `docs/{{ CLI_NAME }}/specs/YYYY-MM-DD-<topic>-design.md` and commit it.
    Then transition to implementation by following the `{{ CLI_NAME }}-feature`
-   command workflow.
+   or `{{ CLI_NAME }}-template` command workflow.

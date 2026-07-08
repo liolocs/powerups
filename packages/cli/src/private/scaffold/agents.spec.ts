@@ -3,7 +3,13 @@ import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { runTemplate } from "#runners/output/index";
-import { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
+import {
+  CLI_NAME,
+  MAIN_FOLDER,
+  OUTPUT_FOLDER,
+  TEMPLATE_FOLDER,
+  FEATURE_FOLDER,
+} from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -12,7 +18,13 @@ const scaffoldDir = fs.ref(import.meta.dirname);
 async function renderAgents(): Promise<string> {
   return await runTemplate({
     templatePath: scaffoldDir.append("/agents.njk"),
-    variables: { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER },
+    variables: {
+      CLI_NAME,
+      MAIN_FOLDER,
+      OUTPUT_FOLDER,
+      TEMPLATE_FOLDER,
+      FEATURE_FOLDER,
+    },
   });
 }
 
@@ -26,7 +38,7 @@ test.case("creates AGENTS.md when absent", async assert => {
   const content = await testRoot.append("/AGENTS.md").text();
   assert(content.includes(`<!-- BEGIN ${CLI_NAME} -->`)).equals(true);
   assert(content.includes(`<!-- END ${CLI_NAME} -->`)).equals(true);
-  assert(content.includes("Suboutputs")).equals(true);
+  assert(content.includes("Subtemplates")).equals(true);
   assert(content.includes(`"includes"`)).equals(true);
   assert(content.includes("{{parentVar}}")).equals(true);
   assert(content.includes("{{modelName}}")).equals(true);
@@ -95,6 +107,24 @@ test.case("works for CLAUDE.md same as AGENTS.md", async assert => {
   assert(content.includes("OLD")).equals(false);
   const count = (content.match(new RegExp(`<!-- BEGIN ${CLI_NAME} -->`, "g")) ?? []).length;
   assert(count).equals(1);
+
+  await testRoot.remove();
+});
+
+test.case("renders template vs feature content", async assert => {
+  await testRoot.remove();
+  await fs.create(testRoot);
+
+  const rendered = await renderAgents();
+  await writeToAgentsOrClaudeMD(testRoot, "AGENTS.md", rendered, CLI_NAME);
+
+  const content = await testRoot.append("/AGENTS.md").text();
+  assert(content.includes("template")).equals(true);
+  assert(content.includes("feature")).equals(true);
+  assert(content.includes("Template vs Feature")).equals(true);
+  assert(content.includes("Modify templates")).equals(true);
+  assert(content.includes("outputPathOverride")).equals(true);
+  assert(content.includes("doctor")).equals(true);
 
   await testRoot.remove();
 });

@@ -12,9 +12,10 @@ const program = new CLI({
   examples: [
     `$ ${CLI_NAME} init`,
     `$ ${CLI_NAME} init --harness=claude`,
-    `$ ${CLI_NAME} output gen my-output`,
-    `$ ${CLI_NAME} output run my-output --var name=foo`,
-    `$ ${CLI_NAME} output search "summarize a pdf"`,
+    `$ ${CLI_NAME} template create my-template`,
+    `$ ${CLI_NAME} template apply my-template --var name=foo`,
+    `$ ${CLI_NAME} feature search "summarize a pdf"`,
+    `$ ${CLI_NAME} doctor`,
   ],
 });
 

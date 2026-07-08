@@ -2,50 +2,78 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { resolveOutput, type RenderTask } from "#utils/resolve";
-import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
+import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const outputsFolder: FileRef = mainFolder.append(`/${OUTPUTS_FOLDER}`);
+const templateFolder: FileRef = mainFolder.append(`/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(outputsFolder);
+  await fs.create(templateFolder);
 }
 
 async function writeOutput(name: string, instructions: Record<string, unknown>) {
-  const dir = outputsFolder.append(`/${name}`);
+  const dir = templateFolder.append(`/${name}`);
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
 
-test.case("leaf output produces one task per output file", async assert => {
+test.case("leaf output produces one task per create file", async assert => {
   await reset();
   await writeOutput("leaf", {
     name: "leaf",
     variables: ["componentName"],
     intent: [],
     output: {
-      files: [
+      create: [
         { name: "comp", template: "comp.njk", outputPath: "src/{{componentName}}.ts" },
         { name: "test", template: "test.njk", outputPath: "src/{{componentName}}.spec.ts" },
       ],
+      modify: [],
     },
   });
 
   const tasks = await resolveOutput({
     outputName: "leaf",
     variables: { componentName: "Button" },
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   assert(tasks.length).equals(2);
+  assert(tasks[0].kind).equals("create");
   assert(tasks[0].outputPath).equals("src/{{componentName}}.ts");
   assert(tasks[0].variables.componentName).equals("Button");
   assert(tasks[1].outputPath).equals("src/{{componentName}}.spec.ts");
+  await testRoot.remove();
+});
+
+test.case("output with both create and modify produces tasks with correct kind", async assert => {
+  await reset();
+  await writeOutput("both", {
+    name: "both",
+    variables: ["name"],
+    intent: [],
+    output: {
+      create: [{ name: "controller", template: "c.ts", outputPath: "src/{{name}}.ts" }],
+      modify: [{ name: "wire", template: "w.json", outputPath: "src/index.ts" }],
+    },
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "both",
+    variables: { name: "User" },
+    outputsFolder: templateFolder,
+  });
+
+  assert(tasks.length).equals(2);
+  assert(tasks[0].kind).equals("create");
+  assert(tasks[0].outputPath).equals("src/{{name}}.ts");
+  assert(tasks[1].kind).equals("modify");
+  assert(tasks[1].outputPath).equals("src/index.ts");
   await testRoot.remove();
 });
 
@@ -56,7 +84,8 @@ test.case("output with includes produces own tasks plus suboutput tasks", async 
     variables: ["componentName", "theme"],
     intent: [],
     output: {
-      files: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
+      create: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
+      modify: [],
     },
   });
   await writeOutput("parent", {
@@ -64,7 +93,8 @@ test.case("output with includes produces own tasks plus suboutput tasks", async 
     variables: ["theme"],
     intent: [],
     output: {
-      files: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
+      create: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
+      modify: [],
     },
     includes: [
       {
@@ -77,7 +107,7 @@ test.case("output with includes produces own tasks plus suboutput tasks", async 
   const tasks = await resolveOutput({
     outputName: "parent",
     variables: { theme: "dark" },
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   assert(tasks.length).equals(2);
@@ -97,27 +127,27 @@ test.case("nested suboutputs (A->B->C) produce flat list of all tasks", async as
     name: "nest-c",
     variables: ["val"],
     intent: [],
-    output: { files: [{ name: "f", template: "c.njk", outputPath: "c.ts" }] },
+    output: { create: [{ name: "f", template: "c.njk", outputPath: "c.ts" }], modify: [] },
   });
   await writeOutput("nest-b", {
     name: "nest-b",
     variables: ["val"],
     intent: [],
-    output: { files: [{ name: "f", template: "b.njk", outputPath: "b.ts" }] },
+    output: { create: [{ name: "f", template: "b.njk", outputPath: "b.ts" }], modify: [] },
     includes: [{ name: "nest-c", variables: { val: "{{val}}" } }],
   });
   await writeOutput("nest-a", {
     name: "nest-a",
     variables: ["val"],
     intent: [],
-    output: { files: [{ name: "f", template: "a.njk", outputPath: "a.ts" }] },
+    output: { create: [{ name: "f", template: "a.njk", outputPath: "a.ts" }], modify: [] },
     includes: [{ name: "nest-b", variables: { val: "{{val}}" } }],
   });
 
   const tasks = await resolveOutput({
     outputName: "nest-a",
     variables: { val: "test" },
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   assert(tasks.length).equals(3);
@@ -135,20 +165,20 @@ test.case("variable mapping passes static value through", async assert => {
     name: "static-child",
     variables: ["componentName"],
     intent: [],
-    output: { files: [{ name: "f", template: "c.njk", outputPath: "out.ts" }] },
+    output: { create: [{ name: "f", template: "c.njk", outputPath: "out.ts" }], modify: [] },
   });
   await writeOutput("static-parent", {
     name: "static-parent",
     variables: [],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
     includes: [{ name: "static-child", variables: { componentName: "Button" } }],
   });
 
   const tasks = await resolveOutput({
     outputName: "static-parent",
     variables: {},
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   assert(tasks[0].variables.componentName).equals("Button");
@@ -161,20 +191,20 @@ test.case("variable mapping resolves parentVar reference", async assert => {
     name: "ref-child",
     variables: ["theme"],
     intent: [],
-    output: { files: [{ name: "f", template: "c.njk", outputPath: "out.ts" }] },
+    output: { create: [{ name: "f", template: "c.njk", outputPath: "out.ts" }], modify: [] },
   });
   await writeOutput("ref-parent", {
     name: "ref-parent",
     variables: ["theme"],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
     includes: [{ name: "ref-child", variables: { theme: "{{theme}}" } }],
   });
 
   const tasks = await resolveOutput({
     outputName: "ref-parent",
     variables: { theme: "dark" },
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   assert(tasks[0].variables.theme).equals("dark");
@@ -187,46 +217,47 @@ test.case("variable mapping resolves mixed text and tokens", async assert => {
     name: "mixed-child",
     variables: ["variant"],
     intent: [],
-    output: { files: [{ name: "f", template: "c.njk", outputPath: "out.ts" }] },
+    output: { create: [{ name: "f", template: "c.njk", outputPath: "out.ts" }], modify: [] },
   });
   await writeOutput("mixed-parent", {
     name: "mixed-parent",
     variables: ["theme"],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
     includes: [{ name: "mixed-child", variables: { variant: "{{theme}}-button" } }],
   });
 
   const tasks = await resolveOutput({
     outputName: "mixed-parent",
     variables: { theme: "dark" },
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   assert(tasks[0].variables.variant).equals("dark-button");
   await testRoot.remove();
 });
 
-test.case("output path override applied to correct file by name", async assert => {
+test.case("create output path override applied to correct file by name", async assert => {
   await reset();
   await writeOutput("override-child", {
     name: "override-child",
     variables: ["componentName"],
     intent: [],
     output: {
-      files: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
+      create: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
+      modify: [],
     },
   });
   await writeOutput("override-parent", {
     name: "override-parent",
     variables: [],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
     includes: [
       {
         name: "override-child",
         variables: { componentName: "Button" },
-        files: { comp: "src/ui/{{componentName}}.tsx" },
+        outputPathOverride: { create: { comp: "src/ui/{{componentName}}.tsx" } },
       },
     ],
   });
@@ -234,10 +265,47 @@ test.case("output path override applied to correct file by name", async assert =
   const tasks = await resolveOutput({
     outputName: "override-parent",
     variables: {},
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   assert(tasks[0].outputPath).equals("src/ui/{{componentName}}.tsx");
+  await testRoot.remove();
+});
+
+test.case("modify output path override applied to correct file by name", async assert => {
+  await reset();
+  await writeOutput("modify-override-child", {
+    name: "modify-override-child",
+    variables: ["name"],
+    intent: [],
+    output: {
+      create: [],
+      modify: [{ name: "wire", template: "w.json", outputPath: "src/index.ts" }],
+    },
+  });
+  await writeOutput("modify-override-parent", {
+    name: "modify-override-parent",
+    variables: [],
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "modify-override-child",
+        variables: { name: "User" },
+        outputPathOverride: { modify: { wire: "src/custom/index.ts" } },
+      },
+    ],
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "modify-override-parent",
+    variables: {},
+    outputsFolder: templateFolder,
+  });
+
+  assert(tasks.length).equals(1);
+  assert(tasks[0].kind).equals("modify");
+  assert(tasks[0].outputPath).equals("src/custom/index.ts");
   await testRoot.remove();
 });
 
@@ -248,21 +316,22 @@ test.case("no override preserves original outputPath", async assert => {
     variables: ["componentName"],
     intent: [],
     output: {
-      files: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
+      create: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
+      modify: [],
     },
   });
   await writeOutput("no-override-parent", {
     name: "no-override-parent",
     variables: [],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
     includes: [{ name: "no-override-child", variables: { componentName: "Button" } }],
   });
 
   const tasks = await resolveOutput({
     outputName: "no-override-parent",
     variables: {},
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   assert(tasks[0].outputPath).equals("src/{{componentName}}.tsx");
@@ -275,13 +344,13 @@ test.case("same suboutput referenced twice with different variables produces dis
     name: "dual-child",
     variables: ["componentName"],
     intent: [],
-    output: { files: [{ name: "f", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }] },
+    output: { create: [{ name: "f", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }], modify: [] },
   });
   await writeOutput("dual-parent", {
     name: "dual-parent",
     variables: [],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
     includes: [
       { name: "dual-child", variables: { componentName: "Primary" } },
       { name: "dual-child", variables: { componentName: "Secondary" } },
@@ -291,7 +360,7 @@ test.case("same suboutput referenced twice with different variables produces dis
   const tasks = await resolveOutput({
     outputName: "dual-parent",
     variables: {},
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   assert(tasks.length).equals(2);
@@ -306,25 +375,25 @@ test.case("overrides do not cascade to nested suboutputs", async assert => {
     name: "cascade-grandchild",
     variables: [],
     intent: [],
-    output: { files: [{ name: "f", template: "g.njk", outputPath: "original.ts" }] },
+    output: { create: [{ name: "f", template: "g.njk", outputPath: "original.ts" }], modify: [] },
   });
   await writeOutput("cascade-child", {
     name: "cascade-child",
     variables: [],
     intent: [],
-    output: { files: [{ name: "f", template: "c.njk", outputPath: "original.ts" }] },
+    output: { create: [{ name: "f", template: "c.njk", outputPath: "original.ts" }], modify: [] },
     includes: [{ name: "cascade-grandchild", variables: {} }],
   });
   await writeOutput("cascade-parent", {
     name: "cascade-parent",
     variables: [],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
     includes: [
       {
         name: "cascade-child",
         variables: {},
-        files: { f: "overridden.ts" },
+        outputPathOverride: { create: { f: "overridden.ts" } },
       },
     ],
   });
@@ -332,7 +401,7 @@ test.case("overrides do not cascade to nested suboutputs", async assert => {
   const tasks = await resolveOutput({
     outputName: "cascade-parent",
     variables: {},
-    outputsFolder,
+    outputsFolder: templateFolder,
   });
 
   // Child's file is overridden

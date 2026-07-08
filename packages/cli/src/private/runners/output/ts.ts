@@ -1,14 +1,14 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import outputRunErrors from "#errors/outputRunErrors";
+import runnerErrors from "#errors/runnerErrors";
 import type { TemplateContext } from "#runners/output/index";
 
 export default async function tsRunner(
   { templatePath, variables }: TemplateContext,
 ): Promise<string> {
   if (!(await fs.exists(templatePath))) {
-    throw outputRunErrors.template_not_found(templatePath.name);
+    throw runnerErrors.template_not_found(templatePath.name);
   }
 
   switch (runtime.name) {
@@ -18,7 +18,7 @@ export default async function tsRunner(
     case "node":
       return await childProcessImport(templatePath, variables);
     default:
-      throw outputRunErrors.unsupported_runtime(runtime.name);
+      throw runnerErrors.unsupported_runtime(runtime.name);
   }
 }
 
@@ -32,7 +32,7 @@ async function directImport(
   try {
     const module = await import(templatePath.path);
     if (!is.defined(module.default) || typeof module.default !== "function") {
-      throw outputRunErrors.invalid_ts_template(templatePath);
+      throw runnerErrors.invalid_ts_template(templatePath);
     }
     return String(module.default(variables));
   } catch (error_) {
@@ -40,7 +40,7 @@ async function directImport(
     if (error_ instanceof Error && error_.constructor.name === "CodeError") {
       throw error_;
     }
-    throw outputRunErrors.template_execution_error(
+    throw runnerErrors.template_execution_error(
       templatePath.name,
       error_ instanceof Error ? error_.message : String(error_),
     );
@@ -96,7 +96,7 @@ async function childProcessImport(
     const message = error_ instanceof Error
       ? `${error_.message}${stderr ? `: ${stderr}` : ""}`
       : String(error_);
-    throw outputRunErrors.template_execution_error(
+    throw runnerErrors.template_execution_error(
       templatePath.name,
       message,
     );

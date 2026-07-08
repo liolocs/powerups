@@ -51,7 +51,7 @@ test.case("init --harness=claude scaffolds claude files only", async assert => {
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
   const brainstormPath = `.claude/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
-  const outputPath = `.claude/skills/${CLI_NAME}-output.md`;
+  const outputPath = `.claude/skills/${CLI_NAME}-template.md`;
   assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
   // No other harness dirs
   assert(await fs.exists(testRoot.append("/.opencode"))).equals(false);
@@ -78,7 +78,7 @@ test.case("init --harness=opencode scaffolds opencode files only", async assert 
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
   const brainstormPath = `.opencode/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
-  const outputPath = `.opencode/skills/${CLI_NAME}-output.md`;
+  const outputPath = `.opencode/skills/${CLI_NAME}-template.md`;
   assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
   // No other harness dirs
   assert(await fs.exists(testRoot.append("/.claude"))).equals(false);
@@ -102,7 +102,7 @@ test.case("init --harness=pi scaffolds pi files only", async assert => {
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
   const brainstormPath = `.pi/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
-  const outputPath = `.pi/skills/${CLI_NAME}-output.md`;
+  const outputPath = `.pi/skills/${CLI_NAME}-template.md`;
   assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
   // No other harness dirs
   assert(await fs.exists(testRoot.append("/.claude"))).equals(false);
@@ -127,7 +127,7 @@ test.case("init --harness=codex scaffolds codex files", async assert => {
   assert(await fs.exists(testRoot.append(`/${featurePath}`))).equals(true);
   const brainstormPath = `.codex/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
-  const outputPath = `.codex/skills/${CLI_NAME}-output.md`;
+  const outputPath = `.codex/skills/${CLI_NAME}-template.md`;
   assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
   // No other harness dirs
   assert(await fs.exists(testRoot.append("/.claude"))).equals(false);
@@ -465,7 +465,7 @@ test.case("init writes skill files with constants substituted", async assert => 
   await testRoot.remove();
 });
 
-test.case("init writes saved-output skill file for each harness", async assert => {
+test.case("init writes saved-template skill file for each harness", async assert => {
   for (const harness of ["claude", "opencode", "pi", "codex"] as const) {
     await reset();
 
@@ -482,7 +482,7 @@ test.case("init writes saved-output skill file for each harness", async assert =
       codex: ".codex/skills",
     };
 
-    const outputPath = `${skillDirs[harness]}/${CLI_NAME}-output.md`;
+    const outputPath = `${skillDirs[harness]}/${CLI_NAME}-template.md`;
     assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
 
     const content = await testRoot.append(`/${outputPath}`).text();

@@ -1,39 +1,44 @@
 import test from "@rcompat/test";
-import search from "#commands/output/search";
-import generate from "#commands/output/generate";
+import createSearchCommand from "#commands/output/search";
+import createCreateCommand from "#commands/output/create";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import captureStdout from "#test-utils/capture-stdout";
-import { MAIN_FOLDER } from "#constants";
+import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
+const templateFolder = mainFolder.append(`/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`);
 
-test.case("search finds matching outputs", async assert => {
+const search = createSearchCommand("template");
+const createCmd = createCreateCommand("template");
+
+test.case("search finds matching templates", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
 
-  await generate.run({
+  await createCmd.run({
     subcommands: [],
     flags: [
       { flag: "--name", value: "ui-component" },
       { flag: "--intent", value: "ui,component" },
       { flag: "--variables", value: "ComponentName" },
       { flag: "--output", value: JSON.stringify({
-        files: [
+        create: [
           { name: "button.svelte",
             template: "button.svelte.tmpl",
             outputPath: "src/{{ComponentName}}.svelte",
           },
         ],
+        modify: [],
       }) },
     ],
     context: { root: testRoot },
   });
 
-  await generate.run({
+  await createCmd.run({
     subcommands: [],
     flags: [
       { flag: "--name", value: "api-route" },
@@ -60,7 +65,7 @@ test.case("search ranks by score descending", async assert => {
   await fs.create(testRoot);
   await fs.create(mainFolder);
 
-  await generate.run({
+  await createCmd.run({
     subcommands: [],
     flags: [
       { flag: "--name", value: "focused" },
@@ -69,13 +74,14 @@ test.case("search ranks by score descending", async assert => {
     context: { root: testRoot },
   });
 
-  await generate.run({
+  await createCmd.run({
     subcommands: [],
     flags: [
       { flag: "--name", value: "broad" },
       { flag: "--intent", value: "component,ui,state" },
       { flag: "--output", value: JSON.stringify({
-        files: [{ name: "a", template: "a", outputPath: "a" }],
+        create: [{ name: "a", template: "a", outputPath: "a" }],
+        modify: [],
       }) },
     ],
     context: { root: testRoot },
@@ -96,12 +102,12 @@ test.case("search ranks by score descending", async assert => {
   await testRoot.remove();
 });
 
-test.case("search errors when no outputs match", async assert => {
+test.case("search errors when no templates match", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
 
-  await generate.run({
+  await createCmd.run({
     subcommands: [],
     flags: [
       { flag: "--name", value: "ui-component" },
@@ -125,7 +131,7 @@ test.case("search errors when no outputs match", async assert => {
   await testRoot.remove();
 });
 
-test.case("search errors without .dry folder", async assert => {
+test.case("search errors without .saved folder", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 

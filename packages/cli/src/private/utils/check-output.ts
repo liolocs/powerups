@@ -29,7 +29,14 @@ export async function checkOutput(args: {
     return issues;
   }
 
-  for (const file of instructions.output.files) {
+  for (const file of instructions.output.create) {
+    const templatePath = currentOutputDir.append(`/${file.template}`);
+    if (!(await fs.exists(templatePath))) {
+      issues.push(`missing template file: ${file.template}`);
+    }
+  }
+
+  for (const file of instructions.output.modify) {
     const templatePath = currentOutputDir.append(`/${file.template}`);
     if (!(await fs.exists(templatePath))) {
       issues.push(`missing template file: ${file.template}`);

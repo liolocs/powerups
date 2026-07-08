@@ -4,7 +4,13 @@ import { runTemplate } from "#runners/output/index";
 import { detectHarness, type Harness } from "#scaffold/detect";
 import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { writeSkillFile } from "#scaffold/write";
-import { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
+import {
+  CLI_NAME,
+  MAIN_FOLDER,
+  OUTPUT_FOLDER,
+  TEMPLATE_FOLDER,
+  FEATURE_FOLDER,
+} from "#constants";
 
 const SCAFFOLD_DIR = import.meta.dirname;
 
@@ -53,8 +59,8 @@ const SKILLS_TO_SCAFFOLD = [
     name: `${CLI_NAME}-brainstorm`,
   },
   {
-    template: "saved-output.njk",
-    name: `${CLI_NAME}-output`,
+    template: "saved-template.njk",
+    name: `${CLI_NAME}-template`,
   },
 ];
 
@@ -66,7 +72,13 @@ export async function scaffold(
   const harness = await detectHarness(projectRoot, harnessFlag, options);
   const config = HARNESS_CONFIG[harness];
 
-  const variables = { CLI_NAME, MAIN_FOLDER, OUTPUTS_FOLDER };
+  const variables = {
+    CLI_NAME,
+    MAIN_FOLDER,
+    OUTPUT_FOLDER,
+    TEMPLATE_FOLDER,
+    FEATURE_FOLDER,
+  };
   const filesWritten: string[] = [];
   const rollback = options?.rollback;
 

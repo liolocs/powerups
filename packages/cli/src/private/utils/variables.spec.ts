@@ -1,6 +1,13 @@
 import test from "@rcompat/test";
-import { normalizeFlagName, toKebabCase, extractVariables } from "#utils/variables";
-import { CodeError } from "@rcompat/error";
+import {
+  normalizeFlagName,
+  toKebabCase,
+  extractVariables,
+} from "#utils/variables";
+
+function throwMissing(variable: string, _flagName: string): never {
+  throw new Error(`Missing required variable: ${variable}`);
+}
 
 test.case("normalizeFlagName converts kebab to camelCase", async assert => {
   assert(normalizeFlagName("--component-name")).equals("componentName");
@@ -21,19 +28,18 @@ test.case("extractVariables returns camelCase record", async assert => {
     [{ flag: "--component-name", value: "Button" }, { flag: "--theme", value: "dark" }],
     ["ComponentName", "theme"],
     ["--dry-run", "-d", "--help", "-h"],
+    throwMissing,
   );
   assert(result.componentName).equals("Button");
   assert(result.theme).equals("dark");
 });
 
 test.case("extractVariables excludes declared flags", async assert => {
-  // parseArgs types `value` as `string` (noUncheckedIndexedAccess is off),
-  // but at runtime a bare `--dry-run` yields value `undefined`. The exclusion
-  // matches on the flag name, so a string value exercises the same path.
   const result = extractVariables(
     [{ flag: "--dry-run", value: "true" }, { flag: "--component-name", value: "Button" }],
     ["ComponentName"],
     ["--dry-run", "-d", "--help", "-h"],
+    throwMissing,
   );
   assert(result.componentName).equals("Button");
   assert(result["dry-run"]).equals(undefined);
@@ -45,6 +51,7 @@ test.case("extractVariables ignores undeclared extra flags", async assert => {
     [{ flag: "--component-name", value: "Button" }, { flag: "--extra", value: "ignored" }],
     ["ComponentName"],
     ["--dry-run", "-d", "--help", "-h"],
+    throwMissing,
   );
   assert(result.componentName).equals("Button");
   assert(result.extra).equals("ignored");
@@ -57,21 +64,21 @@ test.case("extractVariables throws on missing declared variable", async assert =
       [{ flag: "--theme", value: "dark" }],
       ["ComponentName", "theme"],
       ["--dry-run", "-d", "--help", "-h"],
+      throwMissing,
     );
   } catch (e) {
     threw = true;
-    assert(e instanceof CodeError).true();
-    assert((e as CodeError).code).equals("missing_variable");
+    assert((e as Error).message).includes("Missing required variable: ComponentName");
   }
   assert(threw).true();
 });
 
 test.case("extractVariables matches case-insensitively", async assert => {
-  // Declared as PascalCase, flag as kebab -> camelCase
   const result = extractVariables(
     [{ flag: "--component-name", value: "Button" }],
     ["ComponentName"],
     [],
+    throwMissing,
   );
   assert(result.componentName).equals("Button");
 });

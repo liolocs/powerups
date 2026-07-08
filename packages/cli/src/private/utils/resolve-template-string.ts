@@ -13,6 +13,7 @@ export function resolveTemplateString(
     const key = Object.keys(variables).find(
       k => k.toLowerCase() === token.toLowerCase(),
     );
+
     return key !== undefined ? variables[key] : match;
   });
 }

@@ -1,5 +1,6 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
+import is from "@rcompat/is";
 
 /**
  * Validate the suboutput tree of a output. Walks all includes recursively,
@@ -31,7 +32,7 @@ export async function validateOutputTree(args: {
     return [`instructions.json parse failed: ${currentOutputDir.name}`];
   }
 
-  if (!instructions.includes) {
+  if (is.defined(instructions.includes) === false) {
     return issues;
   }
 
@@ -60,17 +61,18 @@ export async function validateOutputTree(args: {
       continue;
     }
 
-    // d. Variable completeness — every declared variable must have a mapping key
+    // Every declared variable must have a mapping key
     for (const declared of subInstructions.variables) {
       const mapped = Object.keys(ref.variables).find(
         k => k.toLowerCase() === declared.toLowerCase(),
       );
-      if (!mapped) {
+
+      if (is.falsy(mapped)) {
         issues.push(`unmapped variable: ${declared} in suboutput: ${ref.name}`);
       }
     }
 
-    // e. Reference validity — {{parentVar}} tokens must refer to parent's declared variables
+    // {{parentVar}} tokens must refer to parent's declared variables
     for (const value of Object.values(ref.variables)) {
       const tokens = value.match(/\{\{(\w+)\}\}/g) ?? [];
       for (const token of tokens) {
@@ -78,20 +80,33 @@ export async function validateOutputTree(args: {
         const declared = instructions.variables.find(
           v => v.toLowerCase() === varName.toLowerCase(),
         );
-        if (!declared) {
+
+        if (is.falsy(declared)) {
           issues.push(`invalid reference: {{${varName}}} in suboutput: ${ref.name}`);
         }
       }
     }
 
-    // f. Override file names — must match a file name in suboutput's output.files
-    if (ref.files) {
-      for (const fileName of Object.keys(ref.files)) {
-        const found = subInstructions.output.files.find(
-          f => f.name === fileName,
-        );
-        if (!found) {
-          issues.push(`override file not found: ${fileName} in suboutput: ${ref.name}`);
+    // f. Override file names must match a file name in suboutput's output.create or output.modify
+    if (is.defined(ref.outputPathOverride)) {
+      if (is.defined(ref.outputPathOverride.create)) {
+        for (const fileName of Object.keys(ref.outputPathOverride.create)) {
+          const found = subInstructions.output.create.find(
+            f => f.name === fileName,
+          );
+          if (is.falsy(found)) {
+            issues.push(`override file not found: ${fileName} in suboutput: ${ref.name}`);
+          }
+        }
+      }
+      if (is.defined(ref.outputPathOverride.modify)) {
+        for (const fileName of Object.keys(ref.outputPathOverride.modify)) {
+          const found = subInstructions.output.modify.find(
+            f => f.name === fileName,
+          );
+          if (is.falsy(found)) {
+            issues.push(`override file not found: ${fileName} in suboutput: ${ref.name}`);
+          }
         }
       }
     }

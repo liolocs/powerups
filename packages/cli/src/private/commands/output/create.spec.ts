@@ -1,14 +1,16 @@
 import test from "@rcompat/test";
-import generate from "#commands/output/generate";
+import createCreateCommand from "#commands/output/create";
 import { instructionsSchema } from "#schemas/instruction";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
+import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
-const outputsFolder = mainFolder.append(`/${OUTPUTS_FOLDER}`);
+const templateFolder = mainFolder.append(`/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`);
+
+const create = createCreateCommand("template");
 
 async function reset() {
   await testRoot.remove();
@@ -16,34 +18,39 @@ async function reset() {
   await fs.create(mainFolder);
 }
 
-test.case("gen output creates an instructions.json file", async assert => {
+test.case("create template creates an instructions.json file", async assert => {
   await reset();
 
-  await generate.run({
+  await create.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "test-output" }],
+    flags: [{ flag: "--name", value: "test-template" }],
     context: { root: testRoot },
   });
 
-  const outputPath = outputsFolder.append("/test-output/instructions.json");
+  const outputPath = templateFolder.append("/test-template/instructions.json");
   const hasOutput = await fs.exists(outputPath);
   assert(hasOutput).equals(true);
 
   await testRoot.remove();
 });
 
-test.case("gen output creates template files from output", async assert => {
+test.case("create template creates empty files for create and modify entries", async assert => {
   await reset();
 
   const output = JSON.stringify({
-    files: [{
+    create: [{
       name: "button.svelte",
       template: "button.svelte.tmpl",
       outputPath: "src/{{ComponentName}}.svelte",
     }],
+    modify: [{
+      name: "wire",
+      template: "wire.json",
+      outputPath: "src/index.ts",
+    }],
   });
 
-  await generate.run({
+  await create.run({
     subcommands: [],
     flags: [
       { flag: "--name", value: "ui-component" },
@@ -54,31 +61,34 @@ test.case("gen output creates template files from output", async assert => {
     context: { root: testRoot },
   });
 
-  const outputPath = outputsFolder.append("/ui-component/instructions.json");
-  const templatePath = outputsFolder.append("/ui-component/button.svelte.tmpl");
+  const outputPath = templateFolder.append("/ui-component/instructions.json");
+  const createTemplatePath = templateFolder.append("/ui-component/button.svelte.tmpl");
+  const modifyTemplatePath = templateFolder.append("/ui-component/wire.json");
 
   assert(await fs.exists(outputPath)).equals(true);
-  assert(await fs.exists(templatePath)).equals(true);
+  assert(await fs.exists(createTemplatePath)).equals(true);
+  assert(await fs.exists(modifyTemplatePath)).equals(true);
 
   const content = instructionsSchema.parse(await outputPath.json());
 
   assert(content.name).equals("ui-component");
   assert(content.intent).equals(["component", "ui"]);
   assert(content.variables).equals(["ComponentName"]);
-  assert(content.output.files[0]?.name).equals("button.svelte");
+  assert(content.output.create[0]?.name).equals("button.svelte");
+  assert(content.output.modify[0]?.name).equals("wire");
   // Generated outputs do not include the optional "includes" field
   assert(content.includes).undefined();
 
   await testRoot.remove();
 });
 
-test.case("gen output errors without .dry folder", async assert => {
+test.case("create template errors without .saved folder", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
   let threw = false;
   try {
-    await generate.run({
+    await create.run({
       subcommands: [],
       flags: [{ flag: "--name", value: "should-fail" }],
       context: { root: testRoot },
@@ -91,20 +101,20 @@ test.case("gen output errors without .dry folder", async assert => {
   await testRoot.remove();
 });
 
-test.case("gen output errors when output already exists", async assert => {
+test.case("create template errors when template already exists", async assert => {
   await reset();
 
-  await generate.run({
+  await create.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "dup-output" }],
+    flags: [{ flag: "--name", value: "dup-template" }],
     context: { root: testRoot },
   });
 
   let threw = false;
   try {
-    await generate.run({
+    await create.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "dup-output" }],
+      flags: [{ flag: "--name", value: "dup-template" }],
       context: { root: testRoot },
     });
   } catch {

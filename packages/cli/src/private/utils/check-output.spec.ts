@@ -2,22 +2,22 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { checkOutput } from "#utils/check-output";
-import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
+import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const outputsFolder: FileRef = mainFolder.append(`/${OUTPUTS_FOLDER}`);
+const templateFolder: FileRef = mainFolder.append(`/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(outputsFolder);
+  await fs.create(templateFolder);
 }
 
 async function writeOutput(name: string, instructions: Record<string, unknown>) {
-  const dir = outputsFolder.append(`/${name}`);
+  const dir = templateFolder.append(`/${name}`);
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
@@ -28,12 +28,12 @@ test.case("valid output with no includes returns no issues", async assert => {
     name: "simple",
     variables: ["ComponentName"],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
   });
 
   const issues = await checkOutput({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/simple"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/simple"),
   });
 
   assert(issues.length).equals(0);
@@ -42,11 +42,11 @@ test.case("valid output with no includes returns no issues", async assert => {
 
 test.case("missing instructions.json returns issue", async assert => {
   await reset();
-  const dir = outputsFolder.append("/empty");
+  const dir = templateFolder.append("/empty");
   await fs.create(dir);
 
   const issues = await checkOutput({
-    rootOutputDir: outputsFolder,
+    rootOutputDir: templateFolder,
     currentOutputDir: dir,
   });
 
@@ -57,12 +57,12 @@ test.case("missing instructions.json returns issue", async assert => {
 
 test.case("schema parse failure returns issue and skips suboutput checks", async assert => {
   await reset();
-  const dir = outputsFolder.append("/bad-schema");
+  const dir = templateFolder.append("/bad-schema");
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON({ name: 123 });
 
   const issues = await checkOutput({
-    rootOutputDir: outputsFolder,
+    rootOutputDir: templateFolder,
     currentOutputDir: dir,
   });
 
@@ -70,23 +70,70 @@ test.case("schema parse failure returns issue and skips suboutput checks", async
   await testRoot.remove();
 });
 
-test.case("missing template file returns issue", async assert => {
+test.case("missing create template file returns issue", async assert => {
   await reset();
   await writeOutput("missing-tmpl", {
     name: "missing-tmpl",
     variables: [],
     intent: [],
     output: {
-      files: [{ name: "f", template: "nonexistent.njk", outputPath: "out.ts" }],
+      create: [{ name: "f", template: "nonexistent.njk", outputPath: "out.ts" }],
+      modify: [],
     },
   });
 
   const issues = await checkOutput({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/missing-tmpl"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/missing-tmpl"),
   });
 
   assert(issues.some(i => i.includes("missing template file: nonexistent.njk"))).true();
+  await testRoot.remove();
+});
+
+test.case("missing modify template file returns issue", async assert => {
+  await reset();
+  await writeOutput("missing-modify-tmpl", {
+    name: "missing-modify-tmpl",
+    variables: [],
+    intent: [],
+    output: {
+      create: [],
+      modify: [{ name: "wire", template: "nonexistent.json", outputPath: "src/index.ts" }],
+    },
+  });
+
+  const issues = await checkOutput({
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/missing-modify-tmpl"),
+  });
+
+  assert(issues.some(i => i.includes("missing template file: nonexistent.json"))).true();
+  await testRoot.remove();
+});
+
+test.case("valid output with both create and modify entries returns no issues", async assert => {
+  await reset();
+  const dir = templateFolder.append("/both");
+  await fs.create(dir);
+  await dir.append("/instructions.json").writeJSON({
+    name: "both",
+    variables: [],
+    intent: [],
+    output: {
+      create: [{ name: "controller", template: "controller.ts", outputPath: "src/c.ts" }],
+      modify: [{ name: "wire", template: "wire.json", outputPath: "src/index.ts" }],
+    },
+  } as never);
+  await dir.append("/controller.ts").write("test");
+  await dir.append("/wire.json").write("[]");
+
+  const issues = await checkOutput({
+    rootOutputDir: templateFolder,
+    currentOutputDir: dir,
+  });
+
+  assert(issues.length).equals(0);
   await testRoot.remove();
 });
 
@@ -96,19 +143,19 @@ test.case("valid output with valid suboutputs returns no issues", async assert =
     name: "valid-child",
     variables: ["componentName"],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
   });
   await writeOutput("valid-parent", {
     name: "valid-parent",
     variables: [],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
     includes: [{ name: "valid-child", variables: { componentName: "Button" } }],
   });
 
   const issues = await checkOutput({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/valid-parent"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/valid-parent"),
   });
 
   assert(issues.length).equals(0);
@@ -121,19 +168,19 @@ test.case("valid output with invalid suboutput tree merges suboutput issues", as
     name: "missing-child-ref",
     variables: ["componentName"],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
   });
   await writeOutput("bad-parent", {
     name: "bad-parent",
     variables: [],
     intent: [],
-    output: { files: [] },
+    output: { create: [], modify: [] },
     includes: [{ name: "nonexistent", variables: {} }],
   });
 
   const issues = await checkOutput({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/bad-parent"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/bad-parent"),
   });
 
   assert(issues.some(i => i.includes("suboutput not found: nonexistent"))).true();

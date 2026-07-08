@@ -1,13 +1,13 @@
 import fs from "@rcompat/fs";
 import nunjucks from "nunjucks";
-import outputRunErrors from "#errors/outputRunErrors";
+import runnerErrors from "#errors/runnerErrors";
 import type { TemplateContext } from "#runners/output/index";
 
 export default async function njkRunner(
   { templatePath, variables }: TemplateContext,
 ): Promise<string> {
   if (!(await fs.exists(templatePath))) {
-    throw outputRunErrors.template_not_found(templatePath.name);
+    throw runnerErrors.template_not_found(templatePath.name);
   }
 
   const content = await templatePath.text();
@@ -15,7 +15,7 @@ export default async function njkRunner(
   try {
     return nunjucks.renderString(content, variables);
   } catch (error_) {
-    throw outputRunErrors.template_execution_error(
+    throw runnerErrors.template_execution_error(
       templatePath.name,
       error_ instanceof Error ? error_.message : String(error_),
     );

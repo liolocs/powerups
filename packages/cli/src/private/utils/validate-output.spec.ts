@@ -2,38 +2,47 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { validateOutputTree } from "#utils/validate-output";
-import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
+import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const outputsFolder: FileRef = mainFolder.append(`/${OUTPUTS_FOLDER}`);
+const templateFolder: FileRef = mainFolder.append(`/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(outputsFolder);
+  await fs.create(templateFolder);
 }
 
-async function writeOutput(name: string, instructions: Record<string, unknown>) {
-  const dir = outputsFolder.append(`/${name}`);
+async function writeOutput({
+  name,
+  instructions,
+}: {
+  name: string;
+  instructions: Record<string, unknown>;
+}) {
+  const dir = templateFolder.append(`/${name}`);
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
 
 test.case("valid tree with no includes returns no issues", async assert => {
   await reset();
-  await writeOutput("simple", {
+  await writeOutput({
     name: "simple",
-    variables: ["ComponentName"],
-    intent: [],
-    output: { files: [] },
+    instructions: {
+      name: "simple",
+      variables: ["ComponentName"],
+      intent: [],
+      output: { create: [], modify: [] },
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/simple"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/simple"),
   });
 
   assert(issues.length).equals(0);
@@ -42,28 +51,34 @@ test.case("valid tree with no includes returns no issues", async assert => {
 
 test.case("valid tree with one suboutput returns no issues", async assert => {
   await reset();
-  await writeOutput("button", {
+  await writeOutput({
     name: "button",
-    variables: ["componentName", "theme"],
-    intent: [],
-    output: { files: [] },
+    instructions: {
+      name: "button",
+      variables: ["componentName", "theme"],
+      intent: [],
+      output: { create: [], modify: [] },
+    },
   });
-  await writeOutput("all-components", {
+  await writeOutput({
     name: "all-components",
-    variables: ["theme"],
-    intent: [],
-    output: { files: [] },
-    includes: [
-      {
-        name: "button",
-        variables: { componentName: "Button", theme: "{{theme}}" },
-      },
-    ],
+    instructions: {
+      name: "all-components",
+      variables: ["theme"],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        {
+          name: "button",
+          variables: { componentName: "Button", theme: "{{theme}}" },
+        },
+      ],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/all-components"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/all-components"),
   });
 
   assert(issues.length).equals(0);
@@ -72,30 +87,39 @@ test.case("valid tree with one suboutput returns no issues", async assert => {
 
 test.case("valid nested suboutputs (A->B->C) returns no issues", async assert => {
   await reset();
-  await writeOutput("c", {
+  await writeOutput({
     name: "c",
-    variables: ["val"],
-    intent: [],
-    output: { files: [] },
+    instructions: {
+      name: "c",
+      variables: ["val"],
+      intent: [],
+      output: { create: [], modify: [] },
+    },
   });
-  await writeOutput("b", {
+  await writeOutput({
     name: "b",
-    variables: ["val"],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "c", variables: { val: "{{val}}" } }],
+    instructions: {
+      name: "b",
+      variables: ["val"],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "c", variables: { val: "{{val}}" } }],
+    },
   });
-  await writeOutput("a", {
+  await writeOutput({
     name: "a",
-    variables: ["val"],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "b", variables: { val: "{{val}}" } }],
+    instructions: {
+      name: "a",
+      variables: ["val"],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "b", variables: { val: "{{val}}" } }],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/a"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/a"),
   });
 
   assert(issues.length).equals(0);
@@ -104,17 +128,20 @@ test.case("valid nested suboutputs (A->B->C) returns no issues", async assert =>
 
 test.case("missing suboutput reports issue", async assert => {
   await reset();
-  await writeOutput("parent", {
+  await writeOutput({
     name: "parent",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "nonexistent", variables: {} }],
+    instructions: {
+      name: "parent",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "nonexistent", variables: {} }],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/parent"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/parent"),
   });
 
   assert(issues.length).equals(1);
@@ -124,24 +151,30 @@ test.case("missing suboutput reports issue", async assert => {
 
 test.case("circular reference (A->B->A) reports issue with chain", async assert => {
   await reset();
-  await writeOutput("a-cycle", {
+  await writeOutput({
     name: "a-cycle",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "b-cycle", variables: {} }],
+    instructions: {
+      name: "a-cycle",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "b-cycle", variables: {} }],
+    },
   });
-  await writeOutput("b-cycle", {
+  await writeOutput({
     name: "b-cycle",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "a-cycle", variables: {} }],
+    instructions: {
+      name: "b-cycle",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "a-cycle", variables: {} }],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/a-cycle"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/a-cycle"),
   });
 
   assert(issues.some(i => i.includes("circular reference"))).true();
@@ -151,31 +184,40 @@ test.case("circular reference (A->B->A) reports issue with chain", async assert 
 
 test.case("deep circular reference (A->B->C->B) reports issue with chain", async assert => {
   await reset();
-  await writeOutput("deep-a", {
+  await writeOutput({
     name: "deep-a",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "deep-b", variables: {} }],
+    instructions: {
+      name: "deep-a",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "deep-b", variables: {} }],
+    },
   });
-  await writeOutput("deep-b", {
+  await writeOutput({
     name: "deep-b",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "deep-c", variables: {} }],
+    instructions: {
+      name: "deep-b",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "deep-c", variables: {} }],
+    },
   });
-  await writeOutput("deep-c", {
+  await writeOutput({
     name: "deep-c",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "deep-b", variables: {} }],
+    instructions: {
+      name: "deep-c",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "deep-b", variables: {} }],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/deep-a"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/deep-a"),
   });
 
   assert(issues.some(i => i.includes("circular reference"))).true();
@@ -185,33 +227,42 @@ test.case("deep circular reference (A->B->C->B) reports issue with chain", async
 
 test.case("diamond shape (A->B, A->C, C->B) is not a cycle", async assert => {
   await reset();
-  await writeOutput("diamond-b", {
+  await writeOutput({
     name: "diamond-b",
-    variables: [],
-    intent: [],
-    output: { files: [] },
+    instructions: {
+      name: "diamond-b",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+    },
   });
-  await writeOutput("diamond-c", {
+  await writeOutput({
     name: "diamond-c",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "diamond-b", variables: {} }],
+    instructions: {
+      name: "diamond-c",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "diamond-b", variables: {} }],
+    },
   });
-  await writeOutput("diamond-a", {
+  await writeOutput({
     name: "diamond-a",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [
-      { name: "diamond-b", variables: {} },
-      { name: "diamond-c", variables: {} },
-    ],
+    instructions: {
+      name: "diamond-a",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        { name: "diamond-b", variables: {} },
+        { name: "diamond-c", variables: {} },
+      ],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/diamond-a"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/diamond-a"),
   });
 
   assert(issues.length).equals(0);
@@ -220,25 +271,31 @@ test.case("diamond shape (A->B, A->C, C->B) is not a cycle", async assert => {
 
 test.case("unmapped variable reports issue", async assert => {
   await reset();
-  await writeOutput("child-needs-vars", {
+  await writeOutput({
     name: "child-needs-vars",
-    variables: ["componentName", "theme"],
-    intent: [],
-    output: { files: [] },
+    instructions: {
+      name: "child-needs-vars",
+      variables: ["componentName", "theme"],
+      intent: [],
+      output: { create: [], modify: [] },
+    },
   });
-  await writeOutput("parent-missing-map", {
+  await writeOutput({
     name: "parent-missing-map",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [
-      { name: "child-needs-vars", variables: { componentName: "Button" } },
-    ],
+    instructions: {
+      name: "parent-missing-map",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        { name: "child-needs-vars", variables: { componentName: "Button" } },
+      ],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/parent-missing-map"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/parent-missing-map"),
   });
 
   assert(issues.some(i => i.includes("unmapped variable: theme"))).true();
@@ -248,25 +305,31 @@ test.case("unmapped variable reports issue", async assert => {
 
 test.case("invalid parentVar reference reports issue", async assert => {
   await reset();
-  await writeOutput("ref-child", {
+  await writeOutput({
     name: "ref-child",
-    variables: ["val"],
-    intent: [],
-    output: { files: [] },
+    instructions: {
+      name: "ref-child",
+      variables: ["val"],
+      intent: [],
+      output: { create: [], modify: [] },
+    },
   });
-  await writeOutput("ref-parent", {
+  await writeOutput({
     name: "ref-parent",
-    variables: ["theme"],
-    intent: [],
-    output: { files: [] },
-    includes: [
-      { name: "ref-child", variables: { val: "{{nonexistent}}" } },
-    ],
+    instructions: {
+      name: "ref-parent",
+      variables: ["theme"],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        { name: "ref-child", variables: { val: "{{nonexistent}}" } },
+      ],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/ref-parent"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/ref-parent"),
   });
 
   assert(issues.some(i => i.includes("invalid reference"))).true();
@@ -274,33 +337,40 @@ test.case("invalid parentVar reference reports issue", async assert => {
   await testRoot.remove();
 });
 
-test.case("override file name not in suboutput reports issue", async assert => {
+test.case("override create file name not in suboutput reports issue", async assert => {
   await reset();
-  await writeOutput("override-child", {
+  await writeOutput({
     name: "override-child",
-    variables: [],
-    intent: [],
-    output: {
-      files: [{ name: "real-file", template: "t.njk", outputPath: "out.ts" }],
+    instructions: {
+      name: "override-child",
+      variables: [],
+      intent: [],
+      output: {
+        create: [{ name: "real-file", template: "t.njk", outputPath: "out.ts" }],
+        modify: [],
+      },
     },
   });
-  await writeOutput("override-parent", {
+  await writeOutput({
     name: "override-parent",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [
-      {
-        name: "override-child",
-        variables: {},
-        files: { "nonexistent-file": "src/new.ts" },
-      },
-    ],
+    instructions: {
+      name: "override-parent",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        {
+          name: "override-child",
+          variables: {},
+          outputPathOverride: { create: { "nonexistent-file": "src/new.ts" } },
+        },
+      ],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/override-parent"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/override-parent"),
   });
 
   assert(issues.some(i => i.includes("override file not found"))).true();
@@ -308,28 +378,75 @@ test.case("override file name not in suboutput reports issue", async assert => {
   await testRoot.remove();
 });
 
-test.case("same suboutput referenced twice validates both independently", async assert => {
+test.case("override modify file name not in suboutput reports issue", async assert => {
   await reset();
-  await writeOutput("dual-child", {
-    name: "dual-child",
-    variables: ["componentName"],
-    intent: [],
-    output: { files: [] },
+  await writeOutput({
+    name: "modify-override-child",
+    instructions: {
+      name: "modify-override-child",
+      variables: [],
+      intent: [],
+      output: {
+        create: [],
+        modify: [{ name: "real-modify", template: "m.json", outputPath: "out.ts" }],
+      },
+    },
   });
-  await writeOutput("dual-parent", {
-    name: "dual-parent",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [
-      { name: "dual-child", variables: { componentName: "Primary" } },
-      { name: "dual-child", variables: { componentName: "Secondary" } },
-    ],
+  await writeOutput({
+    name: "modify-override-parent",
+    instructions: {
+      name: "modify-override-parent",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        {
+          name: "modify-override-child",
+          variables: {},
+          outputPathOverride: { modify: { "nonexistent-modify": "src/new.ts" } },
+        },
+      ],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/dual-parent"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/modify-override-parent"),
+  });
+
+  assert(issues.some(i => i.includes("override file not found"))).true();
+  assert(issues.some(i => i.includes("nonexistent-modify"))).true();
+  await testRoot.remove();
+});
+
+test.case("same suboutput referenced twice validates both independently", async assert => {
+  await reset();
+  await writeOutput({
+    name: "dual-child",
+    instructions: {
+      name: "dual-child",
+      variables: ["componentName"],
+      intent: [],
+      output: { create: [], modify: [] },
+    },
+  });
+  await writeOutput({
+    name: "dual-parent",
+    instructions: {
+      name: "dual-parent",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        { name: "dual-child", variables: { componentName: "Primary" } },
+        { name: "dual-child", variables: { componentName: "Secondary" } },
+      ],
+    },
+  });
+
+  const issues = await validateOutputTree({
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/dual-parent"),
   });
 
   assert(issues.length).equals(0);
@@ -338,20 +455,23 @@ test.case("same suboutput referenced twice validates both independently", async 
 
 test.case("suboutput with unparseable instructions reports issue and skips recursion", async assert => {
   await reset();
-  const childDir = outputsFolder.append("/broken-child");
+  const childDir = templateFolder.append("/broken-child");
   await fs.create(childDir);
   await childDir.append("/instructions.json").writeJSON({ name: 123 });
-  await writeOutput("broken-parent", {
+  await writeOutput({
     name: "broken-parent",
-    variables: [],
-    intent: [],
-    output: { files: [] },
-    includes: [{ name: "broken-child", variables: {} }],
+    instructions: {
+      name: "broken-parent",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [{ name: "broken-child", variables: {} }],
+    },
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: outputsFolder,
-    currentOutputDir: outputsFolder.append("/broken-parent"),
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/broken-parent"),
   });
 
   assert(issues.length).equals(1);

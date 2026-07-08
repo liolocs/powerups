@@ -3,110 +3,119 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
-import generate_output_errors from "#errors/outputGenerateErrors";
-import output_validate_errors from "#errors/outputValidateErrors";
+import createOutputCreateErrors from "#errors/outputCreateErrors";
+import createOutputValidateErrors from "#errors/outputValidateErrors";
 import { checkOutput } from "#utils/check-output";
-import { MAIN_FOLDER, OUTPUTS_FOLDER } from "#constants";
+import {
+  MAIN_FOLDER,
+  OUTPUT_FOLDER,
+  getDomainFolder,
+} from "#constants";
 
 interface ValidationFailure {
   name: string;
   issues: string[];
 }
 
-const validate = new Command({
-  name: "validate",
-  description: "Validate output instructions.json files and templates",
-  flags: [
-    {
-      name: "name",
-      long: "name",
-      short: "n",
-      description: "Validate only this output",
-    },
-  ],
-  subcommands: [],
-  action: async ({ flags, context }) => {
-    const root: FileRef = context?.root ?? await runtime.projectRoot();
-    const mainFolder = root.append(`/${MAIN_FOLDER}`);
-    const hasDryFolder = await fs.exists(mainFolder);
+export default function createValidateCommand(domain: string): Command<readonly never[]> {
+  const createErrors = createOutputCreateErrors(domain);
+  const validateErrors = createOutputValidateErrors(domain);
 
-    if (!hasDryFolder) {
-      throw generate_output_errors.dry_folder_not_found();
-    }
+  return new Command({
+    name: "validate",
+    description: `Validate ${domain} instructions.json files and templates`,
+    flags: [
+      {
+        name: "name",
+        long: "name",
+        short: "n",
+        description: `Validate only this ${domain}`,
+      },
+    ],
+    subcommands: [],
+    action: async ({ flags, context }) => {
+      const root: FileRef = context?.root ?? await runtime.projectRoot();
+      const mainFolder = root.append(`/${MAIN_FOLDER}`);
+      const hasDryFolder = await fs.exists(mainFolder);
 
-    const outputsFolder = mainFolder.append(`/${OUTPUTS_FOLDER}`);
-    const hasOutputsFolder = await fs.exists(outputsFolder);
-
-    if (!hasOutputsFolder) {
-      throw output_validate_errors.no_outputs_found();
-    }
-
-    // Single-output path: validate one folder, throw on missing/invalid.
-    if (is.defined(flags.name) === true) {
-      const outputFolder = outputsFolder.append(`/${flags.name}`);
-
-      if (!(await fs.exists(outputFolder))) {
-        throw output_validate_errors.output_not_found(flags.name);
+      if (!hasDryFolder) {
+        throw createErrors.dry_folder_not_found();
       }
 
-      const issues = await checkOutput({
-        rootOutputDir: outputsFolder,
-        currentOutputDir: outputFolder,
+      const domainFolder = mainFolder.append(
+        `/${OUTPUT_FOLDER}/${getDomainFolder(domain as "template" | "feature")}`,
+      );
+      const hasDomainFolder = await fs.exists(domainFolder);
+
+      if (!hasDomainFolder) {
+        throw validateErrors.no_outputs_found();
+      }
+
+      // Single-target path: validate one folder, throw on missing/invalid.
+      if (is.defined(flags.name) === true) {
+        const outputFolder = domainFolder.append(`/${flags.name}`);
+
+        if (!(await fs.exists(outputFolder))) {
+          throw validateErrors.not_found(flags.name);
+        }
+
+        const issues = await checkOutput({
+          rootOutputDir: domainFolder,
+          currentOutputDir: outputFolder,
+        });
+
+        if (issues.length > 0) {
+          throw validateErrors.invalid(
+            flags.name,
+            issues.join("; "),
+          );
+        }
+
+        cli.print(`${flags.name} is valid.`);
+        return;
+      }
+
+      // All-targets path: discover every instructions.json, report per-file.
+      const outputFiles = await domainFolder.files({
+        recursive: true,
+        filter: (file) => file.name === "instructions.json",
       });
 
-      if (issues.length > 0) {
-        throw output_validate_errors.invalid_output(
-          flags.name,
-          issues.join("; "),
-        );
+      if (outputFiles.length === 0) {
+        throw validateErrors.no_outputs_found();
       }
 
-      cli.print(`Output ${flags.name} is valid.`);
-      return;
-    }
+      const failures: ValidationFailure[] = [];
 
-    // All-outputs path: discover every instructions.json, report per-file.
-    const outputFiles = await outputsFolder.files({
-      recursive: true,
-      filter: (file) => file.name === "instructions.json",
-    });
+      for (const outputFile of outputFiles) {
+        const name = outputFile.directory.name;
+        const issues = await checkOutput({
+          rootOutputDir: domainFolder,
+          currentOutputDir: outputFile.directory,
+        });
 
-    if (outputFiles.length === 0) {
-      throw output_validate_errors.no_outputs_found();
-    }
-
-    const failures: ValidationFailure[] = [];
-
-    for (const outputFile of outputFiles) {
-      const name = outputFile.directory.name;
-      const issues = await checkOutput({
-        rootOutputDir: outputsFolder,
-        currentOutputDir: outputFile.directory,
-      });
-
-      if (issues.length > 0) {
-        failures.push({ name, issues });
-      }
-    }
-
-    if (failures.length > 0) {
-      cli.print(`Validation failed for ${failures.length} output(s):`);
-      cli.print("");
-
-      for (const { name, issues } of failures) {
-        cli.print(`  ${name}:`);
-
-        for (const issue of issues) {
-          cli.print(`    - ${issue}`);
+        if (issues.length > 0) {
+          failures.push({ name, issues });
         }
       }
 
-      cli.print("");
-      throw output_validate_errors.validation_failed(failures.length);
-    }
+      if (failures.length > 0) {
+        cli.print(`Validation failed for ${failures.length} ${domain}(s):`);
+        cli.print("");
 
-    cli.print(`Validated ${outputFiles.length} output(s). All valid.`);
-  },
-});
+        for (const { name, issues } of failures) {
+          cli.print(`  ${name}:`);
 
-export default validate;
+          for (const issue of issues) {
+            cli.print(`    - ${issue}`);
+          }
+        }
+
+        cli.print("");
+        throw validateErrors.validation_failed(failures.length);
+      }
+
+      cli.print(`Validated ${outputFiles.length} ${domain}(s). All valid.`);
+    },
+  });
+}

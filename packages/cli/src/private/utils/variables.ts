@@ -1,4 +1,4 @@
-import outputRunErrors from "#errors/outputRunErrors";
+import is from "@rcompat/is";
 
 export interface VariableResult {
   [key: string]: string;
@@ -35,15 +35,39 @@ export function toKebabCase(name: string): string {
 }
 
 /**
+ * Check that all declared variables have matching flags.
+ * Returns the list of missing variable names (empty = all present).
+ */
+export function findMissingVariables(
+  result: VariableResult,
+  declaredVariables: string[],
+): string[] {
+  const missing: string[] = [];
+  for (const declared of declaredVariables) {
+    const matched = Object.keys(result).find(
+      k => k.toLowerCase() === declared.toLowerCase(),
+    );
+    if (is.falsy(matched)) {
+      missing.push(declared);
+    }
+  }
+  return missing;
+}
+
+/**
  * Extract variables from raw CLI flags, normalize to camelCase,
  * and validate against declared variables (case-insensitive).
  *
  * Undeclared extra flags are passed through in the result (not filtered out).
+ *
+ * `onMissing` is called with each missing variable name and its kebab-case
+ * flag hint; it should throw an error.
  */
 export function extractVariables(
   rawFlags: { flag: string; value: string }[],
   declaredVariables: string[],
   excludeFlags: string[],
+  onMissing: (variable: string, flagName: string) => never,
 ): VariableResult {
   // 1. Filter out excluded flags (--dry-run, -d, --help, -h)
   const variableFlags = rawFlags.filter(
@@ -58,16 +82,12 @@ export function extractVariables(
   }
 
   // 3. Validate: each declared variable must have a matching flag
-  //    Match case-insensitively: componentName satisfies ComponentName
   for (const declared of declaredVariables) {
     const matched = Object.keys(result).find(
       k => k.toLowerCase() === declared.toLowerCase(),
     );
-    if (!matched) {
-      throw outputRunErrors.missing_variable(
-        declared,
-        toKebabCase(declared),
-      );
+    if (is.falsy(matched)) {
+      onMissing(declared, toKebabCase(declared));
     }
   }
 

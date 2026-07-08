@@ -2,8 +2,10 @@ import type { FileRef } from "@rcompat/fs";
 import { instructionsSchema } from "#schemas/instruction";
 import type { VariableResult } from "#utils/variables";
 import { resolveTemplateString } from "#utils/resolve-template-string";
+import is from "@rcompat/is";
 
 export interface RenderTask {
+  kind: "create" | "modify";
   templatePath: FileRef;
   variables: VariableResult;
   outputPath: string;
@@ -24,10 +26,12 @@ export async function resolveOutput(args: {
   outputName: string;
   variables: VariableResult;
   outputsFolder: FileRef;
-  overrides?: Record<string, string>;
+  createOverrides?: Record<string, string>;
+  modifyOverrides?: Record<string, string>;
 }): Promise<RenderTask[]> {
   const { outputName, variables, outputsFolder } = args;
-  const overrides = args.overrides ?? {};
+  const createOverrides = args.createOverrides ?? {};
+  const modifyOverrides = args.modifyOverrides ?? {};
 
   const outputFolder = outputsFolder.append(`/${outputName}`);
   const outputPath = outputFolder.append("/instructions.json");
@@ -35,30 +39,56 @@ export async function resolveOutput(args: {
 
   const tasks: RenderTask[] = [];
 
-  // Own output files
-  for (const file of instructions.output.files) {
-    const outputPath = overrides[file.name] ?? file.outputPath;
+  // Own create files
+  for (const file of instructions.output.create) {
+    let fileOutputPath = file.outputPath;
+
+    if (is.defined(createOverrides[file.name])) {
+      fileOutputPath = createOverrides[file.name];
+    }
+
     tasks.push({
+      kind: "create",
       templatePath: outputFolder.append(`/${file.template}`),
       variables,
-      outputPath,
+      outputPath: fileOutputPath,
+    });
+  }
+
+  // Own modify files
+  for (const file of instructions.output.modify) {
+    let fileOutputPath = file.outputPath;
+
+    if (is.defined(modifyOverrides[file.name])) {
+      fileOutputPath = modifyOverrides[file.name];
+    }
+
+    tasks.push({
+      kind: "modify",
+      templatePath: outputFolder.append(`/${file.template}`),
+      variables,
+      outputPath: fileOutputPath,
     });
   }
 
   // Suboutputs
-  if (instructions.includes) {
+  if (is.defined(instructions.includes)) {
     for (const ref of instructions.includes) {
-      // Resolve variable mapping: replace {{parentVar}} tokens with parent values
+      // Replace {{parentVar}} tokens with parent values
       const subVariables: VariableResult = {};
       for (const [key, value] of Object.entries(ref.variables)) {
         subVariables[key] = resolveTemplateString(value, variables);
       }
 
+      const childCreateOverrides = ref.outputPathOverride?.create ?? {};
+      const childModifyOverrides = ref.outputPathOverride?.modify ?? {};
+
       const childTasks = await resolveOutput({
         outputName: ref.name,
         variables: subVariables,
         outputsFolder,
-        overrides: ref.files ?? {},
+        createOverrides: childCreateOverrides,
+        modifyOverrides: childModifyOverrides,
       });
 
       tasks.push(...childTasks);

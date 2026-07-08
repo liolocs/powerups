@@ -46,8 +46,8 @@ export default function createSearchCommand(
       const root: FileRef = context?.root ?? await runtime.projectRoot();
       const mainFolder = root.append(`/${MAIN_FOLDER}`);
 
-      const hasDryFolder = await fs.exists(mainFolder);
-      if (!hasDryFolder) {
+      const hasMainFolder = await fs.exists(mainFolder);
+      if (!hasMainFolder) {
         throw createErrors.dry_folder_not_found();
       }
 

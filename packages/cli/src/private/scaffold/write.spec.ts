@@ -7,7 +7,7 @@ import { CLI_NAME } from "#constants";
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 
-test.case("writes skill file with constants substituted", async assert => {
+test.case("should write skill file with constants substituted", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
@@ -21,7 +21,7 @@ test.case("writes skill file with constants substituted", async assert => {
   await testRoot.remove();
 });
 
-test.case("creates parent directories", async assert => {
+test.case("should create parent directories", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
@@ -33,7 +33,7 @@ test.case("creates parent directories", async assert => {
   await testRoot.remove();
 });
 
-test.case("writes content verbatim (frontmatter lives in the template)", async assert => {
+test.case("should write content verbatim (frontmatter lives in the template)", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 

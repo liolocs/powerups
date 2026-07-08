@@ -29,7 +29,7 @@ async function gitInit(dir: FileRef): Promise<void> {
   await execAsync("git commit -m init", { cwd: dir.path });
 }
 
-test.case("verifyGitRepo passes when in a git repo", async assert => {
+test.case("should pass when in a git repo (verifyGitRepo)", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await gitInit(testRoot);
@@ -44,7 +44,7 @@ test.case("verifyGitRepo passes when in a git repo", async assert => {
   await testRoot.remove();
 });
 
-test.case("verifyGitRepo throws when not in a git repo", async assert => {
+test.case("should throw when not in a git repo (verifyGitRepo)", async assert => {
   // Use a temp dir outside the project's git repo
   const noGitDir = fs.ref(path.join(tmpdir(), `saved-test-nogit-${randomBytes(4).toString("hex")}`));
   await fs.create(noGitDir);
@@ -59,7 +59,7 @@ test.case("verifyGitRepo throws when not in a git repo", async assert => {
   await noGitDir.remove();
 });
 
-test.case("createWorktree creates a worktree in temp dir", async assert => {
+test.case("should create a worktree in a temp dir", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await gitInit(testRoot);
@@ -71,7 +71,7 @@ test.case("createWorktree creates a worktree in temp dir", async assert => {
   await testRoot.remove();
 });
 
-test.case("removeWorktree removes the worktree", async assert => {
+test.case("should remove the worktree", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await gitInit(testRoot);
@@ -84,7 +84,7 @@ test.case("removeWorktree removes the worktree", async assert => {
   await testRoot.remove();
 });
 
-test.case("copyChangedFiles copies files from worktree to project root", async assert => {
+test.case("should copy files from worktree to project root", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await gitInit(testRoot);
@@ -110,7 +110,7 @@ test.case("copyChangedFiles copies files from worktree to project root", async a
   await testRoot.remove();
 });
 
-test.case("integration: create worktree, write file, copy back, verify, remove", async assert => {
+test.case("should create worktree, write file, copy back, verify, and remove (integration)", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await gitInit(testRoot);

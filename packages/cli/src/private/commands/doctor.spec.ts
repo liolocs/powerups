@@ -6,6 +6,8 @@ import createCreateCommand from "#commands/output/create";
 import captureStdout, {
   captureStdoutOrError,
 } from "#test-utils/capture-stdout";
+import { CodeError } from "@rcompat/error";
+import { DoctorErrorCode } from "#errors/doctorErrors";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { tmpdir } from "node:os";
@@ -56,27 +58,6 @@ async function reset() {
   await gitInit(testRoot);
 }
 
-test.case("doctor errors when .saved folder not found", async assert => {
-  await testRoot.remove();
-  await fs.create(testRoot);
-  await gitInit(testRoot);
-
-  let threw = false;
-  try {
-    await doctor.run({
-      subcommands: [],
-      flags: [],
-      context: { root: testRoot },
-    });
-  } catch (e) {
-    threw = true;
-    assert((e as Error).message).includes(".saved folder not found");
-  }
-  assert(threw).true();
-
-  await testRoot.remove();
-});
-
 test.case("doctor reports clean state with no templates or features", async assert => {
   await reset();
   // Create feature folder too so there are no warnings
@@ -116,37 +97,6 @@ test.case("doctor validates templates and features with no issues", async assert
 
   assert(output).includes("All checks passed.");
   assert(output).includes("1 template(s)");
-
-  await testRoot.remove();
-});
-
-test.case("doctor reports missing template file in template domain", async assert => {
-  await reset();
-  await fs.create(featureFolder);
-
-  await createCmd.run({
-    subcommands: [],
-    flags: [
-      { flag: "--name", value: "bad-template" },
-      { flag: "--output", value: JSON.stringify({
-        create: [{ name: "f", template: "missing.njk", outputPath: "out.ts" }],
-        modify: [],
-      }) },
-    ],
-    context: { root: testRoot },
-  });
-
-  // Remove the template file
-  await templateFolder.append("/bad-template/missing.njk").remove();
-
-  const { output, error } = await captureStdoutOrError(() => doctor.run({
-    subcommands: [],
-    flags: [],
-    context: { root: testRoot },
-  }));
-
-  assert(output).includes("missing template file: missing.njk");
-  assert(error instanceof Error).true();
 
   await testRoot.remove();
 });
@@ -278,4 +228,59 @@ test.case("doctor checks both domains in one pass", async assert => {
   assert(output).includes("All checks passed.");
 
   await testRoot.remove();
+});
+
+test.group("doctor errors", () => {
+  test.case("should fail with not_initialized when .saved folder not found", async assert => {
+    await testRoot.remove();
+    await fs.create(testRoot);
+    await gitInit(testRoot);
+
+    let threw;
+    try {
+      await doctor.run({
+        subcommands: [],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(DoctorErrorCode.not_initialized);
+
+    await testRoot.remove();
+  });
+
+  test.case("should fail with validation_failed when a template file is missing", async assert => {
+    await reset();
+    await fs.create(featureFolder);
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "bad-template" },
+        { flag: "--output", value: JSON.stringify({
+          create: [{ name: "f", template: "missing.njk", outputPath: "out.ts" }],
+          modify: [],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+
+    // Remove the template file
+    await templateFolder.append("/bad-template/missing.njk").remove();
+
+    const { output, error } = await captureStdoutOrError(() => doctor.run({
+      subcommands: [],
+      flags: [],
+      context: { root: testRoot },
+    }));
+
+    assert(output).includes("missing template file: missing.njk");
+    assert(error instanceof CodeError).true();
+    assert((error as CodeError).code).equals(DoctorErrorCode.validation_failed);
+
+    await testRoot.remove();
+  });
 });

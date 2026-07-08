@@ -16,7 +16,13 @@ import { MAIN_FOLDER, CLI_NAME } from "#constants";
  * Best-effort: individual cleanup failures are swallowed so that the
  * *original* error is always the one the user sees.
  */
-async function rollbackChanges(root: FileRef, rollback: RollbackInfo): Promise<void> {
+async function rollbackChanges({
+  root,
+  rollback,
+}: {
+  root: FileRef;
+  rollback: RollbackInfo;
+}): Promise<void> {
   for (const relativePath of rollback.remove) {
     try {
       const ref = root.append(`/${relativePath}`);
@@ -86,7 +92,7 @@ const init = new Command({
       }
     } catch (error) {
       // Revert any filesystem changes so re-running init works cleanly.
-      await rollbackChanges(root, rollback);
+      await rollbackChanges({ root, rollback });
       throw error;
     }
   },

@@ -7,7 +7,7 @@ import { CodeError } from "@rcompat/error";
 const root = await runtime.projectRoot();
 const tmpDir = root.append("/.test-runner-tmp");
 
-test.case("dispatcher throws for unsupported extension", async assert => {
+test.case("should throw unsupported_template_type for unsupported extension", async assert => {
   await fs.create(tmpDir);
   const templatePath = tmpDir.append("/template.txt");
   await templatePath.write("hello");

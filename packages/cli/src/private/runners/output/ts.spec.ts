@@ -7,7 +7,7 @@ import { CodeError } from "@rcompat/error";
 const root = await runtime.projectRoot();
 const tmpDir = root.append("/.test-ts-tmp");
 
-test.case("ts runner renders a template with a default function export",
+test.case("should render a ts template with a default function export",
   async assert => {
     await fs.create(tmpDir);
     const templatePath = tmpDir.append("/button.ts");
@@ -27,7 +27,7 @@ test.case("ts runner renders a template with a default function export",
     await tmpDir.remove();
   });
 
-test.case("ts runner throws template_not_found for missing file",
+test.case("should throw template_not_found for a missing ts file",
   async assert => {
     await fs.create(tmpDir);
     const templatePath = tmpDir.append("/nonexistent.ts");
@@ -45,7 +45,7 @@ test.case("ts runner throws template_not_found for missing file",
     await tmpDir.remove();
   });
 
-test.case("ts runner throws invalid_ts_template when no default function",
+test.case("should throw invalid_ts_template or template_execution_error when no default function",
   async assert => {
     await fs.create(tmpDir);
     const templatePath = tmpDir.append("/no-default.ts");

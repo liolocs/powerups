@@ -28,7 +28,7 @@ async function writeOutput({
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
 
-test.case("valid tree with no includes returns no issues", async assert => {
+test.case("should return no issues for a valid tree with no includes", async assert => {
   await reset();
   await writeOutput({
     name: "simple",
@@ -49,7 +49,7 @@ test.case("valid tree with no includes returns no issues", async assert => {
   await testRoot.remove();
 });
 
-test.case("valid tree with one suboutput returns no issues", async assert => {
+test.case("should return no issues for a valid tree with one suboutput", async assert => {
   await reset();
   await writeOutput({
     name: "button",
@@ -85,7 +85,7 @@ test.case("valid tree with one suboutput returns no issues", async assert => {
   await testRoot.remove();
 });
 
-test.case("valid nested suboutputs (A->B->C) returns no issues", async assert => {
+test.case("should return no issues for valid nested suboutputs", async assert => {
   await reset();
   await writeOutput({
     name: "c",
@@ -126,7 +126,7 @@ test.case("valid nested suboutputs (A->B->C) returns no issues", async assert =>
   await testRoot.remove();
 });
 
-test.case("missing suboutput reports issue", async assert => {
+test.case("should report an issue for a missing suboutput", async assert => {
   await reset();
   await writeOutput({
     name: "parent",
@@ -149,7 +149,7 @@ test.case("missing suboutput reports issue", async assert => {
   await testRoot.remove();
 });
 
-test.case("circular reference (A->B->A) reports issue with chain", async assert => {
+test.case("should report an issue with chain for a circular reference", async assert => {
   await reset();
   await writeOutput({
     name: "a-cycle",
@@ -182,7 +182,7 @@ test.case("circular reference (A->B->A) reports issue with chain", async assert 
   await testRoot.remove();
 });
 
-test.case("deep circular reference (A->B->C->B) reports issue with chain", async assert => {
+test.case("should report an issue with chain for a deep circular reference", async assert => {
   await reset();
   await writeOutput({
     name: "deep-a",
@@ -225,7 +225,7 @@ test.case("deep circular reference (A->B->C->B) reports issue with chain", async
   await testRoot.remove();
 });
 
-test.case("diamond shape (A->B, A->C, C->B) is not a cycle", async assert => {
+test.case("should not report a cycle for a diamond shape", async assert => {
   await reset();
   await writeOutput({
     name: "diamond-b",
@@ -269,7 +269,7 @@ test.case("diamond shape (A->B, A->C, C->B) is not a cycle", async assert => {
   await testRoot.remove();
 });
 
-test.case("unmapped variable reports issue", async assert => {
+test.case("should report an issue for an unmapped variable", async assert => {
   await reset();
   await writeOutput({
     name: "child-needs-vars",
@@ -303,7 +303,7 @@ test.case("unmapped variable reports issue", async assert => {
   await testRoot.remove();
 });
 
-test.case("invalid parentVar reference reports issue", async assert => {
+test.case("should report an issue for an invalid parentVar reference", async assert => {
   await reset();
   await writeOutput({
     name: "ref-child",
@@ -337,7 +337,7 @@ test.case("invalid parentVar reference reports issue", async assert => {
   await testRoot.remove();
 });
 
-test.case("override create file name not in suboutput reports issue", async assert => {
+test.case("should report an issue for a create override file name not in suboutput", async assert => {
   await reset();
   await writeOutput({
     name: "override-child",
@@ -378,7 +378,7 @@ test.case("override create file name not in suboutput reports issue", async asse
   await testRoot.remove();
 });
 
-test.case("override modify file name not in suboutput reports issue", async assert => {
+test.case("should report an issue for a modify override file name not in suboutput", async assert => {
   await reset();
   await writeOutput({
     name: "modify-override-child",
@@ -419,7 +419,7 @@ test.case("override modify file name not in suboutput reports issue", async asse
   await testRoot.remove();
 });
 
-test.case("same suboutput referenced twice validates both independently", async assert => {
+test.case("should validate both independently when the same suboutput is referenced twice", async assert => {
   await reset();
   await writeOutput({
     name: "dual-child",
@@ -453,7 +453,7 @@ test.case("same suboutput referenced twice validates both independently", async 
   await testRoot.remove();
 });
 
-test.case("suboutput with unparseable instructions reports issue and skips recursion", async assert => {
+test.case("should report an issue and skip recursion for a suboutput with unparseable instructions", async assert => {
   await reset();
   const childDir = templateFolder.append("/broken-child");
   await fs.create(childDir);

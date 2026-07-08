@@ -9,7 +9,7 @@ function throwMissing(variable: string, _flagName: string): never {
   throw new Error(`Missing required variable: ${variable}`);
 }
 
-test.case("normalizeFlagName converts kebab to camelCase", async assert => {
+test.case("should convert kebab to camelCase with normalizeFlagName", async assert => {
   assert(normalizeFlagName("--component-name")).equals("componentName");
   assert(normalizeFlagName("--theme")).equals("theme");
   assert(normalizeFlagName("--my-long-variable")).equals("myLongVariable");
@@ -17,13 +17,13 @@ test.case("normalizeFlagName converts kebab to camelCase", async assert => {
   assert(normalizeFlagName("--a")).equals("a");
 });
 
-test.case("toKebabCase converts PascalCase/camelCase to kebab", async assert => {
+test.case("should convert PascalCase/camelCase to kebab with toKebabCase", async assert => {
   assert(toKebabCase("ComponentName")).equals("component-name");
   assert(toKebabCase("theme")).equals("theme");
   assert(toKebabCase("MyLongVariable")).equals("my-long-variable");
 });
 
-test.case("extractVariables returns camelCase record", async assert => {
+test.case("should return a camelCase record from extractVariables", async assert => {
   const result = extractVariables(
     [{ flag: "--component-name", value: "Button" }, { flag: "--theme", value: "dark" }],
     ["ComponentName", "theme"],
@@ -34,7 +34,7 @@ test.case("extractVariables returns camelCase record", async assert => {
   assert(result.theme).equals("dark");
 });
 
-test.case("extractVariables excludes declared flags", async assert => {
+test.case("should exclude declared flags in extractVariables", async assert => {
   const result = extractVariables(
     [{ flag: "--dry-run", value: "true" }, { flag: "--component-name", value: "Button" }],
     ["ComponentName"],
@@ -46,7 +46,7 @@ test.case("extractVariables excludes declared flags", async assert => {
   assert(result["dryRun"]).equals(undefined);
 });
 
-test.case("extractVariables ignores undeclared extra flags", async assert => {
+test.case("should ignore undeclared extra flags in extractVariables", async assert => {
   const result = extractVariables(
     [{ flag: "--component-name", value: "Button" }, { flag: "--extra", value: "ignored" }],
     ["ComponentName"],
@@ -57,7 +57,8 @@ test.case("extractVariables ignores undeclared extra flags", async assert => {
   assert(result.extra).equals("ignored");
 });
 
-test.case("extractVariables throws on missing declared variable", async assert => {
+test.group("variables errors", () => {
+  test.case("should throw on a missing declared variable in extractVariables", async assert => {
   let threw = false;
   try {
     extractVariables(
@@ -71,9 +72,10 @@ test.case("extractVariables throws on missing declared variable", async assert =
     assert((e as Error).message).includes("Missing required variable: ComponentName");
   }
   assert(threw).true();
+  });
 });
 
-test.case("extractVariables matches case-insensitively", async assert => {
+test.case("should match case-insensitively in extractVariables", async assert => {
   const result = extractVariables(
     [{ flag: "--component-name", value: "Button" }],
     ["ComponentName"],

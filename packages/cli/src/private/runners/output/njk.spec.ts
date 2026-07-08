@@ -7,7 +7,7 @@ import { CodeError } from "@rcompat/error";
 const root = await runtime.projectRoot();
 const tmpDir = root.append("/.test-njk-tmp");
 
-test.case("njk runner renders a simple template", async assert => {
+test.case("should render a simple njk template", async assert => {
   await fs.create(tmpDir);
   const templatePath = tmpDir.append("/button.njk");
   await templatePath.write("<button class=\"{{ theme }}\">{{ componentName }}</button>");
@@ -24,7 +24,7 @@ test.case("njk runner renders a simple template", async assert => {
   await tmpDir.remove();
 });
 
-test.case("njk runner throws template_not_found for missing file", async assert => {
+test.case("should throw template_not_found for a missing njk file", async assert => {
   await fs.create(tmpDir);
   const templatePath = tmpDir.append("/nonexistent.njk");
 
@@ -41,7 +41,7 @@ test.case("njk runner throws template_not_found for missing file", async assert 
   await tmpDir.remove();
 });
 
-test.case("njk runner wraps Nunjucks syntax errors", async assert => {
+test.case("should wrap Nunjucks syntax errors as template_execution_error", async assert => {
   await fs.create(tmpDir);
   const templatePath = tmpDir.append("/bad.njk");
   await templatePath.write("{% if missing_paren %}");

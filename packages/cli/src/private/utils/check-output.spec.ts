@@ -22,7 +22,7 @@ async function writeOutput(name: string, instructions: Record<string, unknown>) 
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
 
-test.case("valid output with no includes returns no issues", async assert => {
+test.case("should return no issues for valid output with no includes", async assert => {
   await reset();
   await writeOutput("simple", {
     name: "simple",
@@ -40,7 +40,7 @@ test.case("valid output with no includes returns no issues", async assert => {
   await testRoot.remove();
 });
 
-test.case("missing instructions.json returns issue", async assert => {
+test.case("should return an issue for missing instructions.json", async assert => {
   await reset();
   const dir = templateFolder.append("/empty");
   await fs.create(dir);
@@ -55,7 +55,7 @@ test.case("missing instructions.json returns issue", async assert => {
   await testRoot.remove();
 });
 
-test.case("schema parse failure returns issue and skips suboutput checks", async assert => {
+test.case("should return an issue for schema parse failure and skip suboutput checks", async assert => {
   await reset();
   const dir = templateFolder.append("/bad-schema");
   await fs.create(dir);
@@ -70,7 +70,7 @@ test.case("schema parse failure returns issue and skips suboutput checks", async
   await testRoot.remove();
 });
 
-test.case("missing create template file returns issue", async assert => {
+test.case("should return an issue for a missing create template file", async assert => {
   await reset();
   await writeOutput("missing-tmpl", {
     name: "missing-tmpl",
@@ -91,7 +91,7 @@ test.case("missing create template file returns issue", async assert => {
   await testRoot.remove();
 });
 
-test.case("missing modify template file returns issue", async assert => {
+test.case("should return an issue for a missing modify template file", async assert => {
   await reset();
   await writeOutput("missing-modify-tmpl", {
     name: "missing-modify-tmpl",
@@ -112,7 +112,7 @@ test.case("missing modify template file returns issue", async assert => {
   await testRoot.remove();
 });
 
-test.case("valid output with both create and modify entries returns no issues", async assert => {
+test.case("should return no issues for valid output with both create and modify entries", async assert => {
   await reset();
   const dir = templateFolder.append("/both");
   await fs.create(dir);
@@ -137,7 +137,7 @@ test.case("valid output with both create and modify entries returns no issues", 
   await testRoot.remove();
 });
 
-test.case("valid output with valid suboutputs returns no issues", async assert => {
+test.case("should return no issues for valid output with valid suboutputs", async assert => {
   await reset();
   await writeOutput("valid-child", {
     name: "valid-child",
@@ -162,7 +162,7 @@ test.case("valid output with valid suboutputs returns no issues", async assert =
   await testRoot.remove();
 });
 
-test.case("valid output with invalid suboutput tree merges suboutput issues", async assert => {
+test.case("should merge suboutput issues for valid output with invalid suboutput tree", async assert => {
   await reset();
   await writeOutput("missing-child-ref", {
     name: "missing-child-ref",

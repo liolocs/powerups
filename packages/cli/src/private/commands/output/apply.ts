@@ -62,9 +62,9 @@ export default function createApplyCommand(
       // 2. Locate .saved folder
       const root: FileRef = context?.root ?? await runtime.projectRoot();
       const mainFolder = root.append(`/${MAIN_FOLDER}`);
-      const hasDryFolder = await fs.exists(mainFolder);
+      const hasMainFolder = await fs.exists(mainFolder);
 
-      if (!hasDryFolder) {
+      if (!hasMainFolder) {
         throw errors.dry_folder_not_found();
       }
 
@@ -161,7 +161,11 @@ export default function createApplyCommand(
       }
 
       // 10. Non-dry-run: use git worktree
-      await verifyGitRepo(root);
+      try {
+        await verifyGitRepo(root);
+      } catch {
+        throw errors.git_repo_required();
+      }
       const worktree = await createWorktree(root);
 
       const changedFiles: ChangedFile[] = [];

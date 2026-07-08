@@ -53,8 +53,8 @@ export default function createCreateCommand(
       const root: FileRef = context?.root ?? await runtime.projectRoot();
       const mainFolder = root.append(`/${MAIN_FOLDER}`);
 
-      const hasDryFolder = await fs.exists(mainFolder);
-      if (!hasDryFolder) {
+      const hasMainFolder = await fs.exists(mainFolder);
+      if (!hasMainFolder) {
         throw errors.dry_folder_not_found();
       }
 

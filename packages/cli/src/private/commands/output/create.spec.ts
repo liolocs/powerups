@@ -3,6 +3,8 @@ import createCreateCommand from "#commands/output/create";
 import { instructionsSchema } from "#schemas/instruction";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
+import { CodeError } from "@rcompat/error";
+import { OutputTemplateCreateErrorCode } from "#errors/outputCreateErrors";
 import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -82,45 +84,71 @@ test.case("create template creates empty files for create and modify entries", a
   await testRoot.remove();
 });
 
-test.case("create template errors without .saved folder", async assert => {
-  await testRoot.remove();
-  await fs.create(testRoot);
+test.group("create errors", () => {
+  test.case("should fail with dry_folder_not_found without .saved folder", async assert => {
+    await testRoot.remove();
+    await fs.create(testRoot);
 
-  let threw = false;
-  try {
-    await create.run({
-      subcommands: [],
-      flags: [{ flag: "--name", value: "should-fail" }],
-      context: { root: testRoot },
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
+    let threw;
+    try {
+      await create.run({
+        subcommands: [],
+        flags: [{ flag: "--name", value: "should-fail" }],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateCreateErrorCode.dry_folder_not_found);
 
-  await testRoot.remove();
-});
-
-test.case("create template errors when template already exists", async assert => {
-  await reset();
-
-  await create.run({
-    subcommands: [],
-    flags: [{ flag: "--name", value: "dup-template" }],
-    context: { root: testRoot },
+    await testRoot.remove();
   });
 
-  let threw = false;
-  try {
+  test.case("should fail with already_exists when template name is taken", async assert => {
+    await reset();
+
     await create.run({
       subcommands: [],
       flags: [{ flag: "--name", value: "dup-template" }],
       context: { root: testRoot },
     });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
 
-  await testRoot.remove();
+    let threw;
+    try {
+      await create.run({
+        subcommands: [],
+        flags: [{ flag: "--name", value: "dup-template" }],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateCreateErrorCode.already_exists);
+
+    await testRoot.remove();
+  });
+
+  test.case("should fail with invalid_output_json when --output is malformed", async assert => {
+    await reset();
+
+    let threw;
+    try {
+      await create.run({
+        subcommands: [],
+        flags: [
+          { flag: "--name", value: "bad-json" },
+          { flag: "--output", value: "{not valid json" },
+        ],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateCreateErrorCode.invalid_output_json);
+
+    await testRoot.remove();
+  });
 });

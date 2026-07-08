@@ -28,7 +28,7 @@ async function renderAgents(): Promise<string> {
   });
 }
 
-test.case("creates AGENTS.md when absent", async assert => {
+test.case("should create AGENTS.md when absent", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
@@ -46,7 +46,7 @@ test.case("creates AGENTS.md when absent", async assert => {
   await testRoot.remove();
 });
 
-test.case("creates CLAUDE.md when absent", async assert => {
+test.case("should create CLAUDE.md when absent", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
@@ -59,7 +59,7 @@ test.case("creates CLAUDE.md when absent", async assert => {
   await testRoot.remove();
 });
 
-test.case("appends to existing file without section", async assert => {
+test.case("should append to existing file without section", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await testRoot.append("/AGENTS.md").write("# Existing project\n\nSome content.");
@@ -74,7 +74,7 @@ test.case("appends to existing file without section", async assert => {
   await testRoot.remove();
 });
 
-test.case("replaces existing section (idempotent)", async assert => {
+test.case("should replace existing section (idempotent)", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   const oldContent = "# Project\n\n<!-- BEGIN " + CLI_NAME + " -->\nOLD CONTENT\n<!-- END " + CLI_NAME + " -->\n";
@@ -93,7 +93,7 @@ test.case("replaces existing section (idempotent)", async assert => {
   await testRoot.remove();
 });
 
-test.case("works for CLAUDE.md same as AGENTS.md", async assert => {
+test.case("should work for CLAUDE.md same as AGENTS.md", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   const oldContent = "# My Claude\n\n<!-- BEGIN " + CLI_NAME + " -->\nOLD\n<!-- END " + CLI_NAME + " -->\n";
@@ -111,7 +111,7 @@ test.case("works for CLAUDE.md same as AGENTS.md", async assert => {
   await testRoot.remove();
 });
 
-test.case("renders template vs feature content", async assert => {
+test.case("should render template vs feature content", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 

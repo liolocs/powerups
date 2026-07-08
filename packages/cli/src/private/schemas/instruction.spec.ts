@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import { instructionsSchema } from "#schemas/instruction";
 
-test.case("parses instructions with includes", async assert => {
+test.case("should parse instructions with includes", async assert => {
   const result = instructionsSchema.parse({
     name: "shadcn-all-components",
     variables: ["theme"],
@@ -25,7 +25,7 @@ test.case("parses instructions with includes", async assert => {
   assert(result.includes![0].outputPathOverride!.create!.component).equals("src/ui/{{componentName}}.tsx");
 });
 
-test.case("parses instructions without includes (backward compat)", async assert => {
+test.case("should parse instructions without includes (backward compat)", async assert => {
   const result = instructionsSchema.parse({
     name: "simple-output",
     variables: ["ComponentName"],
@@ -37,7 +37,7 @@ test.case("parses instructions without includes (backward compat)", async assert
   assert(result.includes).undefined();
 });
 
-test.case("parses includes without optional outputPathOverride", async assert => {
+test.case("should parse includes without optional outputPathOverride", async assert => {
   const result = instructionsSchema.parse({
     name: "parent",
     variables: ["theme"],
@@ -54,7 +54,7 @@ test.case("parses includes without optional outputPathOverride", async assert =>
   assert(result.includes![0].outputPathOverride).undefined();
 });
 
-test.case("parses includes with both create and modify outputPathOverride", async assert => {
+test.case("should parse includes with both create and modify outputPathOverride", async assert => {
   const result = instructionsSchema.parse({
     name: "parent",
     variables: ["theme"],
@@ -76,7 +76,7 @@ test.case("parses includes with both create and modify outputPathOverride", asyn
   assert(result.includes![0].outputPathOverride!.modify!.wire).equals("src/index.ts");
 });
 
-test.case("parses output with both create and modify entries", async assert => {
+test.case("should parse output with both create and modify entries", async assert => {
   const result = instructionsSchema.parse({
     name: "api",
     variables: ["name"],
@@ -97,7 +97,8 @@ test.case("parses output with both create and modify entries", async assert => {
   assert(result.output.modify[0].name).equals("wire");
 });
 
-test.case("rejects includes entry missing name", async assert => {
+test.group("instruction schema rejections", () => {
+  test.case("should reject an includes entry missing name", async assert => {
   let threw = false;
   try {
     instructionsSchema.parse({
@@ -113,7 +114,7 @@ test.case("rejects includes entry missing name", async assert => {
   assert(threw).true();
 });
 
-test.case("rejects includes entry missing variables", async assert => {
+  test.case("should reject an includes entry missing variables", async assert => {
   let threw = false;
   try {
     instructionsSchema.parse({
@@ -129,7 +130,7 @@ test.case("rejects includes entry missing variables", async assert => {
   assert(threw).true();
 });
 
-test.case("rejects output missing create array", async assert => {
+  test.case("should reject output missing create array", async assert => {
   let threw = false;
   try {
     instructionsSchema.parse({
@@ -144,7 +145,7 @@ test.case("rejects output missing create array", async assert => {
   assert(threw).true();
 });
 
-test.case("rejects output missing modify array", async assert => {
+  test.case("should reject output missing modify array", async assert => {
   let threw = false;
   try {
     instructionsSchema.parse({
@@ -157,4 +158,5 @@ test.case("rejects output missing modify array", async assert => {
     threw = true;
   }
   assert(threw).true();
+  });
 });

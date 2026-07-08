@@ -3,6 +3,8 @@ import init from "#commands/init";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { MAIN_FOLDER, CLI_NAME } from "#constants";
+import { CodeError } from "@rcompat/error";
+import { InitErrorCode } from "#errors/initErrors";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -22,13 +24,13 @@ test.case(`init generates a ${MAIN_FOLDER} folder`, async assert => {
     context: { root: testRoot },
   });
 
-  const hasDryFolder = await fs.exists(mainFolder);
-  assert(hasDryFolder).equals(true);
+  const hasMainFolder = await fs.exists(mainFolder);
+  assert(hasMainFolder).equals(true);
 
   await testRoot.remove();
 
-  const hasDryFolderAgain = await fs.exists(mainFolder);
-  assert(hasDryFolderAgain).equals(false);
+  const hasMainFolderAgain = await fs.exists(mainFolder);
+  assert(hasMainFolderAgain).equals(false);
 });
 
 test.case("init --harness=claude scaffolds claude files only", async assert => {
@@ -137,271 +139,312 @@ test.case("init --harness=codex scaffolds codex files", async assert => {
   await testRoot.remove();
 });
 
-test.case("init errors when no harness detected", async assert => {
-  await reset();
+test.group("init errors", () => {
+  test.case("should fail with the correct error when no harness detected",
+    async assert => {
+      await reset();
 
-  let threw = false;
-  try {
-    await init.run({
-      subcommands: [],
-      flags: [],
-      context: { root: testRoot, skipGlobal: true },
+      let threw;
+      try {
+        await init.run({
+          subcommands: [],
+          flags: [],
+          context: { root: testRoot, skipGlobal: true },
+        });
+      } catch (e: unknown) {
+        assert(e instanceof CodeError).true();
+        threw = (e as CodeError).code;
+      }
+      assert(threw).equals(InitErrorCode.no_harness_detected);
+
+      await testRoot.remove();
     });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
 
-  await testRoot.remove();
-});
+  test.case("should fail with invalid_harness when --harness value is invalid", async assert => {
+    await reset();
 
-test.case("init --harness=invalid throws", async assert => {
-  await reset();
+    let threw;
+    try {
+      await init.run({
+        subcommands: [],
+        flags: [{ flag: "--harness", value: "foo" }],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(InitErrorCode.invalid_harness);
 
-  let threw = false;
-  try {
+    await testRoot.remove();
+  });
+
+  test.case("should fail with multiple_harnesses_detected when several harnesses found locally", async assert => {
+    await reset();
+    await fs.create(testRoot.append("/.claude"));
+    await fs.create(testRoot.append("/.pi"));
+
+    let threw;
+    try {
+      await init.run({
+        subcommands: [],
+        flags: [],
+        context: { root: testRoot, skipGlobal: true },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
+
+    await testRoot.remove();
+  });
+
+  test.case("should fail with dry_folder_exists when already initialized", async assert => {
+    await reset();
+
+    // First run succeeds and creates .saved
     await init.run({
       subcommands: [],
-      flags: [{ flag: "--harness", value: "foo" }],
+      flags: [{ flag: "--harness", value: "claude" }],
       context: { root: testRoot },
     });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
 
-  await testRoot.remove();
-});
+    // Second run should fail because .saved already exists
+    let threw;
+    try {
+      await init.run({
+        subcommands: [],
+        flags: [{ flag: "--harness", value: "claude" }],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(InitErrorCode.dry_folder_exists);
 
-test.case("init detects claude from CLAUDE.md", async assert => {
-  await reset();
-  await testRoot.append("/CLAUDE.md").write("# Existing project");
-
-  await init.run({
-    subcommands: [],
-    flags: [],
-    context: { root: testRoot, skipGlobal: true },
+    await testRoot.remove();
   });
-
-  // Should detect claude and write commands
-  assert(await fs.exists(testRoot.append("/.claude/skills"))).equals(true);
-  // CLAUDE.md should have the savedai section appended
-  const content = await testRoot.append("/CLAUDE.md").text();
-  assert(content.includes("# Existing project")).equals(true);
-  assert(content.includes(`<!-- BEGIN ${CLI_NAME} -->`)).equals(true);
-
-  await testRoot.remove();
 });
 
-test.case("init detects opencode from .opencode/ dir", async assert => {
-  await reset();
-  await fs.create(testRoot.append("/.opencode"));
+test.group("init detection", () => {
+  test.case("should detect claude from CLAUDE.md", async assert => {
+    await reset();
+    await testRoot.append("/CLAUDE.md").write("# Existing project");
 
-  await init.run({
-    subcommands: [],
-    flags: [],
-    context: { root: testRoot, skipGlobal: true },
-  });
-
-  assert(await fs.exists(testRoot.append("/.opencode/skills"))).equals(true);
-  assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
-  assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(false);
-
-  await testRoot.remove();
-});
-
-test.case("init detects pi from .pi/ dir", async assert => {
-  await reset();
-  await fs.create(testRoot.append("/.pi"));
-
-  await init.run({
-    subcommands: [],
-    flags: [],
-    context: { root: testRoot, skipGlobal: true },
-  });
-
-  assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
-  assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
-
-  await testRoot.remove();
-});
-
-test.case("init errors when multiple harnesses detected locally", async assert => {
-  await reset();
-  await fs.create(testRoot.append("/.claude"));
-  await fs.create(testRoot.append("/.pi"));
-
-  let threw = false;
-  try {
     await init.run({
       subcommands: [],
       flags: [],
       context: { root: testRoot, skipGlobal: true },
     });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
 
-  await testRoot.remove();
-});
+    // Should detect claude and write commands
+    assert(await fs.exists(testRoot.append("/.claude/skills"))).equals(true);
+    // CLAUDE.md should have the savedai section appended
+    const content = await testRoot.append("/CLAUDE.md").text();
+    assert(content.includes("# Existing project")).equals(true);
+    assert(content.includes(`<!-- BEGIN ${CLI_NAME} -->`)).equals(true);
 
-test.case("init --harness resolves multiple detection ambiguity", async assert => {
-  await reset();
-  await fs.create(testRoot.append("/.claude"));
-  await fs.create(testRoot.append("/.pi"));
-
-  // Should succeed with --harness=pi despite multiple detected
-  await init.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "pi" }],
-    context: { root: testRoot },
+    await testRoot.remove();
   });
 
-  assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
-  assert(await fs.exists(testRoot.append("/.claude/skills"))).equals(false);
+  test.case("should detect opencode from .opencode/ dir", async assert => {
+    await reset();
+    await fs.create(testRoot.append("/.opencode"));
 
-  await testRoot.remove();
-});
-
-// ── Rollback tests ───────────────────────────────────────────────
-//
-// init must clean up any files/directories it created when scaffold
-// throws, so that re-running init works cleanly instead of failing with
-// "project already initialized".
-// ─────────────────────────────────────────────────────────────────
-
-test.case("init removes .saved on detection error (multiple harnesses)", async assert => {
-  await reset();
-  await fs.create(testRoot.append("/.claude"));
-  await fs.create(testRoot.append("/.pi"));
-
-  let threw = false;
-  try {
     await init.run({
       subcommands: [],
       flags: [],
       context: { root: testRoot, skipGlobal: true },
     });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
 
-  // .saved must NOT be left behind
-  assert(await fs.exists(mainFolder)).equals(false);
+    assert(await fs.exists(testRoot.append("/.opencode/skills"))).equals(true);
+    assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
+    assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(false);
 
-  await testRoot.remove();
-});
+    await testRoot.remove();
+  });
 
-test.case("init removes .saved on invalid harness error", async assert => {
-  await reset();
+  test.case("should detect pi from .pi/ dir", async assert => {
+    await reset();
+    await fs.create(testRoot.append("/.pi"));
 
-  let threw = false;
-  try {
     await init.run({
       subcommands: [],
-      flags: [{ flag: "--harness", value: "bogus" }],
+      flags: [],
+      context: { root: testRoot, skipGlobal: true },
+    });
+
+    assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
+    assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
+
+    await testRoot.remove();
+  });
+
+  test.case("should resolve multiple detection ambiguity with --harness flag", async assert => {
+    await reset();
+    await fs.create(testRoot.append("/.claude"));
+    await fs.create(testRoot.append("/.pi"));
+
+    // Should succeed with --harness=pi despite multiple detected
+    await init.run({
+      subcommands: [],
+      flags: [{ flag: "--harness", value: "pi" }],
       context: { root: testRoot },
     });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
 
-  assert(await fs.exists(mainFolder)).equals(false);
+    assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
+    assert(await fs.exists(testRoot.append("/.claude/skills"))).equals(false);
 
-  await testRoot.remove();
-});
-
-test.case("init removes .saved on no-harness-detected error", async assert => {
-  await reset();
-
-  let threw = false;
-  try {
-    await init.run({
-      subcommands: [],
-      flags: [],
-      context: { root: testRoot, skipGlobal: true },
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
-
-  assert(await fs.exists(mainFolder)).equals(false);
-
-  await testRoot.remove();
-});
-
-test.case("init can be re-run immediately after detection error", async assert => {
-  // This is the exact scenario from the bug report:
-  //   $ saved init                              → multiple harnesses error
-  //   $ savedai init --harness=pi               → should work, not "already initialized"
-  await reset();
-  await fs.create(testRoot.append("/.claude"));
-  await fs.create(testRoot.append("/.pi"));
-
-  // First run fails (multiple harnesses, no --harness)
-  let firstThrew = false;
-  try {
-    await init.run({
-      subcommands: [],
-      flags: [],
-      context: { root: testRoot, skipGlobal: true },
-    });
-  } catch {
-    firstThrew = true;
-  }
-  assert(firstThrew).equals(true);
-
-  // .saved was cleaned up — second run with --harness succeeds
-  await init.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "pi" }],
-    context: { root: testRoot },
+    await testRoot.remove();
   });
-
-  assert(await fs.exists(mainFolder)).equals(true);
-  assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
-
-  await testRoot.remove();
 });
 
-test.case("init restores modified instruction file on error", async assert => {
-  // Pre-existing CLAUDE.md with user content — init detects multiple
-  // harnesses *after* scaffold has already appended to CLAUDE.md.
-  // We simulate this by setting up a scenario where the instruction
-  // file is written but then a later step (command file write) fails.
+test.group("init rollback", () => {
+  // ── Rollback tests ───────────────────────────────────────────────
   //
-  // Since detection happens first and throws before any files are
-  // written, we instead verify the restore path by directly testing
-  // that a pre-existing instruction file is untouched after a
-  // detection failure.
-  await reset();
-  const original = "# My Project\n\nOriginal content.\n";
-  await testRoot.append("/AGENTS.md").write(original);
-  await fs.create(testRoot.append("/.claude"));
-  await fs.create(testRoot.append("/.pi"));
+  // init must clean up any files/directories it created when scaffold
+  // throws, so that re-running init works cleanly instead of failing with
+  // "project already initialized".
+  // ─────────────────────────────────────────────────────────────────
 
-  let threw = false;
-  try {
+  test.case("should remove .saved on detection error (multiple harnesses)", async assert => {
+    await reset();
+    await fs.create(testRoot.append("/.claude"));
+    await fs.create(testRoot.append("/.pi"));
+
+    let threw;
+    try {
+      await init.run({
+        subcommands: [],
+        flags: [],
+        context: { root: testRoot, skipGlobal: true },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
+
+    // .saved must NOT be left behind
+    assert(await fs.exists(mainFolder)).equals(false);
+
+    await testRoot.remove();
+  });
+
+  test.case("should remove .saved on invalid harness error", async assert => {
+    await reset();
+
+    let threw;
+    try {
+      await init.run({
+        subcommands: [],
+        flags: [{ flag: "--harness", value: "bogus" }],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(InitErrorCode.invalid_harness);
+
+    assert(await fs.exists(mainFolder)).equals(false);
+
+    await testRoot.remove();
+  });
+
+  test.case("should remove .saved on no-harness-detected error", async assert => {
+    await reset();
+
+    let threw;
+    try {
+      await init.run({
+        subcommands: [],
+        flags: [],
+        context: { root: testRoot, skipGlobal: true },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(InitErrorCode.no_harness_detected);
+
+    assert(await fs.exists(mainFolder)).equals(false);
+
+    await testRoot.remove();
+  });
+
+  test.case("should be re-runnable immediately after detection error", async assert => {
+    // This is the exact scenario from the bug report:
+    //   $ saved init                              → multiple harnesses error
+    //   $ savedai init --harness=pi               → should work, not "already initialized"
+    await reset();
+    await fs.create(testRoot.append("/.claude"));
+    await fs.create(testRoot.append("/.pi"));
+
+    // First run fails (multiple harnesses, no --harness)
+    let firstThrew = false;
+    try {
+      await init.run({
+        subcommands: [],
+        flags: [],
+        context: { root: testRoot, skipGlobal: true },
+      });
+    } catch {
+      firstThrew = true;
+    }
+    assert(firstThrew).equals(true);
+
+    // .saved was cleaned up — second run with --harness succeeds
     await init.run({
       subcommands: [],
-      flags: [],
-      context: { root: testRoot, skipGlobal: true },
+      flags: [{ flag: "--harness", value: "pi" }],
+      context: { root: testRoot },
     });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
 
-  // AGENTS.md should be unchanged (detection threw before any writes)
-  const content = await testRoot.append("/AGENTS.md").text();
-  assert(content).equals(original);
-  assert(await fs.exists(mainFolder)).equals(false);
+    assert(await fs.exists(mainFolder)).equals(true);
+    assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
 
-  await testRoot.remove();
+    await testRoot.remove();
+  });
+
+  test.case("should restore modified instruction file on error", async assert => {
+    // Pre-existing CLAUDE.md with user content — init detects multiple
+    // harnesses *after* scaffold has already appended to CLAUDE.md.
+    // We simulate this by setting up a scenario where the instruction
+    // file is written but then a later step (command file write) fails.
+    //
+    // Since detection happens first and throws before any files are
+    // written, we instead verify the restore path by directly testing
+    // that a pre-existing instruction file is untouched after a
+    // detection failure.
+    await reset();
+    const original = "# My Project\n\nOriginal content.\n";
+    await testRoot.append("/AGENTS.md").write(original);
+    await fs.create(testRoot.append("/.claude"));
+    await fs.create(testRoot.append("/.pi"));
+
+    let threw;
+    try {
+      await init.run({
+        subcommands: [],
+        flags: [],
+        context: { root: testRoot, skipGlobal: true },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
+
+    // AGENTS.md should be unchanged (detection threw before any writes)
+    const content = await testRoot.append("/AGENTS.md").text();
+    assert(content).equals(original);
+    assert(await fs.exists(mainFolder)).equals(false);
+
+    await testRoot.remove();
+  });
 });
 
 test.case("init is idempotent — instruction section not duplicated", async assert => {

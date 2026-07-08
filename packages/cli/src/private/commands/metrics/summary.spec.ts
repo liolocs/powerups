@@ -4,6 +4,7 @@ import runtime from "@rcompat/runtime";
 import summary from "#commands/metrics/summary";
 import captureStdout from "#test-utils/capture-stdout";
 import { CodeError } from "@rcompat/error";
+import { MetricsErrorCode } from "#errors/metricsErrors";
 import { logRun } from "#utils/metrics";
 import { MAIN_FOLDER } from "#constants";
 
@@ -84,23 +85,24 @@ test.case("summary prints table with aggregated data", async assert => {
   await testRoot.remove();
 });
 
-test.case("summary throws dry_folder_not_found without .saved", async assert => {
-  await testRoot.remove();
-  await fs.create(testRoot);
+test.group("summary errors", () => {
+  test.case("should fail with dry_folder_not_found without .saved folder", async assert => {
+    await testRoot.remove();
+    await fs.create(testRoot);
 
-  let threw = false;
-  try {
-    await summary.run({
-      subcommands: [],
-      flags: [],
-      context: { root: testRoot },
-    });
-  } catch (e) {
-    threw = true;
-    assert(e instanceof CodeError).true();
-    assert((e as CodeError).code).equals("dry_folder_not_found");
-  }
-  assert(threw).true();
+    let threw;
+    try {
+      await summary.run({
+        subcommands: [],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(MetricsErrorCode.dry_folder_not_found);
 
-  await testRoot.remove();
+    await testRoot.remove();
+  });
 });

@@ -19,9 +19,9 @@ const summary = new Command({
   action: async (props) => {
     const root: FileRef = props?.context?.root ?? await runtime.projectRoot();
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
-    const hasDryFolder = await fs.exists(mainFolder);
+    const hasMainFolder = await fs.exists(mainFolder);
 
-    if (!hasDryFolder) {
+    if (!hasMainFolder) {
       throw metricsErrors.dry_folder_not_found();
     }
 

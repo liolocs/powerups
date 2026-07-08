@@ -22,7 +22,7 @@ async function writeOutput(name: string, instructions: Record<string, unknown>) 
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
 
-test.case("leaf output produces one task per create file", async assert => {
+test.case("should produce one task per create file for a leaf output", async assert => {
   await reset();
   await writeOutput("leaf", {
     name: "leaf",
@@ -51,7 +51,7 @@ test.case("leaf output produces one task per create file", async assert => {
   await testRoot.remove();
 });
 
-test.case("output with both create and modify produces tasks with correct kind", async assert => {
+test.case("should produce tasks with correct kind for output with both create and modify", async assert => {
   await reset();
   await writeOutput("both", {
     name: "both",
@@ -77,7 +77,7 @@ test.case("output with both create and modify produces tasks with correct kind",
   await testRoot.remove();
 });
 
-test.case("output with includes produces own tasks plus suboutput tasks", async assert => {
+test.case("should produce own tasks plus suboutput tasks for output with includes", async assert => {
   await reset();
   await writeOutput("child", {
     name: "child",
@@ -121,7 +121,7 @@ test.case("output with includes produces own tasks plus suboutput tasks", async 
   await testRoot.remove();
 });
 
-test.case("nested suboutputs (A->B->C) produce flat list of all tasks", async assert => {
+test.case("should produce a flat list of all tasks for nested suboutputs", async assert => {
   await reset();
   await writeOutput("nest-c", {
     name: "nest-c",
@@ -159,7 +159,7 @@ test.case("nested suboutputs (A->B->C) produce flat list of all tasks", async as
   await testRoot.remove();
 });
 
-test.case("variable mapping passes static value through", async assert => {
+test.case("should pass a static value through for variable mapping", async assert => {
   await reset();
   await writeOutput("static-child", {
     name: "static-child",
@@ -185,7 +185,7 @@ test.case("variable mapping passes static value through", async assert => {
   await testRoot.remove();
 });
 
-test.case("variable mapping resolves parentVar reference", async assert => {
+test.case("should resolve a parentVar reference for variable mapping", async assert => {
   await reset();
   await writeOutput("ref-child", {
     name: "ref-child",
@@ -211,7 +211,7 @@ test.case("variable mapping resolves parentVar reference", async assert => {
   await testRoot.remove();
 });
 
-test.case("variable mapping resolves mixed text and tokens", async assert => {
+test.case("should resolve mixed text and tokens for variable mapping", async assert => {
   await reset();
   await writeOutput("mixed-child", {
     name: "mixed-child",
@@ -237,7 +237,7 @@ test.case("variable mapping resolves mixed text and tokens", async assert => {
   await testRoot.remove();
 });
 
-test.case("create output path override applied to correct file by name", async assert => {
+test.case("should apply create output path override to the correct file by name", async assert => {
   await reset();
   await writeOutput("override-child", {
     name: "override-child",
@@ -272,7 +272,7 @@ test.case("create output path override applied to correct file by name", async a
   await testRoot.remove();
 });
 
-test.case("modify output path override applied to correct file by name", async assert => {
+test.case("should apply modify output path override to the correct file by name", async assert => {
   await reset();
   await writeOutput("modify-override-child", {
     name: "modify-override-child",
@@ -309,7 +309,7 @@ test.case("modify output path override applied to correct file by name", async a
   await testRoot.remove();
 });
 
-test.case("no override preserves original outputPath", async assert => {
+test.case("should preserve the original outputPath when no override is given", async assert => {
   await reset();
   await writeOutput("no-override-child", {
     name: "no-override-child",
@@ -338,7 +338,7 @@ test.case("no override preserves original outputPath", async assert => {
   await testRoot.remove();
 });
 
-test.case("same suboutput referenced twice with different variables produces distinct tasks", async assert => {
+test.case("should produce distinct tasks when the same suboutput is referenced twice with different variables", async assert => {
   await reset();
   await writeOutput("dual-child", {
     name: "dual-child",
@@ -369,7 +369,7 @@ test.case("same suboutput referenced twice with different variables produces dis
   await testRoot.remove();
 });
 
-test.case("overrides do not cascade to nested suboutputs", async assert => {
+test.case("should not cascade overrides to nested suboutputs", async assert => {
   await reset();
   await writeOutput("cascade-grandchild", {
     name: "cascade-grandchild",

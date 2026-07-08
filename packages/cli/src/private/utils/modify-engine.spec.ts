@@ -6,38 +6,36 @@ import {
   applySingleModification,
   applyMultipleModifications,
   parseModifyTemplate,
-  type ModifyErrorSet,
 } from "#utils/modify-engine";
 import { modificationArraySchema } from "#schemas/modification";
-import { CodeError } from "@rcompat/error";
+import type { CodeError } from "@rcompat/error";
+import output_apply_errors from "#errors/outputApplyErrors";
+
+const errors = output_apply_errors["template"];
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 
 const t = error.template;
 
-const errors: ModifyErrorSet = error.coded({
-  modify_target_not_found: (path: string) =>
-    t`Target file not found: ${path}`,
-  modify_anchor_not_found: (anchor: string, path: string) =>
-    t`Anchor "${anchor}" not found in: ${path}`,
-  modify_anchor_ambiguous: (anchor: string, path: string) =>
-    t`Anchor "${anchor}" ambiguous in: ${path}`,
-  modify_template_invalid_json: (template: string) =>
-    t`Invalid JSON: ${template}`,
-});
+test.case("should prepend content with top", async assert => {
+  const result = applySingleModification({
+    content: "world",
+    mod: { where: "top", content: "hello " },
+    outputPath: "out.ts",
+    errors,
+  });
 
-test.case("applySingleModification with top prepends content", async assert => {
-  const result = applySingleModification({ content: "world", mod: { where: "top", content: "hello " }, outputPath: "out.ts", errors });
   assert(result).equals("hello world");
 });
 
-test.case("applySingleModification with bottom appends content", async assert => {
+test.case("should append content with bottom", async assert => {
   const result = applySingleModification({ content: "hello", mod: { where: "bottom", content: " world" }, outputPath: "out.ts", errors });
+
   assert(result).equals("hello world");
 });
 
-test.case("applySingleModification with exact string replace replaces unique match", async assert => {
+test.case("should replace a unique match with exact string", async assert => {
   const result = applySingleModification({
     content: "export const x = 1;",
     mod: { where: "export const x = 1;", content: "export const x = 2;" },
@@ -47,39 +45,7 @@ test.case("applySingleModification with exact string replace replaces unique mat
   assert(result).equals("export const x = 2;");
 });
 
-test.case("applySingleModification with exact string replace when not found throws", async assert => {
-  let threw = false;
-  try {
-    applySingleModification({
-      content: "hello world",
-      mod: { where: "nonexistent", content: "x" },
-      outputPath: "out.ts",
-      errors,
-    });
-  } catch (e) {
-    threw = true;
-    assert((e as CodeError).code).equals("modify_anchor_not_found");
-  }
-  assert(threw).true();
-});
-
-test.case("applySingleModification with exact string replace when ambiguous throws", async assert => {
-  let threw = false;
-  try {
-    applySingleModification({
-      content: "foo bar foo",
-      mod: { where: "foo", content: "x" },
-      outputPath: "out.ts",
-      errors,
-    });
-  } catch (e) {
-    threw = true;
-    assert((e as CodeError).code).equals("modify_anchor_ambiguous");
-  }
-  assert(threw).true();
-});
-
-test.case("applySingleModification with after inserts after anchor", async assert => {
+test.case("should insert after an anchor", async assert => {
   const result = applySingleModification({
     content: "line1\nline2\nline3",
     mod: { where: { after: "line1" }, content: "inserted" },
@@ -89,23 +55,7 @@ test.case("applySingleModification with after inserts after anchor", async asser
   assert(result).equals("line1inserted\nline2\nline3");
 });
 
-test.case("applySingleModification with after when anchor not found throws", async assert => {
-  let threw = false;
-  try {
-    applySingleModification({
-      content: "hello",
-      mod: { where: { after: "nonexistent" }, content: "x" },
-      outputPath: "out.ts",
-      errors,
-    });
-  } catch (e) {
-    threw = true;
-    assert((e as CodeError).code).equals("modify_anchor_not_found");
-  }
-  assert(threw).true();
-});
-
-test.case("applySingleModification with before inserts before anchor", async assert => {
+test.case("should insert before an anchor", async assert => {
   const result = applySingleModification({
     content: "line1\nline2\nline3",
     mod: { where: { before: "line2" }, content: "inserted\n" },
@@ -115,23 +65,7 @@ test.case("applySingleModification with before inserts before anchor", async ass
   assert(result).equals("line1\ninserted\nline2\nline3");
 });
 
-test.case("applySingleModification with before when anchor not found throws", async assert => {
-  let threw = false;
-  try {
-    applySingleModification({
-      content: "hello",
-      mod: { where: { before: "nonexistent" }, content: "x" },
-      outputPath: "out.ts",
-      errors,
-    });
-  } catch (e) {
-    threw = true;
-    assert((e as CodeError).code).equals("modify_anchor_not_found");
-  }
-  assert(threw).true();
-});
-
-test.case("sequential application: multiple mods in array order", async assert => {
+test.case("should apply multiple mods in array order sequentially", async assert => {
   let content = "line1\nline2\nline3";
   const mods = modificationArraySchema.parse([
     { where: "top", content: "header" },
@@ -146,7 +80,7 @@ test.case("sequential application: multiple mods in array order", async assert =
   assert(content).equals("headerline1inserted\nline2\nline3footer");
 });
 
-test.case("parseModifyTemplate with .json file parses directly", async assert => {
+test.case("should parse a .json modify template directly", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   const tmplPath = testRoot.append("/test-mod.json");
@@ -160,7 +94,7 @@ test.case("parseModifyTemplate with .json file parses directly", async assert =>
   await testRoot.remove();
 });
 
-test.case("parseModifyTemplate with .njk file renders then parses", async assert => {
+test.case("should render then parse a .njk modify template", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   const tmplPath = testRoot.append("/test-mod.njk");
@@ -173,24 +107,7 @@ test.case("parseModifyTemplate with .njk file renders then parses", async assert
   await testRoot.remove();
 });
 
-test.case("parseModifyTemplate with invalid JSON throws", async assert => {
-  await testRoot.remove();
-  await fs.create(testRoot);
-  const tmplPath = testRoot.append("/bad-mod.json");
-  await tmplPath.write("{not valid json}");
-
-  let threw = false;
-  try {
-    await parseModifyTemplate(tmplPath, {}, errors);
-  } catch (e) {
-    threw = true;
-    assert((e as CodeError).code).equals("modify_template_invalid_json");
-  }
-  assert(threw).true();
-  await testRoot.remove();
-});
-
-test.case("applyMultipleModifications end-to-end with a real file", async assert => {
+test.case("should apply modifications end-to-end on a real file", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   // Create target file
@@ -213,4 +130,87 @@ test.case("applyMultipleModifications end-to-end with a real file", async assert
 
   assert(result.content).equals("// header\nline1inserted\nline2\nline3\n");
   await testRoot.remove();
+});
+
+test.group("modify-engine errors", () => {
+  test.case("should throw modify_anchor_not_found when exact string not found", async assert => {
+    let threw = false;
+    try {
+      applySingleModification({
+        content: "hello world",
+        mod: { where: "nonexistent", content: "x" },
+        outputPath: "out.ts",
+        errors,
+      });
+    } catch (e) {
+      threw = true;
+      assert((e as CodeError).code).equals("modify_anchor_not_found");
+    }
+    assert(threw).true();
+  });
+
+  test.case("should throw modify_anchor_ambiguous when exact string appears multiple times", async assert => {
+    let threw = false;
+    try {
+      applySingleModification({
+        content: "foo bar foo",
+        mod: { where: "foo", content: "x" },
+        outputPath: "out.ts",
+        errors,
+      });
+    } catch (e) {
+      threw = true;
+      assert((e as CodeError).code).equals("modify_anchor_ambiguous");
+    }
+    assert(threw).true();
+  });
+
+  test.case("should throw modify_anchor_not_found when after anchor not found", async assert => {
+    let threw = false;
+    try {
+      applySingleModification({
+        content: "hello",
+        mod: { where: { after: "nonexistent" }, content: "x" },
+        outputPath: "out.ts",
+        errors,
+      });
+    } catch (e) {
+      threw = true;
+      assert((e as CodeError).code).equals("modify_anchor_not_found");
+    }
+    assert(threw).true();
+  });
+
+  test.case("should throw modify_anchor_not_found when before anchor not found", async assert => {
+    let threw = false;
+    try {
+      applySingleModification({
+        content: "hello",
+        mod: { where: { before: "nonexistent" }, content: "x" },
+        outputPath: "out.ts",
+        errors,
+      });
+    } catch (e) {
+      threw = true;
+      assert((e as CodeError).code).equals("modify_anchor_not_found");
+    }
+    assert(threw).true();
+  });
+
+  test.case("should throw modify_template_invalid_json for invalid JSON output", async assert => {
+    await testRoot.remove();
+    await fs.create(testRoot);
+    const tmplPath = testRoot.append("/bad-mod.json");
+    await tmplPath.write("{not valid json}");
+
+    let threw = false;
+    try {
+      await parseModifyTemplate(tmplPath, {}, errors);
+    } catch (e) {
+      threw = true;
+      assert((e as CodeError).code).equals("modify_template_invalid_json");
+    }
+    assert(threw).true();
+    await testRoot.remove();
+  });
 });

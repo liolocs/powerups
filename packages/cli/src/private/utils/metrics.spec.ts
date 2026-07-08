@@ -15,7 +15,7 @@ async function reset() {
   await fs.create(mainFolder);
 }
 
-test.case("logRun creates metrics file and appends entries", async assert => {
+test.case("should create a metrics file and append entries on logRun", async assert => {
   await reset();
 
   await logRun({ output: "ui-component", characters: 500 }, testRoot);
@@ -38,7 +38,7 @@ test.case("logRun creates metrics file and appends entries", async assert => {
   await testRoot.remove();
 });
 
-test.case("readMetrics returns parsed entries", async assert => {
+test.case("should return parsed entries on readMetrics", async assert => {
   await reset();
 
   await logRun({ output: "ui-component", characters: 500 }, testRoot);
@@ -57,7 +57,7 @@ test.case("readMetrics returns parsed entries", async assert => {
   await testRoot.remove();
 });
 
-test.case("readMetrics returns empty array when file missing", async assert => {
+test.case("should return an empty array when the file is missing", async assert => {
   await reset();
 
   const entries = await readMetrics(testRoot);
@@ -67,7 +67,7 @@ test.case("readMetrics returns empty array when file missing", async assert => {
   await testRoot.remove();
 });
 
-test.case("readMetrics skips blank and corrupt lines", async assert => {
+test.case("should skip blank and corrupt lines on readMetrics", async assert => {
   await reset();
 
   // Write a file with blank lines and corrupt JSON mixed in
@@ -86,7 +86,7 @@ test.case("readMetrics skips blank and corrupt lines", async assert => {
   await testRoot.remove();
 });
 
-test.case("logRun appends to existing file without overwriting", async assert => {
+test.case("should append to an existing file without overwriting on logRun", async assert => {
   await reset();
 
   await logRun({ output: "first", characters: 10 }, testRoot);

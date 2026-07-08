@@ -5,7 +5,7 @@ import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import captureStdout from "#test-utils/capture-stdout";
 import { MAIN_FOLDER } from "#constants";
-import output_search_errors, { OutputTemplateSearchErrorCode } from "#errors/outputSearchErrors";
+import { OutputTemplateSearchErrorCode } from "#errors/outputSearchErrors";
 import { OutputTemplateCreateErrorCode } from "#errors/outputCreateErrors";
 import { CodeError } from "@rcompat/error";
 
@@ -104,53 +104,86 @@ test.case("search ranks by score descending", async assert => {
   await testRoot.remove();
 });
 
-test.case("search errors when no templates match", async assert => {
-  await testRoot.remove();
-  await fs.create(testRoot);
-  await fs.create(mainFolder);
+test.group("search errors", () => {
+  test.case("should fail with no_matching when no templates match", async assert => {
+    await testRoot.remove();
+    await fs.create(testRoot);
+    await fs.create(mainFolder);
 
-  await createCmd.run({
-    subcommands: [],
-    flags: [
-      { flag: "--name", value: "ui-component" },
-      { flag: "--intent", value: "ui,component" },
-    ],
-    context: { root: testRoot },
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "ui-component" },
+        { flag: "--intent", value: "ui,component" },
+      ],
+      context: { root: testRoot },
+    });
+
+    let threw;
+    try {
+      await search.run({
+        subcommands: [],
+        flags: [{ flag: "--query", value: "nonexistent" }],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateSearchErrorCode.no_matching);
+
+    await testRoot.remove();
   });
 
-  let threw = false;
-  try {
-    await search.run({
+  test.case("should fail with no_query when no query is passed", async assert => {
+    await testRoot.remove();
+    await fs.create(testRoot);
+    await fs.create(mainFolder);
+
+    await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--query", value: "nonexistent" }],
+      flags: [
+        { flag: "--name", value: "ui-component" },
+        { flag: "--intent", value: "ui,component" },
+      ],
       context: { root: testRoot },
     });
-  } catch {
-    threw = true;
-  }
-  assert(threw).equals(true);
 
-  await testRoot.remove();
-});
+    let threw;
+    try {
+      await search.run({
+        subcommands: [],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateSearchErrorCode.no_query);
 
-test.case("search errors without .saved folder", async assert => {
-  await testRoot.remove();
-  await fs.create(testRoot);
+    await testRoot.remove();
+  });
 
-  let threw;
+  test.case("should fail with dry_folder_not_found without .saved folder", async assert => {
+    await testRoot.remove();
+    await fs.create(testRoot);
 
-  try {
-    await search.run({
-      subcommands: [],
-      flags: [{ flag: "--query", value: "component" }],
-      context: { root: testRoot },
-    });
-  } catch (e: unknown) {
-    assert(e instanceof CodeError).true();
-    threw = (e as CodeError).code;
-  }
+    let threw;
 
-  assert(threw).equals(OutputTemplateCreateErrorCode.dry_folder_not_found);
+    try {
+      await search.run({
+        subcommands: [],
+        flags: [{ flag: "--query", value: "component" }],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
 
-  await testRoot.remove();
+    assert(threw).equals(OutputTemplateCreateErrorCode.dry_folder_not_found);
+
+    await testRoot.remove();
+  });
 });

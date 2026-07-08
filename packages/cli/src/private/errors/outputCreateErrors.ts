@@ -1,12 +1,13 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_NAME, capitalize } from "#constants";
+import { CLI_NAME } from "#constants";
+import string from "@rcompat/string";
 
 const t = error.template;
 
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
-export default function createOutputCreateErrors(domain: string) {
+function createOutputCreateErrors(domain: string) {
   return error.coded({
     dry_folder_not_found: () => {
       const errorText =
@@ -16,7 +17,7 @@ export default function createOutputCreateErrors(domain: string) {
     already_exists: (name: string) => {
       const nameText = cli.bg.yellow(" " + name + " ");
       const errorText =
-        `${capitalize(domain)} ${nameText} already exists.`;
+        `${string.upperfirst(domain)} ${nameText} already exists.`;
       return t`${errorBGText}${errorText}`;
     },
     invalid_output_json: () => {
@@ -27,10 +28,26 @@ export default function createOutputCreateErrors(domain: string) {
   });
 }
 
-export type OutputCreateErrorCode = "dry_folder_not_found" | "already_exists" | "invalid_output_json";
+const output_template_create_errors = createOutputCreateErrors("template");
+const output_feature_create_errors = createOutputCreateErrors("feature");
 
-export const OutputCreateErrorCode = {
-  dry_folder_not_found: "dry_folder_not_found",
-  already_exists: "already_exists",
-  invalid_output_json: "invalid_output_json",
-} as const;
+export type OutputTemplateCreateErrorCode =
+  keyof typeof output_template_create_errors;
+
+export type OutputFeatureCreateErrorCode =
+  keyof typeof output_feature_create_errors;
+
+export const OutputTemplateCreateErrorCode = Object.fromEntries(
+  Object.keys(output_template_create_errors).map(k => [k, k]),
+) as { [K in OutputTemplateCreateErrorCode]: K };
+
+export const OutputFeatureCreateErrorCode = Object.fromEntries(
+  Object.keys(output_feature_create_errors).map(k => [k, k]),
+) as { [K in OutputFeatureCreateErrorCode]: K };
+
+const errors = {
+  template: output_template_create_errors,
+  feature: output_feature_create_errors,
+};
+
+export default errors;

@@ -33,13 +33,14 @@
     }
   },
   "dependencies": {
-    "@saved/program": "workspace:^",
     "@rcompat/cli": "^0.25.0",
     "@rcompat/error": "^0.9.0",
     "@rcompat/fs": "^0.35.1",
     "@rcompat/io": "^0.11.0",
     "@rcompat/is": "^0.12.0",
     "@rcompat/runtime": "^0.17.0",
+    "@rcompat/string": "^0.22.0",
+    "@saved/program": "workspace:^",
     "nunjucks": "^3.2.4",
     "pema": "^0.8.2"
   },

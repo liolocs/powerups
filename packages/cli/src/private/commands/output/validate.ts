@@ -3,13 +3,13 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
-import createOutputCreateErrors from "#errors/outputCreateErrors";
-import createOutputValidateErrors from "#errors/outputValidateErrors";
+import output_create_errors from "#errors/outputCreateErrors";
+import output_validate_errors from "#errors/outputValidateErrors";
 import { checkOutput } from "#utils/check-output";
 import {
   MAIN_FOLDER,
   OUTPUT_FOLDER,
-  getDomainFolder,
+  domainFolderMap,
 } from "#constants";
 
 interface ValidationFailure {
@@ -17,9 +17,11 @@ interface ValidationFailure {
   issues: string[];
 }
 
-export default function createValidateCommand(domain: string): Command<readonly never[]> {
-  const createErrors = createOutputCreateErrors(domain);
-  const validateErrors = createOutputValidateErrors(domain);
+export default function createValidateCommand(
+  domain: "template" | "feature",
+): Command<any> {
+  const createErrors = output_create_errors[domain];
+  const validateErrors = output_validate_errors[domain];
 
   return new Command({
     name: "validate",
@@ -43,7 +45,7 @@ export default function createValidateCommand(domain: string): Command<readonly 
       }
 
       const domainFolder = mainFolder.append(
-        `/${OUTPUT_FOLDER}/${getDomainFolder(domain as "template" | "feature")}`,
+        `/${OUTPUT_FOLDER}/${domainFolderMap[domain]}`,
       );
       const hasDomainFolder = await fs.exists(domainFolder);
 

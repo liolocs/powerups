@@ -30,8 +30,8 @@ const doctor = new Command({
   description: `Health check for ${CLI_NAME} templates and features`,
   flags: [],
   subcommands: [],
-  action: async ({ context }) => {
-    const root: FileRef = context?.root ?? await runtime.projectRoot();
+  action: async (props) => {
+    const root: FileRef = props?.context?.root ?? await runtime.projectRoot();
     const issues: DoctorIssue[] = [];
 
     // 1. Git repo state

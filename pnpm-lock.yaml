@@ -34,6 +34,43 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/cli:
+    dependencies:
+      '@rcompat/cli':
+        specifier: ^0.25.0
+        version: 0.25.0
+      '@rcompat/error':
+        specifier: ^0.9.0
+        version: 0.9.0
+      '@rcompat/fs':
+        specifier: ^0.35.1
+        version: 0.35.1
+      '@rcompat/io':
+        specifier: ^0.11.0
+        version: 0.11.0
+      '@rcompat/is':
+        specifier: ^0.12.0
+        version: 0.12.0
+      '@rcompat/runtime':
+        specifier: ^0.17.0
+        version: 0.17.0
+      '@rcompat/string':
+        specifier: ^0.22.0
+        version: 0.22.0
+      '@saved/program':
+        specifier: workspace:^
+        version: link:../program
+      nunjucks:
+        specifier: ^3.2.4
+        version: 3.2.4
+      pema:
+        specifier: ^0.8.2
+        version: 0.8.2
+    devDependencies:
+      '@types/nunjucks':
+        specifier: ^3.2.6
+        version: 3.2.6
+
   packages/program:
     dependencies:
       '@rcompat/array':
@@ -463,6 +500,9 @@ packages:
 
   '@rcompat/runtime@0.17.0':
     resolution: {integrity: sha512-s7riBXY0sh943CF/carRzpEtB5DEjrkbpaEwHOBhAMiOeKkgP+5nFuun1Zwlfyva32I1DP0ssDn0rwR1q7uNqg==}
+
+  '@rcompat/string@0.22.0':
+    resolution: {integrity: sha512-uRociq4Nrl3iTnJj5Kxrs90dYfwyKJ3p+4lJocCcLDKh3HQCAQJmoNxqqGkCC0o9LMcIGBsf3zs5PpP8ceEroQ==}
 
   '@rcompat/symbol@0.2.0':
     resolution: {integrity: sha512-S+tR877M89GqLe7RGCdv+ZrSdhOXovHoohBfrCzsKUEWcrs4Ysh/1mfqYnnhov/7Zti35fbGiQfmyloRm/V/pg==}
@@ -1298,6 +1338,11 @@ snapshots:
       '@rcompat/error': 0.9.0
       '@rcompat/fs': 0.35.1
       '@rcompat/type': 0.18.0
+
+  '@rcompat/string@0.22.0':
+    dependencies:
+      '@rcompat/assert': 0.14.0
+      '@rcompat/is': 0.12.0
 
   '@rcompat/symbol@0.2.0': {}
 

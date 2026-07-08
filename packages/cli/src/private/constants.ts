@@ -15,12 +15,7 @@ export const FEATURE_FOLDER = "feature";
 /** Name of the metrics log file, storing one JSON entry per output run. */
 export const METRICS_FILE = "metrics.jsonl";
 
-/** Maps a domain name to its folder name. */
-export function getDomainFolder(domain: "template" | "feature"): string {
-  return domain === "template" ? TEMPLATE_FOLDER : FEATURE_FOLDER;
-}
-
-/** Capitalize the first letter of a string. */
-export function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
+export const domainFolderMap: Record<"template" | "feature", string> = {
+  template: TEMPLATE_FOLDER,
+  feature: FEATURE_FOLDER,
+};

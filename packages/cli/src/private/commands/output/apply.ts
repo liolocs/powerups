@@ -3,7 +3,7 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
-import createOutputApplyErrors from "#errors/outputApplyErrors";
+import output_apply_errors from "#errors/outputApplyErrors";
 import { instructionsSchema } from "#schemas/instruction";
 import { extractVariables } from "#utils/variables";
 import { resolveOutputPath } from "#utils/output-path";
@@ -13,7 +13,6 @@ import { logRun } from "#utils/metrics";
 import { runTemplate } from "#runners/output/index";
 import {
   applyMultipleModifications,
-  type ModifyErrorSet,
 } from "#utils/modify-engine";
 import {
   verifyGitRepo,
@@ -25,22 +24,15 @@ import {
 import {
   MAIN_FOLDER,
   OUTPUT_FOLDER,
-  getDomainFolder,
+  domainFolderMap,
 } from "#constants";
 
 const EXCLUDE_FLAGS = ["--dry-run", "-d", "--overwrite", "-O", "--help", "-h"];
 
-export default function createApplyCommand(domain: string): Command<readonly never[]> {
-  const errors = createOutputApplyErrors(domain);
-  const modifyErrors: ModifyErrorSet = {
-    modify_target_not_found: (path: string) => errors.modify_target_not_found(path),
-    modify_anchor_not_found: (anchor: string, path: string) =>
-      errors.modify_anchor_not_found(anchor, path),
-    modify_anchor_ambiguous: (anchor: string, path: string) =>
-      errors.modify_anchor_ambiguous(anchor, path),
-    modify_template_invalid_json: (template: string) =>
-      errors.modify_template_invalid_json(template),
-  };
+export default function createApplyCommand(
+  domain: "template" | "feature",
+): Command<any> {
+  const errors = output_apply_errors[domain];
 
   return new Command({
     name: "apply",
@@ -78,7 +70,7 @@ export default function createApplyCommand(domain: string): Command<readonly nev
 
       // 3. Resolve domain folder
       const domainFolder = mainFolder.append(
-        `/${OUTPUT_FOLDER}/${getDomainFolder(domain as "template" | "feature")}`,
+        `/${OUTPUT_FOLDER}/${domainFolderMap[domain]}`,
       );
       const outputFolder = domainFolder.append(`/${name}`);
 
@@ -138,8 +130,11 @@ export default function createApplyCommand(domain: string): Command<readonly nev
               templatePath: task.templatePath,
               variables: task.variables,
             });
+
             totalCharacters += rendered.length;
+
             const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
+
             cli.print(`=== ${resolvedPath} ===`);
             cli.print(rendered);
             cli.print("");
@@ -202,16 +197,16 @@ export default function createApplyCommand(domain: string): Command<readonly nev
             });
             cli.print(`Wrote ${resolvedPath}`);
           } else {
-            // Modify task
-            const applied = await applyMultipleModifications(
-              {
+            const applied = await applyMultipleModifications({
+              task: {
                 templatePath: task.templatePath,
                 outputPath: resolvedPath,
                 variables: task.variables,
               },
-              worktree.root,
-              modifyErrors,
-            );
+              rootDir: worktree.root,
+              errors,
+            });
+
             totalCharacters += applied.content.length;
 
             const targetPath = worktree.root.append(`/${resolvedPath}`);

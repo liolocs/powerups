@@ -1,13 +1,14 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
 import type { FileRef } from "@rcompat/fs";
-import { CLI_NAME, capitalize } from "#constants";
+import { CLI_NAME } from "#constants";
+import string from "@rcompat/string";
 
 const t = error.template;
 
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
-export default function createOutputApplyErrors(domain: string) {
+function createOutputApplyErrors(domain: string) {
   return error.coded({
     dry_folder_not_found: () => {
       const errorText = `Dry folder not found. Run "${CLI_NAME} init" first.`;
@@ -16,13 +17,13 @@ export default function createOutputApplyErrors(domain: string) {
 
     missing_name: () => {
       const errorText =
-        `${capitalize(domain)} name required.\nUsage: ${CLI_NAME} ${domain} apply <name> [variables]`;
+        `${string.upperfirst(domain)} name required.\nUsage: ${CLI_NAME} ${domain} apply <name> [variables]`;
       return t`${errorBGText}${errorText}`;
     },
 
     not_found: (name: string) => {
       const nameText = cli.bg.yellow(" " + name + " ");
-      const errorText = `${capitalize(domain)} ${nameText} not found.`;
+      const errorText = `${string.upperfirst(domain)} ${nameText} not found.`;
       return t`${errorBGText}${errorText}`;
     },
 
@@ -68,7 +69,7 @@ export default function createOutputApplyErrors(domain: string) {
     invalid_composition: (issues: string[]) => {
       const issueList = issues.map(i => `  - ${i}`).join("\n");
       const errorText =
-        `${capitalize(domain)} composition is invalid:\n${issueList}`;
+        `${string.upperfirst(domain)} composition is invalid:\n${issueList}`;
       return t`${errorBGText}${errorText}`;
     },
 
@@ -117,3 +118,27 @@ export default function createOutputApplyErrors(domain: string) {
     },
   });
 }
+
+const output_template_apply_errors = createOutputApplyErrors("template");
+const output_feature_apply_errors = createOutputApplyErrors("feature");
+
+export type OutputTemplateApplyErrorCode =
+  keyof typeof output_template_apply_errors;
+
+export type OutputFeatureApplyErrorCode =
+  keyof typeof output_feature_apply_errors;
+
+export const OutputTemplateApplyErrorCode = Object.fromEntries(
+  Object.keys(output_template_apply_errors).map(k => [k, k]),
+) as { [K in OutputTemplateApplyErrorCode]: K };
+
+export const OutputFeatureApplyErrorCode = Object.fromEntries(
+  Object.keys(output_feature_apply_errors).map(k => [k, k]),
+) as { [K in OutputFeatureApplyErrorCode]: K };
+
+const errors = {
+  template: output_template_apply_errors,
+  feature: output_feature_apply_errors,
+};
+
+export default errors;

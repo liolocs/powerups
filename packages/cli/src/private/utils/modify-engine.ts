@@ -4,6 +4,10 @@ import { runTemplate } from "#runners/output/index";
 import type { FileRef } from "@rcompat/fs";
 import type { VariableResult } from "#utils/variables";
 import fs from "@rcompat/fs";
+import type output_apply_errors from "#errors/outputApplyErrors";
+
+type ErrorSet = typeof output_apply_errors["template"] |
+  typeof output_apply_errors["feature"];
 
 export interface ModifyTask {
   templatePath: FileRef;
@@ -16,13 +20,6 @@ export interface AppliedModification {
   content: string; // modified file content
 }
 
-export interface ModifyErrorSet {
-  modify_target_not_found: (path: string) => Error;
-  modify_anchor_not_found: (anchor: string, path: string) => Error;
-  modify_anchor_ambiguous: (anchor: string, path: string) => Error;
-  modify_template_invalid_json: (template: string) => Error;
-}
-
 /**
  * Parse a modify template file into an array of Modification entries.
  * - .json: parse directly (no variable substitution)
@@ -31,7 +28,7 @@ export interface ModifyErrorSet {
 export async function parseModifyTemplate(
   templatePath: FileRef,
   variables: VariableResult,
-  errors: ModifyErrorSet,
+  errors: ErrorSet,
 ): Promise<Modification[]> {
   const ext = templatePath.extension;
   let json: string;
@@ -65,7 +62,7 @@ export function applySingleModification({
   content: string;
   mod: Modification;
   outputPath: string;
-  errors: ModifyErrorSet;
+    errors: ErrorSet;
 }): string {
   const where = mod.where;
 
@@ -124,10 +121,15 @@ export function applySingleModification({
  * Reads the target file, applies each modification sequentially,
  * returns the modified content.
  */
-export async function applyMultipleModifications(
-  task: ModifyTask,
-  rootDir: FileRef,
-  errors: ModifyErrorSet,
+export async function applyMultipleModifications({
+  task,
+  rootDir,
+  errors,
+}: {
+  task: ModifyTask;
+  rootDir: FileRef;
+  errors: ErrorSet;
+}
 ): Promise<AppliedModification> {
   // Read target file
   const targetPath = rootDir.append(`/${task.outputPath}`);

@@ -1,6 +1,7 @@
 import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
+import error from "@rcompat/error";
 import {
   applySingleModification,
   applyMultipleModifications,
@@ -13,16 +14,18 @@ import { CodeError } from "@rcompat/error";
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 
-const errors: ModifyErrorSet = {
+const t = error.template;
+
+const errors: ModifyErrorSet = error.coded({
   modify_target_not_found: (path: string) =>
-    new CodeError("modify_target_not_found", ["Target file not found: " + path]),
+    t`Target file not found: ${path}`,
   modify_anchor_not_found: (anchor: string, path: string) =>
-    new CodeError("modify_anchor_not_found", [`Anchor "${anchor}" not found in: ${path}`]),
+    t`Anchor "${anchor}" not found in: ${path}`,
   modify_anchor_ambiguous: (anchor: string, path: string) =>
-    new CodeError("modify_anchor_ambiguous", [`Anchor "${anchor}" ambiguous in: ${path}`]),
+    t`Anchor "${anchor}" ambiguous in: ${path}`,
   modify_template_invalid_json: (template: string) =>
-    new CodeError("modify_template_invalid_json", [`Invalid JSON: ${template}`]),
-};
+    t`Invalid JSON: ${template}`,
+});
 
 test.case("applySingleModification with top prepends content", async assert => {
   const result = applySingleModification({ content: "world", mod: { where: "top", content: "hello " }, outputPath: "out.ts", errors });
@@ -198,15 +201,15 @@ test.case("applyMultipleModifications end-to-end with a real file", async assert
   const tmplPath = testRoot.append("/mod.json");
   await tmplPath.write('[{"where":"top","content":"// header\\n"},{"where":{"after":"line1"},"content":"inserted"}]');
 
-  const result = await applyMultipleModifications(
-    {
+  const result = await applyMultipleModifications({
+    task: {
       templatePath: tmplPath,
       outputPath: "target.ts",
       variables: {},
     },
-    testRoot,
+    rootDir: testRoot,
     errors,
-  );
+  });
 
   assert(result.content).equals("// header\nline1inserted\nline2\nline3\n");
   await testRoot.remove();

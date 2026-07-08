@@ -4,12 +4,14 @@ import createCreateCommand from "#commands/output/create";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import captureStdout from "#test-utils/capture-stdout";
-import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
+import { MAIN_FOLDER } from "#constants";
+import output_search_errors, { OutputTemplateSearchErrorCode } from "#errors/outputSearchErrors";
+import { OutputTemplateCreateErrorCode } from "#errors/outputCreateErrors";
+import { CodeError } from "@rcompat/error";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
-const templateFolder = mainFolder.append(`/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`);
 
 const search = createSearchCommand("template");
 const createCmd = createCreateCommand("template");
@@ -135,17 +137,20 @@ test.case("search errors without .saved folder", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
-  let threw = false;
+  let threw;
+
   try {
     await search.run({
       subcommands: [],
       flags: [{ flag: "--query", value: "component" }],
       context: { root: testRoot },
     });
-  } catch {
-    threw = true;
+  } catch (e: unknown) {
+    assert(e instanceof CodeError).true();
+    threw = (e as CodeError).code;
   }
-  assert(threw).equals(true);
+
+  assert(threw).equals(OutputTemplateCreateErrorCode.dry_folder_not_found);
 
   await testRoot.remove();
 });

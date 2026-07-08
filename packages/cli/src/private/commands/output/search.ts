@@ -3,15 +3,15 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
-import createOutputCreateErrors from "#errors/outputCreateErrors";
-import createOutputSearchErrors from "#errors/outputSearchErrors";
+import output_create_errors from "#errors/outputCreateErrors";
+import output_search_errors from "#errors/outputSearchErrors";
 import tokenize from "#commands/output/tokenize";
 import scoreIntent from "#commands/output/score-intent";
 import { instructionsSchema } from "#schemas/instruction";
 import {
   MAIN_FOLDER,
   OUTPUT_FOLDER,
-  getDomainFolder,
+  domainFolderMap,
 } from "#constants";
 
 interface SearchResult {
@@ -20,13 +20,17 @@ interface SearchResult {
   fileCount: number;
 }
 
-export default function createSearchCommand(domain: string): Command<readonly never[]> {
-  const createErrors = createOutputCreateErrors(domain);
-  const searchErrors = createOutputSearchErrors(domain);
+export default function createSearchCommand(
+  domain: "template" | "feature",
+): Command<any> {
+  const createErrors = output_create_errors[domain];
+  const searchErrors = output_search_errors[domain];
 
   return new Command({
     name: "search",
+
     description: `Search ${domain}s by intent`,
+
     flags: [
       {
         name: "query",
@@ -35,21 +39,23 @@ export default function createSearchCommand(domain: string): Command<readonly ne
         description: "Search query (space-separated keywords)",
       },
     ],
+
     subcommands: [],
+
     action: async ({ flags, context }) => {
       const root: FileRef = context?.root ?? await runtime.projectRoot();
       const mainFolder = root.append(`/${MAIN_FOLDER}`);
-      const hasDryFolder = await fs.exists(mainFolder);
 
+      const hasDryFolder = await fs.exists(mainFolder);
       if (!hasDryFolder) {
         throw createErrors.dry_folder_not_found();
       }
 
       const domainFolder = mainFolder.append(
-        `/${OUTPUT_FOLDER}/${getDomainFolder(domain as "template" | "feature")}`,
+        `/${OUTPUT_FOLDER}/${domainFolderMap[domain]}`,
       );
-      const hasDomainFolder = await fs.exists(domainFolder);
 
+      const hasDomainFolder = await fs.exists(domainFolder);
       if (!hasDomainFolder) {
         throw searchErrors.no_matching();
       }
@@ -60,7 +66,7 @@ export default function createSearchCommand(domain: string): Command<readonly ne
       const queryKeywords = tokenize(query);
 
       if (queryKeywords.length === 0) {
-        throw searchErrors.no_matching();
+        throw searchErrors.no_query();
       }
 
       const outputFiles = await domainFolder.files({

@@ -45,7 +45,10 @@ Brainstorm a plan using {{ CLI_NAME }} templates and features.
    - It may take variables (e.g., project name, framework choice)
 
    A task is one-off if:
-   - It's project configuration (tsconfig, path aliases, package.json)
+   - It's project configuration (tsconfig, path aliases)
+   - It only adds npm dependencies (use `packageDependencies` in the
+     feature's `instructions.json` instead — the CLI handles `package.json`
+     updates and install automatically)
    - It's a bridge or adapter specific to this project's setup
    - It's content (locale strings, copy text, data files)
    - It's a one-time wiring or edit

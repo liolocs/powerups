@@ -33,3 +33,7 @@ instead of this one.
      `export default ({ name }: Record<string, string>) => \`# ${name}\`;`.
      Use `.njk` only when a `.ts` template is impractical),
      and run `{{ CLI_NAME }} feature validate -n=<name>`.
+   - If the feature requires npm packages, specify them via the `-p` flag
+     (e.g., `-p='[{"dependencies":["pkg@^1.0.0"]}]'`). Do NOT create a
+     modify entry for `package.json` — the CLI handles dependency
+     installation automatically.

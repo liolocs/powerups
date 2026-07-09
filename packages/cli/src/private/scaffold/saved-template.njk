@@ -33,7 +33,10 @@ If the user is pointing at specific already-done work they want to capture
    - The structure is stable enough that parameterizing it adds value
 
    A pattern is NOT a good candidate if:
-   - It's project configuration (tsconfig, path aliases, package.json)
+   - It's project configuration (tsconfig, path aliases)
+   - It only adds npm dependencies (use `packageDependencies` in
+     `instructions.json` instead — the CLI handles `package.json` updates
+     and install automatically)
    - It's a bridge or adapter specific to this project's setup
    - It's content (locale strings, copy text, data files)
    - It's a one-time wiring or edit

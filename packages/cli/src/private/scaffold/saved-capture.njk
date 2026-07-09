@@ -34,6 +34,13 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
      which are "modify" entries (changes to existing files), and which are
      "delete" entries (files to remove). For each create/modify: the template
      filename and the outputPath. For delete: just the outputPath.
+   - Package dependencies: if the captured work involves adding npm
+     dependencies, record them in the `packageDependencies` field of
+     `instructions.json` — do NOT include `package.json` as a modify entry.
+     Use the `-p` flag on `create` to specify them:
+     `-p='[{"dependencies":["pkg@^1.0.0"]}]'` (or `{"target":"packages/web",...}`
+     for monorepo). The CLI manages `package.json` updates and install
+     automatically.
 
    Present this to the user and get approval before proceeding.
 

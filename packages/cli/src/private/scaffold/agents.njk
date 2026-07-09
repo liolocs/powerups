@@ -81,6 +81,14 @@ export default ({ componentName, theme }: Record<string, string>) =>
   "name": "string",
   "variables": ["string"],
   "intent": ["string"],
+  "packageDependencies": [
+    {
+      "target": "packages/web",
+      "dependencies": ["package@version"],
+      "devDependencies": ["package@version"],
+      "peerDependencies": ["package@version"]
+    }
+  ],
   "output": {
     "create": [
       { "name": "string", "template": "string", "outputPath": "string" }
@@ -111,6 +119,27 @@ The `delete` array is optional — omit it entirely for backward compatibility.
 Delete entries have no `template` field (nothing to render); at apply time
 the file at `outputPath` is removed from the project. If the target file
 doesn't exist, a warning is printed and the entry is skipped (no error).
+
+### Package Dependencies
+
+The `packageDependencies` field is optional — omit it entirely if the template
+or feature doesn't need npm packages. Each entry is a group with an optional
+`target` (a monorepo package path like `"packages/web"`, omitted for the root
+`package.json`) and dependency category arrays. Dependency strings use the
+standard `"package@version"` format, including scoped packages like
+`"@scope/pkg@^1.0.0"`. Multiple groups can target different packages in a
+monorepo.
+
+When a template or feature is applied, the CLI writes the declared dependencies
+to the target `package.json`, detects the package manager from the lock file
+(`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lockb`/`bun.lock`),
+and runs the install command automatically.
+
+**Do NOT create `modify` entries for `package.json`.** Use the
+`packageDependencies` field instead. The CLI manages `package.json` updates and
+install automatically — a modify template for `package.json` will not work
+correctly because the apply flow uses a git worktree and does not stage
+`package.json` changes through the modify engine.
 
 ### Modify templates
 
@@ -198,8 +227,8 @@ full template, verify it works, then extract when repetition emerges.
 | Search features | `{{ CLI_NAME }} feature search -q="..."` |
 | Apply a template | `{{ CLI_NAME }} template apply <name> --<variable>=<value> [-d]` |
 | Apply a feature | `{{ CLI_NAME }} feature apply <name> --<variable>=<value> [-d]` |
-| Create a template | `{{ CLI_NAME }} template create -n=<name> -i="..." -v="..." -o='...'` |
-| Create a feature | `{{ CLI_NAME }} feature create -n=<name> -i="..." -v="..." -o='...'` |
+| Create a template | `{{ CLI_NAME }} template create -n=<name> -i="..." -v="..." -o='...' -p='...'` |
+| Create a feature | `{{ CLI_NAME }} feature create -n=<name> -i="..." -v="..." -o='...' -p='...'` |
 | Validate templates | `{{ CLI_NAME }} template validate [-n=<name>]` |
 | Validate features | `{{ CLI_NAME }} feature validate [-n=<name>]` |
 | Health check all | `{{ CLI_NAME }} doctor` |

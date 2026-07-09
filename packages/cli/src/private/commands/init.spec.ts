@@ -55,6 +55,8 @@ test.case("init --harness=claude scaffolds claude files only", async assert => {
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
   const outputPath = `.claude/skills/${CLI_NAME}-template.md`;
   assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
+  const capturePath = `.claude/skills/${CLI_NAME}-capture.md`;
+  assert(await fs.exists(testRoot.append(`/${capturePath}`))).equals(true);
   // No other harness dirs
   assert(await fs.exists(testRoot.append("/.opencode"))).equals(false);
   assert(await fs.exists(testRoot.append("/.pi"))).equals(false);

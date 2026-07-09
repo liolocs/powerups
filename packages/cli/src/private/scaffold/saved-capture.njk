@@ -38,8 +38,8 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
    Present this to the user and get approval before proceeding.
 
 5. Scaffold the folder structure by running:
-   `{{ CLI_NAME }} template create -n <name> -i "<intent>" -v "<vars>" -o '<files-json>'`
-   (or `{{ CLI_NAME }} feature create -n <name> -i "<intent>" -v "<vars>" -o '<files-json>'`
+   `{{ CLI_NAME }} template create -n=<name> -i="<intent>" -v="<vars>" -o='<files-json>'`
+   (or `{{ CLI_NAME }} feature create -n=<name> -i="<intent>" -v="<vars>" -o='<files-json>'`
    for features). This creates the instructions.json and empty template files.
 
 6. Copy the original files into the template directory, overwriting the
@@ -62,16 +62,16 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
    Prefer .ts templates (the recommended format). Use .njk only when .ts
    is impractical.
 
-8. Run `{{ CLI_NAME }} template validate -n <name>` (or
-   `{{ CLI_NAME }} feature validate -n <name>`) to validate the structure.
+8. Run `{{ CLI_NAME }} template validate -n=<name>` (or
+   `{{ CLI_NAME }} feature validate -n=<name>`) to validate the structure.
 
-9. Run `{{ CLI_NAME }} template apply <name> --var key=value ... -d` (or
-   `{{ CLI_NAME }} feature apply <name> --var key=value ... -d`) to dry-run
+9. Run `{{ CLI_NAME }} template apply <name> --<variable-name>=<value> ... -d` (or
+   `{{ CLI_NAME }} feature apply <name> --<variable-name>=<value> ... -d`) to dry-run
    and verify the captured artifact regenerates faithfully. Compare the
    dry-run output to the original work. If there are discrepancies, fix
    the template and re-verify.
 
 10. Report back to the user: what was captured, where it lives, and how to
     reuse it:
-    `{{ CLI_NAME }} template apply <name> --var key=value ...`
-    (or `{{ CLI_NAME }} feature apply <name> --var key=value ...`).
+    `{{ CLI_NAME }} template apply <name> --<variable-name>=<value> ...`
+    (or `{{ CLI_NAME }} feature apply <name> --<variable-name>=<value> ...`).

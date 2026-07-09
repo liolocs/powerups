@@ -18,7 +18,7 @@ If the user is pointing at specific already-done work they want to capture
 
 1. Survey the codebase to understand its structure:
    - Check the project's file tree, key directories, and recent commits.
-   - Run `{{ CLI_NAME }} template search -q "..."` for the main domains you
+   - Run `{{ CLI_NAME }} template search -q="..."` for the main domains you
      find to see if templates already exist for them.
 
 2. Ask the user which area of the codebase they want to focus on:
@@ -48,10 +48,10 @@ If the user is pointing at specific already-done work they want to capture
    Get user approval on which candidates to capture before proceeding.
 
 5. For each approved candidate, capture it:
-   - Run `{{ CLI_NAME }} template create -n <short-name> \
-       -i "<intent keywords>" \
-       -v "var1,var2" \
-       -o '{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'`
+   - Run `{{ CLI_NAME }} template create -n=<short-name> \
+       -i="<intent keywords>" \
+       -v="var1,var2" \
+       -o='{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'`
    - Fill in the template at
      `{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/<name>/<template>`.
      Prefer a `.ts` file with a default-export function
@@ -65,8 +65,8 @@ If the user is pointing at specific already-done work they want to capture
      `.njk`/`.ts` for variable-driven mods) that describes the changes to
      apply to the target file. See the main instruction file for the modify
      template format.
-   - Run `{{ CLI_NAME }} template validate -n <name>` to validate.
-   - Run `{{ CLI_NAME }} template apply <name> --var key=value ... -d` to preview
+   - Run `{{ CLI_NAME }} template validate -n=<name>` to validate.
+   - Run `{{ CLI_NAME }} template apply <name> --<variable-name>=<value> ... -d` to preview
      and confirm the template regenerates the original code faithfully.
 
 6. After all approved candidates are captured, summarize what was created:

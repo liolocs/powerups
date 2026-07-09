@@ -13,15 +13,15 @@ Always prefer templates and features over one-off generation.
   consistent across repeated additions.
 - **Features** are one-time additions to a project (e.g., add tailwind + shadcn,
   set up auth). You apply them once. They can take variables (e.g., a project
-  name or framework choice), though many features have none.
+  name or framework choice).
 
 ### Before writing any new feature or file
 
-1. Run `{{ CLI_NAME }} template search -q "<what you're about to do>"` and
-   `{{ CLI_NAME }} feature search -q "<what you're about to do>"`.
+1. Run `{{ CLI_NAME }} template search -q="<what you're about to do>"` and
+   `{{ CLI_NAME }} feature search -q="<what you're about to do>"`.
    If a template or feature matches (score > 0), apply it instead:
-   `{{ CLI_NAME }} template apply <name> --var key=value ...`
-   or `{{ CLI_NAME }} feature apply <name> --var key=value ...`
+   `{{ CLI_NAME }} template apply <name> --<variable-name>=<value> ...`
+   or `{{ CLI_NAME }} feature apply <name> --<variable-name>=<value> ...`
    Preview first with `--dry-run` / `-d`, then apply for real.
 2. Only write fresh content if no template or feature matches.
 
@@ -34,10 +34,10 @@ one-off edits.
 
 If the user confirms, capture it:
 ```
-{{ CLI_NAME }} template create -n <short-name> \
-  -i "<intent keywords>" \
-  -v "var1,var2" \
-  -o '{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'
+{{ CLI_NAME }} template create -n=<short-name> \
+  -i="<intent keywords>" \
+  -v="var1,var2" \
+  -o='{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'
 ```
 Then fill in the template at
 `{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/<name>/<template>`.
@@ -45,7 +45,7 @@ Prefer a `.ts` file with a default-export function `(vars) => string` — this i
 the recommended format for new templates. Nunjucks `.njk` templates
 (`{{ '{{var}}' }}` syntax) are supported but should only be used when a `.ts`
 template is impractical. Validate before considering it done:
-`{{ CLI_NAME }} template validate -n <name>`
+`{{ CLI_NAME }} template validate -n=<name>`
 
 ### `.ts` template format (recommended)
 
@@ -158,7 +158,7 @@ by multiple parents.
 types file, and a test. Later you build a `graphql-resolver` template that also
 needs a types file with the same structure.
 - *Extraction:* Create a standalone `types` template
-  (`{{ CLI_NAME }} template create -n types ...`). Add it to both parents'
+  (`{{ CLI_NAME }} template create -n=types ...`). Add it to both parents'
   `instructions.json`:
 
 ```json
@@ -174,7 +174,7 @@ needs a types file with the same structure.
 - The `variables` map says: "pass the parent's `modelName` as the subtemplate's
   `entityName`." The `outputPathOverride` map says: "write the subtemplate's
   `types` file to this path instead of its default."
-- Validate: `{{ CLI_NAME }} template validate -n api-route`
+- Validate: `{{ CLI_NAME }} template validate -n=api-route`
 
 #### When to extract subtemplates
 
@@ -194,14 +194,14 @@ full template, verify it works, then extract when repetition emerges.
 
 | Action | Command |
 |--------|---------|
-| Search templates | `{{ CLI_NAME }} template search -q "..."` |
-| Search features | `{{ CLI_NAME }} feature search -q "..."` |
-| Apply a template | `{{ CLI_NAME }} template apply <name> --var k=v [-d]` |
-| Apply a feature | `{{ CLI_NAME }} feature apply <name> --var k=v [-d]` |
-| Create a template | `{{ CLI_NAME }} template create -n <name> -i "..." -v "..." -o '...'` |
-| Create a feature | `{{ CLI_NAME }} feature create -n <name> -i "..." -v "..." -o '...'` |
-| Validate templates | `{{ CLI_NAME }} template validate [-n <name>]` |
-| Validate features | `{{ CLI_NAME }} feature validate [-n <name>]` |
+| Search templates | `{{ CLI_NAME }} template search -q="..."` |
+| Search features | `{{ CLI_NAME }} feature search -q="..."` |
+| Apply a template | `{{ CLI_NAME }} template apply <name> --<variable>=<value> [-d]` |
+| Apply a feature | `{{ CLI_NAME }} feature apply <name> --<variable>=<value> [-d]` |
+| Create a template | `{{ CLI_NAME }} template create -n=<name> -i="..." -v="..." -o='...'` |
+| Create a feature | `{{ CLI_NAME }} feature create -n=<name> -i="..." -v="..." -o='...'` |
+| Validate templates | `{{ CLI_NAME }} template validate [-n=<name>]` |
+| Validate features | `{{ CLI_NAME }} feature validate [-n=<name>]` |
 | Health check all | `{{ CLI_NAME }} doctor` |
 | Usage metrics | `{{ CLI_NAME }} metrics summary` |
 <!-- END {{ CLI_NAME }} -->

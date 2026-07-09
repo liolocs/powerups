@@ -21,6 +21,7 @@ import {
   copyChangedFiles,
   type ChangedFile,
 } from "#utils/worktree";
+import { applyDependencies, collectDependencies } from "#utils/dependencies";
 import {
   MAIN_FOLDER,
   OUTPUT_FOLDER,
@@ -165,6 +166,18 @@ export default function createApplyCommand(
             cli.print("\n");
           }
         }
+        // Process packageDependencies in dry-run mode
+        if (instructions.packageDependencies || instructions.includes) {
+          const collectedDeps = await collectDependencies(name, domainFolder);
+          if (collectedDeps.length > 0) {
+            await applyDependencies({
+              projectRoot: root,
+              packageDependencies: collectedDeps,
+              isDryRun: true,
+            });
+          }
+        }
+
         return;
       }
 
@@ -262,6 +275,23 @@ export default function createApplyCommand(
       // 11. Copy changed files back and clean up
       await copyChangedFiles(root, changedFiles);
       await removeWorktree(root, worktree.path);
+
+      // 11.5 Process packageDependencies
+      if (instructions.packageDependencies || instructions.includes) {
+        try {
+          const collectedDeps = await collectDependencies(name, domainFolder);
+          if (collectedDeps.length > 0) {
+            await applyDependencies({
+              projectRoot: root,
+              packageDependencies: collectedDeps,
+              isDryRun: false,
+            });
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          cli.print(`Warning: dependency installation failed — ${message}\n`);
+        }
+      }
 
       // 12. Log metrics (best-effort)
       try {

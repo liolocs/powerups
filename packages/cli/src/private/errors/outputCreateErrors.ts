@@ -25,6 +25,11 @@ function createOutputCreateErrors(domain: string) {
         "Invalid JSON for --output flag.";
       return t`${errorBGText}${errorText}`;
     },
+    invalid_package_deps_json: () => {
+      const errorText =
+        "Invalid JSON for --package-deps flag.";
+      return t`${errorBGText}${errorText}`;
+    },
   });
 }
 

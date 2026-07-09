@@ -130,6 +130,80 @@ test.case("should parse output without delete (backward compat)", async assert =
   assert(result.output.delete).undefined();
 });
 
+test.case("should parse packageDependencies with target (monorepo)", async assert => {
+  const result = instructionsSchema.parse({
+    name: "add-tailwind",
+    variables: [],
+    intent: ["tailwind"],
+    packageDependencies: [
+      {
+        target: "packages/web",
+        dependencies: ["tailwindcss@^4.0.0"],
+        devDependencies: ["@types/tailwindcss@^3.0.0"],
+      },
+    ],
+    output: { create: [], modify: [] },
+  });
+
+  assert(result.packageDependencies).defined();
+  assert(result.packageDependencies!.length).equals(1);
+  assert(result.packageDependencies![0].target).equals("packages/web");
+  assert(result.packageDependencies![0].dependencies!.length).equals(1);
+  assert(result.packageDependencies![0].dependencies![0]).equals("tailwindcss@^4.0.0");
+  assert(result.packageDependencies![0].devDependencies!.length).equals(1);
+  assert(result.packageDependencies![0].devDependencies![0]).equals("@types/tailwindcss@^3.0.0");
+  assert(result.packageDependencies![0].peerDependencies).undefined();
+});
+
+test.case("should parse packageDependencies without target (normal repo)", async assert => {
+  const result = instructionsSchema.parse({
+    name: "add-dep",
+    variables: [],
+    intent: [],
+    packageDependencies: [
+      {
+        dependencies: ["some-pkg@^1.0.0"],
+      },
+    ],
+    output: { create: [], modify: [] },
+  });
+
+  assert(result.packageDependencies).defined();
+  assert(result.packageDependencies!.length).equals(1);
+  assert(result.packageDependencies![0].target).undefined();
+  assert(result.packageDependencies![0].dependencies![0]).equals("some-pkg@^1.0.0");
+});
+
+test.case("should parse multiple packageDependencies groups", async assert => {
+  const result = instructionsSchema.parse({
+    name: "multi-dep",
+    variables: [],
+    intent: [],
+    packageDependencies: [
+      { target: "packages/web", dependencies: ["react@^18.0.0"] },
+      { target: "packages/api", dependencies: ["express@^4.0.0"] },
+      { dependencies: ["shared-dep@^1.0.0"] },
+    ],
+    output: { create: [], modify: [] },
+  });
+
+  assert(result.packageDependencies!.length).equals(3);
+  assert(result.packageDependencies![0].target).equals("packages/web");
+  assert(result.packageDependencies![1].target).equals("packages/api");
+  assert(result.packageDependencies![2].target).undefined();
+});
+
+test.case("should parse instructions without packageDependencies (backward compat)", async assert => {
+  const result = instructionsSchema.parse({
+    name: "no-deps",
+    variables: [],
+    intent: [],
+    output: { create: [], modify: [] },
+  });
+
+  assert(result.packageDependencies).undefined();
+});
+
 test.case("should parse includes with outputPathOverride.delete", async assert => {
   const result = instructionsSchema.parse({
     name: "parent",
@@ -260,4 +334,22 @@ test.group("instruction schema rejections", () => {
     }
     assert(threw).true();
   });
+
+  test.case("should reject packageDependencies with non-string dependency", async assert => {
+  let threw = false;
+  try {
+    instructionsSchema.parse({
+      name: "bad",
+      variables: [],
+      intent: [],
+      packageDependencies: [
+        { dependencies: [123] },
+      ],
+      output: { create: [], modify: [] },
+    });
+  } catch {
+    threw = true;
+  }
+  assert(threw).true();
+});
 });

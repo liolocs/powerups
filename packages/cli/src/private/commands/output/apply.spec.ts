@@ -1098,6 +1098,149 @@ test.group("apply metrics", () => {
     });
 });
 
+test.group("apply packageDependencies", () => {
+  test.case("dry-run should print deps without installing", async assert => {
+    await reset();
+    await testRoot.append("/package.json").write(JSON.stringify({
+      name: "test-project",
+      version: "1.0.0",
+    }));
+    await testRoot.append("/pnpm-lock.yaml").write("");
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "dep-feature" },
+        { flag: "--variables", value: "" },
+        { flag: "--output", value: JSON.stringify({
+          create: [],
+          modify: [],
+        }) },
+        { flag: "--package-deps", value: JSON.stringify([
+          { dependencies: ["fake-pkg@^1.0.0"] },
+        ]) },
+      ],
+      context: { root: testRoot },
+    });
+
+    const output = await captureStdout(async () => {
+      await apply.run({
+        subcommands: ["dep-feature"],
+        flags: [{ flag: "--dry-run", value: "true" }],
+        context: { root: testRoot },
+      });
+    });
+
+    assert(output.includes("fake-pkg@^1.0.0")).true();
+    assert(output.includes("Would run")).true();
+
+    await testRoot.remove();
+  });
+
+  test.case("dry-run should print nothing when no packageDependencies", async assert => {
+    await reset();
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "no-dep-feature" },
+        { flag: "--variables", value: "" },
+        { flag: "--output", value: JSON.stringify({
+          create: [],
+          modify: [],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+
+    const output = await captureStdout(async () => {
+      await apply.run({
+        subcommands: ["no-dep-feature"],
+        flags: [{ flag: "--dry-run", value: "true" }],
+        context: { root: testRoot },
+      });
+    });
+
+    assert(output.includes("Would run")).false();
+    assert(output.includes("Dependencies")).false();
+
+    await testRoot.remove();
+  });
+
+  test.case("real run should write deps to package.json", async assert => {
+    await reset();
+    await testRoot.append("/package.json").write(JSON.stringify({
+      name: "test-project",
+      version: "1.0.0",
+    }));
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "real-dep" },
+        { flag: "--variables", value: "" },
+        { flag: "--output", value: JSON.stringify({
+          create: [],
+          modify: [],
+        }) },
+        { flag: "--package-deps", value: JSON.stringify([
+          { dependencies: ["fake-pkg@^1.0.0"] },
+        ]) },
+      ],
+      context: { root: testRoot },
+    });
+
+    await apply.run({
+      subcommands: ["real-dep"],
+      flags: [],
+      context: { root: testRoot },
+    });
+
+    const pkg = JSON.parse(await testRoot.append("/package.json").text());
+    assert(pkg.dependencies["fake-pkg"]).equals("^1.0.0");
+
+    await testRoot.remove();
+  });
+
+  test.case("real run should not abort when install fails (no lock file)", async assert => {
+    await reset();
+    await testRoot.append("/package.json").write(JSON.stringify({
+      name: "test-project",
+      version: "1.0.0",
+    }));
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "no-lock-dep" },
+        { flag: "--variables", value: "" },
+        { flag: "--output", value: JSON.stringify({
+          create: [],
+          modify: [],
+        }) },
+        { flag: "--package-deps", value: JSON.stringify([
+          { dependencies: ["fake-pkg@^1.0.0"] },
+        ]) },
+      ],
+      context: { root: testRoot },
+    });
+
+    const output = await captureStdout(async () => {
+      await apply.run({
+        subcommands: ["no-lock-dep"],
+        flags: [],
+        context: { root: testRoot },
+      });
+    });
+
+    assert(output.includes("No lock file detected")).true();
+    const pkg = JSON.parse(await testRoot.append("/package.json").text());
+    assert(pkg.dependencies["fake-pkg"]).equals("^1.0.0");
+
+    await testRoot.remove();
+  });
+});
+
 test.group("apply rollback", () => {
   test.case("should roll back on error with no files changed in project", async assert => {
     await reset();

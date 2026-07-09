@@ -4,7 +4,7 @@ import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
 import output_create_errors from "#errors/outputCreateErrors";
-import { outputSchema, type Instructions } from "#schemas/instruction";
+import { outputSchema, packageDependencyGroupArraySchema, type Instructions } from "#schemas/instruction";
 import {
   MAIN_FOLDER,
   OUTPUT_FOLDER,
@@ -44,6 +44,12 @@ export default function createCreateCommand(
         long: "output",
         short: "o",
         description: "JSON output specification",
+      },
+      {
+        name: "packageDeps",
+        long: "package-deps",
+        short: "p",
+        description: "JSON package dependencies specification",
       },
     ],
 
@@ -95,7 +101,19 @@ export default function createCreateCommand(
         }
       }
 
-      const instructions = { name, variables, intent, output };
+      let packageDependencies: Instructions["packageDependencies"] = undefined;
+
+      if (is.defined(flags.packageDeps) === true) {
+        try {
+          packageDependencies = packageDependencyGroupArraySchema.parse(
+            JSON.parse(flags.packageDeps),
+          ) as Instructions["packageDependencies"];
+        } catch {
+          throw errors.invalid_package_deps_json();
+        }
+      }
+
+      const instructions = { name, variables, intent, packageDependencies, output };
 
       await outputPath.writeJSON(instructions as never);
 

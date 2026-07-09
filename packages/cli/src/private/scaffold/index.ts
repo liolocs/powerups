@@ -62,6 +62,10 @@ const SKILLS_TO_SCAFFOLD = [
     template: "saved-template.njk",
     name: `${CLI_NAME}-template`,
   },
+  {
+    template: "saved-capture.njk",
+    name: `${CLI_NAME}-capture`,
+  },
 ];
 
 export async function scaffold(

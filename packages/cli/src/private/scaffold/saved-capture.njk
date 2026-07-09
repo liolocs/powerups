@@ -1,0 +1,75 @@
+---
+name: {{ CLI_NAME }}-capture
+description: "Capture already-done work as a {{ CLI_NAME }} feature or template"
+---
+Capture work the user has already done — files they wrote or changes they made
+outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
+
+1. Ask the user to point at the work they want to capture — specific files or
+   a directory. Do not auto-detect via git diff or other heuristics; always
+   get explicit guidance from the user about what to capture.
+
+2. Read the files the user points at. Understand what was created or modified
+   and what the work does.
+
+3. Assess whether this is a feature or a template:
+   - A feature is a one-time addition to the project (e.g., add a dependency,
+     set up auth). It may have no variables, or fixed values.
+   - A template is a recurring pattern that will be repeated with different
+     variable values (e.g., new API route, new view component).
+
+   Present your assessment to the user and get confirmation on the domain
+   (feature or template) before proceeding. If the user later needs to
+   switch domains, the folder can simply be moved between
+   {{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/ and
+   {{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ FEATURE_FOLDER }}/.
+
+4. Identify the capture structure:
+   - Name (short, kebab-case)
+   - Intent keywords (comma-separated)
+   - Variables — the parts that change between uses (for templates). For
+     features, variables may be empty.
+   - File mapping: which files are "create" entries (new files generated)
+     and which are "modify" entries (changes to existing files). For each:
+     the template filename and the outputPath.
+
+   Present this to the user and get approval before proceeding.
+
+5. Scaffold the folder structure by running:
+   `{{ CLI_NAME }} template create -n <name> -i "<intent>" -v "<vars>" -o '<files-json>'`
+   (or `{{ CLI_NAME }} feature create -n <name> -i "<intent>" -v "<vars>" -o '<files-json>'`
+   for features). This creates the instructions.json and empty template files.
+
+6. Copy the original files into the template directory, overwriting the
+   empty stubs. Use `cp` for each file — this brings the full content onto
+   disk without writing it as agent output. Do NOT write file contents from
+   scratch — always copy first.
+
+7. Edit the copied files in place to parameterize them:
+   - For .ts templates: wrap the content in a default-export function and
+     replace concrete values with `${var}`. Keep it a pure function of
+     `vars` — no imports, no filesystem access. Example:
+     `export default ({ name }: Record<string, string>) => \`# ${name}\`;`.
+   - For .njk templates: replace concrete values with `{{ '{{var}}' }}` syntax.
+     Simpler when the original file needs significant transformation to become
+     a .ts function.
+   - For modify entries: author the modify template (.json for static,
+     .njk/.ts for variable-driven). See the main instruction file for the
+     modify template format.
+
+   Prefer .ts templates (the recommended format). Use .njk only when .ts
+   is impractical.
+
+8. Run `{{ CLI_NAME }} template validate -n <name>` (or
+   `{{ CLI_NAME }} feature validate -n <name>`) to validate the structure.
+
+9. Run `{{ CLI_NAME }} template apply <name> --var key=value ... -d` (or
+   `{{ CLI_NAME }} feature apply <name> --var key=value ... -d`) to dry-run
+   and verify the captured artifact regenerates faithfully. Compare the
+   dry-run output to the original work. If there are discrepancies, fix
+   the template and re-verify.
+
+10. Report back to the user: what was captured, where it lives, and how to
+    reuse it:
+    `{{ CLI_NAME }} template apply <name> --var key=value ...`
+    (or `{{ CLI_NAME }} feature apply <name> --var key=value ...`).

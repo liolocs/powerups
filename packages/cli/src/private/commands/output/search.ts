@@ -51,15 +51,6 @@ export default function createSearchCommand(
         throw createErrors.dry_folder_not_found();
       }
 
-      const domainFolder = mainFolder.append(
-        `/${OUTPUT_FOLDER}/${domainFolderMap[domain]}`,
-      );
-
-      const hasDomainFolder = await fs.exists(domainFolder);
-      if (!hasDomainFolder) {
-        throw searchErrors.no_matching();
-      }
-
       const query = is.defined(flags.query) && flags.query.length > 0
         ? flags.query
         : "";
@@ -67,6 +58,15 @@ export default function createSearchCommand(
 
       if (queryKeywords.length === 0) {
         throw searchErrors.no_query();
+      }
+
+      const domainFolder = mainFolder.append(
+        `/${OUTPUT_FOLDER}/${domainFolderMap[domain]}`,
+      );
+
+      const hasDomainFolder = await fs.exists(domainFolder);
+      if (!hasDomainFolder) {
+        throw searchErrors.no_matching();
       }
 
       const outputFiles = await domainFolder.files({

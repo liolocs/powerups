@@ -14,7 +14,8 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
 
 3. Assess whether this is a feature or a template:
    - A feature is a one-time addition to the project (e.g., add a dependency,
-     set up auth). It may have no variables, or fixed values.
+     set up auth). It can have variables (e.g., a project name, framework
+     choice) or none at all.
    - A template is a recurring pattern that will be repeated with different
      variable values (e.g., new API route, new view component).
 
@@ -27,8 +28,8 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
 4. Identify the capture structure:
    - Name (short, kebab-case)
    - Intent keywords (comma-separated)
-   - Variables — the parts that change between uses (for templates). For
-     features, variables may be empty.
+   - Variables — the parts that change between uses. Both templates and
+     features can have variables; for some features, variables may be empty.
    - File mapping: which files are "create" entries (new files generated),
      which are "modify" entries (changes to existing files), and which are
      "delete" entries (files to remove). For each create/modify: the template

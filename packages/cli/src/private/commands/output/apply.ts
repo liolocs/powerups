@@ -121,13 +121,21 @@ export default function createApplyCommand(
       if (isDryRun) {
         let totalCharacters = 0;
         for (const task of tasks) {
-          if (!(await fs.exists(task.templatePath))) {
-            throw errors.template_not_found(task.templatePath.name);
+          if (task.kind === "delete") {
+            const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
+            cli.print(`=== ${resolvedPath} (delete) ===`);
+            cli.print("Would delete");
+            cli.print("");
+            continue;
+          }
+
+          if (!(await fs.exists(task.templatePath!))) {
+            throw errors.template_not_found(task.templatePath!.name);
           }
 
           if (task.kind === "create") {
             const rendered = await runTemplate({
-              templatePath: task.templatePath,
+              templatePath: task.templatePath!,
               variables: task.variables,
             });
 
@@ -143,13 +151,13 @@ export default function createApplyCommand(
             const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
             cli.print(`=== ${resolvedPath} (modify) ===`);
             // Render the modify template to preview modifications
-            const ext = task.templatePath.extension;
+            const ext = task.templatePath!.extension;
             let modContent: string;
             if (ext === ".json") {
-              modContent = await task.templatePath.text();
+              modContent = await task.templatePath!.text();
             } else {
               modContent = await runTemplate({
-                templatePath: task.templatePath,
+                templatePath: task.templatePath!,
                 variables: task.variables,
               });
             }
@@ -173,15 +181,32 @@ export default function createApplyCommand(
 
       try {
         for (const task of tasks) {
-          if (!(await fs.exists(task.templatePath))) {
-            throw errors.template_not_found(task.templatePath.name);
+          const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
+
+          if (task.kind === "delete") {
+            const targetPath = worktree.root.append(`/${resolvedPath}`);
+            const exists = await fs.exists(targetPath);
+            if (!exists) {
+              cli.print(`Warning: file not found, skipping: ${resolvedPath}`);
+              continue;
+            }
+            await targetPath.remove();
+            changedFiles.push({
+              worktreePath: targetPath.path,
+              projectPath: resolvedPath,
+              deleted: true,
+            });
+            cli.print(`Deleted ${resolvedPath}`);
+            continue;
           }
 
-          const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
+          if (!(await fs.exists(task.templatePath!))) {
+            throw errors.template_not_found(task.templatePath!.name);
+          }
 
           if (task.kind === "create") {
             const rendered = await runTemplate({
-              templatePath: task.templatePath,
+              templatePath: task.templatePath!,
               variables: task.variables,
             });
             totalCharacters += rendered.length;
@@ -203,7 +228,7 @@ export default function createApplyCommand(
           } else {
             const applied = await applyMultipleModifications({
               task: {
-                templatePath: task.templatePath,
+                templatePath: task.templatePath!,
                 outputPath: resolvedPath,
                 variables: task.variables,
               },

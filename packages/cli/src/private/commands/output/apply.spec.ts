@@ -1156,3 +1156,280 @@ test.group("apply rollback", () => {
     await testRoot.remove();
   });
 });
+
+test.group("apply delete", () => {
+  test.case("should delete a file from the project root", async assert => {
+    await reset();
+
+    // Create the target file and commit to git so it appears in worktree
+    await fs.create(testRoot.append("/.test-output"));
+    await testRoot.append("/.test-output/legacy.ts").write("export const legacy = true;");
+    await gitCommit(testRoot, "add legacy file");
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "delete-test" },
+        { flag: "--output", value: JSON.stringify({
+          create: [],
+          modify: [],
+          delete: [{ name: "legacy", outputPath: ".test-output/legacy.ts" }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+
+    await apply.run({
+      subcommands: ["delete-test"],
+      flags: [],
+      context: { root: testRoot },
+    });
+
+    const legacyPath = testRoot.append("/.test-output/legacy.ts");
+    assert(await fs.exists(legacyPath)).false();
+
+    await testRoot.remove();
+  });
+
+  test.case("should delete alongside create and modify in one run", async assert => {
+    await reset();
+
+    // Create files to modify and delete, then commit
+    await fs.create(testRoot.append("/.test-output"));
+    await testRoot.append("/.test-output/index.ts").write("export const x = 1;\n");
+    await testRoot.append("/.test-output/old.ts").write("old content");
+    await gitCommit(testRoot, "add target files");
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "mixed-ops" },
+        { flag: "--variables", value: "ComponentName" },
+        { flag: "--output", value: JSON.stringify({
+          create: [{
+            name: "new-file",
+            template: "new.njk",
+            outputPath: ".test-output/{{ComponentName}}.ts",
+          }],
+          modify: [{
+            name: "wire",
+            template: "wire.json",
+            outputPath: ".test-output/index.ts",
+          }],
+          delete: [{ name: "old", outputPath: ".test-output/old.ts" }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+
+    await templateFolder.append("/mixed-ops/new.njk").write("export const {{componentName}} = 1;");
+    await templateFolder.append("/mixed-ops/wire.json")
+      .write('[{"where":"top","content":"// header\\n"}]');
+    await gitCommit(testRoot, "add templates");
+
+    await apply.run({
+      subcommands: ["mixed-ops"],
+      flags: [{ flag: "--component-name", value: "Widget" }],
+      context: { root: testRoot },
+    });
+
+    // Create happened
+    assert(await fs.exists(testRoot.append("/.test-output/Widget.ts"))).true();
+    // Modify happened
+    const indexContent = await testRoot.append("/.test-output/index.ts").text();
+    assert(indexContent.includes("// header")).true();
+    // Delete happened
+    assert(await fs.exists(testRoot.append("/.test-output/old.ts"))).false();
+
+    await testRoot.remove();
+  });
+
+  test.case("should print a warning and skip when delete target does not exist", async assert => {
+    await reset();
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "delete-missing" },
+        { flag: "--output", value: JSON.stringify({
+          create: [],
+          modify: [],
+          delete: [{ name: "nonexistent", outputPath: ".test-output/never-existed.ts" }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+
+    const output = await captureStdout(() => apply.run({
+      subcommands: ["delete-missing"],
+      flags: [],
+      context: { root: testRoot },
+    }));
+
+    assert(output).includes("Warning: file not found, skipping: .test-output/never-existed.ts");
+    // No error thrown, no file created
+    assert(await fs.exists(testRoot.append("/.test-output/never-existed.ts"))).false();
+
+    await testRoot.remove();
+  });
+
+  test.case("should roll back on error after a delete (atomicity)", async assert => {
+    await reset();
+
+    // Create a file to delete and a target file for the failing suboutput modify
+    await fs.create(testRoot.append("/.test-output"));
+    await testRoot.append("/.test-output/to-delete.ts").write("delete me");
+    await testRoot.append("/.test-output/target.ts").write("export const x = 1;");
+    await gitCommit(testRoot, "add target files");
+
+    // Create child with a modify that will fail at apply time (bad anchor)
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "failing-child" },
+        { flag: "--output", value: JSON.stringify({
+          create: [],
+          modify: [{
+            name: "wire",
+            template: "wire.json",
+            outputPath: ".test-output/target.ts",
+          }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+    await templateFolder.append("/failing-child/wire.json")
+      .write('[{"where":"NONEXISTENT_ANCHOR","content":"hello"}]');
+
+    // Create parent with a delete entry and the failing suboutput.
+    // The delete runs before the suboutput tasks, so the delete succeeds
+    // in the worktree, then the suboutput modify fails, triggering rollback.
+    await createCmd.run({
+      subcommands: [],
+      flags: [{ flag: "--name", value: "atomic-delete-parent" }],
+      context: { root: testRoot },
+    });
+    await templateFolder.append("/atomic-delete-parent/instructions.json").writeJSON({
+      name: "atomic-delete-parent",
+      variables: [],
+      intent: [],
+      output: {
+        create: [],
+        modify: [],
+        delete: [{ name: "del", outputPath: ".test-output/to-delete.ts" }],
+      },
+      includes: [{ name: "failing-child", variables: {} }],
+    });
+
+    let threw;
+    try {
+      await apply.run({
+        subcommands: ["atomic-delete-parent"],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateApplyErrorCode.modify_anchor_not_found);
+
+    // The file should STILL exist in the project (worktree was discarded — delete was in worktree only)
+    assert(await fs.exists(testRoot.append("/.test-output/to-delete.ts"))).true();
+
+    await testRoot.remove();
+  });
+});
+
+test.group("apply delete dry-run", () => {
+  test.case("should print 'Would delete' without deleting the file", async assert => {
+    await reset();
+
+    // Create the target file and commit to git
+    await fs.create(testRoot.append("/.test-output"));
+    await testRoot.append("/.test-output/legacy.ts").write("export const legacy = true;");
+    await gitCommit(testRoot, "add legacy file");
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "dry-delete" },
+        { flag: "--output", value: JSON.stringify({
+          create: [],
+          modify: [],
+          delete: [{ name: "legacy", outputPath: ".test-output/legacy.ts" }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+
+    const output = await captureStdout(() => apply.run({
+      subcommands: ["dry-delete"],
+      flags: [{ flag: "--dry-run", value: "true" }],
+      context: { root: testRoot },
+    }));
+
+    assert(output).includes("=== .test-output/legacy.ts (delete) ===");
+    assert(output).includes("Would delete");
+
+    // File should NOT be deleted
+    assert(await fs.exists(testRoot.append("/.test-output/legacy.ts"))).true();
+
+    await testRoot.remove();
+  });
+
+  test.case("should print create, modify, and delete in dry-run", async assert => {
+    await reset();
+
+    await fs.create(testRoot.append("/.test-output"));
+    await testRoot.append("/.test-output/index.ts").write("line1\n");
+    await testRoot.append("/.test-output/old.ts").write("old");
+    await gitCommit(testRoot, "add target files");
+
+    await createCmd.run({
+      subcommands: [],
+      flags: [
+        { flag: "--name", value: "dry-mixed" },
+        { flag: "--variables", value: "ComponentName" },
+        { flag: "--output", value: JSON.stringify({
+          create: [{
+            name: "new",
+            template: "new.njk",
+            outputPath: ".test-output/{{ComponentName}}.ts",
+          }],
+          modify: [{
+            name: "wire",
+            template: "wire.json",
+            outputPath: ".test-output/index.ts",
+          }],
+          delete: [{ name: "old", outputPath: ".test-output/old.ts" }],
+        }) },
+      ],
+      context: { root: testRoot },
+    });
+
+    await templateFolder.append("/dry-mixed/new.njk").write("const {{componentName}} = 1;");
+    await templateFolder.append("/dry-mixed/wire.json")
+      .write('[{"where":"top","content":"// header\\n"}]');
+
+    const output = await captureStdout(() => apply.run({
+      subcommands: ["dry-mixed"],
+      flags: [
+        { flag: "--dry-run", value: "true" },
+        { flag: "--component-name", value: "Widget" },
+      ],
+      context: { root: testRoot },
+    }));
+
+    assert(output).includes("=== .test-output/Widget.ts ===");
+    assert(output).includes("=== .test-output/index.ts (modify) ===");
+    assert(output).includes("=== .test-output/old.ts (delete) ===");
+    assert(output).includes("Would delete");
+
+    // No files changed
+    assert(await fs.exists(testRoot.append("/.test-output/old.ts"))).true();
+    assert((await testRoot.append("/.test-output/index.ts").text()).trim()).equals("line1");
+
+    await testRoot.remove();
+  });
+});

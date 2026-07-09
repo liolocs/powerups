@@ -10,6 +10,7 @@ const execAsync = promisify(exec);
 export interface ChangedFile {
   worktreePath: string; // absolute path in worktree
   projectPath: string; // relative path in project root
+  deleted?: boolean;
 }
 
 export interface Worktree {
@@ -68,8 +69,12 @@ export async function copyChangedFiles(
   projectRoot: FileRef,
   changedFiles: ChangedFile[],
 ): Promise<void> {
-  for (const { worktreePath, projectPath } of changedFiles) {
+  for (const { worktreePath, projectPath, deleted } of changedFiles) {
     const target = projectRoot.append(`/${projectPath}`);
+    if (deleted) {
+      await target.remove();
+      continue;
+    }
     await fs.create(target.directory);
     const content = await fs.ref(worktreePath).text();
     await target.write(content);

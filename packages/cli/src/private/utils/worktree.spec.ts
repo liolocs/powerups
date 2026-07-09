@@ -137,3 +137,60 @@ test.case("should create worktree, write file, copy back, verify, and remove (in
   assert(await fs.exists(fs.ref(wt.path))).false();
   await testRoot.remove();
 });
+
+test.case("should delete a file from project root when deleted flag is set", async assert => {
+  await testRoot.remove();
+  await fs.create(testRoot);
+  await gitInit(testRoot);
+
+  // Create a file in the project root first
+  const projectFile = testRoot.append("/src/legacy.ts");
+  await fs.create(projectFile.directory);
+  await projectFile.write("export const legacy = true;");
+
+  const wt = await createWorktree(testRoot);
+
+  // Simulate a delete: the file was removed from the worktree,
+  // and we pass a ChangedFile with deleted: true
+  const changedFiles: ChangedFile[] = [
+    { worktreePath: path.join(wt.path, "src/legacy.ts"), projectPath: "src/legacy.ts", deleted: true },
+  ];
+
+  await copyChangedFiles(testRoot, changedFiles);
+
+  assert(await fs.exists(projectFile)).false();
+
+  await removeWorktree(testRoot, wt.path);
+  await testRoot.remove();
+});
+
+test.case("should handle both create and delete in one copyChangedFiles call", async assert => {
+  await testRoot.remove();
+  await fs.create(testRoot);
+  await gitInit(testRoot);
+
+  // Create a file that will be deleted
+  const toDelete = testRoot.append("/src/old.ts");
+  await fs.create(toDelete.directory);
+  await toDelete.write("old");
+
+  const wt = await createWorktree(testRoot);
+
+  // Write a new file in the worktree
+  const newFilePath = path.join(wt.path, "src/new.ts");
+  await fs.create(fs.ref(path.dirname(newFilePath)));
+  await fs.ref(newFilePath).write("export const x = 1;");
+
+  const changedFiles: ChangedFile[] = [
+    { worktreePath: newFilePath, projectPath: "src/new.ts" },
+    { worktreePath: path.join(wt.path, "src/old.ts"), projectPath: "src/old.ts", deleted: true },
+  ];
+
+  await copyChangedFiles(testRoot, changedFiles);
+
+  assert(await fs.exists(testRoot.append("/src/new.ts"))).true();
+  assert(await fs.exists(testRoot.append("/src/old.ts"))).false();
+
+  await removeWorktree(testRoot, wt.path);
+  await testRoot.remove();
+});

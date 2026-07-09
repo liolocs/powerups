@@ -168,7 +168,7 @@ export default function createApplyCommand(
         }
         // Process packageDependencies in dry-run mode
         if (instructions.packageDependencies || instructions.includes) {
-          const collectedDeps = await collectDependencies(name, domainFolder);
+          const collectedDeps = await collectDependencies({ outputName: name, outputsFolder: domainFolder });
           if (collectedDeps.length > 0) {
             await applyDependencies({
               projectRoot: root,
@@ -279,7 +279,7 @@ export default function createApplyCommand(
       // 11.5 Process packageDependencies
       if (instructions.packageDependencies || instructions.includes) {
         try {
-          const collectedDeps = await collectDependencies(name, domainFolder);
+          const collectedDeps = await collectDependencies({ outputName: name, outputsFolder: domainFolder });
           if (collectedDeps.length > 0) {
             await applyDependencies({
               projectRoot: root,

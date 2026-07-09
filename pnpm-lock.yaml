@@ -57,6 +57,9 @@ importers:
       '@rcompat/string':
         specifier: ^0.22.0
         version: 0.22.0
+      '@rcompat/type':
+        specifier: ^0.18.0
+        version: 0.18.0
       '@saved/program':
         specifier: workspace:^
         version: link:../program

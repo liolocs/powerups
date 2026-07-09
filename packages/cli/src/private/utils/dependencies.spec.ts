@@ -381,7 +381,7 @@ test.group("collectDependencies", () => {
       output: { create: [], modify: [] },
     });
 
-    const deps = await collectDependencies("parent", mainFolder.append("/output/template"));
+    const deps = await collectDependencies({ outputName: "parent", outputsFolder: mainFolder.append("/output/template") });
     assert(deps.length).equals(1);
     assert(deps[0].dependencies![0]).equals("parent-dep@^1.0.0");
 
@@ -413,7 +413,7 @@ test.group("collectDependencies", () => {
       output: { create: [], modify: [] },
     });
 
-    const deps = await collectDependencies("parent", templateFolder);
+    const deps = await collectDependencies({ outputName: "parent", outputsFolder: templateFolder });
     assert(deps.length).equals(2);
     assert(deps[0].dependencies![0]).equals("parent-dep@^1.0.0");
     assert(deps[1].dependencies![0]).equals("child-dep@^2.0.0");
@@ -433,7 +433,7 @@ test.group("collectDependencies", () => {
       output: { create: [], modify: [] },
     });
 
-    const deps = await collectDependencies("nodeps", mainFolder.append("/output/template"));
+    const deps = await collectDependencies({ outputName: "nodeps", outputsFolder: mainFolder.append("/output/template") });
     assert(deps.length).equals(0);
 
     await testRoot.remove();

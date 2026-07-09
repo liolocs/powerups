@@ -1,10 +1,9 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
+import io from "@rcompat/io";
+import is from "@rcompat/is";
+import type { JSONValue } from "@rcompat/type";
 import { instructionsSchema } from "#schemas/instruction";
-
-const execAsync = promisify(exec);
 
 export interface PackageManager {
   manager: string;
@@ -76,16 +75,23 @@ function parseDep(dep: string): { name: string; version?: string } {
  * Skips deps that already exist (same version silently, different version with warning).
  * Returns the merged object and a list of warnings produced.
  */
-function mergeDeps(
-  existing: Record<string, string> | undefined,
-  newDeps: string[],
-  pkgLabel: string,
-): { merged: Record<string, string>; warnings: string[] } {
+interface MergeDepsParams {
+  existing: Record<string, string> | undefined;
+  newDeps: string[];
+  pkgLabel: string;
+}
+
+function mergeDeps({
+  existing,
+  newDeps,
+  pkgLabel,
+}: MergeDepsParams): { merged: Record<string, string>; warnings: string[] } {
   const merged = { ...(existing ?? {}) };
   const warnings: string[] = [];
+
   for (const dep of newDeps) {
     const { name, version } = parseDep(dep);
-    if (merged[name] !== undefined) {
+    if (is.defined(merged[name])) {
       if (merged[name] === (version ?? merged[name])) {
         // Same version — skip silently
         continue;
@@ -115,87 +121,95 @@ export async function applyDependencies(options: ApplyDependenciesOptions): Prom
   // Collect all target package.json paths and their modifications
   for (const group of packageDependencies) {
     const targetPath = group.target ?? "";
-    const pkgJsonPath = targetPath
+    const packageJsonPath = is.defined(targetPath)
       ? projectRoot.append(`/${targetPath}/package.json`)
       : projectRoot.append("/package.json");
-    const pkgLabel = targetPath || "root";
+    const packageLocationLabel = is.defined(targetPath) ? targetPath : "root";
 
     // Check if package.json exists
-    if (!(await fs.exists(pkgJsonPath))) {
-      cli.print(`Warning: Target package.json not found at ${pkgLabel}, skipping dependency group.\n`);
+    if (!(await fs.exists(packageJsonPath))) {
+      cli.print(`Warning: Target package.json not found at ${packageLocationLabel}, skipping dependency group.\n`);
       continue;
     }
 
+    const hasDependencies = is.truthy(group.dependencies?.length);
+    const hasDevDependencies = is.truthy(group.devDependencies?.length);
+    const hasPeerDependencies = is.truthy(group.peerDependencies?.length);
+
     if (isDryRun) {
-      cli.print(`=== Dependencies for ${pkgLabel} ===\n`);
-      if (group.dependencies?.length) {
-        cli.print(`  dependencies: ${group.dependencies.join(", ")}\n`);
+      cli.print(`=== Dependencies for ${packageLocationLabel} ===\n`);
+
+      if (hasDependencies) {
+        cli.print(`  dependencies: ${group.dependencies!.join(", ")}\n`);
       }
-      if (group.devDependencies?.length) {
-        cli.print(`  devDependencies: ${group.devDependencies.join(", ")}\n`);
+      if (hasDevDependencies) {
+        cli.print(`  devDependencies: ${group.devDependencies!.join(", ")}\n`);
       }
-      if (group.peerDependencies?.length) {
-        cli.print(`  peerDependencies: ${group.peerDependencies.join(", ")}\n`);
+      if (hasPeerDependencies) {
+        cli.print(`  peerDependencies: ${group.peerDependencies!.join(", ")}\n`);
       }
       continue;
     }
 
     // Real run: read, merge, write
-    const pkg = await pkgJsonPath.json() as Record<string, unknown>;
+    // package.json is always a JSON object; cast to a mutable record for editing
+    const packageJsonContents: JSONValue = await packageJsonPath.json();
+    const packageJson = packageJsonContents as Record<string, JSONValue>;
 
     const warnings: string[] = [];
 
-    if (group.dependencies?.length) {
-      const { merged, warnings: w } = mergeDeps(
-        pkg.dependencies as Record<string, string> | undefined,
-        group.dependencies,
-        pkgLabel,
-      );
-      pkg.dependencies = merged;
-      warnings.push(...w);
+    if (hasDependencies) {
+      const { merged, warnings: mergeWarnings } = mergeDeps({
+        existing: packageJson.dependencies as Record<string, string> | undefined,
+        newDeps: group.dependencies!,
+        pkgLabel: packageLocationLabel,
+      });
+      packageJson.dependencies = merged;
+      warnings.push(...mergeWarnings);
     }
 
-    if (group.devDependencies?.length) {
-      const { merged, warnings: w } = mergeDeps(
-        pkg.devDependencies as Record<string, string> | undefined,
-        group.devDependencies,
-        pkgLabel,
-      );
-      pkg.devDependencies = merged;
-      warnings.push(...w);
+    if (hasDevDependencies) {
+      const { merged, warnings: mergeWarnings } = mergeDeps({
+        existing: packageJson.devDependencies as Record<string, string> | undefined,
+        newDeps: group.devDependencies!,
+        pkgLabel: packageLocationLabel,
+      });
+      packageJson.devDependencies = merged;
+      warnings.push(...mergeWarnings);
     }
 
-    if (group.peerDependencies?.length) {
-      const { merged, warnings: w } = mergeDeps(
-        pkg.peerDependencies as Record<string, string> | undefined,
-        group.peerDependencies,
-        pkgLabel,
-      );
-      pkg.peerDependencies = merged;
-      warnings.push(...w);
+    if (hasPeerDependencies) {
+      const { merged, warnings: mergeWarnings } = mergeDeps({
+        existing: packageJson.peerDependencies as Record<string, string> | undefined,
+        newDeps: group.peerDependencies!,
+        pkgLabel: packageLocationLabel,
+      });
+      packageJson.peerDependencies = merged;
+      warnings.push(...mergeWarnings);
     }
 
-    for (const w of warnings) {
-      cli.print(`Warning: ${w}\n`);
+    for (const warning of warnings) {
+      cli.print(`Warning: ${warning}\n`);
     }
 
-    await pkgJsonPath.writeJSON(pkg);
-    cli.print(`Updated ${pkgLabel}/package.json\n`);
+    await packageJsonPath.writeJSON(packageJson);
+
+    cli.print(`Updated ${packageLocationLabel}/package.json\n`);
   }
 
   // Detect lock file and run install
-  const pm = await detectPackageManager(projectRoot);
+  const detectedPackageManager = await detectPackageManager(projectRoot);
 
   if (isDryRun) {
-    if (pm) {
-      cli.print(`\nWould run: ${pm.command}\n`);
+    if (is.truthy(detectedPackageManager)) {
+      cli.print(`\nWould run: ${detectedPackageManager!.command}\n`);
     } else {
       cli.print(`\nNo lock file detected. Dependencies would be written but not installed.\n`);
     }
     return;
   }
 
-  if (!pm) {
+  if (is.falsy(detectedPackageManager)) {
     cli.print(
       "Warning: No lock file detected. package.json has been updated, but dependencies were not installed. " +
       "Please run your package manager's install command manually.\n",
@@ -205,19 +219,33 @@ export async function applyDependencies(options: ApplyDependenciesOptions): Prom
 
   // Run the install command
   try {
-    cli.print(`Running ${pm.command}...\n`);
-    const { stdout, stderr } = await execAsync(pm.command, {
+    cli.print(`Running ${detectedPackageManager!.command}...\n`);
+
+    const stdout = await io.run(detectedPackageManager!.command, {
       cwd: projectRoot.path,
     });
-    if (stdout) cli.print(stdout);
-    if (stderr) cli.print(stderr);
+
+    if (is.truthy(stdout)) {
+      cli.print(stdout);
+    }
+
     cli.print("Dependency installation complete.\n");
   } catch (error) {
+    // io.run rejects with the stderr output on failure
+    if (typeof error === "string" && is.truthy(error)) {
+      cli.print(error);
+    }
+
     cli.print(
       `Warning: Dependency installation failed. Generated files are in place. ` +
-      `Please run '${pm.command}' manually.\n`,
+      `Please run '${detectedPackageManager!.command}' manually.\n`,
     );
   }
+}
+
+export interface CollectDependenciesOptions {
+  outputName: string;
+  outputsFolder: FileRef;
 }
 
 /**
@@ -225,19 +253,25 @@ export async function applyDependencies(options: ApplyDependenciesOptions): Prom
  * Recursively walks the includes tree, loading each instructions.json to
  * gather its packageDependencies. Returns a flat array of all groups.
  */
-export async function collectDependencies(
-  outputName: string,
-  outputsFolder: FileRef,
-): Promise<PackageDependencyGroup[]> {
+export async function collectDependencies({
+  outputName,
+  outputsFolder,
+}: CollectDependenciesOptions): Promise<PackageDependencyGroup[]> {
   const outputFolder = outputsFolder.append(`/${outputName}`);
   const outputPath = outputFolder.append("/instructions.json");
   const instructions = instructionsSchema.parse(await outputPath.json());
 
-  const deps: PackageDependencyGroup[] = [...(instructions.packageDependencies ?? [])];
+  const deps: PackageDependencyGroup[] = [
+    ...(instructions.packageDependencies ?? []),
+  ];
 
-  if (instructions.includes) {
+  if (is.defined(instructions.includes) && is.truthy(instructions.includes)) {
     for (const ref of instructions.includes) {
-      const childDeps = await collectDependencies(ref.name, outputsFolder);
+      const childDeps = await collectDependencies({
+        outputName: ref.name,
+        outputsFolder,
+      });
+
       deps.push(...childDeps);
     }
   }

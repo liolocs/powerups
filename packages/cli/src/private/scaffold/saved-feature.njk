@@ -11,6 +11,10 @@ or "add a view component," push back to the user: "This sounds like a recurring
 pattern — consider using `{{ CLI_NAME }}-template` instead." Only proceed with
 the feature workflow if it's genuinely a one-time addition.
 
+If the user has already done the work and wants to capture it as a feature —
+rather than generating something new — use the `{{ CLI_NAME }}-capture` skill
+instead of this one.
+
 1. Run `{{ CLI_NAME }} feature search -q "<what the user wants to build>"`.
 2. If a feature matches (score > 0):
    - Run `{{ CLI_NAME }} feature apply <name> --var key=value ... -d` to preview.

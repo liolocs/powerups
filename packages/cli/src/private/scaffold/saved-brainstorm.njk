@@ -53,21 +53,8 @@ Brainstorm a plan using {{ CLI_NAME }} templates and features.
    templates or features before the concrete implementation exists and is
    verified. Instead, plan the concrete implementation (what files to write,
    what they contain). Mark repeatable parts as capture candidates — to be
-   captured AFTER the implementation is verified working, using:
-   `{{ CLI_NAME }} template create -n <short-name> -i "<intent>" -v "<vars>" -o '<files-json>'`
-   or `{{ CLI_NAME }} feature create -n <short-name> -i "<intent>" -v "<vars>" -o '<files-json>'`
-   Then author the template at
-   `{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/<name>/<template>`
-   (or `{{ FEATURE_FOLDER }}` for features). Prefer a `.ts` file with a
-   default-export function `(vars: Record<string, string>) => string` —
-   the recommended format for new templates/features. The CLI calls that
-   function with the declared variables (keyed by name, all strings) and
-   writes the returned string to `outputPath`; keep it a pure function of
-   `vars` (no imports, no filesystem access). Example:
-   `export default ({ name }: Record<string, string>) => \`# ${name}\`;`.
-   Nunjucks `.njk` templates (`{{ '{{var}}' }}` syntax) are supported but should
-   only be used when a `.ts` template is impractical. Validate with
-   `{{ CLI_NAME }} template validate -n <name>` (or `feature validate`).
+   captured AFTER the implementation is verified working, using the
+   `{{ CLI_NAME }}-capture` skill.
 
    Subtemplates: Do NOT plan subtemplate decomposition upfront. Plan
    concrete, standalone templates. If two planned templates clearly share

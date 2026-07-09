@@ -182,19 +182,19 @@ const doctor = new Command({
     const warnCount = issues.filter(i => i.level === "WARN").length;
 
     cli.print(
-      `Doctor: checking git state, folder structure, ${templateCount} template(s), ${featureCount} feature(s)`,
+      `Doctor: checking git state, folder structure, ${templateCount} template(s), ${featureCount} feature(s)\n`,
     );
-    cli.print("");
+    cli.print("\n");
 
     for (const issue of issues) {
       const prefix = issue.level === "ERROR" ? "ERROR" : "WARN";
-      cli.print(`  [${prefix}] [${issue.domain}:${issue.name}] ${issue.message}`);
+      cli.print(`  [${prefix}] [${issue.domain}:${issue.name}] ${issue.message}\n`);
     }
 
     if (errorCount === 0 && warnCount === 0) {
-      cli.print("All checks passed.");
+      cli.print("All checks passed.\n");
     } else {
-      cli.print(`\n${errorCount} error(s), ${warnCount} warning(s)`);
+      cli.print(`\n${errorCount} error(s), ${warnCount} warning(s)\n`);
     }
 
     if (errorCount > 0) {

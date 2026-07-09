@@ -122,7 +122,7 @@ export default function createCreateCommand(
         }
       }
 
-      cli.print(`Created ${domain}: ${name}`);
+      cli.print(`Created ${domain}: ${name}\n`);
     },
   });
 }

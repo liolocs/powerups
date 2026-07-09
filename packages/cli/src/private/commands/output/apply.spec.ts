@@ -325,7 +325,7 @@ test.group("apply errors", () => {
       await testRoot.remove();
     });
 
-  test.case("should fail with modify_target_not_found when the target file doesn't exist", async assert => {
+  test.case("should warn and skip when the modify target file doesn't exist", async assert => {
     await reset();
 
     await createCmd.run({
@@ -347,24 +347,19 @@ test.group("apply errors", () => {
     await templateFolder.append("/no-target/wire.json")
       .write('[{"where":"top","content":"hello"}]');
 
-    let threw = false;
-    try {
-      await apply.run({
-        subcommands: ["no-target"],
-        flags: [],
-        context: { root: testRoot },
-      });
-    } catch (e) {
-      threw = true;
-      assert(e instanceof CodeError).true();
-      assert((e as CodeError).code).equals("modify_target_not_found");
-    }
-    assert(threw).true();
+    const output = await captureStdout(() => apply.run({
+      subcommands: ["no-target"],
+      flags: [],
+      context: { root: testRoot },
+    }));
+
+    assert(output).includes("Warning: skipped modification");
+    assert(output).includes("Target file for modification not found");
 
     await testRoot.remove();
   });
 
-  test.case("should fail with modify_anchor_not_found when the anchor doesn't exist in the target", async assert => {
+  test.case("should warn and skip when the anchor doesn't exist in the target", async assert => {
     await reset();
 
     await fs.create(testRoot.append("/.test-output"));
@@ -392,23 +387,19 @@ test.group("apply errors", () => {
       .write('[{"where":"NONEXISTENT_ANCHOR","content":"hello"}]');
     await gitCommit(testRoot, "add modify template");
 
-    let threw;
-    try {
-      await apply.run({
-        subcommands: ["anchor-missing"],
-        flags: [],
-        context: { root: testRoot },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(OutputTemplateApplyErrorCode.modify_anchor_not_found);
+    const output = await captureStdout(() => apply.run({
+      subcommands: ["anchor-missing"],
+      flags: [],
+      context: { root: testRoot },
+    }));
+
+    assert(output).includes("Warning: skipped modification");
+    assert(output).includes("Anchor \"NONEXISTENT_ANCHOR\" not found");
 
     await testRoot.remove();
   });
 
-  test.case("should fail with modify_anchor_ambiguous when the anchor appears multiple times", async assert => {
+  test.case("should warn and skip when the anchor appears multiple times", async assert => {
     await reset();
 
     await fs.create(testRoot.append("/.test-output"));
@@ -440,18 +431,14 @@ test.group("apply errors", () => {
       .write('[{"where":"export","content":"// replaced"}]');
     await gitCommit(testRoot, "add modify template");
 
-    let threw;
-    try {
-      await apply.run({
-        subcommands: ["anchor-ambiguous"],
-        flags: [],
-        context: { root: testRoot },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(OutputTemplateApplyErrorCode.modify_anchor_ambiguous);
+    const output = await captureStdout(() => apply.run({
+      subcommands: ["anchor-ambiguous"],
+      flags: [],
+      context: { root: testRoot },
+    }));
+
+    assert(output).includes("Warning: skipped modification");
+    assert(output).includes("Anchor \"export\" appears multiple times");
 
     await testRoot.remove();
   });
@@ -1273,7 +1260,7 @@ test.group("apply delete", () => {
     await testRoot.remove();
   });
 
-  test.case("should roll back on error after a delete (atomicity)", async assert => {
+  test.case("should apply delete and warn on failed modify (non-atomic)", async assert => {
     await reset();
 
     // Create a file to delete and a target file for the failing suboutput modify
@@ -1303,7 +1290,8 @@ test.group("apply delete", () => {
 
     // Create parent with a delete entry and the failing suboutput.
     // The delete runs before the suboutput tasks, so the delete succeeds
-    // in the worktree, then the suboutput modify fails, triggering rollback.
+    // in the worktree, then the suboutput modify fails — but now it warns
+    // and continues instead of aborting, so the delete is still applied.
     await createCmd.run({
       subcommands: [],
       flags: [{ flag: "--name", value: "atomic-delete-parent" }],
@@ -1321,21 +1309,18 @@ test.group("apply delete", () => {
       includes: [{ name: "failing-child", variables: {} }],
     });
 
-    let threw;
-    try {
-      await apply.run({
-        subcommands: ["atomic-delete-parent"],
-        flags: [],
-        context: { root: testRoot },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(OutputTemplateApplyErrorCode.modify_anchor_not_found);
+    const output = await captureStdout(() => apply.run({
+      subcommands: ["atomic-delete-parent"],
+      flags: [],
+      context: { root: testRoot },
+    }));
 
-    // The file should STILL exist in the project (worktree was discarded — delete was in worktree only)
-    assert(await fs.exists(testRoot.append("/.test-output/to-delete.ts"))).true();
+    // The modify failure should produce a warning
+    assert(output).includes("Warning: skipped modification");
+    assert(output).includes("Anchor \"NONEXISTENT_ANCHOR\" not found");
+
+    // The delete should have been applied (file no longer exists)
+    assert(await fs.exists(testRoot.append("/.test-output/to-delete.ts"))).false();
 
     await testRoot.remove();
   });

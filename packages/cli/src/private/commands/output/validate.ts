@@ -73,7 +73,7 @@ export default function createValidateCommand(
           );
         }
 
-        cli.print(`${flags.name} is valid.`);
+        cli.print(`${flags.name} is valid.\n`);
         return;
       }
 
@@ -102,22 +102,22 @@ export default function createValidateCommand(
       }
 
       if (failures.length > 0) {
-        cli.print(`Validation failed for ${failures.length} ${domain}(s):`);
-        cli.print("");
+        cli.print(`Validation failed for ${failures.length} ${domain}(s):\n`);
+        cli.print("\n");
 
         for (const { name, issues } of failures) {
-          cli.print(`  ${name}:`);
+          cli.print(`  ${name}:\n`);
 
           for (const issue of issues) {
-            cli.print(`    - ${issue}`);
+            cli.print(`    - ${issue}\n`);
           }
         }
 
-        cli.print("");
+        cli.print("\n");
         throw validateErrors.validation_failed(failures.length);
       }
 
-      cli.print(`Validated ${outputFiles.length} ${domain}(s). All valid.`);
+      cli.print(`Validated ${outputFiles.length} ${domain}(s). All valid.\n`);
     },
   });
 }

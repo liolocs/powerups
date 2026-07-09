@@ -22,5 +22,5 @@ const program = new CLI({
 try {
   await program.run();
 } catch (err) {
-  console.error((err as TemplateError).message);
+  console.error("\n" + (err as TemplateError).message);
 }

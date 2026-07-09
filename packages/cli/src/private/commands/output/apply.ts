@@ -123,9 +123,9 @@ export default function createApplyCommand(
         for (const task of tasks) {
           if (task.kind === "delete") {
             const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
-            cli.print(`=== ${resolvedPath} (delete) ===`);
-            cli.print("Would delete");
-            cli.print("");
+            cli.print(`=== ${resolvedPath} (delete) ===\n`);
+            cli.print("Would delete\n");
+            cli.print("\n");
             continue;
           }
 
@@ -143,13 +143,13 @@ export default function createApplyCommand(
 
             const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
 
-            cli.print(`=== ${resolvedPath} ===`);
+            cli.print(`=== ${resolvedPath} ===\n`);
             cli.print(rendered);
-            cli.print("");
+            cli.print("\n");
           } else {
             // Modify: show what would change
             const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
-            cli.print(`=== ${resolvedPath} (modify) ===`);
+            cli.print(`=== ${resolvedPath} (modify) ===\n`);
             // Render the modify template to preview modifications
             const ext = task.templatePath!.extension;
             let modContent: string;
@@ -162,7 +162,7 @@ export default function createApplyCommand(
               });
             }
             cli.print(modContent);
-            cli.print("");
+            cli.print("\n");
           }
         }
         return;
@@ -187,7 +187,7 @@ export default function createApplyCommand(
             const targetPath = worktree.root.append(`/${resolvedPath}`);
             const exists = await fs.exists(targetPath);
             if (!exists) {
-              cli.print(`Warning: file not found, skipping: ${resolvedPath}`);
+              cli.print(`Warning: file not found, skipping: ${resolvedPath}\n`);
               continue;
             }
             await targetPath.remove();
@@ -196,7 +196,7 @@ export default function createApplyCommand(
               projectPath: resolvedPath,
               deleted: true,
             });
-            cli.print(`Deleted ${resolvedPath}`);
+            cli.print(`Deleted ${resolvedPath}\n`);
             continue;
           }
 
@@ -224,28 +224,34 @@ export default function createApplyCommand(
               worktreePath: targetPath.path,
               projectPath: resolvedPath,
             });
-            cli.print(`Wrote ${resolvedPath}`);
+            cli.print(`Wrote ${resolvedPath}\n`);
           } else {
-            const applied = await applyMultipleModifications({
-              task: {
-                templatePath: task.templatePath!,
-                outputPath: resolvedPath,
-                variables: task.variables,
-              },
-              rootDir: worktree.root,
-              errors,
-            });
+            try {
+              const applied = await applyMultipleModifications({
+                task: {
+                  templatePath: task.templatePath!,
+                  outputPath: resolvedPath,
+                  variables: task.variables,
+                },
+                rootDir: worktree.root,
+                errors,
+              });
 
-            totalCharacters += applied.content.length;
+              totalCharacters += applied.content.length;
 
-            const targetPath = worktree.root.append(`/${resolvedPath}`);
-            await fs.create(targetPath.directory);
-            await targetPath.write(applied.content);
-            changedFiles.push({
-              worktreePath: targetPath.path,
-              projectPath: resolvedPath,
-            });
-            cli.print(`Modified ${resolvedPath}`);
+              const targetPath = worktree.root.append(`/${resolvedPath}`);
+              await fs.create(targetPath.directory);
+              await targetPath.write(applied.content);
+              changedFiles.push({
+                worktreePath: targetPath.path,
+                projectPath: resolvedPath,
+              });
+              cli.print(`Modified ${resolvedPath}\n`);
+            } catch (error) {
+              // Warn and continue — don't abort the whole apply
+              const message = error instanceof Error ? error.message : String(error);
+              cli.print(`Warning: skipped modification for ${resolvedPath} — ${message}\n`);
+            }
           }
         }
       } catch (error) {

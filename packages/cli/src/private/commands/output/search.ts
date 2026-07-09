@@ -102,15 +102,15 @@ export default function createSearchCommand(
 
       results.sort((a, b) => b.score - a.score);
 
-      cli.print(`Found ${results.length} matching ${domain}(s):`);
-      cli.print("Highest rank first");
-      cli.print("");
+      cli.print(`Found ${results.length} matching ${domain}(s):\n`);
+      cli.print("Highest rank first\n");
+      cli.print("\n");
 
       results.forEach((result, index) => {
         const score_text = `score: ${result.score}`;
         const files_text = `files: ${result.fileCount}`;
         const score_and_files_text = `(${score_text}, ${files_text})`;
-        cli.print(`  [${index + 1}] ${result.name} ${score_and_files_text}`);
+        cli.print(`  [${index + 1}] ${result.name} ${score_and_files_text}\n`);
       });
     },
   });

@@ -28,7 +28,7 @@ const summary = new Command({
     const entries: MetricsEntry[] = await readMetrics(root);
 
     if (entries.length === 0) {
-      cli.print("No metrics recorded yet. Run a output to start collecting metrics.");
+      cli.print("No metrics recorded yet. Run a output to start collecting metrics.\n");
       return;
     }
 
@@ -88,13 +88,13 @@ const summary = new Command({
       `${output.padEnd(colWidths[0])}   ${runs.padStart(colWidths[1])}   ${chars.padStart(colWidths[2])}   ${tokens.padStart(colWidths[3])}`;
 
     // Print table
-    cli.print(formatRow(headers[0], headers[1], headers[2], headers[3]));
-    cli.print(colWidths.map(w => "─".repeat(w)).join("   "));
+    cli.print(formatRow(headers[0], headers[1], headers[2], headers[3]) + "\n");
+    cli.print(colWidths.map(w => "─".repeat(w)).join("   ") + "\n");
     for (const row of dataRows) {
-      cli.print(formatRow(row[0], row[1], row[2], row[3]));
+      cli.print(formatRow(row[0], row[1], row[2], row[3]) + "\n");
     }
-    cli.print(colWidths.map(w => "─".repeat(w)).join("   "));
-    cli.print(formatRow(totalRow[0], totalRow[1], totalRow[2], totalRow[3]));
+    cli.print(colWidths.map(w => "─".repeat(w)).join("   ") + "\n");
+    cli.print(formatRow(totalRow[0], totalRow[1], totalRow[2], totalRow[3]) + "\n");
   },
 });
 

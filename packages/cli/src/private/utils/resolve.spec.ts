@@ -410,3 +410,127 @@ test.case("should not cascade overrides to nested suboutputs", async assert => {
   assert(tasks[1].outputPath).equals("original.ts");
   await testRoot.remove();
 });
+
+test.case("should produce a delete task with no templatePath for delete entries", async assert => {
+  await reset();
+  await writeOutput("delete-only", {
+    name: "delete-only",
+    variables: [],
+    intent: [],
+    output: {
+      create: [],
+      modify: [],
+      delete: [{ name: "old-file", outputPath: "src/old/legacy.ts" }],
+    },
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "delete-only",
+    variables: {},
+    outputsFolder: templateFolder,
+  });
+
+  assert(tasks.length).equals(1);
+  assert(tasks[0].kind).equals("delete");
+  assert(tasks[0].templatePath).undefined();
+  assert(tasks[0].outputPath).equals("src/old/legacy.ts");
+  await testRoot.remove();
+});
+
+test.case("should produce create, modify, and delete tasks in order", async assert => {
+  await reset();
+  await writeOutput("mixed", {
+    name: "mixed",
+    variables: ["name"],
+    intent: [],
+    output: {
+      create: [{ name: "c", template: "c.njk", outputPath: "src/{{name}}.ts" }],
+      modify: [{ name: "m", template: "m.json", outputPath: "src/index.ts" }],
+      delete: [{ name: "d", outputPath: "src/old.ts" }],
+    },
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "mixed",
+    variables: { name: "Widget" },
+    outputsFolder: templateFolder,
+  });
+
+  assert(tasks.length).equals(3);
+  assert(tasks[0].kind).equals("create");
+  assert(tasks[1].kind).equals("modify");
+  assert(tasks[2].kind).equals("delete");
+  assert(tasks[2].templatePath).undefined();
+  await testRoot.remove();
+});
+
+test.case("should apply delete output path override to the correct file by name", async assert => {
+  await reset();
+  await writeOutput("delete-override-child", {
+    name: "delete-override-child",
+    variables: [],
+    intent: [],
+    output: {
+      create: [],
+      modify: [],
+      delete: [{ name: "legacy", outputPath: "src/legacy/old.ts" }],
+    },
+  });
+  await writeOutput("delete-override-parent", {
+    name: "delete-override-parent",
+    variables: [],
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "delete-override-child",
+        variables: {},
+        outputPathOverride: { delete: { legacy: "src/custom/old.ts" } },
+      },
+    ],
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "delete-override-parent",
+    variables: {},
+    outputsFolder: templateFolder,
+  });
+
+  assert(tasks.length).equals(1);
+  assert(tasks[0].kind).equals("delete");
+  assert(tasks[0].outputPath).equals("src/custom/old.ts");
+  await testRoot.remove();
+});
+
+test.case("should resolve delete tasks from nested suboutputs", async assert => {
+  await reset();
+  await writeOutput("delete-child", {
+    name: "delete-child",
+    variables: [],
+    intent: [],
+    output: {
+      create: [{ name: "f", template: "c.njk", outputPath: "new.ts" }],
+      modify: [],
+      delete: [{ name: "old", outputPath: "old.ts" }],
+    },
+  });
+  await writeOutput("delete-parent", {
+    name: "delete-parent",
+    variables: [],
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [{ name: "delete-child", variables: {} }],
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "delete-parent",
+    variables: {},
+    outputsFolder: templateFolder,
+  });
+
+  assert(tasks.length).equals(2);
+  assert(tasks[0].kind).equals("create");
+  assert(tasks[1].kind).equals("delete");
+  assert(tasks[1].outputPath).equals("old.ts");
+  await testRoot.remove();
+});

@@ -5,8 +5,8 @@ import { resolveTemplateString } from "#utils/resolve-template-string";
 import is from "@rcompat/is";
 
 export interface RenderTask {
-  kind: "create" | "modify";
-  templatePath: FileRef;
+  kind: "create" | "modify" | "delete";
+  templatePath?: FileRef;
   variables: VariableResult;
   outputPath: string;
 }
@@ -28,10 +28,12 @@ export async function resolveOutput(args: {
   outputsFolder: FileRef;
   createOverrides?: Record<string, string>;
   modifyOverrides?: Record<string, string>;
+  deleteOverrides?: Record<string, string>;
 }): Promise<RenderTask[]> {
   const { outputName, variables, outputsFolder } = args;
   const createOverrides = args.createOverrides ?? {};
   const modifyOverrides = args.modifyOverrides ?? {};
+  const deleteOverrides = args.deleteOverrides ?? {};
 
   const outputFolder = outputsFolder.append(`/${outputName}`);
   const outputPath = outputFolder.append("/instructions.json");
@@ -71,6 +73,21 @@ export async function resolveOutput(args: {
     });
   }
 
+  // Own delete files
+  for (const file of instructions.output.delete ?? []) {
+    let fileOutputPath = file.outputPath;
+
+    if (is.defined(deleteOverrides[file.name])) {
+      fileOutputPath = deleteOverrides[file.name];
+    }
+
+    tasks.push({
+      kind: "delete",
+      variables,
+      outputPath: fileOutputPath,
+    });
+  }
+
   // Suboutputs
   if (is.defined(instructions.includes)) {
     for (const ref of instructions.includes) {
@@ -82,6 +99,7 @@ export async function resolveOutput(args: {
 
       const childCreateOverrides = ref.outputPathOverride?.create ?? {};
       const childModifyOverrides = ref.outputPathOverride?.modify ?? {};
+      const childDeleteOverrides = ref.outputPathOverride?.delete ?? {};
 
       const childTasks = await resolveOutput({
         outputName: ref.name,
@@ -89,6 +107,7 @@ export async function resolveOutput(args: {
         outputsFolder,
         createOverrides: childCreateOverrides,
         modifyOverrides: childModifyOverrides,
+        deleteOverrides: childDeleteOverrides,
       });
 
       tasks.push(...childTasks);

@@ -97,6 +97,77 @@ test.case("should parse output with both create and modify entries", async asser
   assert(result.output.modify[0].name).equals("wire");
 });
 
+test.case("should parse output with a delete array", async assert => {
+  const result = instructionsSchema.parse({
+    name: "cleanup",
+    variables: [],
+    intent: [],
+    output: {
+      create: [],
+      modify: [],
+      delete: [
+        { name: "legacy-config", outputPath: "src/legacy/config.ts" },
+        { name: "old-types", outputPath: "src/old/types.d.ts" },
+      ],
+    },
+  });
+
+  assert(result.output.delete).defined();
+  assert(result.output.delete!.length).equals(2);
+  assert(result.output.delete![0].name).equals("legacy-config");
+  assert(result.output.delete![0].outputPath).equals("src/legacy/config.ts");
+  assert(result.output.delete![1].name).equals("old-types");
+});
+
+test.case("should parse output without delete (backward compat)", async assert => {
+  const result = instructionsSchema.parse({
+    name: "simple",
+    variables: [],
+    intent: [],
+    output: { create: [], modify: [] },
+  });
+
+  assert(result.output.delete).undefined();
+});
+
+test.case("should parse includes with outputPathOverride.delete", async assert => {
+  const result = instructionsSchema.parse({
+    name: "parent",
+    variables: [],
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "child",
+        variables: {},
+        outputPathOverride: {
+          delete: { "legacy-file": "src/legacy/file.ts" },
+        },
+      },
+    ],
+  });
+
+  assert(result.includes![0].outputPathOverride!.delete!.legacyFile).undefined();
+  assert(result.includes![0].outputPathOverride!.delete!["legacy-file"]).equals("src/legacy/file.ts");
+});
+
+test.case("should parse output with create, modify, and delete together", async assert => {
+  const result = instructionsSchema.parse({
+    name: "full",
+    variables: ["name"],
+    intent: [],
+    output: {
+      create: [{ name: "c", template: "c.njk", outputPath: "src/{{name}}.ts" }],
+      modify: [{ name: "m", template: "m.json", outputPath: "src/index.ts" }],
+      delete: [{ name: "d", outputPath: "src/old.ts" }],
+    },
+  });
+
+  assert(result.output.create.length).equals(1);
+  assert(result.output.modify.length).equals(1);
+  assert(result.output.delete!.length).equals(1);
+});
+
 test.group("instruction schema rejections", () => {
   test.case("should reject an includes entry missing name", async assert => {
   let threw = false;
@@ -158,5 +229,35 @@ test.group("instruction schema rejections", () => {
     threw = true;
   }
   assert(threw).true();
+  });
+
+  test.case("should reject a delete entry missing name", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        variables: [],
+        intent: [],
+        output: { create: [], modify: [], delete: [{ outputPath: "src/x.ts" }] },
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
+  });
+
+  test.case("should reject a delete entry missing outputPath", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        variables: [],
+        intent: [],
+        output: { create: [], modify: [], delete: [{ name: "x" }] },
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
   });
 });

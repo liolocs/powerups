@@ -12,9 +12,15 @@ const modifyFileSchema = p({
   outputPath: p.string,
 });
 
+const deleteFileSchema = p({
+  name: p.string,
+  outputPath: p.string,
+});
+
 export const outputSchema = p({
   create: p.array(createFileSchema),
   modify: p.array(modifyFileSchema),
+  delete: p.array(deleteFileSchema).optional(),
 });
 
 const suboutputSchema = p({
@@ -23,6 +29,7 @@ const suboutputSchema = p({
   outputPathOverride: p({
     create: p.record(p.string, p.string).optional(),
     modify: p.record(p.string, p.string).optional(),
+    delete: p.record(p.string, p.string).optional(),
   }).optional(),
 });
 

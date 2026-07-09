@@ -84,6 +84,48 @@ test.case("create template creates empty files for create and modify entries", a
   await testRoot.remove();
 });
 
+test.case("create template with -p flag writes packageDependencies to instructions.json", async assert => {
+  await reset();
+
+  const packageDeps = JSON.stringify([
+    { target: "packages/web", dependencies: ["react@^18.0.0"] },
+  ]);
+
+  await create.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "with-deps" },
+      { flag: "--package-deps", value: packageDeps },
+    ],
+    context: { root: testRoot },
+  });
+
+  const outputPath = templateFolder.append("/with-deps/instructions.json");
+  const content = instructionsSchema.parse(await outputPath.json());
+  assert(content.packageDependencies).defined();
+  assert(content.packageDependencies!.length).equals(1);
+  assert(content.packageDependencies![0].target).equals("packages/web");
+  assert(content.packageDependencies![0].dependencies![0]).equals("react@^18.0.0");
+
+  await testRoot.remove();
+});
+
+test.case("create template without -p flag omits packageDependencies", async assert => {
+  await reset();
+
+  await create.run({
+    subcommands: [],
+    flags: [{ flag: "--name", value: "no-deps" }],
+    context: { root: testRoot },
+  });
+
+  const outputPath = templateFolder.append("/no-deps/instructions.json");
+  const content = instructionsSchema.parse(await outputPath.json());
+  assert(content.packageDependencies).undefined();
+
+  await testRoot.remove();
+});
+
 test.group("create errors", () => {
   test.case("should fail with dry_folder_not_found without .saved folder", async assert => {
     await testRoot.remove();
@@ -126,6 +168,28 @@ test.group("create errors", () => {
       threw = (e as CodeError).code;
     }
     assert(threw).equals(OutputTemplateCreateErrorCode.already_exists);
+
+    await testRoot.remove();
+  });
+
+  test.case("should fail with invalid_package_deps_json when --package-deps is malformed", async assert => {
+    await reset();
+
+    let threw;
+    try {
+      await create.run({
+        subcommands: [],
+        flags: [
+          { flag: "--name", value: "bad-deps" },
+          { flag: "--package-deps", value: "{not valid json" },
+        ],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateCreateErrorCode.invalid_package_deps_json);
 
     await testRoot.remove();
   });

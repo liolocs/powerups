@@ -85,7 +85,7 @@ export default function createCreateCommand(
         ? flags.variables.split(",").map(s => s.trim()).filter(Boolean)
         : [];
 
-      let output: Instructions["output"] = { create: [], modify: [] };
+      let output: Instructions["output"] = { create: [], modify: [], delete: [] };
 
       if (is.defined(flags.output) === true) {
         try {
@@ -97,7 +97,7 @@ export default function createCreateCommand(
 
       const instructions = { name, variables, intent, output };
 
-      await outputPath.writeJSON(instructions);
+      await outputPath.writeJSON(instructions as never);
 
       // Scaffold empty files for both create and modify entries
       for (const file of output.create) {

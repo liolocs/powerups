@@ -419,6 +419,89 @@ test.case("should report an issue for a modify override file name not in suboutp
   await testRoot.remove();
 });
 
+test.case("should report an issue for a delete override file name not in suboutput", async assert => {
+  await reset();
+  await writeOutput({
+    name: "delete-override-child",
+    instructions: {
+      name: "delete-override-child",
+      variables: [],
+      intent: [],
+      output: {
+        create: [],
+        modify: [],
+        delete: [{ name: "real-delete", outputPath: "src/old.ts" }],
+      },
+    },
+  });
+  await writeOutput({
+    name: "delete-override-parent",
+    instructions: {
+      name: "delete-override-parent",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        {
+          name: "delete-override-child",
+          variables: {},
+          outputPathOverride: { delete: { "nonexistent-delete": "src/custom.ts" } },
+        },
+      ],
+    },
+  });
+
+  const issues = await validateOutputTree({
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/delete-override-parent"),
+  });
+
+  assert(issues.some(i => i.includes("override file not found"))).true();
+  assert(issues.some(i => i.includes("nonexistent-delete"))).true();
+  await testRoot.remove();
+});
+
+test.case("should return no issues for a valid delete override", async assert => {
+  await reset();
+  await writeOutput({
+    name: "valid-delete-child",
+    instructions: {
+      name: "valid-delete-child",
+      variables: [],
+      intent: [],
+      output: {
+        create: [],
+        modify: [],
+        delete: [{ name: "legacy", outputPath: "src/legacy.ts" }],
+      },
+    },
+  });
+  await writeOutput({
+    name: "valid-delete-parent",
+    instructions: {
+      name: "valid-delete-parent",
+      variables: [],
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        {
+          name: "valid-delete-child",
+          variables: {},
+          outputPathOverride: { delete: { legacy: "src/custom/legacy.ts" } },
+        },
+      ],
+    },
+  });
+
+  const issues = await validateOutputTree({
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/valid-delete-parent"),
+  });
+
+  assert(issues.length).equals(0);
+  await testRoot.remove();
+});
+
 test.case("should validate both independently when the same suboutput is referenced twice", async assert => {
   await reset();
   await writeOutput({

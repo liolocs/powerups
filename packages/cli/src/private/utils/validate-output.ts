@@ -109,6 +109,16 @@ export async function validateOutputTree(args: {
           }
         }
       }
+      if (is.defined(ref.outputPathOverride.delete)) {
+        for (const fileName of Object.keys(ref.outputPathOverride.delete)) {
+          const found = subInstructions.output.delete?.find(
+            f => f.name === fileName,
+          );
+          if (is.falsy(found)) {
+            issues.push(`override file not found: ${fileName} in suboutput: ${ref.name}`);
+          }
+        }
+      }
     }
 
     // g. Recurse

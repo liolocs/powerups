@@ -29,9 +29,10 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
    - Intent keywords (comma-separated)
    - Variables — the parts that change between uses (for templates). For
      features, variables may be empty.
-   - File mapping: which files are "create" entries (new files generated)
-     and which are "modify" entries (changes to existing files). For each:
-     the template filename and the outputPath.
+   - File mapping: which files are "create" entries (new files generated),
+     which are "modify" entries (changes to existing files), and which are
+     "delete" entries (files to remove). For each create/modify: the template
+     filename and the outputPath. For delete: just the outputPath.
 
    Present this to the user and get approval before proceeding.
 

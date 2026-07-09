@@ -36,7 +36,7 @@ If the user confirms, capture it:
 {{ CLI_NAME }} template create -n <short-name> \
   -i "<intent keywords>" \
   -v "var1,var2" \
-  -o '{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[]}'
+  -o '{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'
 ```
 Then fill in the template at
 `{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/<name>/<template>`.
@@ -86,13 +86,19 @@ export default ({ componentName, theme }: Record<string, string>) =>
     ],
     "modify": [
       { "name": "string", "template": "string", "outputPath": "string" }
+    ],
+    "delete": [
+      { "name": "string", "outputPath": "string" }
     ]
   },
   "includes": [
     {
       "name": "subtemplate-name",
       "variables": { "subVar": "{{ '{{parentVar}}' }}", "other": "literal" },
-      "outputPathOverride": { "create": { "originalName": "overridden/path" } }
+      "outputPathOverride": {
+        "create": { "originalName": "overridden/path" },
+        "delete": { "oldFile": "overridden/path" }
+      }
     }
   ]
 }
@@ -100,6 +106,10 @@ export default ({ componentName, theme }: Record<string, string>) =>
 
 `includes` is optional — see [Subtemplates](#subtemplates) below.
 Both `create` and `modify` arrays are required (can be empty `[]`).
+The `delete` array is optional — omit it entirely for backward compatibility.
+Delete entries have no `template` field (nothing to render); at apply time
+the file at `outputPath` is removed from the project. If the target file
+doesn't exist, a warning is printed and the entry is skipped (no error).
 
 ### Modify templates
 

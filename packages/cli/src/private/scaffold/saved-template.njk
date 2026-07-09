@@ -42,7 +42,8 @@ If the user is pointing at specific already-done work they want to capture
    - Suggested template name
    - Intent keywords
    - Variables (the parts that would change between uses)
-   - Files it would generate (create) and files it would modify (modify)
+   - Files it would generate (create), files it would modify (modify), and
+     files it would delete (delete)
 
    Get user approval on which candidates to capture before proceeding.
 
@@ -50,7 +51,7 @@ If the user is pointing at specific already-done work they want to capture
    - Run `{{ CLI_NAME }} template create -n <short-name> \
        -i "<intent keywords>" \
        -v "var1,var2" \
-       -o '{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[]}'`
+       -o '{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'`
    - Fill in the template at
      `{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/<name>/<template>`.
      Prefer a `.ts` file with a default-export function

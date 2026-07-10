@@ -1,0 +1,84 @@
+---
+name: saved-capture
+description: "Capture already-done work as a saved feature or template"
+---
+Capture work the user has already done — files they wrote or changes they made
+outside the CLI — into a reusable saved feature or template.
+
+1. Ask the user to point at the work they want to capture — specific files or
+   a directory. Do not auto-detect via git diff or other heuristics; always
+   get explicit guidance from the user about what to capture.
+
+2. Read the files the user points at. Understand what was created or modified
+   and what the work does.
+
+3. Assess whether this is a feature or a template:
+   - A feature is a one-time addition to the project (e.g., add a dependency,
+     set up auth). It can have variables (e.g., a project name, framework
+     choice) or none at all.
+   - A template is a recurring pattern that will be repeated with different
+     variable values (e.g., new API route, new view component).
+
+   Present your assessment to the user and get confirmation on the domain
+   (feature or template) before proceeding. If the user later needs to
+   switch domains, the folder can simply be moved between
+   .saved/output/template/ and
+   .saved/output/feature/.
+
+4. Identify the capture structure:
+   - Name (short, kebab-case)
+   - Intent keywords (comma-separated)
+   - Variables — the parts that change between uses. Both templates and
+     features can have variables; for some features, variables may be empty.
+   - File mapping: which files are "create" entries (new files generated),
+     which are "modify" entries (changes to existing files), and which are
+     "delete" entries (files to remove). For each create/modify: the template
+     filename and the outputPath. For delete: just the outputPath.
+   - Package dependencies: if the captured work involves adding npm
+     dependencies, record them in the `packageDependencies` field of
+     `instructions.json` — do NOT include `package.json` as a modify entry.
+     Use the `-p` flag on `create` to specify them:
+     `-p='[{"dependencies":["pkg@^1.0.0"]}]'` (or `{"target":"packages/web",...}`
+     for monorepo). The CLI manages `package.json` updates and install
+     automatically.
+
+   Present this to the user and get approval before proceeding.
+
+5. Scaffold the folder structure by running:
+   `saved template create -n=<name> -i="<intent>" -v="<vars>" -o='<files-json>'`
+   (or `saved feature create -n=<name> -i="<intent>" -v="<vars>" -o='<files-json>'`
+   for features). This creates the instructions.json and empty template files.
+
+6. Copy the original files into the template directory, overwriting the
+   empty stubs. Use `cp` for each file — this brings the full content onto
+   disk without writing it as agent output. Do NOT write file contents from
+   scratch — always copy first.
+
+7. Edit the copied files in place to parameterize them:
+   - For .ts templates: wrap the content in a default-export function and
+     replace concrete values with `${var}`. Keep it a pure function of
+     `vars` — no imports, no filesystem access. Example:
+     `export default ({ name }: Record<string, string>) => \`# ${name}\`;`.
+   - For .njk templates: replace concrete values with `{{var}}` syntax.
+     Simpler when the original file needs significant transformation to become
+     a .ts function.
+   - For modify entries: author the modify template (.json for static,
+     .njk/.ts for variable-driven). See the main instruction file for the
+     modify template format.
+
+   Prefer .ts templates (the recommended format). Use .njk only when .ts
+   is impractical.
+
+8. Run `saved template validate -n=<name>` (or
+   `saved feature validate -n=<name>`) to validate the structure.
+
+9. Run `saved template apply <name> --<variable-name>=<value> ... -d` (or
+   `saved feature apply <name> --<variable-name>=<value> ... -d`) to dry-run
+   and verify the captured artifact regenerates faithfully. Compare the
+   dry-run output to the original work. If there are discrepancies, fix
+   the template and re-verify.
+
+10. Report back to the user: what was captured, where it lives, and how to
+    reuse it:
+    `saved template apply <name> --<variable-name>=<value> ...`
+    (or `saved feature apply <name> --<variable-name>=<value> ...`).

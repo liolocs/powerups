@@ -2,8 +2,8 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { CodeError } from "@rcompat/error";
-import createValidateCommand from "#commands/output/validate";
-import createCreateCommand from "#commands/output/create";
+import createValidateCommand from "#commands/output/validate/index";
+import createCreateCommand from "#commands/output/create/index";
 import { OutputTemplateCreateErrorCode } from "#errors/outputCreateErrors";
 import captureStdout, {
   captureStdoutOrError,

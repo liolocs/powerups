@@ -1,4 +1,4 @@
-import tokenize from "#commands/output/tokenize";
+import tokenize from "#commands/output/validate/tokenize";
 
 export default function scoreIntent(
   output: { intent: string[] },

@@ -1,0 +1,42 @@
+{
+  "name": "cli-command",
+  "variables": [
+    "name",
+    "description",
+    "sub",
+    "subDescription"
+  ],
+  "intent": [
+    "cli command",
+    "new command",
+    "command group",
+    "saved cli",
+    "subcommand"
+  ],
+  "output": {
+    "create": [
+      {
+        "name": "entry",
+        "template": "command-entry.ts.ts",
+        "outputPath": "packages/cli/src/commands/{{name}}.ts"
+      },
+      {
+        "name": "impl",
+        "template": "command-impl-index.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{name}}/index.ts"
+      },
+      {
+        "name": "sub",
+        "template": "command-sub.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{name}}/{{sub}}.ts"
+      },
+      {
+        "name": "errors",
+        "template": "command-errors.ts.ts",
+        "outputPath": "packages/cli/src/private/errors/{{name}}Errors.ts"
+      }
+    ],
+    "modify": [],
+    "delete": []
+  }
+}

@@ -2,7 +2,7 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import doctor from "#commands/doctor";
-import createCreateCommand from "#commands/output/create";
+import createCreateCommand from "#commands/output/create/index";
 import captureStdout, {
   captureStdoutOrError,
 } from "#test-utils/capture-stdout";

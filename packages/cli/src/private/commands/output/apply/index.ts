@@ -121,12 +121,15 @@ export default function createApplyCommand(
       // 9. If --dry-run: render to stdout, no file writes
       if (isDryRun) {
         let totalCharacters = 0;
+
         for (const task of tasks) {
           if (task.kind === "delete") {
             const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
+
             cli.print(`=== ${resolvedPath} (delete) ===\n`);
             cli.print("Would delete\n");
             cli.print("\n");
+
             continue;
           }
 
@@ -150,10 +153,13 @@ export default function createApplyCommand(
           } else {
             // Modify: show what would change
             const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
+
             cli.print(`=== ${resolvedPath} (modify) ===\n`);
             // Render the modify template to preview modifications
             const ext = task.templatePath!.extension;
+
             let modContent: string;
+
             if (ext === ".json") {
               modContent = await task.templatePath!.text();
             } else {
@@ -169,6 +175,7 @@ export default function createApplyCommand(
         // Process packageDependencies in dry-run mode
         if (instructions.packageDependencies || instructions.includes) {
           const collectedDeps = await collectDependencies({ outputName: name, outputsFolder: domainFolder });
+
           if (collectedDeps.length > 0) {
             await applyDependencies({
               projectRoot: root,
@@ -280,6 +287,7 @@ export default function createApplyCommand(
       if (instructions.packageDependencies || instructions.includes) {
         try {
           const collectedDeps = await collectDependencies({ outputName: name, outputsFolder: domainFolder });
+          
           if (collectedDeps.length > 0) {
             await applyDependencies({
               projectRoot: root,
@@ -289,6 +297,7 @@ export default function createApplyCommand(
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+
           cli.print(`Warning: dependency installation failed — ${message}\n`);
         }
       }

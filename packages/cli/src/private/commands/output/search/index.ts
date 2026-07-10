@@ -5,8 +5,8 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
 import output_create_errors from "#errors/outputCreateErrors";
 import output_search_errors from "#errors/outputSearchErrors";
-import tokenize from "#commands/output/tokenize";
-import scoreIntent from "#commands/output/score-intent";
+import tokenize from "#commands/output/validate/tokenize";
+import scoreIntent from "#commands/output/validate/score-intent";
 import { instructionsSchema } from "#schemas/instruction";
 import {
   MAIN_FOLDER,

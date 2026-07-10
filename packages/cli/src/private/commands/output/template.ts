@@ -1,9 +1,9 @@
 import { Command } from "@saved/program";
 import { CLI_NAME } from "#constants";
-import createCreateCommand from "#commands/output/create";
-import createApplyCommand from "#commands/output/apply";
-import createSearchCommand from "#commands/output/search";
-import createValidateCommand from "#commands/output/validate";
+import createCreateCommand from "#commands/output/create/index";
+import createApplyCommand from "#commands/output/apply/index";
+import createSearchCommand from "#commands/output/search/index";
+import createValidateCommand from "#commands/output/validate/index";
 
 const template = new Command({
   name: "template",

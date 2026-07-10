@@ -1,5 +1,5 @@
 import test from "@rcompat/test";
-import createCreateCommand from "#commands/output/create";
+import createCreateCommand from "#commands/output/create/index";
 import { instructionsSchema } from "#schemas/instruction";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";

@@ -1,8 +1,8 @@
 import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import createApplyCommand from "#commands/output/apply";
-import createCreateCommand from "#commands/output/create";
+import createApplyCommand from "#commands/output/apply/index";
+import createCreateCommand from "#commands/output/create/index";
 import captureStdout from "#test-utils/capture-stdout";
 import { CodeError } from "@rcompat/error";
 import { OutputTemplateApplyErrorCode } from "#errors/outputApplyErrors";

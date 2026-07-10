@@ -1,17 +1,27 @@
+import string from "@rcompat/string"
+import is from "@rcompat/is";
+
 export default ({ name, description, sub }: Record<string, string>) => {
-  const camel = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-  const subCamel = sub.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  const camel = string.toCamelCase(name);
+  let subCamel = sub;
+  const hasSub = is.truthy(sub);
+
+  if (hasSub) {
+    subCamel = string.toCamelCase(sub);
+  }
+
   const desc = description.replaceAll("`", "\\`");
+
   return `import { Command } from "@saved/program";
-import ${subCamel} from "#commands/${name}/${sub}";
+${hasSub ? `import ${subCamel} from "#commands/${name}/${sub}";` : ""}
 import { CLI_NAME } from "#constants";
 
 const ${camel} = new Command({
   name: "${name}",
   description: \`${desc}\`,
   flags: [],
-  subcommands: [${subCamel}],
-  requiresSubcommand: true,
+  subcommands: [${ hasSub ? `"${sub}"` : ""}],
+  requiresSubcommand: ${hasSub},
   action: () => {},
 });
 

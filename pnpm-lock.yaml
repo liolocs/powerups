@@ -21,6 +21,12 @@ importers:
         specifier: ^0.22.0
         version: 0.22.0(@rcompat/test@0.20.0)
     devDependencies:
+      '@rcompat/is':
+        specifier: ^0.12.0
+        version: 0.12.0
+      '@rcompat/string':
+        specifier: ^0.22.0
+        version: 0.22.0
       apekit:
         specifier: 0.0.58
         version: 0.0.58(eslint@10.5.0(jiti@2.7.0))
@@ -94,40 +100,6 @@ importers:
       pema:
         specifier: ^0.8.2
         version: 0.8.2
-
-  packages/saved-cli:
-    dependencies:
-      '@rcompat/cli':
-        specifier: ^0.25.0
-        version: 0.25.0
-      '@rcompat/error':
-        specifier: ^0.9.0
-        version: 0.9.0
-      '@rcompat/fs':
-        specifier: ^0.35.1
-        version: 0.35.1
-      '@rcompat/io':
-        specifier: ^0.11.0
-        version: 0.11.0
-      '@rcompat/is':
-        specifier: ^0.12.0
-        version: 0.12.0
-      '@rcompat/runtime':
-        specifier: ^0.17.0
-        version: 0.17.0
-      '@saved/program':
-        specifier: workspace:^
-        version: link:../program
-      nunjucks:
-        specifier: ^3.2.4
-        version: 3.2.4
-      pema:
-        specifier: ^0.8.2
-        version: 0.8.2
-    devDependencies:
-      '@types/nunjucks':
-        specifier: ^3.2.6
-        version: 3.2.6
 
 packages:
 

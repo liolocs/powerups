@@ -12,6 +12,9 @@ export const TEMPLATE_FOLDER = "template";
 /** Subfolder for features (one-time additions). */
 export const FEATURE_FOLDER = "feature";
 
+/** Name of the config file storing project settings (e.g. chosen harness). */
+export const CONFIG_FILE = "config.json";
+
 /** Name of the metrics log file, storing one JSON entry per output run. */
 export const METRICS_FILE = "metrics.jsonl";
 

@@ -2,7 +2,7 @@ import test from "@rcompat/test";
 import init from "#commands/init/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { MAIN_FOLDER, CLI_NAME } from "#constants";
+import { MAIN_FOLDER, CLI_NAME, CONFIG_FILE } from "#constants";
 import { CodeError } from "@rcompat/error";
 import { InitErrorCode } from "#errors/initErrors";
 
@@ -570,4 +570,61 @@ test.case("init injects frontmatter into skill files for every harness", async a
 
     await testRoot.remove();
   }
+});
+
+test.group("init config", () => {
+  test.case("init writes config.json with the chosen harness", async assert => {
+    await reset();
+
+    await init.run({
+      subcommands: [],
+      flags: [{ flag: "--harness", value: "pi" }],
+      context: { root: testRoot },
+    });
+
+    const configPath = testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`);
+    assert(await fs.exists(configPath)).equals(true);
+
+    const config = JSON.parse(await configPath.text());
+    assert(config.harness).equals("pi");
+
+    await testRoot.remove();
+  });
+
+  test.case("init writes config.json with the detected harness", async assert => {
+    await reset();
+    await testRoot.append("/CLAUDE.md").write("# Existing project");
+
+    await init.run({
+      subcommands: [],
+      flags: [],
+      context: { root: testRoot, skipGlobal: true },
+    });
+
+    const configPath = testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`);
+    assert(await fs.exists(configPath)).equals(true);
+
+    const config = JSON.parse(await configPath.text());
+    assert(config.harness).equals("claude");
+
+    await testRoot.remove();
+  });
+
+  test.case("init writes config.json for every harness", async assert => {
+    for (const harness of ["claude", "opencode", "pi", "codex"] as const) {
+      await reset();
+
+      await init.run({
+        subcommands: [],
+        flags: [{ flag: "--harness", value: harness }],
+        context: { root: testRoot },
+      });
+
+      const configPath = testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`);
+      const config = JSON.parse(await configPath.text());
+      assert(config.harness).equals(harness);
+
+      await testRoot.remove();
+    }
+  });
 });

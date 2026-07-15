@@ -4,6 +4,7 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
 import init_errors from "#errors/initErrors";
 import { scaffold, type RollbackInfo } from "#commands/init/scaffold/index";
+import { writeConfig } from "#utils/config";
 import { MAIN_FOLDER, CLI_NAME } from "#constants";
 
 /**
@@ -80,6 +81,9 @@ const init = new Command({
         skipGlobal: context?.skipGlobal,
         rollback,
       });
+
+      // Persist the resolved harness so `saved update` can reuse it
+      await writeConfig(root, { harness: result.harness });
 
       const green = cli.fg.green;
       const dim = cli.fg.dim;

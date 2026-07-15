@@ -36,7 +36,7 @@ If the user confirms, capture it:
 ```
 {{ CLI_NAME }} template create -n=<short-name> \
   -i="<intent keywords>" \
-  -v="var1,var2" \
+  -v="var1,var2" -ov="optVar1,optVar2" \
   -o='{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'
 ```
 Then fill in the template at
@@ -79,7 +79,10 @@ export default ({ componentName, theme }: Record<string, string>) =>
 ```json
 {
   "name": "string",
-  "variables": ["string"],
+  "variables": {
+    "required": ["string"],
+    "optional": ["string"]
+  },
   "intent": ["string"],
   "packageDependencies": [
     {
@@ -119,6 +122,26 @@ The `delete` array is optional — omit it entirely for backward compatibility.
 Delete entries have no `template` field (nothing to render); at apply time
 the file at `outputPath` is removed from the project. If the target file
 doesn't exist, a warning is printed and the entry is skipped (no error).
+
+### Required vs Optional Variables
+
+The `variables` field has two arrays:
+
+- **`required`** — variables the user must provide at apply time. If any are
+  missing, the CLI reports all missing required variables in a single error
+  along with an example command showing the required flags.
+- **`optional`** — variables the user may omit. When not provided, they default
+  to an empty string (`""`), so `{{ '{{var}}' }}` tokens in templates and
+  output paths resolve to `""` instead of leaving unresolved tokens.
+
+Use `--<variable-name>=<value>` flags at apply time for both required and
+optional variables. When creating a template, use `-v` for required variables
+and `-ov` for optional variables.
+
+A variable cannot be in both `required` and `optional` — validation will reject
+it. Additionally, if an optional variable is used in an `outputPath`,
+validation will flag it (an optional variable in a path produces broken paths
+when omitted — it should be required instead).
 
 ### Package Dependencies
 
@@ -227,8 +250,8 @@ full template, verify it works, then extract when repetition emerges.
 | Search features | `{{ CLI_NAME }} feature search -q="..."` |
 | Apply a template | `{{ CLI_NAME }} template apply <name> --<variable>=<value> [-d]` |
 | Apply a feature | `{{ CLI_NAME }} feature apply <name> --<variable>=<value> [-d]` |
-| Create a template | `{{ CLI_NAME }} template create -n=<name> -i="..." -v="..." -o='...' -p='...'` |
-| Create a feature | `{{ CLI_NAME }} feature create -n=<name> -i="..." -v="..." -o='...' -p='...'` |
+| Create a template | `{{ CLI_NAME }} template create -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Create a feature | `{{ CLI_NAME }} feature create -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
 | Validate templates | `{{ CLI_NAME }} template validate [-n=<name>]` |
 | Validate features | `{{ CLI_NAME }} feature validate [-n=<name>]` |
 | Health check all | `{{ CLI_NAME }} doctor` |

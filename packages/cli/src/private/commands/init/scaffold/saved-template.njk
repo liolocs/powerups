@@ -53,8 +53,9 @@ If the user is pointing at specific already-done work they want to capture
 5. For each approved candidate, capture it:
    - Run `{{ CLI_NAME }} template create -n=<short-name> \
        -i="<intent keywords>" \
-       -v="var1,var2" \
+       -v="var1,var2" -ov="optVar1,optVar2" \
        -o='{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'`
+     Use `-ov` only if there are optional variables; omit it otherwise.
    - Fill in the template at
      `{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/<name>/<template>`.
      Prefer a `.ts` file with a default-export function

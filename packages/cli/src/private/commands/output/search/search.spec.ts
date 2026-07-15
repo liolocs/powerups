@@ -13,7 +13,7 @@ const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
 
-const search = createSearchCommand("template");
+const searchCmd = createSearchCommand("template");
 const createCmd = createCreateCommand("template");
 
 test.case("search finds matching templates", async assert => {
@@ -50,7 +50,7 @@ test.case("search finds matching templates", async assert => {
     context: { root: testRoot },
   });
 
-  const output = await captureStdout(() => search.run({
+  const output = await captureStdout(() => searchCmd.run({
     subcommands: [],
     flags: [{ flag: "--query", value: "component" }],
     context: { root: testRoot },
@@ -89,7 +89,7 @@ test.case("search ranks by score descending", async assert => {
     context: { root: testRoot },
   });
 
-  const output = await captureStdout(() => search.run({
+  const output = await captureStdout(() => searchCmd.run({
     subcommands: [],
     flags: [{ flag: "--query", value: "component ui" }],
     context: { root: testRoot },
@@ -121,7 +121,7 @@ test.group("search errors", () => {
 
     let threw;
     try {
-      await search.run({
+      await searchCmd.run({
         subcommands: [],
         flags: [{ flag: "--query", value: "nonexistent" }],
         context: { root: testRoot },
@@ -151,7 +151,7 @@ test.group("search errors", () => {
 
     let threw;
     try {
-      await search.run({
+      await searchCmd.run({
         subcommands: [],
         flags: [],
         context: { root: testRoot },
@@ -172,7 +172,7 @@ test.group("search errors", () => {
     let threw;
 
     try {
-      await search.run({
+      await searchCmd.run({
         subcommands: [],
         flags: [{ flag: "--query", value: "component" }],
         context: { root: testRoot },

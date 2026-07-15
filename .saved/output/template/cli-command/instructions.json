@@ -4,18 +4,12 @@
     "required": [
       "name",
       "description"
-    ],
-    "optional": [
-      "sub",
-      "subDescription"
     ]
   },
   "intent": [
     "cli command",
     "new command",
-    "command group",
-    "saved cli",
-    "subcommand"
+    "saved cli"
   ],
   "output": {
     "create": [
@@ -30,14 +24,14 @@
         "outputPath": "packages/cli/src/private/commands/{{name}}/index.ts"
       },
       {
-        "name": "sub",
-        "template": "command-sub.ts.ts",
-        "outputPath": "packages/cli/src/private/commands/{{name}}/{{sub}}.ts"
-      },
-      {
         "name": "errors",
         "template": "command-errors.ts.ts",
         "outputPath": "packages/cli/src/private/errors/{{name}}Errors.ts"
+      },
+      {
+        "name": "spec",
+        "template": "command-spec.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{name}}/{{name}}.spec.ts"
       }
     ],
     "modify": [],

@@ -1,0 +1,33 @@
+{
+  "name": "cli-subcommand",
+  "variables": {
+    "required": [
+      "name",
+      "sub",
+      "subDescription"
+    ]
+  },
+  "intent": [
+    "cli subcommand",
+    "subcommand",
+    "command sub",
+    "saved cli"
+  ],
+  "output": {
+    "create": [
+      {
+        "name": "sub",
+        "template": "command-sub.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{name}}/{{sub}}.ts"
+      }
+    ],
+    "modify": [
+      {
+        "name": "index-modify",
+        "template": "command-index-modify.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{name}}/index.ts"
+      }
+    ],
+    "delete": []
+  }
+}

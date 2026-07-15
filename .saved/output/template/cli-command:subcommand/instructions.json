@@ -1,0 +1,38 @@
+{
+  "name": "cli-command:subcommand",
+  "variables": {
+    "required": [
+      "name",
+      "description",
+      "sub",
+      "subDescription"
+    ]
+  },
+  "intent": [
+    "cli command with subcommand",
+    "command group",
+    "saved cli"
+  ],
+  "output": {
+    "create": [],
+    "modify": [],
+    "delete": []
+  },
+  "includes": [
+    {
+      "name": "cli-command",
+      "variables": {
+        "name": "{{name}}",
+        "description": "{{description}}"
+      }
+    },
+    {
+      "name": "cli-subcommand",
+      "variables": {
+        "name": "{{name}}",
+        "sub": "{{sub}}",
+        "subDescription": "{{subDescription}}"
+      }
+    }
+  ]
+}

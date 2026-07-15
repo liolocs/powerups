@@ -26,6 +26,7 @@ test.case("should return no issues for valid output with no includes", async ass
   await reset();
   await writeOutput("simple", {
     name: "simple",
+    description: "test description",
     variables: { required: ["ComponentName"] },
     intent: [],
     output: { create: [], modify: [] },
@@ -74,6 +75,7 @@ test.case("should return an issue for a missing create template file", async ass
   await reset();
   await writeOutput("missing-tmpl", {
     name: "missing-tmpl",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     output: {
@@ -95,6 +97,7 @@ test.case("should return an issue for a missing modify template file", async ass
   await reset();
   await writeOutput("missing-modify-tmpl", {
     name: "missing-modify-tmpl",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     output: {
@@ -118,6 +121,7 @@ test.case("should return no issues for valid output with both create and modify 
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON({
     name: "both",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     output: {
@@ -141,12 +145,14 @@ test.case("should return no issues for valid output with valid suboutputs", asyn
   await reset();
   await writeOutput("valid-child", {
     name: "valid-child",
+    description: "test description",
     variables: { required: ["componentName"] },
     intent: [],
     output: { create: [], modify: [] },
   });
   await writeOutput("valid-parent", {
     name: "valid-parent",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
@@ -166,12 +172,14 @@ test.case("should merge suboutput issues for valid output with invalid suboutput
   await reset();
   await writeOutput("missing-child-ref", {
     name: "missing-child-ref",
+    description: "test description",
     variables: { required: ["componentName"] },
     intent: [],
     output: { create: [], modify: [] },
   });
   await writeOutput("bad-parent", {
     name: "bad-parent",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
@@ -190,6 +198,7 @@ test.case("should report issue for required/optional variable name collision", a
   await reset();
   await writeOutput("collision", {
     name: "collision",
+    description: "test description",
     variables: { required: ["name"], optional: ["name"] },
     intent: [],
     output: { create: [], modify: [] },
@@ -208,6 +217,7 @@ test.case("should report issue for optional variable used in output path", async
   await reset();
   await writeOutput("opt-in-path", {
     name: "opt-in-path",
+    description: "test description",
     variables: { required: [], optional: ["name"] },
     intent: [],
     output: {
@@ -229,6 +239,7 @@ test.case("should not report issue when optional variable is not in any output p
   await reset();
   await writeOutput("opt-clean", {
     name: "opt-clean",
+    description: "test description",
     variables: { required: ["name"], optional: ["sub"] },
     intent: [],
     output: {

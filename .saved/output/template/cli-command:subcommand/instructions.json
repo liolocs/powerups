@@ -1,5 +1,6 @@
 {
   "name": "cli-command:subcommand",
+  "description": "Scaffolds a CLI command that groups multiple subcommands under a shared entry point.",
   "variables": {
     "required": [
       "name",

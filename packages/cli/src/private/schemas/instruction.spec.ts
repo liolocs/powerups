@@ -4,6 +4,7 @@ import { instructionsSchema } from "#schemas/instruction";
 test.case("should parse instructions with includes", async assert => {
   const result = instructionsSchema.parse({
     name: "shadcn-all-components",
+    description: "test description",
     variables: { required: ["theme"] },
     intent: ["shadcn"],
     output: { create: [], modify: [] },
@@ -28,6 +29,7 @@ test.case("should parse instructions with includes", async assert => {
 test.case("should parse instructions without includes (backward compat)", async assert => {
   const result = instructionsSchema.parse({
     name: "simple-output",
+    description: "test description",
     variables: { required: ["ComponentName"] },
     intent: [],
     output: { create: [], modify: [] },
@@ -40,6 +42,7 @@ test.case("should parse instructions without includes (backward compat)", async 
 test.case("should parse includes without optional outputPathOverride", async assert => {
   const result = instructionsSchema.parse({
     name: "parent",
+    description: "test description",
     variables: { required: ["theme"] },
     intent: [],
     output: { create: [], modify: [] },
@@ -57,6 +60,7 @@ test.case("should parse includes without optional outputPathOverride", async ass
 test.case("should parse includes with both create and modify outputPathOverride", async assert => {
   const result = instructionsSchema.parse({
     name: "parent",
+    description: "test description",
     variables: { required: ["theme"] },
     intent: [],
     output: { create: [], modify: [] },
@@ -79,6 +83,7 @@ test.case("should parse includes with both create and modify outputPathOverride"
 test.case("should parse output with both create and modify entries", async assert => {
   const result = instructionsSchema.parse({
     name: "api",
+    description: "test description",
     variables: { required: ["name"] },
     intent: ["create a new backend api"],
     output: {
@@ -100,6 +105,7 @@ test.case("should parse output with both create and modify entries", async asser
 test.case("should parse output with a delete array", async assert => {
   const result = instructionsSchema.parse({
     name: "cleanup",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     output: {
@@ -122,6 +128,7 @@ test.case("should parse output with a delete array", async assert => {
 test.case("should parse output without delete (backward compat)", async assert => {
   const result = instructionsSchema.parse({
     name: "simple",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
@@ -133,6 +140,7 @@ test.case("should parse output without delete (backward compat)", async assert =
 test.case("should parse packageDependencies with target (monorepo)", async assert => {
   const result = instructionsSchema.parse({
     name: "add-tailwind",
+    description: "test description",
     variables: { required: [] },
     intent: ["tailwind"],
     packageDependencies: [
@@ -158,6 +166,7 @@ test.case("should parse packageDependencies with target (monorepo)", async asser
 test.case("should parse packageDependencies without target (normal repo)", async assert => {
   const result = instructionsSchema.parse({
     name: "add-dep",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     packageDependencies: [
@@ -177,6 +186,7 @@ test.case("should parse packageDependencies without target (normal repo)", async
 test.case("should parse multiple packageDependencies groups", async assert => {
   const result = instructionsSchema.parse({
     name: "multi-dep",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     packageDependencies: [
@@ -196,6 +206,7 @@ test.case("should parse multiple packageDependencies groups", async assert => {
 test.case("should parse instructions without packageDependencies (backward compat)", async assert => {
   const result = instructionsSchema.parse({
     name: "no-deps",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
@@ -207,6 +218,7 @@ test.case("should parse instructions without packageDependencies (backward compa
 test.case("should parse includes with outputPathOverride.delete", async assert => {
   const result = instructionsSchema.parse({
     name: "parent",
+    description: "test description",
     variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
@@ -228,6 +240,7 @@ test.case("should parse includes with outputPathOverride.delete", async assert =
 test.case("should parse output with create, modify, and delete together", async assert => {
   const result = instructionsSchema.parse({
     name: "full",
+    description: "test description",
     variables: { required: ["name"] },
     intent: [],
     output: {
@@ -248,6 +261,7 @@ test.group("instruction schema rejections", () => {
   try {
     instructionsSchema.parse({
       name: "parent",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
@@ -264,6 +278,7 @@ test.group("instruction schema rejections", () => {
   try {
     instructionsSchema.parse({
       name: "parent",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
@@ -280,6 +295,7 @@ test.group("instruction schema rejections", () => {
   try {
     instructionsSchema.parse({
       name: "bad",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       output: { modify: [] },
@@ -295,6 +311,7 @@ test.group("instruction schema rejections", () => {
   try {
     instructionsSchema.parse({
       name: "bad",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       output: { create: [] },
@@ -310,6 +327,7 @@ test.group("instruction schema rejections", () => {
     try {
       instructionsSchema.parse({
         name: "bad",
+        description: "test description",
         variables: { required: [] },
         intent: [],
         output: { create: [], modify: [], delete: [{ outputPath: "src/x.ts" }] },
@@ -325,6 +343,7 @@ test.group("instruction schema rejections", () => {
     try {
       instructionsSchema.parse({
         name: "bad",
+        description: "test description",
         variables: { required: [] },
         intent: [],
         output: { create: [], modify: [], delete: [{ name: "x" }] },
@@ -340,6 +359,7 @@ test.group("instruction schema rejections", () => {
   try {
     instructionsSchema.parse({
       name: "bad",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       packageDependencies: [
@@ -356,6 +376,7 @@ test.group("instruction schema rejections", () => {
 test.case("should parse instructions with required and optional variables", async assert => {
   const result = instructionsSchema.parse({
     name: "cli-command",
+    description: "test description",
     variables: { required: ["name", "description"], optional: ["sub", "subDescription"] },
     intent: [],
     output: { create: [], modify: [] },
@@ -368,6 +389,7 @@ test.case("should parse instructions with required and optional variables", asyn
 test.case("should parse instructions with required only (optional omitted)", async assert => {
   const result = instructionsSchema.parse({
     name: "simple",
+    description: "test description",
     variables: { required: ["name"] },
     intent: [],
     output: { create: [], modify: [] },
@@ -380,6 +402,7 @@ test.case("should parse instructions with required only (optional omitted)", asy
 test.case("should parse instructions with empty required and some optional", async assert => {
   const result = instructionsSchema.parse({
     name: "opt-only",
+    description: "test description",
     variables: { required: [], optional: ["sub"] },
     intent: [],
     output: { create: [], modify: [] },
@@ -395,6 +418,49 @@ test.case("should reject old array format for variables", async assert => {
     instructionsSchema.parse({
       name: "bad",
       variables: ["name"],
+      intent: [],
+      output: { create: [], modify: [] },
+    });
+  } catch {
+    threw = true;
+  }
+  assert(threw).true();
+});
+
+test.case("should parse description field", async assert => {
+  const result = instructionsSchema.parse({
+    name: "with-description",
+    description: "A template that does something useful.",
+    variables: { required: [] },
+    intent: [],
+    output: { create: [], modify: [] },
+  });
+
+  assert(result.description).equals("A template that does something useful.");
+});
+
+test.case("should reject instructions missing description", async assert => {
+  let threw = false;
+  try {
+    instructionsSchema.parse({
+      name: "no-description",
+      variables: { required: [] },
+      intent: [],
+      output: { create: [], modify: [] },
+    });
+  } catch {
+    threw = true;
+  }
+  assert(threw).true();
+});
+
+test.case("should reject instructions with non-string description", async assert => {
+  let threw = false;
+  try {
+    instructionsSchema.parse({
+      name: "bad-description",
+      description: 123,
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
     });

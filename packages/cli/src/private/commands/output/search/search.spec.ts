@@ -25,6 +25,7 @@ test.case("search finds matching templates", async assert => {
     subcommands: [],
     flags: [
       { flag: "--name", value: "ui-component" },
+      { flag: "--description", value: "test description" },
       { flag: "--intent", value: "ui,component" },
       { flag: "--variables", value: "ComponentName" },
       { flag: "--output", value: JSON.stringify({
@@ -44,6 +45,7 @@ test.case("search finds matching templates", async assert => {
     subcommands: [],
     flags: [
       { flag: "--name", value: "api-route" },
+      { flag: "--description", value: "test description" },
       { flag: "--intent", value: "api,route" },
       { flag: "--variables", value: "RouteName" },
     ],
@@ -71,6 +73,7 @@ test.case("search ranks by score descending", async assert => {
     subcommands: [],
     flags: [
       { flag: "--name", value: "focused" },
+      { flag: "--description", value: "test description" },
       { flag: "--intent", value: "component" },
     ],
     context: { root: testRoot },
@@ -80,6 +83,7 @@ test.case("search ranks by score descending", async assert => {
     subcommands: [],
     flags: [
       { flag: "--name", value: "broad" },
+      { flag: "--description", value: "test description" },
       { flag: "--intent", value: "component,ui,state" },
       { flag: "--output", value: JSON.stringify({
         create: [{ name: "a", template: "a", outputPath: "a" }],
@@ -114,6 +118,7 @@ test.group("search errors", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "ui-component" },
+      { flag: "--description", value: "test description" },
         { flag: "--intent", value: "ui,component" },
       ],
       context: { root: testRoot },
@@ -144,6 +149,7 @@ test.group("search errors", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "ui-component" },
+      { flag: "--description", value: "test description" },
         { flag: "--intent", value: "ui,component" },
       ],
       context: { root: testRoot },

@@ -83,7 +83,8 @@ test.case("doctor validates templates and features with no issues", async assert
 
   await createCmd.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "valid-template" }],
+    flags: [{ flag: "--name", value: "valid-template" },
+      { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
   // Commit so working tree is clean
@@ -107,7 +108,8 @@ test.case("doctor reports orphaned file in a template folder", async assert => {
 
   await createCmd.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "with-orphan" }],
+    flags: [{ flag: "--name", value: "with-orphan" },
+      { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
 
@@ -133,6 +135,7 @@ test.case("doctor reports invalid .json modify template", async assert => {
     subcommands: [],
     flags: [
       { flag: "--name", value: "bad-modify" },
+      { flag: "--description", value: "test description" },
       { flag: "--output", value: JSON.stringify({
         create: [],
         modify: [{ name: "wire", template: "wire.json", outputPath: "src/index.ts" }],
@@ -202,7 +205,8 @@ test.case("doctor checks both domains in one pass", async assert => {
   // Create a template
   await createCmd.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "tmpl" }],
+    flags: [{ flag: "--name", value: "tmpl" },
+      { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
 
@@ -210,7 +214,8 @@ test.case("doctor checks both domains in one pass", async assert => {
   const createFeature = createCreateCommand("feature");
   await createFeature.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "feat" }],
+    flags: [{ flag: "--name", value: "feat" },
+      { flag: "--description", value: "test description" }],
     context: { root: testRoot },
   });
 
@@ -260,6 +265,7 @@ test.group("doctor errors", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "bad-template" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [{ name: "f", template: "missing.njk", outputPath: "out.ts" }],
           modify: [],

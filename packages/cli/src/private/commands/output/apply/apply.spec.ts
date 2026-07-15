@@ -62,6 +62,7 @@ test.case("apply writes rendered .njk template files to outputPath",
       subcommands: [],
       flags: [
         { flag: "--name", value: "ui-component" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "ComponentName" },
         { flag: "--output", value: JSON.stringify({
           create: [{
@@ -99,6 +100,7 @@ test.case("apply writes rendered .ts template files to outputPath",
       subcommands: [],
       flags: [
         { flag: "--name", value: "ts-output" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "ComponentName" },
         { flag: "--output", value: JSON.stringify({
           create: [{
@@ -144,6 +146,7 @@ test.case("apply with --overwrite overwrites existing destination files", async 
     subcommands: [],
     flags: [
       { flag: "--name", value: "overwrite-test" },
+      { flag: "--description", value: "test description" },
       { flag: "--variables", value: "ComponentName" },
       { flag: "--output", value: JSON.stringify({
         create: [{
@@ -221,7 +224,8 @@ test.group("apply errors", () => {
 
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "real" }],
+      flags: [{ flag: "--name", value: "real" },
+      { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
 
@@ -248,6 +252,7 @@ test.group("apply errors", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "needs-vars" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "ComponentName,theme" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -291,6 +296,7 @@ test.group("apply errors", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "missing-tmpl" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "ComponentName" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -333,6 +339,7 @@ test.group("apply errors", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "no-target" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [],
           modify: [{
@@ -371,6 +378,7 @@ test.group("apply errors", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "anchor-missing" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [],
           modify: [{
@@ -411,6 +419,7 @@ test.group("apply errors", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "anchor-ambiguous" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [],
           modify: [{
@@ -456,6 +465,7 @@ test.group("apply errors", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "no-overwrite-test" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "ComponentName" },
         { flag: "--output", value: JSON.stringify({
           create: [{
@@ -503,6 +513,7 @@ test.group("apply errors", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "no-git" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "ComponentName" },
         { flag: "--output", value: JSON.stringify({
           create: [{
@@ -543,6 +554,7 @@ test.group("apply dry-run", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "dry-run-test" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "ComponentName" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -588,6 +600,7 @@ test.group("apply dry-run", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "dry-modify" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [],
           modify: [{
@@ -629,6 +642,7 @@ test.group("apply composite output", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "shadcn-button" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "componentName,theme" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -649,6 +663,7 @@ test.group("apply composite output", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "shadcn-all" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "theme" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -667,6 +682,7 @@ test.group("apply composite output", () => {
       // Add includes to parent
       await templateFolder.append("/shadcn-all/instructions.json").writeJSON({
         name: "shadcn-all",
+      description: "test description",
         variables: { required: ["theme"] },
         intent: [],
         output: {
@@ -723,6 +739,7 @@ test.group("apply composite output", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "dry-child" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "componentName" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -742,6 +759,7 @@ test.group("apply composite output", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "dry-parent" },
+      { flag: "--description", value: "test description" },
           { flag: "--output", value: JSON.stringify({
             create: [{
               name: "barrel", template: "barrel.njk", outputPath: ".test-output/index.ts",
@@ -755,6 +773,7 @@ test.group("apply composite output", () => {
 
       await templateFolder.append("/dry-parent/instructions.json").writeJSON({
         name: "dry-parent",
+      description: "test description",
         variables: { required: [] },
         intent: [],
         output: {
@@ -794,11 +813,13 @@ test.group("apply composite output", () => {
 
       await createCmd.run({
         subcommands: [],
-        flags: [{ flag: "--name", value: "bad-parent" }],
+        flags: [{ flag: "--name", value: "bad-parent" },
+      { flag: "--description", value: "test description" },],
         context: { root: testRoot },
       });
       await templateFolder.append("/bad-parent/instructions.json").writeJSON({
         name: "bad-parent",
+      description: "test description",
         variables: { required: [] },
         intent: [],
         output: { create: [], modify: [] },
@@ -831,6 +852,7 @@ test.group("apply composite output", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "override-child" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "componentName" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -848,11 +870,13 @@ test.group("apply composite output", () => {
 
       await createCmd.run({
         subcommands: [],
-        flags: [{ flag: "--name", value: "override-parent" }],
+        flags: [{ flag: "--name", value: "override-parent" },
+      { flag: "--description", value: "test description" },],
         context: { root: testRoot },
       });
       await templateFolder.append("/override-parent/instructions.json").writeJSON({
         name: "override-parent",
+      description: "test description",
         variables: { required: [] },
         intent: [],
         output: { create: [], modify: [] },
@@ -890,6 +914,7 @@ test.group("apply composite output", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "dual-child" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "componentName" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -907,11 +932,13 @@ test.group("apply composite output", () => {
 
       await createCmd.run({
         subcommands: [],
-        flags: [{ flag: "--name", value: "dual-parent" }],
+        flags: [{ flag: "--name", value: "dual-parent" },
+      { flag: "--description", value: "test description" },],
         context: { root: testRoot },
       });
       await templateFolder.append("/dual-parent/instructions.json").writeJSON({
         name: "dual-parent",
+      description: "test description",
         variables: { required: [] },
         intent: [],
         output: { create: [], modify: [] },
@@ -953,6 +980,7 @@ test.group("apply modify", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "modify-test" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [],
           modify: [{
@@ -992,6 +1020,7 @@ test.group("apply modify", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "njk-modify" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "name" },
         { flag: "--output", value: JSON.stringify({
           create: [],
@@ -1032,6 +1061,7 @@ test.group("apply metrics", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "metrics-test" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "ComponentName" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -1070,6 +1100,7 @@ test.group("apply metrics", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "dry-metrics-test" },
+      { flag: "--description", value: "test description" },
           { flag: "--variables", value: "ComponentName" },
           { flag: "--output", value: JSON.stringify({
             create: [{
@@ -1116,6 +1147,7 @@ test.group("apply packageDependencies", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "dep-feature" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "" },
         { flag: "--output", value: JSON.stringify({
           create: [],
@@ -1149,6 +1181,7 @@ test.group("apply packageDependencies", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "no-dep-feature" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "" },
         { flag: "--output", value: JSON.stringify({
           create: [],
@@ -1183,6 +1216,7 @@ test.group("apply packageDependencies", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "real-dep" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "" },
         { flag: "--output", value: JSON.stringify({
           create: [],
@@ -1219,6 +1253,7 @@ test.group("apply packageDependencies", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "no-lock-dep" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "" },
         { flag: "--output", value: JSON.stringify({
           create: [],
@@ -1258,6 +1293,7 @@ test.group("apply rollback", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "rollback-test" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "ComponentName" },
         { flag: "--output", value: JSON.stringify({
           create: [{
@@ -1306,6 +1342,7 @@ test.group("apply delete", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "delete-test" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [],
           modify: [],
@@ -1343,6 +1380,7 @@ test.group("apply delete", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "mixed-ops" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "ComponentName" },
         { flag: "--output", value: JSON.stringify({
           create: [{
@@ -1390,6 +1428,7 @@ test.group("apply delete", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "delete-missing" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [],
           modify: [],
@@ -1426,6 +1465,7 @@ test.group("apply delete", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "failing-child" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [],
           modify: [{
@@ -1446,11 +1486,13 @@ test.group("apply delete", () => {
     // and continues instead of aborting, so the delete is still applied.
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "atomic-delete-parent" }],
+      flags: [{ flag: "--name", value: "atomic-delete-parent" },
+      { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
     await templateFolder.append("/atomic-delete-parent/instructions.json").writeJSON({
       name: "atomic-delete-parent",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       output: {
@@ -1491,6 +1533,7 @@ test.group("apply delete dry-run", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "dry-delete" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [],
           modify: [],
@@ -1527,6 +1570,7 @@ test.group("apply delete dry-run", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "dry-mixed" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "ComponentName" },
         { flag: "--output", value: JSON.stringify({
           create: [{

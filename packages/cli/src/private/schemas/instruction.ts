@@ -42,6 +42,7 @@ const packageDependencyGroupSchema = p({
 
 export const instructionsSchema = p({
   name: p.string,
+  description: p.string,
   variables: p({
     required: p.array(p.string),
     optional: p.array(p.string).optional(),

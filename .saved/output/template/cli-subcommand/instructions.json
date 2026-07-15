@@ -1,5 +1,6 @@
 {
   "name": "cli-subcommand",
+  "description": "Scaffolds a single subcommand nested inside an existing CLI command.",
   "variables": {
     "required": [
       "name",

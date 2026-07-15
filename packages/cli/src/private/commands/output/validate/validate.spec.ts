@@ -33,7 +33,8 @@ test.case("validate --name reports a single valid template", async assert => {
 
   await createCmd.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "ui-component" }],
+    flags: [{ flag: "--name", value: "ui-component" },
+      { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
 
@@ -96,7 +97,8 @@ test.group("validate errors", () => {
     // nonexistent name.
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "real-template" }],
+      flags: [{ flag: "--name", value: "real-template" },
+      { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
 
@@ -124,6 +126,7 @@ test.group("validate errors", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "missing-template" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [{
             name: "button.svelte",
@@ -164,12 +167,14 @@ test.group("validate errors", () => {
 
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "bad-parent" }],
+      flags: [{ flag: "--name", value: "bad-parent" },
+      { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
 
     await (await outputPath("bad-parent")).writeJSON({
       name: "bad-parent",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
@@ -204,6 +209,7 @@ test.group("validate all-targets", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "ui-component" },
+      { flag: "--description", value: "test description" },
         { flag: "--intent", value: "ui,component" },
         { flag: "--output", value: JSON.stringify({
           create: [{
@@ -219,7 +225,8 @@ test.group("validate all-targets", () => {
 
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "api-route" }],
+      flags: [{ flag: "--name", value: "api-route" },
+      { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
 
@@ -241,7 +248,8 @@ test.group("validate all-targets", () => {
 
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "bad-schema" }],
+      flags: [{ flag: "--name", value: "bad-schema" },
+      { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
 
@@ -271,6 +279,7 @@ test.group("validate all-targets", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "missing-template" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [{
             name: "button.svelte",
@@ -311,6 +320,7 @@ test.group("validate all-targets", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "many-missing" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [
             { name: "a", template: "a.tmpl", outputPath: "a" },
@@ -347,6 +357,7 @@ test.group("validate composite", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "parent" },
+      { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
           modify: [],
@@ -359,6 +370,7 @@ test.group("validate composite", () => {
     const path = await outputPath("parent");
     await path.writeJSON({
       name: "parent",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       output: {
@@ -388,17 +400,20 @@ test.group("validate composite", () => {
     // Create two templates that reference each other
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "cycle-a" }],
+      flags: [{ flag: "--name", value: "cycle-a" },
+      { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "cycle-b" }],
+      flags: [{ flag: "--name", value: "cycle-b" },
+      { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
 
     await (await outputPath("cycle-a")).writeJSON({
       name: "cycle-a",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
@@ -406,6 +421,7 @@ test.group("validate composite", () => {
     });
     await (await outputPath("cycle-b")).writeJSON({
       name: "cycle-b",
+      description: "test description",
       variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
@@ -433,6 +449,7 @@ test.group("validate composite", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "valid-child" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "componentName" },
         { flag: "--output", value: JSON.stringify({
           create: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
@@ -449,6 +466,7 @@ test.group("validate composite", () => {
       subcommands: [],
       flags: [
         { flag: "--name", value: "valid-parent" },
+      { flag: "--description", value: "test description" },
         { flag: "--variables", value: "theme" },
         { flag: "--output", value: JSON.stringify({
           create: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
@@ -463,6 +481,7 @@ test.group("validate composite", () => {
     // Add includes to the parent
     await (await outputPath("valid-parent")).writeJSON({
       name: "valid-parent",
+      description: "test description",
       variables: { required: ["theme"] },
       intent: [],
       output: {

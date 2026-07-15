@@ -34,6 +34,13 @@ export default function createCreateCommand(
         description: "Comma-separated intent strings",
       },
       {
+        name: "description",
+        long: "description",
+        short: "d",
+        description: "Human-readable description of what this does",
+        required: true,
+      },
+      {
         name: "variables",
         long: "variables",
         short: "v",
@@ -124,6 +131,7 @@ export default function createCreateCommand(
 
       const instructions = {
         name,
+        description: flags.description!,
         variables: {
           required,
           ...(optional.length > 0 ? { optional } : {}),

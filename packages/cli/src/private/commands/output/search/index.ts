@@ -16,6 +16,7 @@ import {
 
 interface SearchResult {
   name: string;
+  description: string;
   score: number;
   fileCount: number;
 }
@@ -91,6 +92,7 @@ export default function createSearchCommand(
 
         results.push({
           name: output.name,
+          description: output.description,
           score,
           fileCount: output.output.create.length + output.output.modify.length,
         });
@@ -111,6 +113,7 @@ export default function createSearchCommand(
         const files_text = `files: ${result.fileCount}`;
         const score_and_files_text = `(${score_text}, ${files_text})`;
         cli.print(`  [${index + 1}] ${result.name} ${score_and_files_text}\n`);
+        cli.print(`      ${result.description}\n`);
       });
     },
   });

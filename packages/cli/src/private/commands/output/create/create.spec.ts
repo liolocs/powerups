@@ -25,7 +25,8 @@ test.case("create template creates an instructions.json file", async assert => {
 
   await create.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "test-template" }],
+    flags: [{ flag: "--name", value: "test-template" },
+      { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
 
@@ -56,6 +57,7 @@ test.case("create template creates empty files for create and modify entries", a
     subcommands: [],
     flags: [
       { flag: "--name", value: "ui-component" },
+      { flag: "--description", value: "test description" },
       { flag: "--intent", value: "component,ui" },
       { flag: "--variables", value: "ComponentName" },
       { flag: "--output", value: output },
@@ -96,6 +98,7 @@ test.case("create template with -p flag writes packageDependencies to instructio
     subcommands: [],
     flags: [
       { flag: "--name", value: "with-deps" },
+      { flag: "--description", value: "test description" },
       { flag: "--package-deps", value: packageDeps },
     ],
     context: { root: testRoot },
@@ -116,7 +119,8 @@ test.case("create template without -p flag omits packageDependencies", async ass
 
   await create.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "no-deps" }],
+    flags: [{ flag: "--name", value: "no-deps" },
+      { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
 
@@ -136,7 +140,8 @@ test.group("create errors", () => {
     try {
       await create.run({
         subcommands: [],
-        flags: [{ flag: "--name", value: "should-fail" }],
+        flags: [{ flag: "--name", value: "should-fail" },
+      { flag: "--description", value: "test description" },],
         context: { root: testRoot },
       });
     } catch (e: unknown) {
@@ -153,7 +158,8 @@ test.group("create errors", () => {
 
     await create.run({
       subcommands: [],
-      flags: [{ flag: "--name", value: "dup-template" }],
+      flags: [{ flag: "--name", value: "dup-template" },
+      { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
 
@@ -161,7 +167,8 @@ test.group("create errors", () => {
     try {
       await create.run({
         subcommands: [],
-        flags: [{ flag: "--name", value: "dup-template" }],
+        flags: [{ flag: "--name", value: "dup-template" },
+      { flag: "--description", value: "test description" },],
         context: { root: testRoot },
       });
     } catch (e: unknown) {
@@ -182,6 +189,7 @@ test.group("create errors", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "bad-deps" },
+      { flag: "--description", value: "test description" },
           { flag: "--package-deps", value: "{not valid json" },
         ],
         context: { root: testRoot },
@@ -204,6 +212,7 @@ test.group("create errors", () => {
         subcommands: [],
         flags: [
           { flag: "--name", value: "bad-json" },
+      { flag: "--description", value: "test description" },
           { flag: "--output", value: "{not valid json" },
         ],
         context: { root: testRoot },
@@ -224,6 +233,7 @@ test.case("should write optional variables when --optional-variables flag is pro
     subcommands: [],
     flags: [
       { flag: "--name", value: "opt-template" },
+      { flag: "--description", value: "test description" },
       { flag: "--variables", value: "name" },
       { flag: "--optional-variables", value: "sub,subDescription" },
     ],
@@ -245,6 +255,7 @@ test.case("should omit optional from JSON when --optional-variables is not provi
     subcommands: [],
     flags: [
       { flag: "--name", value: "no-opt" },
+      { flag: "--description", value: "test description" },
       { flag: "--variables", value: "name" },
     ],
     context: { root: testRoot },

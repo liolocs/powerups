@@ -1,5 +1,6 @@
 {
   "name": "cli-command",
+  "description": "Scaffolds a new CLI command with entry, impl, errors, and spec files.",
   "variables": {
     "required": [
       "name",

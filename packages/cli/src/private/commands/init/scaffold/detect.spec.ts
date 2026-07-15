@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { detectHarness, VALID_HARNESSES } from "#scaffold/detect";
+import { detectHarness, VALID_HARNESSES } from "#commands/init/scaffold/detect";
 import { CodeError } from "@rcompat/error";
 import { InitErrorCode } from "#errors/initErrors";
 

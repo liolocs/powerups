@@ -2,8 +2,8 @@ import is from "@rcompat/is";
 import type { FileRef } from "@rcompat/fs";
 import type { VariableResult } from "#utils/variables";
 import runnerErrors from "#errors/runnerErrors";
-import tsRunner from "#runners/ts";
-import njkRunner from "#runners/njk";
+import tsRunner from "#template-runners/ts";
+import njkRunner from "#template-runners/njk";
 
 export interface TemplateContext {
   templatePath: FileRef;

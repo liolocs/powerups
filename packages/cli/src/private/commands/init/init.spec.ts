@@ -1,5 +1,5 @@
 import test from "@rcompat/test";
-import init from "#commands/init";
+import init from "#commands/init/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { MAIN_FOLDER, CLI_NAME } from "#constants";

@@ -1,7 +1,7 @@
 import fs from "@rcompat/fs";
 import nunjucks from "nunjucks";
 import runnerErrors from "#errors/runnerErrors";
-import type { TemplateContext } from "#runners/index";
+import type { TemplateContext } from "#template-runners/index";
 
 export default async function njkRunner(
   { templatePath, variables }: TemplateContext,

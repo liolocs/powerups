@@ -1,8 +1,8 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
-import { runTemplate } from "#runners/index";
+import { writeToAgentsOrClaudeMD } from "#commands/init/scaffold/agents";
+import { runTemplate } from "#template-runners/index";
 import {
   CLI_NAME,
   MAIN_FOLDER,

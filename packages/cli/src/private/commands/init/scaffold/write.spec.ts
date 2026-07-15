@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { writeSkillFile } from "#scaffold/write";
+import { writeSkillFile } from "#commands/init/scaffold/write";
 import { CLI_NAME } from "#constants";
 
 const root = await runtime.projectRoot();

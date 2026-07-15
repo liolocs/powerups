@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import doctor from "#commands/doctor";
+import doctor from "#commands/doctor/index";
 import createCreateCommand from "#commands/output/create/index";
 import captureStdout, {
   captureStdoutOrError,

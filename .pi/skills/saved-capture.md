@@ -45,9 +45,10 @@ outside the CLI — into a reusable saved feature or template.
    Present this to the user and get approval before proceeding.
 
 5. Scaffold the folder structure by running:
-   `saved template create -n=<name> -i="<intent>" -v="<vars>" -o='<files-json>'`
-   (or `saved feature create -n=<name> -i="<intent>" -v="<vars>" -o='<files-json>'`
-   for features). This creates the instructions.json and empty template files.
+   `saved template create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   (or `saved feature create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   for features). Use `-ov` only if there are optional variables; omit it
+   otherwise. This creates the instructions.json and empty template files.
 
 6. Copy the original files into the template directory, overwriting the
    empty stubs. Use `cp` for each file — this brings the full content onto

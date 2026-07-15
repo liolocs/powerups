@@ -6,7 +6,7 @@
   "license": "MIT",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "build": "npm run clean && tsgo && cp src/app.tsconfig.json lib && cp src/private/scaffold/*.njk lib/private/scaffold/",
+    "build": "npm run clean && tsgo && cp src/app.tsconfig.json lib && cp src/private/commands/init/scaffold/*.njk lib/private/commands/init/scaffold/",
     "clean": "rm -rf ./lib",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

@@ -4,6 +4,7 @@ import createCreateCommand from "#commands/output/create/index";
 import createApplyCommand from "#commands/output/apply/index";
 import createSearchCommand from "#commands/output/search/index";
 import createValidateCommand from "#commands/output/validate/index";
+import createListCommand from "#commands/output/list/index";
 
 const feature = new Command({
   name: "feature",
@@ -14,6 +15,7 @@ const feature = new Command({
     createApplyCommand("feature"),
     createSearchCommand("feature"),
     createValidateCommand("feature"),
+    createListCommand("feature"),
   ],
   requiresSubcommand: true,
   action: () => {},

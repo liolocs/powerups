@@ -4,7 +4,7 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@saved/program";
 import init_errors from "#errors/initErrors";
 import update_errors from "#errors/updateErrors";
-import { scaffold } from "#commands/init/scaffold/index";
+import { scaffold } from "#scaffold/index";
 import { readConfig, writeConfig } from "#utils/config";
 import { MAIN_FOLDER, CLI_NAME } from "#constants";
 

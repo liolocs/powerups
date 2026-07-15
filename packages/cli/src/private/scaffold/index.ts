@@ -1,9 +1,9 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import { runTemplate } from "#template-runners/index";
-import { detectHarness, type Harness } from "#commands/init/scaffold/detect";
-import { writeToAgentsOrClaudeMD } from "#commands/init/scaffold/agents";
-import { writeSkillFile } from "#commands/init/scaffold/write";
+import { detectHarness, type Harness } from "#scaffold/detect";
+import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
+import { writeSkillFile } from "#scaffold/write";
 import {
   CLI_NAME,
   MAIN_FOLDER,
@@ -88,7 +88,7 @@ export async function scaffold(
 
   // output is either (AGENTS.md or CLAUDE.md)
   const agentsRendered = await runTemplate({
-    templatePath: fs.ref(`${SCAFFOLD_DIR}/agents.njk`),
+    templatePath: fs.ref(`${SCAFFOLD_DIR}/templates/agents.njk`),
     variables,
   });
 
@@ -120,7 +120,7 @@ export async function scaffold(
 
   for (const skill of SKILLS_TO_SCAFFOLD) {
     const rendered = await runTemplate({
-      templatePath: fs.ref(`${SCAFFOLD_DIR}/${skill.template}`),
+      templatePath: fs.ref(`${SCAFFOLD_DIR}/templates/${skill.template}`),
       variables,
     });
 

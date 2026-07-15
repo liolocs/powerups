@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { writeToAgentsOrClaudeMD } from "#commands/init/scaffold/agents";
+import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { runTemplate } from "#template-runners/index";
 import {
   CLI_NAME,
@@ -17,7 +17,7 @@ const scaffoldDir = fs.ref(import.meta.dirname);
 
 async function renderAgents(): Promise<string> {
   return await runTemplate({
-    templatePath: scaffoldDir.append("/agents.njk"),
+    templatePath: scaffoldDir.append("/templates/agents.njk"),
     variables: {
       CLI_NAME,
       MAIN_FOLDER,

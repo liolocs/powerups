@@ -11,7 +11,7 @@ import { MAIN_FOLDER, CLI_NAME } from "#constants";
 const update = new Command({
   name: "update",
 
-  description: `Regenerate the docs scaffolded on init`,
+  description: "Regenerate the docs scaffolded on init",
 
   flags: [
     {

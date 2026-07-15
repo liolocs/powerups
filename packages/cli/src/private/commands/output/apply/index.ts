@@ -94,14 +94,15 @@ export default function createApplyCommand(
       const instructions = instructionsSchema.parse(await outputPath.json());
 
       // 6. Extract & validate variables
-      const variables = extractVariables(
-        rawFlags ?? [],
-        instructions.variables,
-        EXCLUDE_FLAGS,
-        (variable, flagName) => {
-          throw errors.missing_variable(variable, flagName);
+      const variables = extractVariables({
+        rawFlags: rawFlags ?? [],
+        required: instructions.variables.required,
+        optional: instructions.variables.optional ?? [],
+        excludeFlags: EXCLUDE_FLAGS,
+        onMissing: (missing) => {
+          throw errors.missing_variables(missing, instructions.variables.required, domain, name);
         },
-      );
+      });
 
       // 7. Detect --dry-run and --overwrite via rawFlags
       const isDryRun = (rawFlags ?? []).some(

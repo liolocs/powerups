@@ -1,11 +1,9 @@
 {
   "name": "cli-command",
-  "variables": [
-    "name",
-    "description",
-    "sub",
-    "subDescription"
-  ],
+  "variables": {
+    "required": ["name", "description"],
+    "optional": ["sub", "subDescription"]
+  },
   "intent": [
     "cli command",
     "new command",

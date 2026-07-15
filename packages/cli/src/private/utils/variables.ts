@@ -35,41 +35,26 @@ export function toKebabCase(name: string): string {
 }
 
 /**
- * Check that all declared variables have matching flags.
- * Returns the list of missing variable names (empty = all present).
- */
-export function findMissingVariables(
-  result: VariableResult,
-  declaredVariables: string[],
-): string[] {
-  const missing: string[] = [];
-  for (const declared of declaredVariables) {
-    const matched = Object.keys(result).find(
-      k => k.toLowerCase() === declared.toLowerCase(),
-    );
-    if (is.falsy(matched)) {
-      missing.push(declared);
-    }
-  }
-  return missing;
-}
-
-/**
  * Extract variables from raw CLI flags, normalize to camelCase,
  * and validate against declared variables (case-insensitive).
  *
- * Undeclared extra flags are passed through in the result (not filtered out).
+ * Required variables must be provided; if any are missing, `onMissing`
+ * is called once with the full list of missing variable names.
  *
- * `onMissing` is called with each missing variable name and its kebab-case
- * flag hint; it should throw an error.
+ * Optional variables default to empty string when not provided.
+ *
+ * Undeclared extra flags are passed through in the result (not filtered out).
  */
-export function extractVariables(
-  rawFlags: { flag: string; value: string }[],
-  declaredVariables: string[],
-  excludeFlags: string[],
-  onMissing: (variable: string, flagName: string) => never,
-): VariableResult {
-  // 1. Filter out excluded flags (--dry-run, -d, --help, -h)
+export function extractVariables(args: {
+  rawFlags: { flag: string; value: string }[];
+  required: string[];
+  optional: string[];
+  excludeFlags: string[];
+  onMissing: (missing: string[]) => never;
+}): VariableResult {
+  const { rawFlags, required, optional, excludeFlags, onMissing } = args;
+
+  // 1. Filter out excluded flags (--dry-run, -d, --overwrite, -O, --help, -h)
   const variableFlags = rawFlags.filter(
     f => !excludeFlags.includes(f.flag),
   );
@@ -81,13 +66,27 @@ export function extractVariables(
     result[key] = f.value;
   }
 
-  // 3. Validate: each declared variable must have a matching flag
-  for (const declared of declaredVariables) {
+  // 3. Validate required: collect ALL missing, then call onMissing once
+  const missing: string[] = [];
+  for (const declared of required) {
     const matched = Object.keys(result).find(
       k => k.toLowerCase() === declared.toLowerCase(),
     );
     if (is.falsy(matched)) {
-      onMissing(declared, toKebabCase(declared));
+      missing.push(declared);
+    }
+  }
+  if (missing.length > 0) {
+    onMissing(missing);
+  }
+
+  // 4. Optional: if provided, use the value; if not, default to ""
+  for (const declared of optional) {
+    const matched = Object.keys(result).find(
+      k => k.toLowerCase() === declared.toLowerCase(),
+    );
+    if (is.falsy(matched)) {
+      result[declared] = "";
     }
   }
 

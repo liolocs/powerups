@@ -240,7 +240,7 @@ test.group("apply errors", () => {
     await testRoot.remove();
   });
 
-  test.case("should fail with missing_variable when a required variable is omitted",
+  test.case("should fail with missing_variables when a required variable is omitted",
     async assert => {
       await reset();
 
@@ -276,7 +276,7 @@ test.group("apply errors", () => {
         threw = true;
         assert(e instanceof CodeError).true();
         assert((e as CodeError).code)
-          .equals(OutputTemplateApplyErrorCode.missing_variable);
+          .equals(OutputTemplateApplyErrorCode.missing_variables);
       }
       assert(threw).true();
 
@@ -667,7 +667,7 @@ test.group("apply composite output", () => {
       // Add includes to parent
       await templateFolder.append("/shadcn-all/instructions.json").writeJSON({
         name: "shadcn-all",
-        variables: ["theme"],
+        variables: { required: ["theme"] },
         intent: [],
         output: {
           create: [{
@@ -755,7 +755,7 @@ test.group("apply composite output", () => {
 
       await templateFolder.append("/dry-parent/instructions.json").writeJSON({
         name: "dry-parent",
-        variables: [],
+        variables: { required: [] },
         intent: [],
         output: {
           create: [{
@@ -799,7 +799,7 @@ test.group("apply composite output", () => {
       });
       await templateFolder.append("/bad-parent/instructions.json").writeJSON({
         name: "bad-parent",
-        variables: [],
+        variables: { required: [] },
         intent: [],
         output: { create: [], modify: [] },
         includes: [{ name: "nonexistent", variables: {} }],
@@ -853,7 +853,7 @@ test.group("apply composite output", () => {
       });
       await templateFolder.append("/override-parent/instructions.json").writeJSON({
         name: "override-parent",
-        variables: [],
+        variables: { required: [] },
         intent: [],
         output: { create: [], modify: [] },
         includes: [
@@ -912,7 +912,7 @@ test.group("apply composite output", () => {
       });
       await templateFolder.append("/dual-parent/instructions.json").writeJSON({
         name: "dual-parent",
-        variables: [],
+        variables: { required: [] },
         intent: [],
         output: { create: [], modify: [] },
         includes: [
@@ -1451,7 +1451,7 @@ test.group("apply delete", () => {
     });
     await templateFolder.append("/atomic-delete-parent/instructions.json").writeJSON({
       name: "atomic-delete-parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: {
         create: [],

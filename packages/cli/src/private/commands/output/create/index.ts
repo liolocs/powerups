@@ -37,7 +37,13 @@ export default function createCreateCommand(
         name: "variables",
         long: "variables",
         short: "v",
-        description: "Comma-separated variable names",
+        description: "Comma-separated required variable names",
+      },
+      {
+        name: "optionalVariables",
+        long: "optional-variables",
+        short: "ov",
+        description: "Comma-separated optional variable names",
       },
       {
         name: "output",
@@ -87,8 +93,11 @@ export default function createCreateCommand(
       const intent = is.defined(flags.intent) === true
         ? flags.intent.split(",").map(s => s.trim()).filter(Boolean)
         : [];
-      const variables = is.defined(flags.variables) === true
+      const required = is.defined(flags.variables) === true
         ? flags.variables.split(",").map(s => s.trim()).filter(Boolean)
+        : [];
+      const optional = is.defined(flags.optionalVariables) === true
+        ? flags.optionalVariables.split(",").map(s => s.trim()).filter(Boolean)
         : [];
 
       let output: Instructions["output"] = { create: [], modify: [], delete: [] };
@@ -113,7 +122,16 @@ export default function createCreateCommand(
         }
       }
 
-      const instructions = { name, variables, intent, packageDependencies, output };
+      const instructions = {
+        name,
+        variables: {
+          required,
+          ...(optional.length > 0 ? { optional } : {}),
+        },
+        intent,
+        packageDependencies,
+        output,
+      };
 
       await outputPath.writeJSON(instructions as never);
 

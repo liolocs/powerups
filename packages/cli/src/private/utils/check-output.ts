@@ -29,6 +29,41 @@ export async function checkOutput(args: {
     return issues;
   }
 
+  // Validate variable declarations
+  const required = instructions.variables.required;
+  const optional = instructions.variables.optional ?? [];
+
+  // a) Required/optional name collision
+  for (const opt of optional) {
+    const collision = required.some(r => r.toLowerCase() === opt.toLowerCase());
+    if (collision) {
+      issues.push(`variable "${opt}" is declared as both required and optional`);
+    }
+  }
+
+  // b) Optional variable used in an output path
+  const pathVariables = new Set<string>();
+  for (const file of [...instructions.output.create, ...instructions.output.modify]) {
+    for (const [, token] of file.outputPath.matchAll(/\{\{(\w+)\}\}/g)) {
+      pathVariables.add(token);
+    }
+  }
+  for (const file of instructions.output.delete ?? []) {
+    for (const [, token] of file.outputPath.matchAll(/\{\{(\w+)\}\}/g)) {
+      pathVariables.add(token);
+    }
+  }
+  for (const pathVar of pathVariables) {
+    const isOptionalVar = optional.some(
+      v => v.toLowerCase() === pathVar.toLowerCase(),
+    );
+    if (isOptionalVar) {
+      issues.push(
+        `variable "${pathVar}" is used in an output path but declared optional; it should be required`,
+      );
+    }
+  }
+
   for (const file of instructions.output.create) {
     const templatePath = currentOutputDir.append(`/${file.template}`);
     if (!(await fs.exists(templatePath))) {

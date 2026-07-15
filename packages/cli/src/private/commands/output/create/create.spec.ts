@@ -75,7 +75,8 @@ test.case("create template creates empty files for create and modify entries", a
 
   assert(content.name).equals("ui-component");
   assert(content.intent).equals(["component", "ui"]);
-  assert(content.variables).equals(["ComponentName"]);
+  assert(content.variables.required).equals(["ComponentName"]);
+  assert(content.variables.optional).undefined();
   assert(content.output.create[0]?.name).equals("button.svelte");
   assert(content.output.modify[0]?.name).equals("wire");
   // Generated outputs do not include the optional "includes" field
@@ -215,4 +216,44 @@ test.group("create errors", () => {
 
     await testRoot.remove();
   });
+});
+test.case("should write optional variables when --optional-variables flag is provided", async assert => {
+  await reset();
+
+  await create.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "opt-template" },
+      { flag: "--variables", value: "name" },
+      { flag: "--optional-variables", value: "sub,subDescription" },
+    ],
+    context: { root: testRoot },
+  });
+
+  const outputPath = templateFolder.append("/opt-template/instructions.json");
+  const content = instructionsSchema.parse(await outputPath.json());
+  assert(content.variables.required).equals(["name"]);
+  assert(content.variables.optional).equals(["sub", "subDescription"]);
+
+  await testRoot.remove();
+});
+
+test.case("should omit optional from JSON when --optional-variables is not provided", async assert => {
+  await reset();
+
+  await create.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "no-opt" },
+      { flag: "--variables", value: "name" },
+    ],
+    context: { root: testRoot },
+  });
+
+  const outputPath = templateFolder.append("/no-opt/instructions.json");
+  const content = instructionsSchema.parse(await outputPath.json());
+  assert(content.variables.required).equals(["name"]);
+  assert(content.variables.optional).undefined();
+
+  await testRoot.remove();
 });

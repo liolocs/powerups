@@ -26,7 +26,7 @@ test.case("should produce one task per create file for a leaf output", async ass
   await reset();
   await writeOutput("leaf", {
     name: "leaf",
-    variables: ["componentName"],
+    variables: { required: ["componentName"] },
     intent: [],
     output: {
       create: [
@@ -55,7 +55,7 @@ test.case("should produce tasks with correct kind for output with both create an
   await reset();
   await writeOutput("both", {
     name: "both",
-    variables: ["name"],
+    variables: { required: ["name"] },
     intent: [],
     output: {
       create: [{ name: "controller", template: "c.ts", outputPath: "src/{{name}}.ts" }],
@@ -81,7 +81,7 @@ test.case("should produce own tasks plus suboutput tasks for output with include
   await reset();
   await writeOutput("child", {
     name: "child",
-    variables: ["componentName", "theme"],
+    variables: { required: ["componentName", "theme"] },
     intent: [],
     output: {
       create: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
@@ -90,7 +90,7 @@ test.case("should produce own tasks plus suboutput tasks for output with include
   });
   await writeOutput("parent", {
     name: "parent",
-    variables: ["theme"],
+    variables: { required: ["theme"] },
     intent: [],
     output: {
       create: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
@@ -125,20 +125,20 @@ test.case("should produce a flat list of all tasks for nested suboutputs", async
   await reset();
   await writeOutput("nest-c", {
     name: "nest-c",
-    variables: ["val"],
+    variables: { required: ["val"] },
     intent: [],
     output: { create: [{ name: "f", template: "c.njk", outputPath: "c.ts" }], modify: [] },
   });
   await writeOutput("nest-b", {
     name: "nest-b",
-    variables: ["val"],
+    variables: { required: ["val"] },
     intent: [],
     output: { create: [{ name: "f", template: "b.njk", outputPath: "b.ts" }], modify: [] },
     includes: [{ name: "nest-c", variables: { val: "{{val}}" } }],
   });
   await writeOutput("nest-a", {
     name: "nest-a",
-    variables: ["val"],
+    variables: { required: ["val"] },
     intent: [],
     output: { create: [{ name: "f", template: "a.njk", outputPath: "a.ts" }], modify: [] },
     includes: [{ name: "nest-b", variables: { val: "{{val}}" } }],
@@ -163,13 +163,13 @@ test.case("should pass a static value through for variable mapping", async asser
   await reset();
   await writeOutput("static-child", {
     name: "static-child",
-    variables: ["componentName"],
+    variables: { required: ["componentName"] },
     intent: [],
     output: { create: [{ name: "f", template: "c.njk", outputPath: "out.ts" }], modify: [] },
   });
   await writeOutput("static-parent", {
     name: "static-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [{ name: "static-child", variables: { componentName: "Button" } }],
@@ -189,13 +189,13 @@ test.case("should resolve a parentVar reference for variable mapping", async ass
   await reset();
   await writeOutput("ref-child", {
     name: "ref-child",
-    variables: ["theme"],
+    variables: { required: ["theme"] },
     intent: [],
     output: { create: [{ name: "f", template: "c.njk", outputPath: "out.ts" }], modify: [] },
   });
   await writeOutput("ref-parent", {
     name: "ref-parent",
-    variables: ["theme"],
+    variables: { required: ["theme"] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [{ name: "ref-child", variables: { theme: "{{theme}}" } }],
@@ -215,13 +215,13 @@ test.case("should resolve mixed text and tokens for variable mapping", async ass
   await reset();
   await writeOutput("mixed-child", {
     name: "mixed-child",
-    variables: ["variant"],
+    variables: { required: ["variant"] },
     intent: [],
     output: { create: [{ name: "f", template: "c.njk", outputPath: "out.ts" }], modify: [] },
   });
   await writeOutput("mixed-parent", {
     name: "mixed-parent",
-    variables: ["theme"],
+    variables: { required: ["theme"] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [{ name: "mixed-child", variables: { variant: "{{theme}}-button" } }],
@@ -241,7 +241,7 @@ test.case("should apply create output path override to the correct file by name"
   await reset();
   await writeOutput("override-child", {
     name: "override-child",
-    variables: ["componentName"],
+    variables: { required: ["componentName"] },
     intent: [],
     output: {
       create: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
@@ -250,7 +250,7 @@ test.case("should apply create output path override to the correct file by name"
   });
   await writeOutput("override-parent", {
     name: "override-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [
@@ -276,7 +276,7 @@ test.case("should apply modify output path override to the correct file by name"
   await reset();
   await writeOutput("modify-override-child", {
     name: "modify-override-child",
-    variables: ["name"],
+    variables: { required: ["name"] },
     intent: [],
     output: {
       create: [],
@@ -285,7 +285,7 @@ test.case("should apply modify output path override to the correct file by name"
   });
   await writeOutput("modify-override-parent", {
     name: "modify-override-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [
@@ -313,7 +313,7 @@ test.case("should preserve the original outputPath when no override is given", a
   await reset();
   await writeOutput("no-override-child", {
     name: "no-override-child",
-    variables: ["componentName"],
+    variables: { required: ["componentName"] },
     intent: [],
     output: {
       create: [{ name: "comp", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }],
@@ -322,7 +322,7 @@ test.case("should preserve the original outputPath when no override is given", a
   });
   await writeOutput("no-override-parent", {
     name: "no-override-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [{ name: "no-override-child", variables: { componentName: "Button" } }],
@@ -342,13 +342,13 @@ test.case("should produce distinct tasks when the same suboutput is referenced t
   await reset();
   await writeOutput("dual-child", {
     name: "dual-child",
-    variables: ["componentName"],
+    variables: { required: ["componentName"] },
     intent: [],
     output: { create: [{ name: "f", template: "c.njk", outputPath: "src/{{componentName}}.tsx" }], modify: [] },
   });
   await writeOutput("dual-parent", {
     name: "dual-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [
@@ -373,20 +373,20 @@ test.case("should not cascade overrides to nested suboutputs", async assert => {
   await reset();
   await writeOutput("cascade-grandchild", {
     name: "cascade-grandchild",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [{ name: "f", template: "g.njk", outputPath: "original.ts" }], modify: [] },
   });
   await writeOutput("cascade-child", {
     name: "cascade-child",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [{ name: "f", template: "c.njk", outputPath: "original.ts" }], modify: [] },
     includes: [{ name: "cascade-grandchild", variables: {} }],
   });
   await writeOutput("cascade-parent", {
     name: "cascade-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [
@@ -415,7 +415,7 @@ test.case("should produce a delete task with no templatePath for delete entries"
   await reset();
   await writeOutput("delete-only", {
     name: "delete-only",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: {
       create: [],
@@ -441,7 +441,7 @@ test.case("should produce create, modify, and delete tasks in order", async asse
   await reset();
   await writeOutput("mixed", {
     name: "mixed",
-    variables: ["name"],
+    variables: { required: ["name"] },
     intent: [],
     output: {
       create: [{ name: "c", template: "c.njk", outputPath: "src/{{name}}.ts" }],
@@ -468,7 +468,7 @@ test.case("should apply delete output path override to the correct file by name"
   await reset();
   await writeOutput("delete-override-child", {
     name: "delete-override-child",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: {
       create: [],
@@ -478,7 +478,7 @@ test.case("should apply delete output path override to the correct file by name"
   });
   await writeOutput("delete-override-parent", {
     name: "delete-override-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [
@@ -506,7 +506,7 @@ test.case("should resolve delete tasks from nested suboutputs", async assert => 
   await reset();
   await writeOutput("delete-child", {
     name: "delete-child",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: {
       create: [{ name: "f", template: "c.njk", outputPath: "new.ts" }],
@@ -516,7 +516,7 @@ test.case("should resolve delete tasks from nested suboutputs", async assert => 
   });
   await writeOutput("delete-parent", {
     name: "delete-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [{ name: "delete-child", variables: {} }],

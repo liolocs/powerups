@@ -61,8 +61,12 @@ export async function validateOutputTree(args: {
       continue;
     }
 
-    // Every declared variable must have a mapping key
-    for (const declared of subInstructions.variables) {
+    // Every declared variable (required + optional) must have a mapping key
+    const subAllVariables = [
+      ...subInstructions.variables.required,
+      ...(subInstructions.variables.optional ?? []),
+    ];
+    for (const declared of subAllVariables) {
       const mapped = Object.keys(ref.variables).find(
         k => k.toLowerCase() === declared.toLowerCase(),
       );
@@ -77,7 +81,11 @@ export async function validateOutputTree(args: {
       const tokens = value.match(/\{\{(\w+)\}\}/g) ?? [];
       for (const token of tokens) {
         const varName = token.slice(2, -2);
-        const declared = instructions.variables.find(
+        const allParentVariables = [
+          ...instructions.variables.required,
+          ...(instructions.variables.optional ?? []),
+        ];
+        const declared = allParentVariables.find(
           v => v.toLowerCase() === varName.toLowerCase(),
         );
 

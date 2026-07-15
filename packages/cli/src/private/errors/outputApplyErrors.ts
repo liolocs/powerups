@@ -3,6 +3,7 @@ import cli from "@rcompat/cli";
 import type { FileRef } from "@rcompat/fs";
 import { CLI_NAME } from "#constants";
 import string from "@rcompat/string";
+import { toKebabCase } from "#utils/variables";
 
 const t = error.template;
 
@@ -27,10 +28,23 @@ function createOutputApplyErrors(domain: string) {
       return t`${errorBGText}${errorText}`;
     },
 
-    missing_variable: (variable: string, flagName: string) => {
+    missing_variables: (
+      missing: string[],
+      required: string[],
+      domain: string,
+      name: string,
+    ) => {
+      const missingList = missing.join(", ");
+      const requiredList = required
+        .map(v => `  --${toKebabCase(v)}=<value>`)
+        .join("\n");
+      const example = `${CLI_NAME} ${domain} apply ${name} ${
+        required.map(v => `--${toKebabCase(v)}=<value>`).join(" ")
+      }`;
       const errorText =
-        `Missing required variable: ${variable}\n` +
-        `Provide it with --${flagName}=<value>`;
+        `Missing required variables: ${missingList}\n` +
+        `\nAll required variables:\n${requiredList}\n` +
+        `\nExample:\n  ${example}`;
       return t`${errorBGText}${errorText}`;
     },
 

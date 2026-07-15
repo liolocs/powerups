@@ -170,7 +170,7 @@ test.group("validate errors", () => {
 
     await (await outputPath("bad-parent")).writeJSON({
       name: "bad-parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "nonexistent", variables: {} }],
@@ -359,7 +359,7 @@ test.group("validate composite", () => {
     const path = await outputPath("parent");
     await path.writeJSON({
       name: "parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: {
         create: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],
@@ -399,14 +399,14 @@ test.group("validate composite", () => {
 
     await (await outputPath("cycle-a")).writeJSON({
       name: "cycle-a",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "cycle-b", variables: {} }],
     });
     await (await outputPath("cycle-b")).writeJSON({
       name: "cycle-b",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "cycle-a", variables: {} }],
@@ -463,7 +463,7 @@ test.group("validate composite", () => {
     // Add includes to the parent
     await (await outputPath("valid-parent")).writeJSON({
       name: "valid-parent",
-      variables: ["theme"],
+      variables: { required: ["theme"] },
       intent: [],
       output: {
         create: [{ name: "barrel", template: "b.njk", outputPath: "src/index.ts" }],

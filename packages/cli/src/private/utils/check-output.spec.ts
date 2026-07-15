@@ -26,7 +26,7 @@ test.case("should return no issues for valid output with no includes", async ass
   await reset();
   await writeOutput("simple", {
     name: "simple",
-    variables: ["ComponentName"],
+    variables: { required: ["ComponentName"] },
     intent: [],
     output: { create: [], modify: [] },
   });
@@ -74,7 +74,7 @@ test.case("should return an issue for a missing create template file", async ass
   await reset();
   await writeOutput("missing-tmpl", {
     name: "missing-tmpl",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: {
       create: [{ name: "f", template: "nonexistent.njk", outputPath: "out.ts" }],
@@ -95,7 +95,7 @@ test.case("should return an issue for a missing modify template file", async ass
   await reset();
   await writeOutput("missing-modify-tmpl", {
     name: "missing-modify-tmpl",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: {
       create: [],
@@ -118,7 +118,7 @@ test.case("should return no issues for valid output with both create and modify 
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON({
     name: "both",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: {
       create: [{ name: "controller", template: "controller.ts", outputPath: "src/c.ts" }],
@@ -141,13 +141,13 @@ test.case("should return no issues for valid output with valid suboutputs", asyn
   await reset();
   await writeOutput("valid-child", {
     name: "valid-child",
-    variables: ["componentName"],
+    variables: { required: ["componentName"] },
     intent: [],
     output: { create: [], modify: [] },
   });
   await writeOutput("valid-parent", {
     name: "valid-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [{ name: "valid-child", variables: { componentName: "Button" } }],
@@ -166,13 +166,13 @@ test.case("should merge suboutput issues for valid output with invalid suboutput
   await reset();
   await writeOutput("missing-child-ref", {
     name: "missing-child-ref",
-    variables: ["componentName"],
+    variables: { required: ["componentName"] },
     intent: [],
     output: { create: [], modify: [] },
   });
   await writeOutput("bad-parent", {
     name: "bad-parent",
-    variables: [],
+    variables: { required: [] },
     intent: [],
     output: { create: [], modify: [] },
     includes: [{ name: "nonexistent", variables: {} }],
@@ -184,5 +184,64 @@ test.case("should merge suboutput issues for valid output with invalid suboutput
   });
 
   assert(issues.some(i => i.includes("suboutput not found: nonexistent"))).true();
+  await testRoot.remove();
+});
+test.case("should report issue for required/optional variable name collision", async assert => {
+  await reset();
+  await writeOutput("collision", {
+    name: "collision",
+    variables: { required: ["name"], optional: ["name"] },
+    intent: [],
+    output: { create: [], modify: [] },
+  });
+
+  const issues = await checkOutput({
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/collision"),
+  });
+
+  assert(issues.some(i => i.includes("declared as both required and optional"))).true();
+  await testRoot.remove();
+});
+
+test.case("should report issue for optional variable used in output path", async assert => {
+  await reset();
+  await writeOutput("opt-in-path", {
+    name: "opt-in-path",
+    variables: { required: [], optional: ["name"] },
+    intent: [],
+    output: {
+      create: [{ name: "f", template: "f.njk", outputPath: "src/{{name}}.ts" }],
+      modify: [],
+    },
+  });
+
+  const issues = await checkOutput({
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/opt-in-path"),
+  });
+
+  assert(issues.some(i => i.includes("used in an output path but declared optional"))).true();
+  await testRoot.remove();
+});
+
+test.case("should not report issue when optional variable is not in any output path", async assert => {
+  await reset();
+  await writeOutput("opt-clean", {
+    name: "opt-clean",
+    variables: { required: ["name"], optional: ["sub"] },
+    intent: [],
+    output: {
+      create: [{ name: "f", template: "f.njk", outputPath: "src/{{name}}.ts" }],
+      modify: [],
+    },
+  });
+
+  const issues = await checkOutput({
+    rootOutputDir: templateFolder,
+    currentOutputDir: templateFolder.append("/opt-clean"),
+  });
+
+  assert(issues.some(i => i.includes("optional"))).false();
   await testRoot.remove();
 });

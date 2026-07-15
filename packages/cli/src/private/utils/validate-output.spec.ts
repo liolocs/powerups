@@ -34,7 +34,7 @@ test.case("should return no issues for a valid tree with no includes", async ass
     name: "simple",
     instructions: {
       name: "simple",
-      variables: ["ComponentName"],
+      variables: { required: ["ComponentName"] },
       intent: [],
       output: { create: [], modify: [] },
     },
@@ -55,7 +55,7 @@ test.case("should return no issues for a valid tree with one suboutput", async a
     name: "button",
     instructions: {
       name: "button",
-      variables: ["componentName", "theme"],
+      variables: { required: ["componentName", "theme"] },
       intent: [],
       output: { create: [], modify: [] },
     },
@@ -64,7 +64,7 @@ test.case("should return no issues for a valid tree with one suboutput", async a
     name: "all-components",
     instructions: {
       name: "all-components",
-      variables: ["theme"],
+      variables: { required: ["theme"] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [
@@ -91,7 +91,7 @@ test.case("should return no issues for valid nested suboutputs", async assert =>
     name: "c",
     instructions: {
       name: "c",
-      variables: ["val"],
+      variables: { required: ["val"] },
       intent: [],
       output: { create: [], modify: [] },
     },
@@ -100,7 +100,7 @@ test.case("should return no issues for valid nested suboutputs", async assert =>
     name: "b",
     instructions: {
       name: "b",
-      variables: ["val"],
+      variables: { required: ["val"] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "c", variables: { val: "{{val}}" } }],
@@ -110,7 +110,7 @@ test.case("should return no issues for valid nested suboutputs", async assert =>
     name: "a",
     instructions: {
       name: "a",
-      variables: ["val"],
+      variables: { required: ["val"] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "b", variables: { val: "{{val}}" } }],
@@ -132,7 +132,7 @@ test.case("should report an issue for a missing suboutput", async assert => {
     name: "parent",
     instructions: {
       name: "parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "nonexistent", variables: {} }],
@@ -155,7 +155,7 @@ test.case("should report an issue with chain for a circular reference", async as
     name: "a-cycle",
     instructions: {
       name: "a-cycle",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "b-cycle", variables: {} }],
@@ -165,7 +165,7 @@ test.case("should report an issue with chain for a circular reference", async as
     name: "b-cycle",
     instructions: {
       name: "b-cycle",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "a-cycle", variables: {} }],
@@ -188,7 +188,7 @@ test.case("should report an issue with chain for a deep circular reference", asy
     name: "deep-a",
     instructions: {
       name: "deep-a",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "deep-b", variables: {} }],
@@ -198,7 +198,7 @@ test.case("should report an issue with chain for a deep circular reference", asy
     name: "deep-b",
     instructions: {
       name: "deep-b",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "deep-c", variables: {} }],
@@ -208,7 +208,7 @@ test.case("should report an issue with chain for a deep circular reference", asy
     name: "deep-c",
     instructions: {
       name: "deep-c",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "deep-b", variables: {} }],
@@ -231,7 +231,7 @@ test.case("should not report a cycle for a diamond shape", async assert => {
     name: "diamond-b",
     instructions: {
       name: "diamond-b",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
     },
@@ -240,7 +240,7 @@ test.case("should not report a cycle for a diamond shape", async assert => {
     name: "diamond-c",
     instructions: {
       name: "diamond-c",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "diamond-b", variables: {} }],
@@ -250,7 +250,7 @@ test.case("should not report a cycle for a diamond shape", async assert => {
     name: "diamond-a",
     instructions: {
       name: "diamond-a",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [
@@ -275,7 +275,7 @@ test.case("should report an issue for an unmapped variable", async assert => {
     name: "child-needs-vars",
     instructions: {
       name: "child-needs-vars",
-      variables: ["componentName", "theme"],
+      variables: { required: ["componentName", "theme"] },
       intent: [],
       output: { create: [], modify: [] },
     },
@@ -284,7 +284,7 @@ test.case("should report an issue for an unmapped variable", async assert => {
     name: "parent-missing-map",
     instructions: {
       name: "parent-missing-map",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [
@@ -309,7 +309,7 @@ test.case("should report an issue for an invalid parentVar reference", async ass
     name: "ref-child",
     instructions: {
       name: "ref-child",
-      variables: ["val"],
+      variables: { required: ["val"] },
       intent: [],
       output: { create: [], modify: [] },
     },
@@ -318,7 +318,7 @@ test.case("should report an issue for an invalid parentVar reference", async ass
     name: "ref-parent",
     instructions: {
       name: "ref-parent",
-      variables: ["theme"],
+      variables: { required: ["theme"] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [
@@ -343,7 +343,7 @@ test.case("should report an issue for a create override file name not in suboutp
     name: "override-child",
     instructions: {
       name: "override-child",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: {
         create: [{ name: "real-file", template: "t.njk", outputPath: "out.ts" }],
@@ -355,7 +355,7 @@ test.case("should report an issue for a create override file name not in suboutp
     name: "override-parent",
     instructions: {
       name: "override-parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [
@@ -384,7 +384,7 @@ test.case("should report an issue for a modify override file name not in suboutp
     name: "modify-override-child",
     instructions: {
       name: "modify-override-child",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: {
         create: [],
@@ -396,7 +396,7 @@ test.case("should report an issue for a modify override file name not in suboutp
     name: "modify-override-parent",
     instructions: {
       name: "modify-override-parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [
@@ -425,7 +425,7 @@ test.case("should report an issue for a delete override file name not in suboutp
     name: "delete-override-child",
     instructions: {
       name: "delete-override-child",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: {
         create: [],
@@ -438,7 +438,7 @@ test.case("should report an issue for a delete override file name not in suboutp
     name: "delete-override-parent",
     instructions: {
       name: "delete-override-parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [
@@ -467,7 +467,7 @@ test.case("should return no issues for a valid delete override", async assert =>
     name: "valid-delete-child",
     instructions: {
       name: "valid-delete-child",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: {
         create: [],
@@ -480,7 +480,7 @@ test.case("should return no issues for a valid delete override", async assert =>
     name: "valid-delete-parent",
     instructions: {
       name: "valid-delete-parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [
@@ -508,7 +508,7 @@ test.case("should validate both independently when the same suboutput is referen
     name: "dual-child",
     instructions: {
       name: "dual-child",
-      variables: ["componentName"],
+      variables: { required: ["componentName"] },
       intent: [],
       output: { create: [], modify: [] },
     },
@@ -517,7 +517,7 @@ test.case("should validate both independently when the same suboutput is referen
     name: "dual-parent",
     instructions: {
       name: "dual-parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [
@@ -545,7 +545,7 @@ test.case("should report an issue and skip recursion for a suboutput with unpars
     name: "broken-parent",
     instructions: {
       name: "broken-parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
       includes: [{ name: "broken-child", variables: {} }],

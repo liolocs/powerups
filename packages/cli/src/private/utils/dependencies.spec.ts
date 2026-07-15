@@ -375,7 +375,7 @@ test.group("collectDependencies", () => {
     await fs.create(templateFolder);
     await templateFolder.append("/instructions.json").writeJSON({
       name: "parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       packageDependencies: [{ dependencies: ["parent-dep@^1.0.0"] }],
       output: { create: [], modify: [] },
@@ -399,7 +399,7 @@ test.group("collectDependencies", () => {
 
     await parentFolder.append("/instructions.json").writeJSON({
       name: "parent",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       packageDependencies: [{ dependencies: ["parent-dep@^1.0.0"] }],
       output: { create: [], modify: [] },
@@ -407,7 +407,7 @@ test.group("collectDependencies", () => {
     });
     await childFolder.append("/instructions.json").writeJSON({
       name: "child",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       packageDependencies: [{ dependencies: ["child-dep@^2.0.0"] }],
       output: { create: [], modify: [] },
@@ -428,7 +428,7 @@ test.group("collectDependencies", () => {
     await fs.create(templateFolder);
     await templateFolder.append("/instructions.json").writeJSON({
       name: "nodeps",
-      variables: [],
+      variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
     });

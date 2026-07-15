@@ -5,8 +5,8 @@ import {
   extractVariables,
 } from "#utils/variables";
 
-function throwMissing(variable: string, _flagName: string): never {
-  throw new Error(`Missing required variable: ${variable}`);
+function throwMissing(missing: string[]): never {
+  throw new Error(`Missing required variables: ${missing.join(", ")}`);
 }
 
 test.case("should convert kebab to camelCase with normalizeFlagName", async assert => {
@@ -24,63 +24,128 @@ test.case("should convert PascalCase/camelCase to kebab with toKebabCase", async
 });
 
 test.case("should return a camelCase record from extractVariables", async assert => {
-  const result = extractVariables(
-    [{ flag: "--component-name", value: "Button" }, { flag: "--theme", value: "dark" }],
-    ["ComponentName", "theme"],
-    ["--dry-run", "-d", "--help", "-h"],
-    throwMissing,
-  );
+  const result = extractVariables({
+    rawFlags: [{ flag: "--component-name", value: "Button" }, { flag: "--theme", value: "dark" }],
+    required: ["ComponentName", "theme"],
+    optional: [],
+    excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+    onMissing: throwMissing,
+  });
   assert(result.componentName).equals("Button");
   assert(result.theme).equals("dark");
 });
 
 test.case("should exclude declared flags in extractVariables", async assert => {
-  const result = extractVariables(
-    [{ flag: "--dry-run", value: "true" }, { flag: "--component-name", value: "Button" }],
-    ["ComponentName"],
-    ["--dry-run", "-d", "--help", "-h"],
-    throwMissing,
-  );
+  const result = extractVariables({
+    rawFlags: [{ flag: "--dry-run", value: "true" }, { flag: "--component-name", value: "Button" }],
+    required: ["ComponentName"],
+    optional: [],
+    excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+    onMissing: throwMissing,
+  });
   assert(result.componentName).equals("Button");
   assert(result["dry-run"]).equals(undefined);
   assert(result["dryRun"]).equals(undefined);
 });
 
 test.case("should ignore undeclared extra flags in extractVariables", async assert => {
-  const result = extractVariables(
-    [{ flag: "--component-name", value: "Button" }, { flag: "--extra", value: "ignored" }],
-    ["ComponentName"],
-    ["--dry-run", "-d", "--help", "-h"],
-    throwMissing,
-  );
+  const result = extractVariables({
+    rawFlags: [{ flag: "--component-name", value: "Button" }, { flag: "--extra", value: "ignored" }],
+    required: ["ComponentName"],
+    optional: [],
+    excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+    onMissing: throwMissing,
+  });
   assert(result.componentName).equals("Button");
   assert(result.extra).equals("ignored");
 });
 
+test.case("should default optional variables to empty string when not provided", async assert => {
+  const result = extractVariables({
+    rawFlags: [{ flag: "--component-name", value: "Button" }],
+    required: ["ComponentName"],
+    optional: ["sub", "subDescription"],
+    excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+    onMissing: throwMissing,
+  });
+  assert(result.componentName).equals("Button");
+  assert(result.sub).equals("");
+  assert(result.subDescription).equals("");
+});
+
+test.case("should use provided optional variable values", async assert => {
+  const result = extractVariables({
+    rawFlags: [{ flag: "--component-name", value: "Button" }, { flag: "--sub", value: "detail" }],
+    required: ["ComponentName"],
+    optional: ["sub"],
+    excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+    onMissing: throwMissing,
+  });
+  assert(result.componentName).equals("Button");
+  assert(result.sub).equals("detail");
+});
+
 test.group("variables errors", () => {
-  test.case("should throw on a missing declared variable in extractVariables", async assert => {
+  test.case("should throw on a missing required variable in extractVariables", async assert => {
   let threw = false;
   try {
-    extractVariables(
-      [{ flag: "--theme", value: "dark" }],
-      ["ComponentName", "theme"],
-      ["--dry-run", "-d", "--help", "-h"],
-      throwMissing,
-    );
+    extractVariables({
+      rawFlags: [{ flag: "--theme", value: "dark" }],
+      required: ["ComponentName", "theme"],
+      optional: [],
+      excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+      onMissing: throwMissing,
+    });
   } catch (e) {
     threw = true;
-    assert((e as Error).message).includes("Missing required variable: ComponentName");
+    assert((e as Error).message).includes("Missing required variables: ComponentName");
+  }
+  assert(threw).true();
+  });
+
+  test.case("should collect all missing required variables", async assert => {
+  let threw = false;
+  try {
+    extractVariables({
+      rawFlags: [],
+      required: ["name", "description", "theme"],
+      optional: [],
+      excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+      onMissing: throwMissing,
+    });
+  } catch (e) {
+    threw = true;
+    assert((e as Error).message).includes("Missing required variables: name, description, theme");
+  }
+  assert(threw).true();
+  });
+
+  test.case("should only report missing required variables, not provided ones", async assert => {
+  let threw = false;
+  try {
+    extractVariables({
+      rawFlags: [{ flag: "--name", value: "test" }],
+      required: ["name", "description"],
+      optional: [],
+      excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+      onMissing: throwMissing,
+    });
+  } catch (e) {
+    threw = true;
+    assert((e as Error).message).includes("Missing required variables: description");
+    assert((e as Error).message.includes("name")).false();
   }
   assert(threw).true();
   });
 });
 
 test.case("should match case-insensitively in extractVariables", async assert => {
-  const result = extractVariables(
-    [{ flag: "--component-name", value: "Button" }],
-    ["ComponentName"],
-    [],
-    throwMissing,
-  );
+  const result = extractVariables({
+    rawFlags: [{ flag: "--component-name", value: "Button" }],
+    required: ["ComponentName"],
+    optional: [],
+    excludeFlags: [],
+    onMissing: throwMissing,
+  });
   assert(result.componentName).equals("Button");
 });

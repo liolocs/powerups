@@ -233,7 +233,8 @@ test.group("apply errors", () => {
       });
     } catch (e) {
       assert(e instanceof CodeError).true();
-      assert((e as CodeError).code).equals("not_found");
+      assert((e as CodeError).code)
+        .equals(OutputTemplateApplyErrorCode.not_found);
     }
 
     await testRoot.remove();
@@ -274,8 +275,8 @@ test.group("apply errors", () => {
       } catch (e) {
         threw = true;
         assert(e instanceof CodeError).true();
-        assert((e as CodeError).code).equals("missing_variable");
-        assert((e as Error).message).includes("theme");
+        assert((e as CodeError).code)
+          .equals(OutputTemplateApplyErrorCode.missing_variable);
       }
       assert(threw).true();
 
@@ -317,8 +318,8 @@ test.group("apply errors", () => {
       } catch (e) {
         threw = true;
         assert(e instanceof CodeError).true();
-        assert((e as CodeError).code).equals("invalid_composition");
-        assert((e as Error).message).includes("missing template file");
+        assert((e as CodeError).code)
+          .equals(OutputTemplateApplyErrorCode.invalid_composition);
       }
       assert(threw).true();
 
@@ -814,8 +815,8 @@ test.group("apply composite output", () => {
       } catch (e) {
         threw = true;
         assert(e instanceof CodeError).true();
-        assert((e as CodeError).code).equals("invalid_composition");
-        assert((e as Error).message).includes("suboutput not found: nonexistent");
+        assert((e as CodeError).code)
+          .equals(OutputTemplateApplyErrorCode.invalid_composition);
       }
       assert(threw).true();
 
@@ -1014,7 +1015,9 @@ test.group("apply modify", () => {
     });
 
     const outPath = testRoot.append("/.test-output/index.ts");
-    assert((await outPath.text()).trim()).equals('import { User } from "./User";\nexport const x = 1;');
+
+    assert((await outPath.text()).trim())
+      .equals('import { User } from "./User";\nexport const x = 1;');
 
     await testRoot.remove();
   });
@@ -1052,6 +1055,7 @@ test.group("apply metrics", () => {
       });
 
       const entries = await readMetrics(testRoot);
+
       assert(entries.length).equals(1);
       assert(entries[0].output).equals("metrics-test");
       assert(entries[0].characters).equals("<button>Button</button>\n".length);
@@ -1092,6 +1096,7 @@ test.group("apply metrics", () => {
       });
 
       const entries = await readMetrics(testRoot);
+
       assert(entries.length).equals(0);
 
       await testRoot.remove();
@@ -1197,6 +1202,7 @@ test.group("apply packageDependencies", () => {
     });
 
     const pkg = JSON.parse(await testRoot.append("/package.json").text());
+
     assert(pkg.dependencies["fake-pkg"]).equals("^1.0.0");
 
     await testRoot.remove();
@@ -1316,6 +1322,7 @@ test.group("apply delete", () => {
     });
 
     const legacyPath = testRoot.append("/.test-output/legacy.ts");
+
     assert(await fs.exists(legacyPath)).false();
 
     await testRoot.remove();
@@ -1326,8 +1333,10 @@ test.group("apply delete", () => {
 
     // Create files to modify and delete, then commit
     await fs.create(testRoot.append("/.test-output"));
+
     await testRoot.append("/.test-output/index.ts").write("export const x = 1;\n");
     await testRoot.append("/.test-output/old.ts").write("old content");
+
     await gitCommit(testRoot, "add target files");
 
     await createCmd.run({

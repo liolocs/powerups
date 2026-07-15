@@ -1,4 +1,7 @@
 export default ({ name, sub, subDescription }: Record<string, string>) => {
+  if (!sub) {
+    return "";
+  }
   const camel = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
   const subCamel = sub.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
   const subDesc = subDescription.replaceAll("`", "\\`");

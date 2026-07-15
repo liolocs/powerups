@@ -7,15 +7,20 @@ import createValidateCommand from "#commands/output/validate/index";
 
 const template = new Command({
   name: "template",
+
   description: `Manage ${CLI_NAME} templates`,
+
   flags: [],
+
   subcommands: [
     createCreateCommand("template"),
     createApplyCommand("template"),
     createSearchCommand("template"),
     createValidateCommand("template"),
   ],
+
   requiresSubcommand: true,
+
   action: () => {},
 });
 

@@ -1,6 +1,6 @@
 import { modificationArraySchema } from "#schemas/modification";
 import type { Modification } from "#schemas/modification";
-import { runTemplate } from "#runners/output/index";
+import { runTemplate } from "#runners/index";
 import type { FileRef } from "@rcompat/fs";
 import type { VariableResult } from "#utils/variables";
 import fs from "@rcompat/fs";

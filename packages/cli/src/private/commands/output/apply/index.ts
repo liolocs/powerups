@@ -10,7 +10,7 @@ import { resolveOutputPath } from "#utils/output-path";
 import { checkOutput } from "#utils/check-output";
 import { resolveOutput } from "#utils/resolve";
 import { logRun } from "#utils/metrics";
-import { runTemplate } from "#runners/output/index";
+import { runTemplate } from "#runners/index";
 import {
   applyMultipleModifications,
 } from "#utils/modify-engine";

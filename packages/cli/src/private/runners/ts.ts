@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import runnerErrors from "#errors/runnerErrors";
-import type { TemplateContext } from "#runners/output/index";
+import type { TemplateContext } from "#runners/index";
 
 export default async function tsRunner(
   { templatePath, variables }: TemplateContext,

@@ -1,6 +1,6 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
-import { runTemplate } from "#runners/output/index";
+import { runTemplate } from "#runners/index";
 import { detectHarness, type Harness } from "#scaffold/detect";
 import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { writeSkillFile } from "#scaffold/write";

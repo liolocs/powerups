@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import tsRunner from "#runners/output/ts";
+import tsRunner from "#runners/ts";
 import { CodeError } from "@rcompat/error";
 
 const root = await runtime.projectRoot();

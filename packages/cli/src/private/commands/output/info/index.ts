@@ -67,6 +67,30 @@ export default function createInfoCommand(
         lines.push("");
       }
 
+      // Variables
+      const hasRequired = instructions.variables.required.length > 0;
+      const hasOptional = (instructions.variables.optional ?? []).length > 0;
+      if (hasRequired || hasOptional) {
+        lines.push("## Variables");
+        lines.push("");
+        if (hasRequired) {
+          lines.push("### Required");
+          lines.push("");
+          for (const v of instructions.variables.required) {
+            lines.push(`- \`--${toKebabCase(v)}=<value>\``);
+          }
+          lines.push("");
+        }
+        if (hasOptional) {
+          lines.push("### Optional");
+          lines.push("");
+          for (const v of instructions.variables.optional!) {
+            lines.push(`- \`--${toKebabCase(v)}=<value>\``);
+          }
+          lines.push("");
+        }
+      }
+
       // Usage
       lines.push("## Usage");
       lines.push("");
@@ -74,8 +98,12 @@ export default function createInfoCommand(
       const requiredFlags = instructions.variables.required
         .map(v => `--${toKebabCase(v)}=<value>`)
         .join(" ");
+      const optionalFlags = (instructions.variables.optional ?? [])
+        .map(v => `[--${toKebabCase(v)}=<value>]`)
+        .join(" ");
       let cmd = `${CLI_NAME} ${domain} apply ${instructions.name}`;
       if (requiredFlags) cmd += ` ${requiredFlags}`;
+      if (optionalFlags) cmd += ` ${optionalFlags}`;
       lines.push(cmd);
       lines.push("```");
 

@@ -50,3 +50,63 @@ test.case("info prints name, description, intent, and usage", async assert => {
 
   await testRoot.remove();
 });
+
+test.case("info prints required and optional variables", async assert => {
+  await reset();
+
+  await createCmd.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "api-route" },
+      { flag: "--description", value: "An API route template" },
+      { flag: "--variables", value: "name,method" },
+      { flag: "--optional-variables", value: "middleware" },
+    ],
+    context: { root: testRoot },
+  });
+
+  const output = await captureStdout(() => infoCmd.run({
+    subcommands: ["api-route"],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  assert(output).includes("## Variables");
+  assert(output).includes("### Required");
+  assert(output).includes("`--name=<value>`");
+  assert(output).includes("`--method=<value>`");
+  assert(output).includes("### Optional");
+  assert(output).includes("`--middleware=<value>`");
+  assert(output).includes("[--middleware=<value>]");
+
+  await testRoot.remove();
+});
+
+test.case("info omits empty sections when template has no files, deps, or includes", async assert => {
+  await reset();
+
+  await createCmd.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "simple-template" },
+      { flag: "--description", value: "A simple template" },
+      { flag: "--variables", value: "name" },
+    ],
+    context: { root: testRoot },
+  });
+
+  const output = await captureStdout(() => infoCmd.run({
+    subcommands: ["simple-template"],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  // These sections should NOT appear since the template has no output files,
+  // no dependencies, no includes, and no optional variables.
+  assert(output.includes("## Files")).false();
+  assert(output.includes("## Dependencies")).false();
+  assert(output.includes("## Includes")).false();
+  assert(output.includes("### Optional")).false();
+
+  await testRoot.remove();
+});

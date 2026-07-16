@@ -247,6 +247,76 @@ test.case("info prints includes with variable bindings for composite templates",
   await testRoot.remove();
 });
 
+test.case("info applies outputPathOverride from includes in file listing", async assert => {
+  await reset();
+
+  // Create child template with a create file named "comp"
+  await createCmd.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "override-child" },
+      { flag: "--description", value: "A child with overrideable paths" },
+      { flag: "--variables", value: "componentName" },
+      { flag: "--output", value: JSON.stringify({
+        create: [{
+          name: "comp",
+          template: "comp.njk",
+          outputPath: "src/original/{{componentName}}.tsx",
+        }],
+        modify: [],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+
+  // Create parent template with includes that override the child's outputPath
+  await createCmd.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "override-parent" },
+      { flag: "--description", value: "A parent with outputPathOverride" },
+      { flag: "--variables", value: "theme" },
+      { flag: "--output", value: JSON.stringify({
+        create: [],
+        modify: [],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+
+  const templateFolder = testRoot.append(`/${MAIN_FOLDER}/output/template`);
+  const parentInstructionsPath = templateFolder.append("/override-parent/instructions.json");
+  await parentInstructionsPath.writeJSON({
+    name: "override-parent",
+    description: "A parent with outputPathOverride",
+    variables: { required: ["theme"] },
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "override-child",
+        variables: { componentName: "Button", theme: "{{theme}}" },
+        outputPathOverride: {
+          create: { comp: "src/ui/overridden/{{componentName}}.tsx" },
+        },
+      },
+    ],
+  });
+
+  const output = await captureStdout(() => infoCmd.run({
+    subcommands: ["override-parent"],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  // The overridden path should appear, not the original
+  assert(output).includes("src/ui/overridden/{{componentName}}.tsx");
+  // The original path should NOT appear
+  assert(output.includes("src/original/")).false();
+
+  await testRoot.remove();
+});
+
 test.case("info omits empty sections when template has no files, deps, or includes", async assert => {
   await reset();
 

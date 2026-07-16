@@ -82,6 +82,52 @@ test.case("info prints required and optional variables", async assert => {
   await testRoot.remove();
 });
 
+test.case("info prints create, modify, and delete files", async assert => {
+  await reset();
+
+  await createCmd.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "full-output" },
+      { flag: "--description", value: "A template with all file types" },
+      { flag: "--variables", value: "ComponentName" },
+      { flag: "--output", value: JSON.stringify({
+        create: [{
+          name: "component",
+          template: "component.njk",
+          outputPath: "src/{{ComponentName}}.tsx",
+        }],
+        modify: [{
+          name: "index",
+          template: "index.json",
+          outputPath: "src/index.ts",
+        }],
+        delete: [{
+          name: "old-file",
+          outputPath: "src/legacy.ts",
+        }],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+
+  const output = await captureStdout(() => infoCmd.run({
+    subcommands: ["full-output"],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  assert(output).includes("## Files");
+  assert(output).includes("### Create");
+  assert(output).includes("`src/{{ComponentName}}.tsx` (template: `component.njk`)");
+  assert(output).includes("### Modify");
+  assert(output).includes("`src/index.ts` (template: `index.json`)");
+  assert(output).includes("### Delete");
+  assert(output).includes("`src/legacy.ts`");
+
+  await testRoot.remove();
+});
+
 test.case("info omits empty sections when template has no files, deps, or includes", async assert => {
   await reset();
 

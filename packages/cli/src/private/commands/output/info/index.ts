@@ -13,6 +13,149 @@ import {
   domainFolderMap,
 } from "#constants";
 
+interface CollectedFile {
+  kind: "create" | "modify" | "delete";
+  template?: string;
+  outputPath: string;
+  fromInclude: string | null;
+}
+
+interface IncludeSummary {
+  name: string;
+  description: string;
+  bindings: { key: string; value: string; isReference: boolean }[];
+}
+
+interface CollectedInfo {
+  files: CollectedFile[];
+  dependencies: NonNullable<Instructions["packageDependencies"]>;
+  includes: IncludeSummary[];
+}
+
+async function collectInfo(args: {
+  outputName: string;
+  outputsFolder: FileRef;
+  pathStack: string[];
+  createOverrides?: Record<string, string>;
+  modifyOverrides?: Record<string, string>;
+  deleteOverrides?: Record<string, string>;
+  fromInclude?: string | null;
+}): Promise<CollectedInfo> {
+  const { outputName, outputsFolder, pathStack } = args;
+  const createOverrides = args.createOverrides ?? {};
+  const modifyOverrides = args.modifyOverrides ?? {};
+  const deleteOverrides = args.deleteOverrides ?? {};
+  const fromInclude = args.fromInclude ?? null;
+
+  const outputFolder = outputsFolder.append(`/${outputName}`);
+  const outputPath = outputFolder.append("/instructions.json");
+  const instructions = instructionsSchema.parse(await outputPath.json());
+
+  const files: CollectedFile[] = [];
+  const dependencies: NonNullable<Instructions["packageDependencies"]> = [];
+  const includes: IncludeSummary[] = [];
+
+  // Own create files
+  for (const file of instructions.output.create) {
+    let fileOutputPath = file.outputPath;
+    if (is.defined(createOverrides[file.name])) {
+      fileOutputPath = createOverrides[file.name];
+    }
+    files.push({
+      kind: "create",
+      template: file.template,
+      outputPath: fileOutputPath,
+      fromInclude,
+    });
+  }
+
+  // Own modify files
+  for (const file of instructions.output.modify) {
+    let fileOutputPath = file.outputPath;
+    if (is.defined(modifyOverrides[file.name])) {
+      fileOutputPath = modifyOverrides[file.name];
+    }
+    files.push({
+      kind: "modify",
+      template: file.template,
+      outputPath: fileOutputPath,
+      fromInclude,
+    });
+  }
+
+  // Own delete files
+  for (const file of instructions.output.delete ?? []) {
+    let fileOutputPath = file.outputPath;
+    if (is.defined(deleteOverrides[file.name])) {
+      fileOutputPath = deleteOverrides[file.name];
+    }
+    files.push({
+      kind: "delete",
+      outputPath: fileOutputPath,
+      fromInclude,
+    });
+  }
+
+  // Own packageDependencies
+  if (is.defined(instructions.packageDependencies)) {
+    dependencies.push(...instructions.packageDependencies);
+  }
+
+  // Includes
+  if (is.defined(instructions.includes)) {
+    for (const ref of instructions.includes) {
+      // Cycle guard
+      if (pathStack.includes(ref.name)) {
+        continue;
+      }
+
+      // Build include summary
+      const suboutputDir = outputsFolder.append(`/${ref.name}`);
+      const subOutputPath = suboutputDir.append("/instructions.json");
+      let subDescription = "";
+      try {
+        const subInstructions = instructionsSchema.parse(await subOutputPath.json());
+        subDescription = subInstructions.description;
+      } catch {
+        // If we can't read it, just use empty description
+      }
+
+      const bindings = Object.entries(ref.variables).map(([key, value]) => ({
+        key,
+        value,
+        isReference: /\{\{(\w+)\}\}/.test(value),
+      }));
+
+      includes.push({
+        name: ref.name,
+        description: subDescription,
+        bindings,
+      });
+
+      // Recurse into child
+      const childCreateOverrides = ref.outputPathOverride?.create ?? {};
+      const childModifyOverrides = ref.outputPathOverride?.modify ?? {};
+      const childDeleteOverrides = ref.outputPathOverride?.delete ?? {};
+
+      const childInfo = await collectInfo({
+        outputName: ref.name,
+        outputsFolder,
+        pathStack: [...pathStack, ref.name],
+        createOverrides: childCreateOverrides,
+        modifyOverrides: childModifyOverrides,
+        deleteOverrides: childDeleteOverrides,
+        fromInclude: ref.name,
+      });
+
+      files.push(...childInfo.files);
+      dependencies.push(...childInfo.dependencies);
+      includes.push(...childInfo.includes);
+    }
+  }
+
+  return { files, dependencies, includes };
+}
+
 export default function createInfoCommand(
   domain: "template" | "feature",
 ): Command<any> {
@@ -50,7 +193,14 @@ export default function createInfoCommand(
       const outputPath = outputFolder.append("/instructions.json");
       const instructions = instructionsSchema.parse(await outputPath.json());
 
-      // 5. Format & print (basic version — variables, files, deps, includes added later)
+      // 5. Collect composition data (recursive)
+      const collected = await collectInfo({
+        outputName: name,
+        outputsFolder: domainFolder,
+        pathStack: [name],
+      });
+
+      // 6. Format & print
       const lines: string[] = [];
 
       // Header
@@ -86,6 +236,44 @@ export default function createInfoCommand(
           lines.push("");
           for (const v of instructions.variables.optional!) {
             lines.push(`- \`--${toKebabCase(v)}=<value>\``);
+          }
+          lines.push("");
+        }
+      }
+
+      // Files
+      const createFiles = collected.files.filter(f => f.kind === "create");
+      const modifyFiles = collected.files.filter(f => f.kind === "modify");
+      const deleteFiles = collected.files.filter(f => f.kind === "delete");
+      if (createFiles.length > 0 || modifyFiles.length > 0 || deleteFiles.length > 0) {
+        lines.push("## Files");
+        lines.push("");
+        if (createFiles.length > 0) {
+          lines.push("### Create");
+          lines.push("");
+          for (const f of createFiles) {
+            const templatePart = f.template ? ` (template: \`${f.template}\`)` : "";
+            const includePart = f.fromInclude ? `, from include: ${f.fromInclude}` : "";
+            lines.push(`- \`${f.outputPath}\`${templatePart}${includePart}`);
+          }
+          lines.push("");
+        }
+        if (modifyFiles.length > 0) {
+          lines.push("### Modify");
+          lines.push("");
+          for (const f of modifyFiles) {
+            const templatePart = f.template ? ` (template: \`${f.template}\`)` : "";
+            const includePart = f.fromInclude ? `, from include: ${f.fromInclude}` : "";
+            lines.push(`- \`${f.outputPath}\`${templatePart}${includePart}`);
+          }
+          lines.push("");
+        }
+        if (deleteFiles.length > 0) {
+          lines.push("### Delete");
+          lines.push("");
+          for (const f of deleteFiles) {
+            const includePart = f.fromInclude ? ` (from include: ${f.fromInclude})` : "";
+            lines.push(`- \`${f.outputPath}\`${includePart}`);
           }
           lines.push("");
         }

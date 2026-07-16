@@ -166,15 +166,15 @@ export default function createInfoCommand(
     description: `Show how to use a ${domain}`,
     flags: [],
     subcommands: [],
-    action: async ({ subcommands, context }) => {
+    action: async (props) => {
       // 1. Get name from positional args
-      const name = subcommands?.[0];
+      const name = props?.subcommands?.[0];
       if (!is.defined(name)) {
         throw errors.missing_name();
       }
 
       // 2. Locate .saved folder
-      const root: FileRef = context?.root ?? await runtime.projectRoot();
+      const root: FileRef = props?.context?.root ?? await runtime.projectRoot();
       const mainFolder = root.append(`/${MAIN_FOLDER}`);
       if (!(await fs.exists(mainFolder))) {
         throw errors.dry_folder_not_found();

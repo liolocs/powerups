@@ -5,6 +5,7 @@ import createApplyCommand from "#commands/output/apply/index";
 import createSearchCommand from "#commands/output/search/index";
 import createValidateCommand from "#commands/output/validate/index";
 import createListCommand from "#commands/output/list/index";
+import createInfoCommand from "#commands/output/info/index";
 
 const template = new Command({
   name: "template",
@@ -19,6 +20,7 @@ const template = new Command({
     createSearchCommand("template"),
     createValidateCommand("template"),
     createListCommand("template"),
+    createInfoCommand("template"),
   ],
 
   requiresSubcommand: true,

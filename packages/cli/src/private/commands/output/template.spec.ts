@@ -4,22 +4,24 @@ import feature from "#commands/output/feature";
 import { CommandErrorCode } from "@saved/program";
 import { CodeError } from "@rcompat/error";
 
-test.case("template command has create, apply, search, validate subcommands", async assert => {
+test.case("template command has create, apply, search, validate, info subcommands", async assert => {
   const subNames = [...template.subcommands.values()].map(s => s.name);
 
   assert(subNames.includes("create")).true();
   assert(subNames.includes("apply")).true();
   assert(subNames.includes("search")).true();
   assert(subNames.includes("validate")).true();
+  assert(subNames.includes("info")).true();
 });
 
-test.case("feature command has create, apply, search, validate subcommands", async assert => {
+test.case("feature command has create, apply, search, validate, info subcommands", async assert => {
   const subNames = [...feature.subcommands.values()].map(s => s.name);
 
   assert(subNames.includes("create")).true();
   assert(subNames.includes("apply")).true();
   assert(subNames.includes("search")).true();
   assert(subNames.includes("validate")).true();
+  assert(subNames.includes("info")).true();
 });
 
 test.group("template/feature command errors", () => {

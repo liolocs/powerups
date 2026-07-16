@@ -252,9 +252,11 @@ export default function createInfoCommand(
           lines.push("### Create");
           lines.push("");
           for (const f of createFiles) {
-            const templatePart = f.template ? ` (template: \`${f.template}\`)` : "";
-            const includePart = f.fromInclude ? `, from include: ${f.fromInclude}` : "";
-            lines.push(`- \`${f.outputPath}\`${templatePart}${includePart}`);
+            const meta: string[] = [];
+            if (f.template) meta.push(`template: \`${f.template}\``);
+            if (f.fromInclude) meta.push(`from include: ${f.fromInclude}`);
+            const metaPart = meta.length > 0 ? ` (${meta.join(", ")})` : "";
+            lines.push(`- \`${f.outputPath}\`${metaPart}`);
           }
           lines.push("");
         }
@@ -262,9 +264,11 @@ export default function createInfoCommand(
           lines.push("### Modify");
           lines.push("");
           for (const f of modifyFiles) {
-            const templatePart = f.template ? ` (template: \`${f.template}\`)` : "";
-            const includePart = f.fromInclude ? `, from include: ${f.fromInclude}` : "";
-            lines.push(`- \`${f.outputPath}\`${templatePart}${includePart}`);
+            const meta: string[] = [];
+            if (f.template) meta.push(`template: \`${f.template}\``);
+            if (f.fromInclude) meta.push(`from include: ${f.fromInclude}`);
+            const metaPart = meta.length > 0 ? ` (${meta.join(", ")})` : "";
+            lines.push(`- \`${f.outputPath}\`${metaPart}`);
           }
           lines.push("");
         }
@@ -304,6 +308,20 @@ export default function createInfoCommand(
           }
         }
         lines.push("");
+      }
+
+      // Includes
+      if (collected.includes.length > 0) {
+        lines.push("## Includes");
+        lines.push("");
+        for (const inc of collected.includes) {
+          lines.push(`- **${inc.name}** — ${inc.description}`);
+          const bindings = inc.bindings.map(b =>
+            `${b.key} = "${b.value}" (${b.isReference ? "from parent" : "literal"})`
+          ).join(", ");
+          lines.push(`  - Variable bindings: ${bindings}`);
+          lines.push("");
+        }
       }
 
       // Usage

@@ -161,6 +161,92 @@ test.case("info prints package dependencies", async assert => {
   await testRoot.remove();
 });
 
+test.case("info prints includes with variable bindings for composite templates", async assert => {
+  await reset();
+
+  // Create child template
+  await createCmd.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "child-component" },
+      { flag: "--description", value: "A child component template" },
+      { flag: "--variables", value: "componentName,theme" },
+      { flag: "--output", value: JSON.stringify({
+        create: [{
+          name: "comp",
+          template: "comp.njk",
+          outputPath: "src/ui/{{componentName}}.tsx",
+        }],
+        modify: [],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+
+  // Create parent template with includes
+  await createCmd.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "parent-composite" },
+      { flag: "--description", value: "A composite template" },
+      { flag: "--variables", value: "theme" },
+      { flag: "--output", value: JSON.stringify({
+        create: [{
+          name: "barrel",
+          template: "barrel.njk",
+          outputPath: "src/index.ts",
+        }],
+        modify: [],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+
+  // Overwrite parent instructions.json to add includes
+  const templateFolder = testRoot.append(`/${MAIN_FOLDER}/output/template`);
+  const parentInstructionsPath = templateFolder.append("/parent-composite/instructions.json");
+  await parentInstructionsPath.writeJSON({
+    name: "parent-composite",
+    description: "A composite template",
+    variables: { required: ["theme"] },
+    intent: [],
+    output: {
+      create: [{ name: "barrel", template: "barrel.njk", outputPath: "src/index.ts" }],
+      modify: [],
+    },
+    includes: [
+      {
+        name: "child-component",
+        variables: { componentName: "Button", theme: "{{theme}}" },
+      },
+    ],
+  });
+
+  const output = await captureStdout(() => infoCmd.run({
+    subcommands: ["parent-composite"],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  // Includes section
+  assert(output).includes("## Includes");
+  assert(output).includes("**child-component**");
+  assert(output).includes("A child component template");
+  assert(output).includes("componentName");
+  assert(output).includes("Button");
+  assert(output).includes("(literal)");
+  assert(output).includes("{{theme}}");
+  assert(output).includes("(from parent)");
+
+  // Files from child are listed with from include annotation
+  assert(output).includes("`src/ui/{{componentName}}.tsx` (template: `comp.njk`, from include: child-component)");
+
+  // Usage only shows parent's required variables
+  assert(output).includes("saved template apply parent-composite --theme=<value>");
+
+  await testRoot.remove();
+});
+
 test.case("info omits empty sections when template has no files, deps, or includes", async assert => {
   await reset();
 

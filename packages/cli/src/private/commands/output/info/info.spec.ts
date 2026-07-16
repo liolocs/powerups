@@ -128,6 +128,39 @@ test.case("info prints create, modify, and delete files", async assert => {
   await testRoot.remove();
 });
 
+test.case("info prints package dependencies", async assert => {
+  await reset();
+
+  await createCmd.run({
+    subcommands: [],
+    flags: [
+      { flag: "--name", value: "add-tailwind" },
+      { flag: "--description", value: "Adds tailwind to a project" },
+      { flag: "--variables", value: "name" },
+      { flag: "--package-deps", value: JSON.stringify([
+        {
+          target: "packages/web",
+          dependencies: ["tailwindcss@^4.0.0"],
+          devDependencies: ["@types/tailwindcss@^3.0.0"],
+        },
+      ]) },
+    ],
+    context: { root: testRoot },
+  });
+
+  const output = await captureStdout(() => infoCmd.run({
+    subcommands: ["add-tailwind"],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  assert(output).includes("## Dependencies");
+  assert(output).includes("tailwindcss@^4.0.0 (target: packages/web)");
+  assert(output).includes("@types/tailwindcss@^3.0.0 (devDependency, target: packages/web)");
+
+  await testRoot.remove();
+});
+
 test.case("info omits empty sections when template has no files, deps, or includes", async assert => {
   await reset();
 

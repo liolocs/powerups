@@ -279,6 +279,33 @@ export default function createInfoCommand(
         }
       }
 
+      // Dependencies
+      if (collected.dependencies.length > 0) {
+        lines.push("## Dependencies");
+        lines.push("");
+        for (const dep of collected.dependencies) {
+          if (is.defined(dep.dependencies)) {
+            for (const d of dep.dependencies) {
+              const targetPart = dep.target ? ` (target: ${dep.target})` : "";
+              lines.push(`- ${d}${targetPart}`);
+            }
+          }
+          if (is.defined(dep.devDependencies)) {
+            for (const d of dep.devDependencies) {
+              const targetPart = dep.target ? `, target: ${dep.target}` : "";
+              lines.push(`- ${d} (devDependency${targetPart})`);
+            }
+          }
+          if (is.defined(dep.peerDependencies)) {
+            for (const d of dep.peerDependencies) {
+              const targetPart = dep.target ? `, target: ${dep.target}` : "";
+              lines.push(`- ${d} (peerDependency${targetPart})`);
+            }
+          }
+        }
+        lines.push("");
+      }
+
       // Usage
       lines.push("## Usage");
       lines.push("");

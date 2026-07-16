@@ -275,3 +275,63 @@ test.case("info omits empty sections when template has no files, deps, or includ
 
   await testRoot.remove();
 });
+
+test.group("info errors", () => {
+  test.case("should fail with missing_name when no name provided", async assert => {
+    await reset();
+
+    let threw;
+    try {
+      await infoCmd.run({
+        subcommands: [],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateInfoErrorCode.missing_name);
+
+    await testRoot.remove();
+  });
+
+  test.case("should fail with not_found for a nonexistent template", async assert => {
+    await reset();
+
+    let threw;
+    try {
+      await infoCmd.run({
+        subcommands: ["nonexistent"],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateInfoErrorCode.not_found);
+
+    await testRoot.remove();
+  });
+
+  test.case("should fail with dry_folder_not_found without .saved folder", async assert => {
+    await testRoot.remove();
+    await fs.create(testRoot);
+
+    let threw;
+    try {
+      await infoCmd.run({
+        subcommands: ["some-template"],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(OutputTemplateInfoErrorCode.dry_folder_not_found);
+
+    await testRoot.remove();
+  });
+});

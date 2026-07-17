@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 /**
- * Dev linker for @saved/dry-cli.
+ * Dev linker for @powers/cli.
  *
  * Run with bun (from anywhere in the repo):
  *
- *   bun run packages/saved-cli/scripts/link.ts
+ *   bun run packages/powers-cli/scripts/link.ts
  *
  * What it does:
  *   1. Reads CLI_NAME from src/private/constants.ts.
- *   2. Writes `bin: { [CLI_NAME]: "./lib/bin.js" }` into packages/saved-cli/package.json
+ *   2. Writes `bin: { [CLI_NAME]: "./lib/bin.js" }` into packages/powers-cli/package.json
  *      (creating it if absent, correcting it if stale).
  *   3. Builds lib/bin.js if it doesn't already exist.
  *   4. Runs `pnpm link --global` from the package dir so `<CLI_NAME>` lands on PATH
@@ -17,7 +17,7 @@
  *   5. Verifies with `which <CLI_NAME>`.
  *
  * Idempotent: safe to re-run. If you edit source, just re-run the build
- * (`pnpm --filter @saved/dry-cli build`); the global symlink already points here.
+ * (`pnpm --filter @powers/cli build`); the global symlink already points here.
  */
 import fs from "@rcompat/fs";
 import io from "@rcompat/io";
@@ -47,7 +47,7 @@ async function run(command: string, cwd: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  // packages/saved-cli — the parent of this scripts/ directory.
+  // packages/powers-cli — the parent of this scripts/ directory.
   const pkgDir = fs.ref(import.meta.dir).directory;
   const pkgJsonRef = pkgDir.append("/package.json");
 
@@ -74,7 +74,7 @@ async function main(): Promise<void> {
   // 3. Ensure the compiled entry exists; build if missing.
   const binRef = pkgDir.append("/lib/bin.js");
   if (await binRef.exists()) {
-    log("✓ lib/bin.js already built (rebuild with `pnpm --filter @saved/dry-cli build`)\n");
+    log("✓ lib/bin.js already built (rebuild with `pnpm --filter @powers/cli build`)\n");
   } else {
     log("• building lib/bin.js ...\n");
     await run("pnpm run build", pkgDir.path);
@@ -82,7 +82,7 @@ async function main(): Promise<void> {
   }
 
   // 4. Link globally so <CLI_NAME> is on PATH (via PNPM_HOME).
-  log(`• linking ${pkg.name ?? "@saved/dry-cli"} globally ...\n`);
+  log(`• linking ${pkg.name ?? "@powers/cli"} globally ...\n`);
   await run("pnpm link --global", pkgDir.path);
 
   // 5. Verify it resolved on PATH.

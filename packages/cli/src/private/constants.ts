@@ -1,7 +1,7 @@
-export const CLI_NAME = "saved";
+export const CLI_NAME = "pwrs";
 
 /** Name of the main cli project folder, created at the project root. */
-export const MAIN_FOLDER = ".saved";
+export const MAIN_FOLDER = ".powers";
 
 /** Parent folder for template and feature domains. */
 export const OUTPUT_FOLDER = "output";

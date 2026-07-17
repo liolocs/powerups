@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@saved/program";
+import { Command } from "@powers/program";
 import output_create_errors from "#errors/outputCreateErrors";
 import output_search_errors from "#errors/outputSearchErrors";
 import tokenize from "#utils/tokenize";

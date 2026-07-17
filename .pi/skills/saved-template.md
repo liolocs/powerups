@@ -1,24 +1,24 @@
 ---
-name: saved-template
-description: "Analyze existing code and capture repeatable patterns as saved templates"
+name: powers-template
+description: "Analyze existing code and capture repeatable patterns as powers templates"
 ---
 Analyze existing code in this codebase and capture repeatable patterns as
-saved templates. This may result in multiple templates.
+powers templates. This may result in multiple templates.
 
 **Domain guard:** Before proceeding, assess whether this request is actually a
 template (a recurring pattern you'll repeat with different variables) or a
 feature (a one-time addition). If it's a one-time setup like "add tailwind" or
 "set up auth," push back to the user: "This sounds like a one-time addition —
-consider using `saved-feature` instead." Only proceed with the template
+consider using `powers-feature` instead." Only proceed with the template
 workflow if the pattern is genuinely recurring.
 
 If the user is pointing at specific already-done work they want to capture
 (rather than asking you to survey the codebase for patterns), use the
-`saved-capture` skill instead.
+`powers-capture` skill instead.
 
 1. Survey the codebase to understand its structure:
    - Check the project's file tree, key directories, and recent commits.
-   - Run `saved template search -q="..."` for the main domains you
+   - Run `powers template search -q="..."` for the main domains you
      find to see if templates already exist for them.
 
 2. Ask the user which area of the codebase they want to focus on:
@@ -51,13 +51,13 @@ If the user is pointing at specific already-done work they want to capture
    Get user approval on which candidates to capture before proceeding.
 
 5. For each approved candidate, capture it:
-   - Run `saved template create -n=<short-name> \
+   - Run `powers template create -n=<short-name> \
        -i="<intent keywords>" \
        -v="var1,var2" -ov="optVar1,optVar2" \
        -o='{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'`
      Use `-ov` only if there are optional variables; omit it otherwise.
    - Fill in the template at
-     `.saved/output/template/<name>/<template>`.
+     `.powers/output/template/<name>/<template>`.
      Prefer a `.ts` file with a default-export function
      `(vars: Record<string, string>) => string` — the CLI calls that function
      with the template's declared variables (keyed by name, all strings) and
@@ -69,8 +69,8 @@ If the user is pointing at specific already-done work they want to capture
      `.njk`/`.ts` for variable-driven mods) that describes the changes to
      apply to the target file. See the main instruction file for the modify
      template format.
-   - Run `saved template validate -n=<name>` to validate.
-   - Run `saved template apply <name> --<variable-name>=<value> ... -d` to preview
+   - Run `powers template validate -n=<name>` to validate.
+   - Run `powers template apply <name> --<variable-name>=<value> ... -d` to preview
      and confirm the template regenerates the original code faithfully.
 
 6. After all approved candidates are captured, summarize what was created:

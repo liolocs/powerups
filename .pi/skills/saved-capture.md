@@ -1,9 +1,9 @@
 ---
-name: saved-capture
-description: "Capture already-done work as a saved feature or template"
+name: powers-capture
+description: "Capture already-done work as a powers feature or template"
 ---
 Capture work the user has already done — files they wrote or changes they made
-outside the CLI — into a reusable saved feature or template.
+outside the CLI — into a reusable powers feature or template.
 
 1. Ask the user to point at the work they want to capture — specific files or
    a directory. Do not auto-detect via git diff or other heuristics; always
@@ -22,8 +22,8 @@ outside the CLI — into a reusable saved feature or template.
    Present your assessment to the user and get confirmation on the domain
    (feature or template) before proceeding. If the user later needs to
    switch domains, the folder can simply be moved between
-   .saved/output/template/ and
-   .saved/output/feature/.
+   .powers/output/template/ and
+   .powers/output/feature/.
 
 4. Identify the capture structure:
    - Name (short, kebab-case)
@@ -45,8 +45,8 @@ outside the CLI — into a reusable saved feature or template.
    Present this to the user and get approval before proceeding.
 
 5. Scaffold the folder structure by running:
-   `saved template create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
-   (or `saved feature create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   `powers template create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   (or `powers feature create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
    for features). Use `-ov` only if there are optional variables; omit it
    otherwise. This creates the instructions.json and empty template files.
 
@@ -70,16 +70,16 @@ outside the CLI — into a reusable saved feature or template.
    Prefer .ts templates (the recommended format). Use .njk only when .ts
    is impractical.
 
-8. Run `saved template validate -n=<name>` (or
-   `saved feature validate -n=<name>`) to validate the structure.
+8. Run `powers template validate -n=<name>` (or
+   `powers feature validate -n=<name>`) to validate the structure.
 
-9. Run `saved template apply <name> --<variable-name>=<value> ... -d` (or
-   `saved feature apply <name> --<variable-name>=<value> ... -d`) to dry-run
+9. Run `powers template apply <name> --<variable-name>=<value> ... -d` (or
+   `powers feature apply <name> --<variable-name>=<value> ... -d`) to dry-run
    and verify the captured artifact regenerates faithfully. Compare the
    dry-run output to the original work. If there are discrepancies, fix
    the template and re-verify.
 
 10. Report back to the user: what was captured, where it lives, and how to
     reuse it:
-    `saved template apply <name> --<variable-name>=<value> ...`
-    (or `saved feature apply <name> --<variable-name>=<value> ...`).
+    `powers template apply <name> --<variable-name>=<value> ...`
+    (or `powers feature apply <name> --<variable-name>=<value> ...`).

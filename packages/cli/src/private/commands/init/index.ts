@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
-import { Command } from "@saved/program";
+import { Command } from "@powers/program";
 import init_errors from "#errors/initErrors";
 import { scaffold, type RollbackInfo } from "#scaffold/index";
 import { writeConfig } from "#utils/config";
@@ -82,7 +82,7 @@ const init = new Command({
         rollback,
       });
 
-      // Persist the resolved harness so `saved update` can reuse it
+      // Persist the resolved harness so `powers update` can reuse it
       await writeConfig(root, { harness: result.harness });
 
       const green = cli.fg.green;

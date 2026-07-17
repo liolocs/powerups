@@ -2,7 +2,7 @@ export default ({ name, sub, subDescription }: Record<string, string>) => {
   const camel = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
   const subCamel = sub.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
   const subDesc = subDescription.replaceAll("`", "\\`");
-  return `import { Command } from "@saved/program";
+  return `import { Command } from "@powers/program";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import fs, { type FileRef } from "@rcompat/fs";

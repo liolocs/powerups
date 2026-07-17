@@ -502,7 +502,7 @@ test.group("apply errors", () => {
 
   test.case("should fail with git_repo_required when not in a git repo", async assert => {
     // Use a temp dir outside the project's git repo
-    const noGitRoot = fs.ref(path.join(tmpdir(), `saved-test-nogit-${randomBytes(4).toString("hex")}`));
+    const noGitRoot = fs.ref(path.join(tmpdir(), `powers-test-nogit-${randomBytes(4).toString("hex")}`));
     await fs.create(noGitRoot);
     await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
     await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`));

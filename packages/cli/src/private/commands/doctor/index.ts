@@ -1,4 +1,4 @@
-import { Command } from "@saved/program";
+import { Command } from "@powers/program";
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";

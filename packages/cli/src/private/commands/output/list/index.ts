@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
-import { Command } from "@saved/program";
+import { Command } from "@powers/program";
 import output_list_errors from "#errors/outputListErrors";
 import { instructionsSchema } from "#schemas/instruction";
 import {

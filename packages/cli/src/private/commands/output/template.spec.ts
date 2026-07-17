@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import template from "#commands/output/template";
 import feature from "#commands/output/feature";
-import { CommandErrorCode } from "@saved/program";
+import { CommandErrorCode } from "@powers/program";
 import { CodeError } from "@rcompat/error";
 
 test.case("template command has create, apply, search, validate, info subcommands", async assert => {

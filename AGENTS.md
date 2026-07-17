@@ -1,9 +1,9 @@
-<!-- BEGIN saved -->
-## saved (output engine)
+<!-- BEGIN powers -->
+## powers (output engine)
 
-This project uses the `saved` CLI to keep AI-generated content maintainable.
-Templates live in `.saved/output/template/<name>/` and
-features live in `.saved/output/feature/<name>/`.
+This project uses the `powers` CLI to keep AI-generated content maintainable.
+Templates live in `.powers/output/template/<name>/` and
+features live in `.powers/output/feature/<name>/`.
 Always prefer templates and features over one-off generation.
 
 ### Template vs Feature
@@ -17,11 +17,11 @@ Always prefer templates and features over one-off generation.
 
 ### Before writing any new feature or file
 
-1. Run `saved template search -q="<what you're about to do>"` and
-   `saved feature search -q="<what you're about to do>"`.
+1. Run `powers template search -q="<what you're about to do>"` and
+   `powers feature search -q="<what you're about to do>"`.
    If a template or feature matches (score > 0), apply it instead:
-   `saved template apply <name> --<variable-name>=<value> ...`
-   or `saved feature apply <name> --<variable-name>=<value> ...`
+   `powers template apply <name> --<variable-name>=<value> ...`
+   or `powers feature apply <name> --<variable-name>=<value> ...`
    Preview first with `--dry-run` / `-d`, then apply for real.
 2. Only write fresh content if no template or feature matches.
 
@@ -34,24 +34,24 @@ one-off edits.
 
 If the user confirms, capture it:
 ```
-saved template create -n=<short-name> \
+powers template create -n=<short-name> \
   -d="<human-readable description>" \
   -i="<intent keywords>" \
   -v="var1,var2" -ov="optVar1,optVar2" \
   -o='{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'
 ```
 Then fill in the template at
-`.saved/output/template/<name>/<template>`.
+`.powers/output/template/<name>/<template>`.
 Prefer a `.ts` file with a default-export function `(vars) => string` — this is
 the recommended format for new templates. Nunjucks `.njk` templates
 (`{{var}}` syntax) are supported but should only be used when a `.ts`
 template is impractical. Validate before considering it done:
-`saved template validate -n=<name>`
+`powers template validate -n=<name>`
 
 ### `.ts` template format (recommended)
 
 A `.ts` template is a TypeScript module that `export default`s a function.
-At run time `saved` calls that function with the template's declared
+At run time `powers` calls that function with the template's declared
 variables (keyed by name, all strings) and writes the returned string to the
 file's `outputPath`.
 
@@ -75,7 +75,7 @@ export default ({ componentName, theme }: Record<string, string>) =>
   it does not import or execute it, so apply the template once to confirm the
   default export works.
 
-### Output schema (`.saved/output/template/<name>/instructions.json`)
+### Output schema (`.powers/output/template/<name>/instructions.json`)
 
 ```json
 {
@@ -201,7 +201,7 @@ each included subtemplate — mapping the subtemplate's declared variables to
 values from the parent (using `{{parentVar}}` tokens or literals),
 optionally overriding output paths, and rendering the subtemplate's templates.
 Subtemplates are just templates — they live in their own folder under
-`.saved/output/template/`, have their own
+`.powers/output/template/`, have their own
 `instructions.json` and templates, and can be applied standalone or included
 by multiple parents.
 
@@ -211,7 +211,7 @@ by multiple parents.
 types file, and a test. Later you build a `graphql-resolver` template that also
 needs a types file with the same structure.
 - *Extraction:* Create a standalone `types` template
-  (`saved template create -n=types ...`). Add it to both parents'
+  (`powers template create -n=types ...`). Add it to both parents'
   `instructions.json`:
 
 ```json
@@ -227,7 +227,7 @@ needs a types file with the same structure.
 - The `variables` map says: "pass the parent's `modelName` as the subtemplate's
   `entityName`." The `outputPathOverride` map says: "write the subtemplate's
   `types` file to this path instead of its default."
-- Validate: `saved template validate -n=api-route`
+- Validate: `powers template validate -n=api-route`
 
 #### When to extract subtemplates
 
@@ -247,14 +247,14 @@ full template, verify it works, then extract when repetition emerges.
 
 | Action | Command |
 |--------|---------|
-| Search templates | `saved template search -q="..."` |
-| Search features | `saved feature search -q="..."` |
-| Apply a template | `saved template apply <name> --<variable>=<value> [-d]` |
-| Apply a feature | `saved feature apply <name> --<variable>=<value> [-d]` |
-| Create a template | `saved template create -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
-| Create a feature | `saved feature create -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
-| Validate templates | `saved template validate [-n=<name>]` |
-| Validate features | `saved feature validate [-n=<name>]` |
-| Health check all | `saved doctor` |
-| Usage metrics | `saved metrics summary` |
-<!-- END saved -->
+| Search templates | `powers template search -q="..."` |
+| Search features | `powers feature search -q="..."` |
+| Apply a template | `powers template apply <name> --<variable>=<value> [-d]` |
+| Apply a feature | `powers feature apply <name> --<variable>=<value> [-d]` |
+| Create a template | `powers template create -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Create a feature | `powers feature create -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Validate templates | `powers template validate [-n=<name>]` |
+| Validate features | `powers feature validate [-n=<name>]` |
+| Health check all | `powers doctor` |
+| Usage metrics | `powers metrics summary` |
+<!-- END powers -->

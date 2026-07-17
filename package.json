@@ -1,5 +1,5 @@
 {
-  "name": "@saved/monorepo",
+  "name": "@powers/monorepo",
   "type": "module",
   "main": "index.js",
   "license": "MIT",

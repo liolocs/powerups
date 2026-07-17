@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@saved/program";
+import { Command } from "@powers/program";
 import output_apply_errors from "#errors/outputApplyErrors";
 import { instructionsSchema } from "#schemas/instruction";
 import { extractVariables } from "#utils/variables";
@@ -60,7 +60,7 @@ export default function createApplyCommand(
         throw errors.missing_name();
       }
 
-      // 2. Locate .saved folder
+      // 2. Locate .powers folder
       const root: FileRef = context?.root ?? await runtime.projectRoot();
       const mainFolder = root.append(`/${MAIN_FOLDER}`);
       const hasMainFolder = await fs.exists(mainFolder);

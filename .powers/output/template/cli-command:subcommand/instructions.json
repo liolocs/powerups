@@ -12,7 +12,7 @@
   "intent": [
     "cli command with subcommand",
     "command group",
-    "saved cli"
+    "powers cli"
   ],
   "output": {
     "create": [],

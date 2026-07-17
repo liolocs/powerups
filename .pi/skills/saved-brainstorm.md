@@ -1,17 +1,17 @@
 ---
-name: saved-brainstorm
-description: "Brainstorm a plan using saved templates and features"
+name: powers-brainstorm
+description: "Brainstorm a plan using powers templates and features"
 ---
-Brainstorm a plan using saved templates and features.
+Brainstorm a plan using powers templates and features.
 
 1. Explore the project context:
    - Check recent commits, existing files, and docs.
-   - Run `saved template search -q="<what the user wants to plan>"` and
-     `saved feature search -q="<what the user wants to plan>"` to see if
+   - Run `powers template search -q="<what the user wants to plan>"` and
+     `powers feature search -q="<what the user wants to plan>"` to see if
      any templates or features already relate to this area.
    - If the searches return "No matching templates/features found", check whether
-     `.saved/output/template/` or
-     `.saved/output/feature/` exist and
+     `.powers/output/template/` or
+     `.powers/output/feature/` exist and
      contain any `instructions.json` files. This distinguishes "nothing exists
      yet" (greenfield) from "items exist but none match this request."
 
@@ -21,8 +21,8 @@ Brainstorm a plan using saved templates and features.
    - What success looks like
 
 3. Identify the key intents (topics, domains, capabilities) this plan touches.
-   For each intent, run `saved template search -q="<intent>"` and
-   `saved feature search -q="<intent>"` to find existing items that
+   For each intent, run `powers template search -q="<intent>"` and
+   `powers feature search -q="<intent>"` to find existing items that
    may be reusable.
 
 4. From the search results, determine:
@@ -58,7 +58,7 @@ Brainstorm a plan using saved templates and features.
    verified. Instead, plan the concrete implementation (what files to write,
    what they contain). Mark repeatable parts as capture candidates — to be
    captured AFTER the implementation is verified working, using the
-   `saved-capture` skill.
+   `powers-capture` skill.
 
    Subtemplates: Do NOT plan subtemplate decomposition upfront. Plan
    concrete, standalone templates. If two planned templates clearly share
@@ -82,6 +82,6 @@ Brainstorm a plan using saved templates and features.
 7. Get user approval on the plan before proceeding.
 
 8. Once approved, save the plan to a spec file at
-   `docs/saved/specs/YYYY-MM-DD-<topic>-design.md` and commit it.
-   Then transition to implementation by following the `saved-feature`
-   or `saved-template` command workflow.
+   `docs/powers/specs/YYYY-MM-DD-<topic>-design.md` and commit it.
+   Then transition to implementation by following the `powers-feature`
+   or `powers-template` command workflow.

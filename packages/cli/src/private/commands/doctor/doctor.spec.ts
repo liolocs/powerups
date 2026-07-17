@@ -180,7 +180,7 @@ test.case("doctor warns when git working tree is dirty", async assert => {
 
 test.case("doctor errors when not a git repo", async assert => {
   // Use a temp dir outside the project's git repo
-  const noGitRoot = fs.ref(path.join(tmpdir(), `saved-test-nogit-${randomBytes(4).toString("hex")}`));
+  const noGitRoot = fs.ref(path.join(tmpdir(), `powers-test-nogit-${randomBytes(4).toString("hex")}`));
   await fs.create(noGitRoot);
   await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
   await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${OUTPUT_FOLDER}`));

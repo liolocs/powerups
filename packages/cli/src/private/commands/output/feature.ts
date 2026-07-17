@@ -1,4 +1,4 @@
-import { Command } from "@saved/program";
+import { Command } from "@powers/program";
 import { CLI_NAME } from "#constants";
 import createCreateCommand from "#commands/output/create/index";
 import createApplyCommand from "#commands/output/apply/index";

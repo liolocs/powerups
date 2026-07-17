@@ -46,7 +46,7 @@ test.case("should pass when in a git repo (verifyGitRepo)", async assert => {
 
 test.case("should throw when not in a git repo (verifyGitRepo)", async assert => {
   // Use a temp dir outside the project's git repo
-  const noGitDir = fs.ref(path.join(tmpdir(), `saved-test-nogit-${randomBytes(4).toString("hex")}`));
+  const noGitDir = fs.ref(path.join(tmpdir(), `powers-test-nogit-${randomBytes(4).toString("hex")}`));
   await fs.create(noGitDir);
 
   let threw = false;

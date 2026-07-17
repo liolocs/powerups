@@ -167,20 +167,18 @@ export default function createInfoCommand(
     flags: [],
     subcommands: [],
     action: async (props) => {
-      // 1. Get name from positional args
       const name = props?.subcommands?.[0];
+
       if (!is.defined(name)) {
         throw errors.missing_name();
       }
 
-      // 2. Locate .saved folder
       const root: FileRef = props?.context?.root ?? await runtime.projectRoot();
       const mainFolder = root.append(`/${MAIN_FOLDER}`);
       if (!(await fs.exists(mainFolder))) {
         throw errors.dry_folder_not_found();
       }
 
-      // 3. Resolve domain folder
       const domainFolder = mainFolder.append(
         `/${OUTPUT_FOLDER}/${domainFolderMap[domain]}`,
       );
@@ -189,27 +187,22 @@ export default function createInfoCommand(
         throw errors.not_found(name);
       }
 
-      // 4. Load & parse instructions
       const outputPath = outputFolder.append("/instructions.json");
       const instructions = instructionsSchema.parse(await outputPath.json());
 
-      // 5. Collect composition data (recursive)
       const collected = await collectInfo({
         outputName: name,
         outputsFolder: domainFolder,
         pathStack: [name],
       });
 
-      // 6. Format & print
       const lines: string[] = [];
 
-      // Header
       lines.push(`# ${instructions.name}`);
       lines.push("");
       lines.push(instructions.description);
       lines.push("");
 
-      // Intent
       if (instructions.intent.length > 0) {
         lines.push("## Intent");
         lines.push("");
@@ -217,7 +210,6 @@ export default function createInfoCommand(
         lines.push("");
       }
 
-      // Variables
       const hasRequired = instructions.variables.required.length > 0;
       const hasOptional = (instructions.variables.optional ?? []).length > 0;
       if (hasRequired || hasOptional) {
@@ -241,25 +233,36 @@ export default function createInfoCommand(
         }
       }
 
-      // Files
       const createFiles = collected.files.filter(f => f.kind === "create");
       const modifyFiles = collected.files.filter(f => f.kind === "modify");
       const deleteFiles = collected.files.filter(f => f.kind === "delete");
+
       if (createFiles.length > 0 || modifyFiles.length > 0 || deleteFiles.length > 0) {
         lines.push("## Files");
         lines.push("");
+
         if (createFiles.length > 0) {
           lines.push("### Create");
           lines.push("");
-          for (const f of createFiles) {
+
+          for (const fileToCreate of createFiles) {
             const meta: string[] = [];
-            if (f.template) meta.push(`template: \`${f.template}\``);
-            if (f.fromInclude) meta.push(`from include: ${f.fromInclude}`);
+
+            if (is.truthy(fileToCreate.template)) {
+              meta.push(`template: \`${fileToCreate.template}\``);
+            }
+
+            if (is.truthy(fileToCreate.fromInclude)) {
+              meta.push(`from include: ${fileToCreate.fromInclude}`);
+            }
+
             const metaPart = meta.length > 0 ? ` (${meta.join(", ")})` : "";
-            lines.push(`- \`${f.outputPath}\`${metaPart}`);
+
+            lines.push(`- \`${fileToCreate.outputPath}\`${metaPart}`);
           }
           lines.push("");
         }
+
         if (modifyFiles.length > 0) {
           lines.push("### Modify");
           lines.push("");

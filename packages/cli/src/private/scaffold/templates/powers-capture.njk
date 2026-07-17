@@ -69,10 +69,12 @@ codebase to find patterns worth capturing. No specific files are pointed at
    for single-use powers). Use `-ov` only if there are optional variables; omit it
    otherwise. This creates the instructions.json and empty template files.
 
-7. Copy the original files into the power directory, overwriting the
-   empty stubs. Use `cp` for each file — this brings the full content onto
-   disk without writing it as agent output. Do NOT write file contents from
-   scratch — always copy first.
+7. Copy the original files into the power's `template/` subdirectory,
+   overwriting the empty stubs. Use `cp` for each file — this brings the
+   full content onto disk without writing it as agent output. Do NOT write
+   file contents from scratch — always copy first. The `create` command
+   already scaffolded the `template/` subdirectory and empty stub files; copy
+   the originals over them.
 
 8. Edit the copied files in place to parameterize them:
    - For .ts templates: wrap the content in a default-export function and

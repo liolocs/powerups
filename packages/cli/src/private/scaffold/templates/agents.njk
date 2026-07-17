@@ -126,6 +126,13 @@ Delete entries have no `template` field (nothing to render); at use time
 the file at `outputPath` is removed from the project. If the target file
 doesn't exist, a warning is printed and the entry is skipped (no error).
 
+Template files referenced by `create` and `modify` entries live in a
+`template/` subdirectory alongside `instructions.json` — i.e.
+`{{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/template/<file>`.
+The `template` field holds just the bare filename; the CLI resolves it inside
+that subdirectory. Files placed directly in the power folder (outside
+`template/`) are reported as orphaned by `{{ CLI_CMD }} doctor`.
+
 ### Required vs Optional Variables
 
 The `variables` field has two arrays:

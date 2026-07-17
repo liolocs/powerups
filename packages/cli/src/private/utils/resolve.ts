@@ -2,6 +2,7 @@ import type { FileRef } from "@rcompat/fs";
 import { instructionsSchema } from "#schemas/instruction";
 import type { VariableResult } from "#utils/variables";
 import { resolveTemplateString } from "#utils/resolve-template-string";
+import { TEMPLATE_FOLDER } from "#constants";
 import is from "@rcompat/is";
 
 export interface RenderTask {
@@ -51,7 +52,7 @@ export async function resolveOutput(args: {
 
     tasks.push({
       kind: "create",
-      templatePath: outputFolder.append(`/${file.template}`),
+      templatePath: outputFolder.append(`/${TEMPLATE_FOLDER}/${file.template}`),
       variables,
       outputPath: fileOutputPath,
     });
@@ -67,7 +68,7 @@ export async function resolveOutput(args: {
 
     tasks.push({
       kind: "modify",
-      templatePath: outputFolder.append(`/${file.template}`),
+      templatePath: outputFolder.append(`/${TEMPLATE_FOLDER}/${file.template}`),
       variables,
       outputPath: fileOutputPath,
     });

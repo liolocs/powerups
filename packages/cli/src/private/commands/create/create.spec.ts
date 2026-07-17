@@ -66,8 +66,8 @@ test.case("create template creates empty files for create and modify entries", a
   });
 
   const outputPath = multiUseFolder.append("/ui-component/instructions.json");
-  const createTemplatePath = multiUseFolder.append("/ui-component/button.svelte.tmpl");
-  const modifyTemplatePath = multiUseFolder.append("/ui-component/wire.json");
+  const createTemplatePath = multiUseFolder.append("/ui-component/template/button.svelte.tmpl");
+  const modifyTemplatePath = multiUseFolder.append("/ui-component/template/wire.json");
 
   assert(await fs.exists(outputPath)).equals(true);
   assert(await fs.exists(createTemplatePath)).equals(true);

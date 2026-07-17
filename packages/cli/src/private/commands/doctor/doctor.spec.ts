@@ -146,7 +146,7 @@ test.case("doctor reports invalid .json modify template", async assert => {
   });
 
   // Write invalid JSON modify template
-  await multiUseFolder.append("/bad-modify/wire.json").write("{not valid json}");
+  await multiUseFolder.append("/bad-modify/template/wire.json").write("{not valid json}");
 
   const { output } = await captureStdoutOrError(() => doctor.run({
     subcommands: [],
@@ -278,7 +278,7 @@ test.group("doctor errors", () => {
     });
 
     // Remove the template file
-    await multiUseFolder.append("/bad-power/missing.njk").remove();
+    await multiUseFolder.append("/bad-power/template/missing.njk").remove();
 
     const { output, error } = await captureStdoutOrError(() => doctor.run({
       subcommands: [],

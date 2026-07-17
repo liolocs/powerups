@@ -76,7 +76,7 @@ test.case("apply writes rendered .njk template files to outputPath",
       context: { root: testRoot },
     });
 
-    const tmplPath = multiUseFolder.append("/ui-component/button.njk");
+    const tmplPath = multiUseFolder.append("/ui-component/template/button.njk");
     await tmplPath.write("<button>{{componentName}}</button>");
 
     await use.run({
@@ -115,7 +115,7 @@ test.case("apply writes rendered .ts template files to outputPath",
       context: { root: testRoot },
     });
 
-    const tmplPath = multiUseFolder.append("/ts-output/component.ts");
+    const tmplPath = multiUseFolder.append("/ts-output/template/component.ts");
     await tmplPath.write(
       "export default function({ componentName }: Record<string, string>) {\n" +
       "  return `export const ${componentName} = '${componentName}';`;\n" +
@@ -161,7 +161,7 @@ test.case("apply with --overwrite overwrites existing destination files", async 
     ],
     context: { root: testRoot },
   });
-  await multiUseFolder.append("/overwrite-test/f.njk").write("new content {{componentName}}");
+  await multiUseFolder.append("/overwrite-test/template/f.njk").write("new content {{componentName}}");
 
   await use.run({
     subcommands: ["overwrite-test"],
@@ -269,7 +269,7 @@ test.group("apply errors", () => {
         context: { root: testRoot },
       });
 
-      const tmplPath = multiUseFolder.append("/needs-vars/button.njk");
+      const tmplPath = multiUseFolder.append("/needs-vars/template/button.njk");
       await tmplPath.write("<button>{{componentName}} {{theme}}</button>");
 
       let threw = false;
@@ -315,7 +315,7 @@ test.group("apply errors", () => {
       });
 
       // Remove the template file
-      const tmplPath = multiUseFolder.append("/missing-tmpl/button.njk");
+      const tmplPath = multiUseFolder.append("/missing-tmpl/template/button.njk");
       await tmplPath.remove();
 
       let threw = false;
@@ -357,7 +357,7 @@ test.group("apply errors", () => {
       context: { root: testRoot },
     });
 
-    await multiUseFolder.append("/no-target/wire.json")
+    await multiUseFolder.append("/no-target/template/wire.json")
       .write('[{"where":"top","content":"hello"}]');
 
     const output = await captureStdout(() => use.run({
@@ -398,7 +398,7 @@ test.group("apply errors", () => {
     });
     await gitCommit(testRoot, "add template");
 
-    await multiUseFolder.append("/anchor-missing/wire.json")
+    await multiUseFolder.append("/anchor-missing/template/wire.json")
       .write('[{"where":"NONEXISTENT_ANCHOR","content":"hello"}]');
     await gitCommit(testRoot, "add modify template");
 
@@ -444,7 +444,7 @@ test.group("apply errors", () => {
     await testRoot.append("/.test-output/index.ts").write("export const x = 1;\nexport const y = 2;");
     await gitCommit(testRoot, "update target file");
 
-    await multiUseFolder.append("/anchor-ambiguous/wire.json")
+    await multiUseFolder.append("/anchor-ambiguous/template/wire.json")
       .write('[{"where":"export","content":"// replaced"}]');
     await gitCommit(testRoot, "add modify template");
 
@@ -486,7 +486,7 @@ test.group("apply errors", () => {
       ],
       context: { root: testRoot },
     });
-    await multiUseFolder.append("/no-overwrite-test/f.njk").write("new content");
+    await multiUseFolder.append("/no-overwrite-test/template/f.njk").write("new content");
 
     let threw = false;
     try {
@@ -535,7 +535,7 @@ test.group("apply errors", () => {
       ],
       context: { root: noGitRoot },
     });
-    await noGitTemplateFolder.append("/no-git/f.njk").write("hello {{componentName}}");
+    await noGitTemplateFolder.append("/no-git/template/f.njk").write("hello {{componentName}}");
 
     let threw;
     try {
@@ -578,7 +578,7 @@ test.group("apply dry-run", () => {
         context: { root: testRoot },
       });
 
-      const tmplPath = multiUseFolder.append("/dry-run-test/button.njk");
+      const tmplPath = multiUseFolder.append("/dry-run-test/template/button.njk");
       await tmplPath.write("<button>{{componentName}}</button>");
 
       const output = await captureStdout(() => use.run({
@@ -624,7 +624,7 @@ test.group("apply dry-run", () => {
       context: { root: testRoot },
     });
 
-    await multiUseFolder.append("/dry-modify/wire.json")
+    await multiUseFolder.append("/dry-modify/template/wire.json")
       .write('[{"where":"top","content":"// header"}]');
 
     const output = await captureStdout(() => use.run({
@@ -667,7 +667,7 @@ test.group("apply composite output", () => {
         ],
         context: { root: testRoot },
       });
-      await multiUseFolder.append("/shadcn-button/component.njk")
+      await multiUseFolder.append("/shadcn-button/template/component.njk")
         .write("export const {{componentName}} = '{{theme}}';");
 
       // Create parent template (all components) with includes
@@ -689,7 +689,7 @@ test.group("apply composite output", () => {
         ],
         context: { root: testRoot },
       });
-      await multiUseFolder.append("/shadcn-all/barrel.njk")
+      await multiUseFolder.append("/shadcn-all/template/barrel.njk")
         .write("export { Button, Input } from './';");
 
       // Add includes to parent
@@ -766,7 +766,7 @@ test.group("apply composite output", () => {
         ],
         context: { root: testRoot },
       });
-      await multiUseFolder.append("/dry-child/comp.njk")
+      await multiUseFolder.append("/dry-child/template/comp.njk")
         .write("const {{componentName}} = 1;");
 
       await createCmd.run({
@@ -784,7 +784,7 @@ test.group("apply composite output", () => {
         ],
         context: { root: testRoot },
       });
-      await multiUseFolder.append("/dry-parent/barrel.njk").write("barrel");
+      await multiUseFolder.append("/dry-parent/template/barrel.njk").write("barrel");
 
       await multiUseFolder.append("/dry-parent/instructions.json").writeJSON({
         name: "dry-parent",
@@ -881,7 +881,7 @@ test.group("apply composite output", () => {
         ],
         context: { root: testRoot },
       });
-      await multiUseFolder.append("/override-child/comp.njk")
+      await multiUseFolder.append("/override-child/template/comp.njk")
         .write("const {{componentName}} = 1;");
 
       await createCmd.run({
@@ -944,7 +944,7 @@ test.group("apply composite output", () => {
         ],
         context: { root: testRoot },
       });
-      await multiUseFolder.append("/dual-child/comp.njk")
+      await multiUseFolder.append("/dual-child/template/comp.njk")
         .write("export const {{componentName}} = 1;");
 
       await createCmd.run({
@@ -1012,7 +1012,7 @@ test.group("apply modify", () => {
     });
 
     // Write the modify template
-    await multiUseFolder.append("/modify-test/wire.json")
+    await multiUseFolder.append("/modify-test/template/wire.json")
       .write('[{"where":"top","content":"// header\\n"},{"where":{"after":"line1"},"content":"inserted"}]');
 
     await use.run({
@@ -1053,7 +1053,7 @@ test.group("apply modify", () => {
       context: { root: testRoot },
     });
 
-    await multiUseFolder.append("/njk-modify/wire.njk")
+    await multiUseFolder.append("/njk-modify/template/wire.njk")
       .write('[{"where":"top","content":"import { {{name}} } from \\"./{{name}}\\";\\n"}]');
 
     await use.run({
@@ -1095,7 +1095,7 @@ test.group("apply metrics", () => {
         context: { root: testRoot },
       });
 
-      const tmplPath = multiUseFolder.append("/metrics-test/button.njk");
+      const tmplPath = multiUseFolder.append("/metrics-test/template/button.njk");
       await tmplPath.write("<button>{{componentName}}</button>");
 
       await use.run({
@@ -1135,7 +1135,7 @@ test.group("apply metrics", () => {
         context: { root: testRoot },
       });
 
-      const tmplPath = multiUseFolder.append("/dry-metrics-test/button.njk");
+      const tmplPath = multiUseFolder.append("/dry-metrics-test/template/button.njk");
       await tmplPath.write("<button>{{componentName}}</button>");
 
       await use.run({
@@ -1333,7 +1333,7 @@ test.group("apply rollback", () => {
       context: { root: testRoot },
     });
     // Don't write the template — this will cause template_not_found error
-    await multiUseFolder.append("/rollback-test/first.njk").remove();
+    await multiUseFolder.append("/rollback-test/template/first.njk").remove();
 
     let threw;
     try {
@@ -1427,8 +1427,8 @@ test.group("apply delete", () => {
       context: { root: testRoot },
     });
 
-    await multiUseFolder.append("/mixed-ops/new.njk").write("export const {{componentName}} = 1;");
-    await multiUseFolder.append("/mixed-ops/wire.json")
+    await multiUseFolder.append("/mixed-ops/template/new.njk").write("export const {{componentName}} = 1;");
+    await multiUseFolder.append("/mixed-ops/template/wire.json")
       .write('[{"where":"top","content":"// header\\n"}]');
     await gitCommit(testRoot, "add templates");
 
@@ -1507,7 +1507,7 @@ test.group("apply delete", () => {
       ],
       context: { root: testRoot },
     });
-    await multiUseFolder.append("/failing-child/wire.json")
+    await multiUseFolder.append("/failing-child/template/wire.json")
       .write('[{"where":"NONEXISTENT_ANCHOR","content":"hello"}]');
 
     // Create parent with a delete entry and the failing suboutput.
@@ -1621,8 +1621,8 @@ test.group("apply delete dry-run", () => {
       context: { root: testRoot },
     });
 
-    await multiUseFolder.append("/dry-mixed/new.njk").write("const {{componentName}} = 1;");
-    await multiUseFolder.append("/dry-mixed/wire.json")
+    await multiUseFolder.append("/dry-mixed/template/new.njk").write("const {{componentName}} = 1;");
+    await multiUseFolder.append("/dry-mixed/template/wire.json")
       .write('[{"where":"top","content":"// header\\n"}]');
 
     const output = await captureStdout(() => use.run({

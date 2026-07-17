@@ -1,5 +1,6 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
+import { TEMPLATE_FOLDER } from "#constants";
 import { validateOutputTree } from "#utils/validate-output";
 
 /**
@@ -65,14 +66,14 @@ export async function checkOutput(args: {
   }
 
   for (const file of instructions.output.create) {
-    const templatePath = currentOutputDir.append(`/${file.template}`);
+    const templatePath = currentOutputDir.append(`/${TEMPLATE_FOLDER}/${file.template}`);
     if (!(await fs.exists(templatePath))) {
       issues.push(`missing template file: ${file.template}`);
     }
   }
 
   for (const file of instructions.output.modify) {
-    const templatePath = currentOutputDir.append(`/${file.template}`);
+    const templatePath = currentOutputDir.append(`/${TEMPLATE_FOLDER}/${file.template}`);
     if (!(await fs.exists(templatePath))) {
       issues.push(`missing template file: ${file.template}`);
     }

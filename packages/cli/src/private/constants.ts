@@ -14,6 +14,9 @@ export const MULTI_USE_FOLDER = "multi-use";
 /** Subfolder for single-use powers (one-time additions). */
 export const SINGLE_USE_FOLDER = "single-use";
 
+/** Subfolder inside a power directory holding its template files. */
+export const TEMPLATE_FOLDER = "template";
+
 /** Name of the config file storing project settings (e.g. chosen harness). */
 export const CONFIG_FILE = "config.json";
 

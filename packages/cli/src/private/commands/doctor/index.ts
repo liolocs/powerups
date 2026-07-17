@@ -14,6 +14,7 @@ import {
   ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
+  TEMPLATE_FOLDER,
 } from "#constants";
 
 const execAsync = promisify(exec);
@@ -129,7 +130,10 @@ const doctor = new Command({
             referencedFiles.add(f.template);
           }
 
-          // List all files in the output directory (non-recursive top level)
+          // List all files in the output directory (non-recursive top level).
+          // Directories (e.g. the `template/` subfolder) are excluded by
+          // `.files()`, so stray files next to instructions.json are caught
+          // here without the template directory itself being flagged.
           const allFiles = await outputFile.directory.files();
           for (const file of allFiles) {
             if (!referencedFiles.has(file.name)) {
@@ -139,6 +143,23 @@ const doctor = new Command({
                 name,
                 message: `Orphaned file: ${file.name}`,
               });
+            }
+          }
+
+          // List files inside the `template/` subfolder — any template file
+          // not referenced by instructions.json is orphaned.
+          const templateDir = outputFile.directory.append(`/${TEMPLATE_FOLDER}`);
+          if (await fs.exists(templateDir)) {
+            const templateFiles = await templateDir.files();
+            for (const file of templateFiles) {
+              if (!referencedFiles.has(file.name)) {
+                issues.push({
+                  level: "WARN",
+                  type,
+                  name,
+                  message: `Orphaned file: ${TEMPLATE_FOLDER}/${file.name}`,
+                });
+              }
             }
           }
         } catch {
@@ -152,7 +173,7 @@ const doctor = new Command({
           );
           for (const modifyEntry of instructions.output.modify) {
             const modTemplatePath = outputFile.directory.append(
-              `/${modifyEntry.template}`,
+              `/${TEMPLATE_FOLDER}/${modifyEntry.template}`,
             );
             if (!(await fs.exists(modTemplatePath))) continue;
             const ext = modTemplatePath.extension;

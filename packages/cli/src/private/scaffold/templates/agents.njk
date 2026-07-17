@@ -15,15 +15,30 @@ Always prefer templates and features over one-off generation.
   set up auth). You apply them once. They can take variables (e.g., a project
   name or framework choice).
 
+### Skills
+
+This project scaffolds three skills:
+
+| Skill | When to use |
+|-------|-------------|
+| `{{ CLI_NAME }}-brainstorm` | Planning new work — searches for existing templates/features, classifies work, produces a plan document |
+| `{{ CLI_NAME }}-implement` | Executing a plan document — works through tasks, searches/applies inline, invokes capture when needed |
+| `{{ CLI_NAME }}-capture` | Capturing already-done work as a template or feature — user-directed or survey mode |
+
+For ad-hoc work (not part of a plan), use the search → info → apply pattern below directly.
+
 ### Before writing any new feature or file
 
 1. Run `{{ CLI_CMD }} template search -q="<what you're about to do>"` and
    `{{ CLI_CMD }} feature search -q="<what you're about to do>"`.
-   If a template or feature matches (score > 0), apply it instead:
+2. If a template or feature matches (score > 0), run
+   `{{ CLI_CMD }} <template|feature> info <name>` to see its required
+   variables, generated files, and the exact apply command.
+3. Apply it:
    `{{ CLI_CMD }} template apply <name> --<variable-name>=<value> ...`
    or `{{ CLI_CMD }} feature apply <name> --<variable-name>=<value> ...`
    Preview first with `--dry-run` / `-d`, then apply for real.
-2. Only write fresh content if no template or feature matches.
+4. Only write fresh content if no template or feature matches.
 
 ### After generating new files
 
@@ -32,21 +47,10 @@ whether they'd like to capture it as a template (recurring) or a feature
 (one-time) before moving on. Only do this for new file generation — not for
 one-off edits.
 
-If the user confirms, capture it:
-```
-{{ CLI_CMD }} template create -n=<short-name> \
-  -d="<human-readable description>" \
-  -i="<intent keywords>" \
-  -v="var1,var2" -ov="optVar1,optVar2" \
-  -o='{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'
-```
-Then fill in the template at
-`{{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/<name>/<template>`.
-Prefer a `.ts` file with a default-export function `(vars) => string` — this is
-the recommended format for new templates. Nunjucks `.njk` templates
-(`{{ '{{var}}' }}` syntax) are supported but should only be used when a `.ts`
-template is impractical. Validate before considering it done:
-`{{ CLI_CMD }} template validate -n=<name>`
+If the user confirms, invoke the `{{ CLI_NAME }}-capture` skill — do not run
+`template create` / `feature create` directly. The capture skill handles the
+full workflow: assessment, scaffolding, parameterization, validation, and
+dry-run verification.
 
 ### `.ts` template format (recommended)
 
@@ -249,6 +253,8 @@ full template, verify it works, then extract when repetition emerges.
 |--------|---------|
 | Search templates | `{{ CLI_CMD }} template search -q="..."` |
 | Search features | `{{ CLI_CMD }} feature search -q="..."` |
+| Get info on a template | `{{ CLI_CMD }} template info <name>` |
+| Get info on a feature | `{{ CLI_CMD }} feature info <name>` |
 | Apply a template | `{{ CLI_CMD }} template apply <name> --<variable>=<value> [-d]` |
 | Apply a feature | `{{ CLI_CMD }} feature apply <name> --<variable>=<value> [-d]` |
 | Create a template | `{{ CLI_CMD }} template create -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |

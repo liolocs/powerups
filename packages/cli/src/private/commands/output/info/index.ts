@@ -280,34 +280,43 @@ export default function createInfoCommand(
         }
       }
 
-      // Dependencies
       if (collected.dependencies.length > 0) {
         lines.push("## Dependencies");
         lines.push("");
+
         for (const dep of collected.dependencies) {
-          if (is.defined(dep.dependencies)) {
-            for (const d of dep.dependencies) {
-              const targetPart = dep.target ? ` (target: ${dep.target})` : "";
-              lines.push(`- ${d}${targetPart}`);
+          const dependencyGroups = [
+            { label: null, packages: dep.dependencies },
+            { label: "devDependency", packages: dep.devDependencies },
+            { label: "peerDependency", packages: dep.peerDependencies },
+          ];
+
+          for (const group of dependencyGroups) {
+            if (!is.defined(group.packages)) {
+              continue;
             }
-          }
-          if (is.defined(dep.devDependencies)) {
-            for (const d of dep.devDependencies) {
-              const targetPart = dep.target ? `, target: ${dep.target}` : "";
-              lines.push(`- ${d} (devDependency${targetPart})`);
-            }
-          }
-          if (is.defined(dep.peerDependencies)) {
-            for (const d of dep.peerDependencies) {
-              const targetPart = dep.target ? `, target: ${dep.target}` : "";
-              lines.push(`- ${d} (peerDependency${targetPart})`);
+
+            for (const pkg of group.packages) {
+              if (group.label === null) {
+                const targetPart = is.truthy(dep.target)
+                  ? ` (target: ${dep.target})`
+                  : "";
+
+                lines.push(`- ${pkg}${targetPart}`);
+              } else {
+                const targetPart = is.truthy(dep.target)
+                  ? `, target: ${dep.target}`
+                  : "";
+
+                lines.push(`- ${pkg} (${group.label}${targetPart})`);
+              }
             }
           }
         }
+
         lines.push("");
       }
 
-      // Includes
       if (collected.includes.length > 0) {
         lines.push("## Includes");
         lines.push("");

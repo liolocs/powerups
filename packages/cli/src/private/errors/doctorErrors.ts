@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_NAME, MAIN_FOLDER } from "#constants";
+import { CLI_CMD, MAIN_FOLDER } from "#constants";
 
 const t = error.template;
 
@@ -8,7 +8,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const doctor_errors = error.coded({
   not_initialized: () => {
-    const errorText = `${MAIN_FOLDER}} folder not found. Run "${CLI_NAME} init" first.`;
+    const errorText = `${MAIN_FOLDER}} folder not found. Run "${CLI_CMD} init" first.`;
     return t`${errorBGText}${errorText}`;
   },
   validation_failed: (count: number) => {

@@ -7,21 +7,21 @@
  *   bun run packages/powers-cli/scripts/link.ts
  *
  * What it does:
- *   1. Reads CLI_NAME from src/private/constants.ts.
- *   2. Writes `bin: { [CLI_NAME]: "./lib/bin.js" }` into packages/powers-cli/package.json
+ *   1. Reads CLI_CMD from src/private/constants.ts.
+ *   2. Writes `bin: { [CLI_CMD]: "./lib/bin.js" }` into packages/powers-cli/package.json
  *      (creating it if absent, correcting it if stale).
  *   3. Builds lib/bin.js if it doesn't already exist.
- *   4. Runs `pnpm link --global` from the package dir so `<CLI_NAME>` lands on PATH
+ *   4. Runs `pnpm link --global` from the package dir so `<CLI_CMD>` lands on PATH
  *      (via PNPM_HOME). The link is a symlink into this package, so every rebuild
  *      is picked up live — no re-link needed after source changes.
- *   5. Verifies with `which <CLI_NAME>`.
+ *   5. Verifies with `which <CLI_CMD>`.
  *
  * Idempotent: safe to re-run. If you edit source, just re-run the build
  * (`pnpm --filter @powers/dry-cli build`); the global symlink already points here.
  */
 import fs from "@rcompat/fs";
 import io from "@rcompat/io";
-import { CLI_NAME } from "../src/private/constants.ts";
+import { CLI_CMD } from "../src/private/constants.ts";
 const BIN_TARGET = "./lib/bin.js";
 const INDENT = 2;
 const log = (msg) => void io.stdout.write(msg);
@@ -45,15 +45,15 @@ async function main() {
     }
     // 1. Read the current package.json.
     const pkg = (await pkgJsonRef.json());
-    const desired = { [CLI_NAME]: BIN_TARGET };
+    const desired = { [CLI_CMD]: BIN_TARGET };
     const hadBin = pkg.bin !== undefined;
-    const matches = hadBin && pkg.bin[CLI_NAME] === BIN_TARGET
+    const matches = hadBin && pkg.bin[CLI_CMD] === BIN_TARGET
         && Object.keys(pkg.bin).length === 1;
     // 2. Set / correct the bin field.
     pkg.bin = desired;
     await pkgJsonRef.write(`${JSON.stringify(pkg, null, INDENT)}\n`);
     log(`${matches ? "✓ bin already correct" : hadBin ? "✓ bin updated" : "✓ bin added"}`
-        + ` → { "${CLI_NAME}": "${BIN_TARGET}" }\n`);
+        + ` → { "${CLI_CMD}": "${BIN_TARGET}" }\n`);
     // 3. Ensure the compiled entry exists; build if missing.
     const binRef = pkgDir.append("/lib/bin.js");
     if (await binRef.exists()) {
@@ -64,17 +64,17 @@ async function main() {
         await run("pnpm run build", pkgDir.path);
         log("✓ build complete\n");
     }
-    // 4. Link globally so <CLI_NAME> is on PATH (via PNPM_HOME).
+    // 4. Link globally so <CLI_CMD> is on PATH (via PNPM_HOME).
   log(`• linking ${pkg.name ?? "@powers/dry-cli"} globally ...\n`);
     await run("pnpm link --global", pkgDir.path);
     // 5. Verify it resolved on PATH.
     try {
-        const linked = await io.which(CLI_NAME);
-        log(`✓ ${CLI_NAME} -> ${linked}\n`);
-        log(`  try:  ${CLI_NAME} --version\n`);
+        const linked = await io.which(CLI_CMD);
+        log(`✓ ${CLI_CMD} -> ${linked}\n`);
+        log(`  try:  ${CLI_CMD} --version\n`);
     }
     catch {
-        log(`⚠ ${CLI_NAME} linked, but \`which ${CLI_NAME}\` found nothing.\n`
+        log(`⚠ ${CLI_CMD} linked, but \`which ${CLI_CMD}\` found nothing.\n`
             + `  ensure PNPM_HOME is on your PATH (it is the pnpm global bin dir).\n`);
     }
 }

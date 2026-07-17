@@ -7,7 +7,7 @@ import output_info_errors from "#errors/outputInfoErrors";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
 import { toKebabCase } from "#utils/variables";
 import {
-  CLI_NAME,
+  CLI_CMD,
   MAIN_FOLDER,
   OUTPUT_FOLDER,
   domainFolderMap,
@@ -352,7 +352,7 @@ export default function createInfoCommand(
         .map(variable => `[--${toKebabCase(variable)}=<value>]`)
         .join(" ");
 
-      let command = `${CLI_NAME} ${domain} apply ${instructions.name}`;
+      let command = `${CLI_CMD} ${domain} apply ${instructions.name}`;
 
       if (is.truthy(requiredFlags)) {
         command += ` ${requiredFlags}`;

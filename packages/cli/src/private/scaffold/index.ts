@@ -6,6 +6,7 @@ import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { writeSkillFile } from "#scaffold/write";
 import {
   CLI_NAME,
+  CLI_CMD,
   MAIN_FOLDER,
   OUTPUT_FOLDER,
   TEMPLATE_FOLDER,
@@ -51,19 +52,19 @@ const HARNESS_CONFIG: Record<Harness, {
 // file gets the same frontmatter regardless of the target harness.
 const SKILLS_TO_SCAFFOLD = [
   {
-    template: `${MAIN_FOLDER}-feature.njk`,
+    template: `${CLI_NAME}-feature.njk`,
     name: `${CLI_NAME}-feature`,
   },
   {
-    template: `${MAIN_FOLDER}-brainstorm.njk`,
+    template: `${CLI_NAME}-brainstorm.njk`,
     name: `${CLI_NAME}-brainstorm`,
   },
   {
-    template: `${MAIN_FOLDER}-template.njk`,
+    template: `${CLI_NAME}-template.njk`,
     name: `${CLI_NAME}-template`,
   },
   {
-    template: `${MAIN_FOLDER}-capture.njk`,
+    template: `${CLI_NAME}-capture.njk`,
     name: `${CLI_NAME}-capture`,
   },
 ];
@@ -78,6 +79,7 @@ export async function scaffold(
 
   const variables = {
     CLI_NAME,
+    CLI_CMD,
     MAIN_FOLDER,
     OUTPUT_FOLDER,
     TEMPLATE_FOLDER,

@@ -47,9 +47,6 @@ const HARNESS_CONFIG: Record<Harness, {
   },
 };
 
-// Each template carries its own YAML frontmatter (name + description), so the
-// harness no longer needs to inject frontmatter conditionally — every skill
-// file gets the same frontmatter regardless of the target harness.
 const SKILLS_TO_SCAFFOLD = [
   {
     template: `${CLI_NAME}-brainstorm.njk`,

@@ -212,17 +212,22 @@ export default function createInfoCommand(
 
       const hasRequired = instructions.variables.required.length > 0;
       const hasOptional = (instructions.variables.optional ?? []).length > 0;
+
       if (hasRequired || hasOptional) {
+
         lines.push("## Variables");
         lines.push("");
+
         if (hasRequired) {
           lines.push("### Required");
           lines.push("");
+
           for (const v of instructions.variables.required) {
             lines.push(`- \`--${toKebabCase(v)}=<value>\``);
           }
           lines.push("");
         }
+
         if (hasOptional) {
           lines.push("### Optional");
           lines.push("");
@@ -320,30 +325,44 @@ export default function createInfoCommand(
       if (collected.includes.length > 0) {
         lines.push("## Includes");
         lines.push("");
-        for (const inc of collected.includes) {
-          lines.push(`- **${inc.name}** — ${inc.description}`);
-          const bindings = inc.bindings.map(b =>
-            `${b.key} = "${b.value}" (${b.isReference ? "from parent" : "literal"})`
-          ).join(", ");
+
+        for (const include of collected.includes) {
+          lines.push(`- **${include.name}** — ${include.description}`);
+
+          const bindings = include.bindings
+            .map(binding =>
+              `${binding.key} = "${binding.value}" (${binding.isReference ? "from parent" : "literal"})`
+            )
+            .join(", ");
+
           lines.push(`  - Variable bindings: ${bindings}`);
           lines.push("");
         }
       }
 
-      // Usage
       lines.push("## Usage");
       lines.push("");
       lines.push("```");
+
       const requiredFlags = instructions.variables.required
-        .map(v => `--${toKebabCase(v)}=<value>`)
+        .map(variable => `--${toKebabCase(variable)}=<value>`)
         .join(" ");
+
       const optionalFlags = (instructions.variables.optional ?? [])
-        .map(v => `[--${toKebabCase(v)}=<value>]`)
+        .map(variable => `[--${toKebabCase(variable)}=<value>]`)
         .join(" ");
-      let cmd = `${CLI_NAME} ${domain} apply ${instructions.name}`;
-      if (requiredFlags) cmd += ` ${requiredFlags}`;
-      if (optionalFlags) cmd += ` ${optionalFlags}`;
-      lines.push(cmd);
+
+      let command = `${CLI_NAME} ${domain} apply ${instructions.name}`;
+
+      if (is.truthy(requiredFlags)) {
+        command += ` ${requiredFlags}`;
+      }
+
+      if (is.truthy(optionalFlags)) {
+        command += ` ${optionalFlags}`;
+      }
+
+      lines.push(command);
       lines.push("```");
 
       cli.print(`${lines.join("\n")}\n`);

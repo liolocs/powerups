@@ -9,7 +9,7 @@ const configSchema = p({
 export type Config = (typeof configSchema)["infer"];
 
 /**
- * Read the saved project config from `.saved/config.json`.
+ * Read the MAIN_FOLDER project config from `.${MAIN_FOLDER}/config.json`.
  * Returns null if the config file does not exist.
  */
 export async function readConfig(
@@ -25,8 +25,8 @@ export async function readConfig(
 }
 
 /**
- * Write the saved project config to `.saved/config.json`.
- * Creates the `.saved` folder if it doesn't exist.
+ * Write the MAIN_FOLDER project config to `.${MAIN_FOLDER}/config.json`.
+ * Creates the `.${MAIN_FOLDER}` folder if it doesn't exist.
  */
 export async function writeConfig(
   projectRoot: FileRef,

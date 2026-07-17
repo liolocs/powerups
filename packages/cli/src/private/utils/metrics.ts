@@ -9,7 +9,7 @@ export interface MetricsEntry {
 }
 
 /**
- * Append a metrics entry to `.saved/metrics.jsonl`.
+ * Append a metrics entry to `.${MAIN_FOLDER}/metrics.jsonl`.
  * Creates the file if it doesn't exist. Best-effort — callers should
  * wrap in try/catch if logging failures must not crash the run.
  */
@@ -38,7 +38,7 @@ export async function logRun(
 }
 
 /**
- * Read all metrics entries from `.saved/metrics.jsonl`.
+ * Read all metrics entries from `.${MAIN_FOLDER}/metrics.jsonl`.
  * Returns an empty array if the file doesn't exist.
  * Skips blank lines and lines that fail JSON.parse.
  */

@@ -236,7 +236,7 @@ test.case("doctor checks both domains in one pass", async assert => {
 });
 
 test.group("doctor errors", () => {
-  test.case("should fail with not_initialized when .saved folder not found", async assert => {
+  test.case(`should fail with not_initialized when .${MAIN_FOLDER} folder not found`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
     await gitInit(testRoot);

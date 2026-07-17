@@ -10,14 +10,13 @@ import { MAIN_FOLDER, CLI_NAME, CONFIG_FILE } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
-const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
 }
 
-/** Run init to set up a .saved project, then return. */
+/** Run init to set up a .${MAIN_FOLDER} project, then return. */
 async function setup(
   harness: string,
   context?: { root?: typeof testRoot; skipGlobal?: boolean },

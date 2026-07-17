@@ -132,7 +132,7 @@ test.case("create template without -p flag omits packageDependencies", async ass
 });
 
 test.group("create errors", () => {
-  test.case("should fail with dry_folder_not_found without .saved folder", async assert => {
+  test.case(`should fail with dry_folder_not_found without .${MAIN_FOLDER} folder`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 

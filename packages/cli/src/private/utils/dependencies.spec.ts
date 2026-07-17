@@ -8,6 +8,7 @@ import {
   type PackageDependencyGroup,
 } from "#utils/dependencies";
 import captureStdout from "#test-utils/capture-stdout";
+import { MAIN_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -370,7 +371,7 @@ test.group("applyDependencies real run", () => {
 test.group("collectDependencies", () => {
   test.case("should collect deps from parent only", async assert => {
     await reset();
-    const mainFolder = testRoot.append("/.saved");
+    const mainFolder = testRoot.append(`/.${MAIN_FOLDER}`);
     const templateFolder = mainFolder.append("/output/template/parent");
     await fs.create(templateFolder);
     await templateFolder.append("/instructions.json").writeJSON({
@@ -391,7 +392,7 @@ test.group("collectDependencies", () => {
 
   test.case("should collect deps from parent and subtemplates", async assert => {
     await reset();
-    const mainFolder = testRoot.append("/.saved");
+    const mainFolder = testRoot.append(`/.${MAIN_FOLDER}`);
     const templateFolder = mainFolder.append("/output/template");
     const parentFolder = templateFolder.append("/parent");
     const childFolder = templateFolder.append("/child");
@@ -426,7 +427,7 @@ test.group("collectDependencies", () => {
 
   test.case("should return empty array when no deps declared", async assert => {
     await reset();
-    const mainFolder = testRoot.append("/.saved");
+    const mainFolder = testRoot.append(`/.${MAIN_FOLDER}`);
     const templateFolder = mainFolder.append("/output/template/nodeps");
     await fs.create(templateFolder);
     await templateFolder.append("/instructions.json").writeJSON({

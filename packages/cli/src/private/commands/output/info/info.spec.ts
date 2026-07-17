@@ -6,7 +6,7 @@ import createCreateCommand from "#commands/output/create/index";
 import captureStdout from "#test-utils/capture-stdout";
 import { CodeError } from "@rcompat/error";
 import { OutputTemplateInfoErrorCode } from "#errors/outputInfoErrors";
-import { MAIN_FOLDER } from "#constants";
+import { CLI_NAME, MAIN_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
@@ -46,7 +46,7 @@ test.case("info prints name, description, intent, and usage", async assert => {
   assert(output).includes("## Intent");
   assert(output).includes("ui, component");
   assert(output).includes("## Usage");
-  assert(output).includes("saved template apply ui-component --component-name=<value>");
+  assert(output).includes(`${CLI_NAME} template apply ui-component --component-name=<value>`);
 
   await testRoot.remove();
 });
@@ -242,7 +242,7 @@ test.case("info prints includes with variable bindings for composite templates",
   assert(output).includes("`src/ui/{{componentName}}.tsx` (template: `comp.njk`, from include: child-component)");
 
   // Usage only shows parent's required variables
-  assert(output).includes("saved template apply parent-composite --theme=<value>");
+  assert(output).includes(`${CLI_NAME} template apply parent-composite --theme=<value>`);
 
   await testRoot.remove();
 });
@@ -385,7 +385,7 @@ test.group("info errors", () => {
     await testRoot.remove();
   });
 
-  test.case("should fail with dry_folder_not_found without .saved folder", async assert => {
+  test.case(`should fail with dry_folder_not_found without .${MAIN_FOLDER} folder`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 

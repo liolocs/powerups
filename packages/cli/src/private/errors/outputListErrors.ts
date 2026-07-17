@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_NAME } from "#constants";
+import { CLI_NAME, MAIN_FOLDER } from "#constants";
 
 const t = error.template;
 
@@ -9,7 +9,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 function createOutputListErrors(domain: string) {
   return error.coded({
     dry_folder_not_found: () => {
-      const errorText = `.saved folder not found. Run "${CLI_NAME} init" first.`;
+      const errorText = `.${MAIN_FOLDER} folder not found. Run "${CLI_NAME} init" first.`;
       return t`${errorBGText}${errorText}`;
     },
     no_matching: () => {

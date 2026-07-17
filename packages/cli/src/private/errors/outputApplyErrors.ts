@@ -18,7 +18,7 @@ function createOutputApplyErrors(domain: string) {
 
     missing_name: () => {
       const errorText =
-        `${string.upperfirst(domain)} name required.\nUsage: ${CLI_NAME} ${domain} apply <name> [variables]`;
+        `${string.upperfirst(domain)} name required.\n\nUsage: ${CLI_NAME} ${domain} apply <name> [variables]`;
       return t`${errorBGText}${errorText}`;
     },
 

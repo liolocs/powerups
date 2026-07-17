@@ -86,7 +86,7 @@ test.case("summary prints table with aggregated data", async assert => {
 });
 
 test.group("summary errors", () => {
-  test.case("should fail with dry_folder_not_found without .saved folder", async assert => {
+  test.case(`should fail with dry_folder_not_found without .${MAIN_FOLDER} folder`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 

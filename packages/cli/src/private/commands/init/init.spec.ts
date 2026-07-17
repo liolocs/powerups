@@ -49,12 +49,10 @@ test.case("init --harness=claude scaffolds claude files only", async assert => {
   // AGENTS.md NOT created (claude uses CLAUDE.md)
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(false);
   // Command files created
-  const cmdPath = `.claude/skills/${CLI_NAME}-feature.md`;
+  const cmdPath = `.claude/skills/${CLI_NAME}-implement.md`;
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
   const brainstormPath = `.claude/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
-  const outputPath = `.claude/skills/${CLI_NAME}-template.md`;
-  assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
   const capturePath = `.claude/skills/${CLI_NAME}-capture.md`;
   assert(await fs.exists(testRoot.append(`/${capturePath}`))).equals(true);
   // No other harness dirs
@@ -78,12 +76,10 @@ test.case("init --harness=opencode scaffolds opencode files only", async assert 
   // CLAUDE.md NOT created
   assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(false);
   // Command files created
-  const cmdPath = `.opencode/skills/${CLI_NAME}-feature.md`;
+  const cmdPath = `.opencode/skills/${CLI_NAME}-implement.md`;
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
   const brainstormPath = `.opencode/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
-  const outputPath = `.opencode/skills/${CLI_NAME}-template.md`;
-  assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
   const capturePath = `.opencode/skills/${CLI_NAME}-capture.md`;
   assert(await fs.exists(testRoot.append(`/${capturePath}`))).equals(true);
   // No other harness dirs
@@ -104,12 +100,10 @@ test.case("init --harness=pi scaffolds pi files only", async assert => {
 
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
   assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(false);
-  const cmdPath = `.pi/skills/${CLI_NAME}-feature.md`;
+  const cmdPath = `.pi/skills/${CLI_NAME}-implement.md`;
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
   const brainstormPath = `.pi/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
-  const outputPath = `.pi/skills/${CLI_NAME}-template.md`;
-  assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
   const capturePath = `.pi/skills/${CLI_NAME}-capture.md`;
   assert(await fs.exists(testRoot.append(`/${capturePath}`))).equals(true);
   // No other harness dirs
@@ -131,12 +125,10 @@ test.case("init --harness=codex scaffolds codex files", async assert => {
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
   assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(false);
   // Skill files created
-  const featurePath = `.codex/skills/${CLI_NAME}-feature.md`;
-  assert(await fs.exists(testRoot.append(`/${featurePath}`))).equals(true);
+  const implementPath = `.codex/skills/${CLI_NAME}-implement.md`;
+  assert(await fs.exists(testRoot.append(`/${implementPath}`))).equals(true);
   const brainstormPath = `.codex/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
-  const outputPath = `.codex/skills/${CLI_NAME}-template.md`;
-  assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
   const capturePath = `.codex/skills/${CLI_NAME}-capture.md`;
   assert(await fs.exists(testRoot.append(`/${capturePath}`))).equals(true);
   // No other harness dirs
@@ -508,7 +500,7 @@ test.case("init writes skill files with constants substituted", async assert => 
     context: { root: testRoot },
   });
 
-  const cmdPath = `.claude/skills/${CLI_NAME}-feature.md`;
+  const cmdPath = `.claude/skills/${CLI_NAME}-implement.md`;
   const content = await testRoot.append(`/${cmdPath}`).text();
   assert(content.includes(CLI_NAME)).equals(true);
   assert(content.includes("{{CLI_NAME}}")).equals(false);
@@ -516,7 +508,7 @@ test.case("init writes skill files with constants substituted", async assert => 
   await testRoot.remove();
 });
 
-test.case(`init writes ${CLI_NAME}-template skill file for each harness`, async assert => {
+test.case(`init writes ${CLI_NAME}-implement skill file for each harness`, async assert => {
   for (const harness of ["claude", "opencode", "pi", "codex"] as const) {
     await reset();
 
@@ -533,7 +525,7 @@ test.case(`init writes ${CLI_NAME}-template skill file for each harness`, async 
       codex: ".codex/skills",
     };
 
-    const outputPath = `${skillDirs[harness]}/${CLI_NAME}-template.md`;
+    const outputPath = `${skillDirs[harness]}/${CLI_NAME}-implement.md`;
     assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
 
     const content = await testRoot.append(`/${outputPath}`).text();
@@ -562,11 +554,11 @@ test.case("init injects frontmatter into skill files for every harness", async a
       codex: ".codex/skills",
     };
 
-    const cmdPath = `${skillDirs[harness]}/${CLI_NAME}-feature.md`;
+    const cmdPath = `${skillDirs[harness]}/${CLI_NAME}-implement.md`;
     const content = await testRoot.append(`/${cmdPath}`).text();
     assert(content.startsWith("---\n")).equals(true);
     assert(content.includes("description:")).equals(true);
-    assert(content.includes(`name: ${CLI_NAME}-feature`)).equals(true);
+    assert(content.includes(`name: ${CLI_NAME}-implement`)).equals(true);
 
     await testRoot.remove();
   }

@@ -52,16 +52,12 @@ const HARNESS_CONFIG: Record<Harness, {
 // file gets the same frontmatter regardless of the target harness.
 const SKILLS_TO_SCAFFOLD = [
   {
-    template: `${CLI_NAME}-feature.njk`,
-    name: `${CLI_NAME}-feature`,
-  },
-  {
     template: `${CLI_NAME}-brainstorm.njk`,
     name: `${CLI_NAME}-brainstorm`,
   },
   {
-    template: `${CLI_NAME}-template.njk`,
-    name: `${CLI_NAME}-template`,
+    template: `${CLI_NAME}-implement.njk`,
+    name: `${CLI_NAME}-implement`,
   },
   {
     template: `${CLI_NAME}-capture.njk`,

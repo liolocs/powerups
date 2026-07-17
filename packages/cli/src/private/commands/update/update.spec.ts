@@ -33,7 +33,7 @@ test.case("update regenerates skill files from config harness", async assert => 
   await setup("pi");
 
   // Corrupt a skill file
-  const skillPath = `.pi/skills/${CLI_NAME}-feature.md`;
+  const skillPath = `.pi/skills/${CLI_NAME}-implement.md`;
   const skillRef = testRoot.append(`/${skillPath}`);
   await skillRef.write("CORRUPTED");
 
@@ -47,7 +47,7 @@ test.case("update regenerates skill files from config harness", async assert => 
   const content = await skillRef.text();
   assert(content.includes("CORRUPTED")).equals(false);
   assert(content.startsWith("---\n")).equals(true);
-  assert(content.includes(`name: ${CLI_NAME}-feature`)).equals(true);
+  assert(content.includes(`name: ${CLI_NAME}-implement`)).equals(true);
 
   await testRoot.remove();
 });

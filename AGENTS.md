@@ -101,59 +101,61 @@ const harness = await detectHarness(projectRoot, harnessFlag, options);
 ```
 
 <!-- BEGIN powers -->
-## powers (output engine)
+## powers (power engine)
 
 This project uses the `powers` CLI to keep AI-generated content maintainable.
-Templates live in `.powers/output/template/<name>/` and
-features live in `.powers/output/feature/<name>/`.
-Always prefer templates and features over one-off generation.
+Multi-use powers live in `.powers/active/multi-use/<name>/` and
+single-use powers live in `.powers/active/single-use/<name>/`.
+Always prefer powers over one-off generation.
 
-### Template vs Feature
+### Multi-use vs Single-use
 
-- **Templates** are recurring patterns you add multiple times with different
+- **Multi-use powers** are recurring patterns you add multiple times with different
   variables (e.g., new API route, new view component). They keep structure
   consistent across repeated additions.
-- **Features** are one-time additions to a project (e.g., add tailwind + shadcn,
-  set up auth). You apply them once. They can take variables (e.g., a project
+- **Single-use powers** are one-time additions to a project (e.g., add tailwind + shadcn,
+  set up auth). You use them once. They can take variables (e.g., a project
   name or framework choice).
+
+### Skills
+
+This project scaffolds three skills:
+
+| Skill | When to use |
+|-------|-------------|
+| `powers-brainstorm` | Planning new work — searches for existing powers, classifies work, produces a plan document |
+| `powers-implement` | Executing a plan document — works through tasks, searches/uses inline, invokes capture when needed |
+| `powers-capture` | Capturing already-done work as a power — user-directed or survey mode |
+
+For ad-hoc work (not part of a plan), use the search → info → use pattern below directly.
 
 ### Before writing any new feature or file
 
-1. Run `powers template search -q="<what you're about to do>"` and
-   `powers feature search -q="<what you're about to do>"`.
-   If a template or feature matches (score > 0), apply it instead:
-   `powers template apply <name> --<variable-name>=<value> ...`
-   or `powers feature apply <name> --<variable-name>=<value> ...`
-   Preview first with `--dry-run` / `-d`, then apply for real.
-2. Only write fresh content if no template or feature matches.
+1. Run `pwrs search -q="<what you're about to do>"`.
+2. If a power matches (score > 0), run
+   `pwrs info <name>` to see its required
+   variables, generated files, and the exact use command.
+3. Use it:
+   `pwrs use <name> --<variable-name>=<value> ...`
+   Preview first with `--dry-run` / `-d`, then use for real.
+4. Only write fresh content if no power matches.
 
 ### After generating new files
 
 If you just generated new files and the work seems repeatable, ask the user
-whether they'd like to capture it as a template (recurring) or a feature
+whether they'd like to capture it as a multi-use power (recurring) or a single-use power
 (one-time) before moving on. Only do this for new file generation — not for
 one-off edits.
 
-If the user confirms, capture it:
-```
-powers template create -n=<short-name> \
-  -d="<human-readable description>" \
-  -i="<intent keywords>" \
-  -v="var1,var2" -ov="optVar1,optVar2" \
-  -o='{"create":[{"name":"...","template":"out.ts","outputPath":"..."}],"modify":[],"delete":[{"name":"old","outputPath":"src/old.ts"}]}'
-```
-Then fill in the template at
-`.powers/output/template/<name>/<template>`.
-Prefer a `.ts` file with a default-export function `(vars) => string` — this is
-the recommended format for new templates. Nunjucks `.njk` templates
-(`{{var}}` syntax) are supported but should only be used when a `.ts`
-template is impractical. Validate before considering it done:
-`powers template validate -n=<name>`
+If the user confirms, invoke the `powers-capture` skill — do not run
+`create` directly. The capture skill handles the
+full workflow: assessment, scaffolding, parameterization, validation, and
+dry-run verification.
 
 ### `.ts` template format (recommended)
 
 A `.ts` template is a TypeScript module that `export default`s a function.
-At run time `powers` calls that function with the template's declared
+At run time `pwrs` calls that function with the power's declared
 variables (keyed by name, all strings) and writes the returned string to the
 file's `outputPath`.
 
@@ -171,13 +173,13 @@ export default ({ componentName, theme }: Record<string, string>) =>
 - It runs natively on Bun/Deno; on Node it is executed in a child process with
   `--experimental-strip-types` (Node 22.6+), so write it as ESM with no
   side effects at module top level.
-- If the module has no default function (or it isn't a function), `template apply`
+- If the module has no default function (or it isn't a function), `use`
   fails with `Invalid .ts template: must export a default function that returns a
-  string`. Note: `template validate` only checks that the template file exists —
-  it does not import or execute it, so apply the template once to confirm the
+  string`. Note: `validate` only checks that the template file exists —
+  it does not import or execute it, so use the power once to confirm the
   default export works.
 
-### Output schema (`.powers/output/template/<name>/instructions.json`)
+### Output schema (`.powers/active/multi-use/<name>/instructions.json`)
 
 ```json
 {
@@ -222,7 +224,7 @@ export default ({ componentName, theme }: Record<string, string>) =>
 `includes` is optional — see [Subtemplates](#subtemplates) below.
 Both `create` and `modify` arrays are required (can be empty `[]`).
 The `delete` array is optional — omit it entirely for backward compatibility.
-Delete entries have no `template` field (nothing to render); at apply time
+Delete entries have no `template` field (nothing to render); at use time
 the file at `outputPath` is removed from the project. If the target file
 doesn't exist, a warning is printed and the entry is skipped (no error).
 
@@ -230,15 +232,15 @@ doesn't exist, a warning is printed and the entry is skipped (no error).
 
 The `variables` field has two arrays:
 
-- **`required`** — variables the user must provide at apply time. If any are
+- **`required`** — variables the user must provide at use time. If any are
   missing, the CLI reports all missing required variables in a single error
   along with an example command showing the required flags.
 - **`optional`** — variables the user may omit. When not provided, they default
   to an empty string (`""`), so `{{var}}` tokens in templates and
   output paths resolve to `""` instead of leaving unresolved tokens.
 
-Use `--<variable-name>=<value>` flags at apply time for both required and
-optional variables. When creating a template, use `-v` for required variables
+Use `--<variable-name>=<value>` flags at use time for both required and
+optional variables. When creating a power, use `-v` for required variables
 and `-ov` for optional variables.
 
 A variable cannot be in both `required` and `optional` — validation will reject
@@ -248,15 +250,15 @@ when omitted — it should be required instead).
 
 ### Package Dependencies
 
-The `packageDependencies` field is optional — omit it entirely if the template
-or feature doesn't need npm packages. Each entry is a group with an optional
+The `packageDependencies` field is optional — omit it entirely if the power
+doesn't need npm packages. Each entry is a group with an optional
 `target` (a monorepo package path like `"packages/web"`, omitted for the root
 `package.json`) and dependency category arrays. Dependency strings use the
 standard `"package@version"` format, including scoped packages like
 `"@scope/pkg@^1.0.0"`. Multiple groups can target different packages in a
 monorepo.
 
-When a template or feature is applied, the CLI writes the declared dependencies
+When a power is used, the CLI writes the declared dependencies
 to the target `package.json`, detects the package manager from the lock file
 (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lockb`/`bun.lock`),
 and runs the install command automatically.
@@ -264,7 +266,7 @@ and runs the install command automatically.
 **Do NOT create `modify` entries for `package.json`.** Use the
 `packageDependencies` field instead. The CLI manages `package.json` updates and
 install automatically — a modify template for `package.json` will not work
-correctly because the apply flow uses a git worktree and does not stage
+correctly because the use flow uses a git worktree and does not stage
 `package.json` changes through the modify engine.
 
 ### Modify templates
@@ -297,23 +299,23 @@ Modify template files can be:
 
 ### Subtemplates
 
-A subtemplate is a regular template that another template includes via the
-`includes` field. When a template runs, it renders its own files, then resolves
+A subtemplate is a regular power that another power includes via the
+`includes` field. When a power runs, it renders its own files, then resolves
 each included subtemplate — mapping the subtemplate's declared variables to
 values from the parent (using `{{parentVar}}` tokens or literals),
 optionally overriding output paths, and rendering the subtemplate's templates.
-Subtemplates are just templates — they live in their own folder under
-`.powers/output/template/`, have their own
-`instructions.json` and templates, and can be applied standalone or included
+Subtemplates are just powers — they live in their own folder under
+`.powers/active/multi-use/`, have their own
+`instructions.json` and templates, and can be used standalone or included
 by multiple parents.
 
 #### Worked example
 
-- *Before:* You have an `api-route` template that generates a route handler, a
-types file, and a test. Later you build a `graphql-resolver` template that also
+- *Before:* You have an `api-route` power that generates a route handler, a
+types file, and a test. Later you build a `graphql-resolver` power that also
 needs a types file with the same structure.
-- *Extraction:* Create a standalone `types` template
-  (`powers template create -n=types ...`). Add it to both parents'
+- *Extraction:* Create a standalone `types` power
+  (`pwrs create --type=multi-use -n=types ...`). Add it to both parents'
   `instructions.json`:
 
 ```json
@@ -329,36 +331,36 @@ needs a types file with the same structure.
 - The `variables` map says: "pass the parent's `modelName` as the subtemplate's
   `entityName`." The `outputPathOverride` map says: "write the subtemplate's
   `types` file to this path instead of its default."
-- Validate: `powers template validate -n=api-route`
+- Validate: `pwrs validate api-route`
 
 #### When to extract subtemplates
 
-Create templates first. Extract subtemplates only when a concrete use case
+Create powers first. Extract subtemplates only when a concrete use case
 demands it — you often don't know what should be a subtemplate until you are
 faced with the actual repetition. Extract when:
 
-- You are duplicating the same template files across multiple templates
-- A template is generating files for two distinct concerns that change
+- You are duplicating the same template files across multiple powers
+- A power is generating files for two distinct concerns that change
   independently
-- You find yourself copying a subset of one template's output into another
+- You find yourself copying a subset of one power's output into another
 
-Do NOT preemptively decompose a template into subtemplates upfront. Build the
-full template, verify it works, then extract when repetition emerges.
+Do NOT preemptively decompose a power into subtemplates upfront. Build the
+full power, verify it works, then extract when repetition emerges.
 
 ### Quick reference
 
 | Action | Command |
 |--------|---------|
-| Search templates | `powers template search -q="..."` |
-| Search features | `powers feature search -q="..."` |
-| Apply a template | `powers template apply <name> --<variable>=<value> [-d]` |
-| Apply a feature | `powers feature apply <name> --<variable>=<value> [-d]` |
-| Create a template | `powers template create -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
-| Create a feature | `powers feature create -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
-| Validate templates | `powers template validate [-n=<name>]` |
-| Validate features | `powers feature validate [-n=<name>]` |
-| Health check all | `powers doctor` |
-| Usage metrics | `powers metrics summary` |
+| Search powers | `pwrs search -q="..."` |
+| Search multi-use only | `pwrs search -q="..." --type=multi-use` |
+| Get info on a power | `pwrs info <name>` |
+| Use a power | `pwrs use <name> --<variable>=<value> [-d]` |
+| Create a multi-use power | `pwrs create --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Create a single-use power | `pwrs create --type=single-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Validate a power | `pwrs validate <name>` |
+| Gain powers | `pwrs gain` |
+| Health check all | `pwrs doctor` |
+| Usage metrics | `pwrs metrics summary` |
 <!-- END powers -->
 
 <!-- BEGIN pwrs -->

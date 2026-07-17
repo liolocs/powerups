@@ -13,7 +13,7 @@ const search_errors = error.coded({
   },
   no_query: () => {
     const errorText =
-      `No search query provided. Example: ${CLI_CMD} search -q "<query>"`;
+      `No search query provided. Example: ${CLI_CMD} search -q="<query>"`;
     return t`${errorBGText}${errorText}`;
   },
 });

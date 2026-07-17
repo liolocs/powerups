@@ -1,9 +1,23 @@
 ---
 name: powers-capture
-description: "Capture already-done work as a powers feature or template"
+description: "Capture already-done work as a powers power"
 ---
 Capture work the user has already done — files they wrote or changes they made
-outside the CLI — into a reusable powers feature or template.
+outside the CLI — into a reusable powers power.
+
+**Announce at start:** "I'm using the powers-capture skill to capture this work."
+
+This skill has two entry modes. Determine which mode applies based on the
+user's request:
+
+**Mode A — User-directed capture:** The user points at specific files or a
+directory they've already written and wants to capture as a reusable power.
+
+**Mode B — Survey capture:** The user wants you to survey an area of the
+codebase to find patterns worth capturing. No specific files are pointed at
+— you discover candidates.
+
+### Mode A — User-directed capture
 
 1. Ask the user to point at the work they want to capture — specific files or
    a directory. Do not auto-detect via git diff or other heuristics; always
@@ -12,24 +26,29 @@ outside the CLI — into a reusable powers feature or template.
 2. Read the files the user points at. Understand what was created or modified
    and what the work does.
 
-3. Assess whether this is a feature or a template:
-   - A feature is a one-time addition to the project (e.g., add a dependency,
+3. Run `pwrs search -q="<intent>"` to check if a similar power
+   already exists. If one does, run `pwrs info <name>`
+   to understand it. If it's similar enough, suggest reusing or extending the
+   existing power rather than creating a new one.
+
+4. Assess whether this is a single-use or multi-use power:
+   - A single-use power is a one-time addition to the project (e.g., add a dependency,
      set up auth). It can have variables (e.g., a project name, framework
      choice) or none at all.
-   - A template is a recurring pattern that will be repeated with different
+   - A multi-use power is a recurring pattern that will be repeated with different
      variable values (e.g., new API route, new view component).
 
-   Present your assessment to the user and get confirmation on the domain
-   (feature or template) before proceeding. If the user later needs to
-   switch domains, the folder can simply be moved between
-   .powers/output/template/ and
-   .powers/output/feature/.
+   Present your assessment to the user and get confirmation on the type
+   (single-use or multi-use) before proceeding. If the user later needs to
+   switch types, the folder can simply be moved between
+   .powers/active/multi-use/ and
+   .powers/active/single-use/.
 
-4. Identify the capture structure:
+5. Identify the capture structure:
    - Name (short, kebab-case)
    - Intent keywords (comma-separated)
-   - Variables — the parts that change between uses. Both templates and
-     features can have variables; for some features, variables may be empty.
+   - Variables — the parts that change between uses. Both multi-use and
+     single-use powers can have variables; for some single-use powers, variables may be empty.
    - File mapping: which files are "create" entries (new files generated),
      which are "modify" entries (changes to existing files), and which are
      "delete" entries (files to remove). For each create/modify: the template
@@ -44,18 +63,18 @@ outside the CLI — into a reusable powers feature or template.
 
    Present this to the user and get approval before proceeding.
 
-5. Scaffold the folder structure by running:
-   `powers template create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
-   (or `powers feature create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
-   for features). Use `-ov` only if there are optional variables; omit it
+6. Scaffold the folder structure by running:
+   `pwrs create --type=multi-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   (or `pwrs create --type=single-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   for single-use powers). Use `-ov` only if there are optional variables; omit it
    otherwise. This creates the instructions.json and empty template files.
 
-6. Copy the original files into the template directory, overwriting the
+7. Copy the original files into the power directory, overwriting the
    empty stubs. Use `cp` for each file — this brings the full content onto
    disk without writing it as agent output. Do NOT write file contents from
    scratch — always copy first.
 
-7. Edit the copied files in place to parameterize them:
+8. Edit the copied files in place to parameterize them:
    - For .ts templates: wrap the content in a default-export function and
      replace concrete values with `${var}`. Keep it a pure function of
      `vars` — no imports, no filesystem access. Example:
@@ -70,16 +89,62 @@ outside the CLI — into a reusable powers feature or template.
    Prefer .ts templates (the recommended format). Use .njk only when .ts
    is impractical.
 
-8. Run `powers template validate -n=<name>` (or
-   `powers feature validate -n=<name>`) to validate the structure.
+9. Run `pwrs validate <name>` to validate the structure.
 
-9. Run `powers template apply <name> --<variable-name>=<value> ... -d` (or
-   `powers feature apply <name> --<variable-name>=<value> ... -d`) to dry-run
-   and verify the captured artifact regenerates faithfully. Compare the
-   dry-run output to the original work. If there are discrepancies, fix
-   the template and re-verify.
+10. Run `pwrs use <name> --<variable-name>=<value> ... -d` to dry-run
+    and verify the captured artifact regenerates faithfully. Compare the
+    dry-run output to the original work. If there are discrepancies, fix
+    the template and re-verify.
 
-10. Report back to the user: what was captured, where it lives, and how to
+11. Self-review: Confirm the dry-run output matches the original work.
+    Confirm all variables are declared. Confirm no placeholders remain.
+
+12. Report back to the user: what was captured, where it lives, and how to
     reuse it:
-    `powers template apply <name> --<variable-name>=<value> ...`
-    (or `powers feature apply <name> --<variable-name>=<value> ...`).
+    `pwrs use <name> --<variable-name>=<value> ...`.
+
+13. Terminal state: "Capture complete. Return to the calling skill (if invoked
+    from `powers-implement`) or report to the user (if invoked
+    standalone)."
+
+### Mode B — Survey capture
+
+1. Survey the codebase to understand its structure:
+   - Check the project's file tree, key directories, and recent commits.
+   - Run `pwrs search -q="..."` for the main domains you
+     find to see if powers already exist for them.
+
+2. Ask the user which area of the codebase they want to focus on:
+   - A directory, a feature area, or a specific set of files.
+   - If the user has no preference, survey broadly and propose the most
+     promising areas.
+
+3. For the chosen area, examine the code and identify patterns that are good
+   capture candidates. A pattern is a good candidate if:
+   - It generates files with a repeating structure (same file types, same wiring)
+   - It could be done again with different variable values
+   - The structure is stable enough that parameterizing it adds value
+
+   A pattern is NOT a good candidate if:
+   - It's project configuration (tsconfig, path aliases)
+   - It only adds npm dependencies (use `packageDependencies` in
+     `instructions.json` instead — the CLI handles `package.json` updates
+     and install automatically)
+   - It's a bridge or adapter specific to this project's setup
+   - It's content (locale strings, copy text, data files)
+   - It's a one-time wiring or edit
+
+4. Present the candidates to the user — for each one:
+   - Suggested name (short, kebab-case)
+   - Type assessment: is this a multi-use power (recurring pattern) or a single-use power
+     (one-time addition)?
+   - Intent keywords
+   - Variables (the parts that would change between uses)
+   - Files it would generate (create), modify (modify), delete (delete)
+
+   Get user approval on which candidates to capture before proceeding.
+
+5. For each approved candidate, capture it using Mode A steps 6-12
+   (scaffold, copy, parameterize, validate, dry-run, self-review, report).
+   The type assessment and structure identification are already done in
+   step 4 above (equivalent to Mode A steps 4-5).

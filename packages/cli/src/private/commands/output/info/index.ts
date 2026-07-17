@@ -233,55 +233,49 @@ export default function createInfoCommand(
         }
       }
 
-      const createFiles = collected.files.filter(f => f.kind === "create");
-      const modifyFiles = collected.files.filter(f => f.kind === "modify");
-      const deleteFiles = collected.files.filter(f => f.kind === "delete");
+      const fileSections = [
+        {
+          title: "Create",
+          files: collected.files.filter(file => file.kind === "create"),
+        },
+        {
+          title: "Modify",
+          files: collected.files.filter(file => file.kind === "modify"),
+        },
+        {
+          title: "Delete",
+          files: collected.files.filter(file => file.kind === "delete"),
+        },
+      ];
 
-      if (createFiles.length > 0 || modifyFiles.length > 0 || deleteFiles.length > 0) {
+      if (fileSections.some(section => section.files.length > 0)) {
         lines.push("## Files");
         lines.push("");
 
-        if (createFiles.length > 0) {
-          lines.push("### Create");
+        for (const section of fileSections) {
+          if (section.files.length === 0) {
+            continue;
+          }
+
+          lines.push(`### ${section.title}`);
           lines.push("");
 
-          for (const fileToCreate of createFiles) {
+          for (const file of section.files) {
             const meta: string[] = [];
 
-            if (is.truthy(fileToCreate.template)) {
-              meta.push(`template: \`${fileToCreate.template}\``);
+            if (is.truthy(file.template)) {
+              meta.push(`template: \`${file.template}\``);
             }
 
-            if (is.truthy(fileToCreate.fromInclude)) {
-              meta.push(`from include: ${fileToCreate.fromInclude}`);
+            if (is.truthy(file.fromInclude)) {
+              meta.push(`from include: ${file.fromInclude}`);
             }
 
             const metaPart = meta.length > 0 ? ` (${meta.join(", ")})` : "";
 
-            lines.push(`- \`${fileToCreate.outputPath}\`${metaPart}`);
+            lines.push(`- \`${file.outputPath}\`${metaPart}`);
           }
-          lines.push("");
-        }
 
-        if (modifyFiles.length > 0) {
-          lines.push("### Modify");
-          lines.push("");
-          for (const f of modifyFiles) {
-            const meta: string[] = [];
-            if (f.template) meta.push(`template: \`${f.template}\``);
-            if (f.fromInclude) meta.push(`from include: ${f.fromInclude}`);
-            const metaPart = meta.length > 0 ? ` (${meta.join(", ")})` : "";
-            lines.push(`- \`${f.outputPath}\`${metaPart}`);
-          }
-          lines.push("");
-        }
-        if (deleteFiles.length > 0) {
-          lines.push("### Delete");
-          lines.push("");
-          for (const f of deleteFiles) {
-            const includePart = f.fromInclude ? ` (from include: ${f.fromInclude})` : "";
-            lines.push(`- \`${f.outputPath}\`${includePart}`);
-          }
           lines.push("");
         }
       }

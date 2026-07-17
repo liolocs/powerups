@@ -12,9 +12,9 @@ test.case("should write skill file with constants substituted", async assert => 
   await fs.create(testRoot);
 
   const rendered = `Search and run ${CLI_NAME} outputs for new features.`;
-  await writeSkillFile(testRoot, ".claude/skills/" + CLI_NAME + "-feature.md", rendered);
+  await writeSkillFile(testRoot, ".claude/skills/" + CLI_NAME + "-implement.md", rendered);
 
-  const content = await testRoot.append("/.claude/skills/" + CLI_NAME + "-feature.md").text();
+  const content = await testRoot.append("/.claude/skills/" + CLI_NAME + "-implement.md").text();
   assert(content.includes(CLI_NAME)).equals(true);
   assert(content.includes("{{CLI_NAME}}")).equals(false);
 
@@ -26,9 +26,9 @@ test.case("should create parent directories", async assert => {
   await fs.create(testRoot);
 
   const rendered = "test content";
-  await writeSkillFile(testRoot, ".pi/skills/" + CLI_NAME + "-feature.md", rendered);
+  await writeSkillFile(testRoot, ".pi/skills/" + CLI_NAME + "-implement.md", rendered);
 
-  assert(await fs.exists(testRoot.append("/.pi/skills/" + CLI_NAME + "-feature.md"))).equals(true);
+  assert(await fs.exists(testRoot.append("/.pi/skills/" + CLI_NAME + "-implement.md"))).equals(true);
 
   await testRoot.remove();
 });

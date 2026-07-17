@@ -5,6 +5,21 @@ description: "Capture already-done work as a {{ CLI_NAME }} feature or template"
 Capture work the user has already done — files they wrote or changes they made
 outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
 
+**Announce at start:** "I'm using the {{ CLI_NAME }}-capture skill to capture this work."
+
+This skill has two entry modes. Determine which mode applies based on the
+user's request:
+
+**Mode A — User-directed capture:** The user points at specific files or a
+directory they've already written and wants to captured as a reusable template
+or feature.
+
+**Mode B — Survey capture:** The user wants you to survey an area of the
+codebase to find patterns worth templating. No specific files are pointed at
+— you discover candidates.
+
+### Mode A — User-directed capture
+
 1. Ask the user to point at the work they want to capture — specific files or
    a directory. Do not auto-detect via git diff or other heuristics; always
    get explicit guidance from the user about what to capture.
@@ -12,7 +27,13 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
 2. Read the files the user points at. Understand what was created or modified
    and what the work does.
 
-3. Assess whether this is a feature or a template:
+3. Run `{{ CLI_CMD }} template search -q="<intent>"` and
+   `{{ CLI_CMD }} feature search -q="<intent>"` to check if a similar item
+   already exists. If one does, run `{{ CLI_CMD }} <template|feature> info <name>`
+   to understand it. If it's similar enough, suggest reusing or extending the
+   existing item rather than creating a new one.
+
+4. Assess whether this is a feature or a template:
    - A feature is a one-time addition to the project (e.g., add a dependency,
      set up auth). It can have variables (e.g., a project name, framework
      choice) or none at all.
@@ -25,7 +46,7 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
    {{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ TEMPLATE_FOLDER }}/ and
    {{ MAIN_FOLDER }}/{{ OUTPUT_FOLDER }}/{{ FEATURE_FOLDER }}/.
 
-4. Identify the capture structure:
+5. Identify the capture structure:
    - Name (short, kebab-case)
    - Intent keywords (comma-separated)
    - Variables — the parts that change between uses. Both templates and
@@ -44,18 +65,18 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
 
    Present this to the user and get approval before proceeding.
 
-5. Scaffold the folder structure by running:
+6. Scaffold the folder structure by running:
    `{{ CLI_CMD }} template create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
    (or `{{ CLI_CMD }} feature create -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
    for features). Use `-ov` only if there are optional variables; omit it
    otherwise. This creates the instructions.json and empty template files.
 
-6. Copy the original files into the template directory, overwriting the
+7. Copy the original files into the template directory, overwriting the
    empty stubs. Use `cp` for each file — this brings the full content onto
    disk without writing it as agent output. Do NOT write file contents from
    scratch — always copy first.
 
-7. Edit the copied files in place to parameterize them:
+8. Edit the copied files in place to parameterize them:
    - For .ts templates: wrap the content in a default-export function and
      replace concrete values with `${var}`. Keep it a pure function of
      `vars` — no imports, no filesystem access. Example:
@@ -70,16 +91,65 @@ outside the CLI — into a reusable {{ CLI_NAME }} feature or template.
    Prefer .ts templates (the recommended format). Use .njk only when .ts
    is impractical.
 
-8. Run `{{ CLI_CMD }} template validate -n=<name>` (or
+9. Run `{{ CLI_CMD }} template validate -n=<name>` (or
    `{{ CLI_CMD }} feature validate -n=<name>`) to validate the structure.
 
-9. Run `{{ CLI_CMD }} template apply <name> --<variable-name>=<value> ... -d` (or
-   `{{ CLI_CMD }} feature apply <name> --<variable-name>=<value> ... -d`) to dry-run
-   and verify the captured artifact regenerates faithfully. Compare the
-   dry-run output to the original work. If there are discrepancies, fix
-   the template and re-verify.
+10. Run `{{ CLI_CMD }} template apply <name> --<variable-name>=<value> ... -d` (or
+    `{{ CLI_CMD }} feature apply <name> --<variable-name>=<value> ... -d`) to dry-run
+    and verify the captured artifact regenerates faithfully. Compare the
+    dry-run output to the original work. If there are discrepancies, fix
+    the template and re-verify.
 
-10. Report back to the user: what was captured, where it lives, and how to
+11. Self-review: Confirm the dry-run output matches the original work.
+    Confirm all variables are declared. Confirm no placeholders remain.
+
+12. Report back to the user: what was captured, where it lives, and how to
     reuse it:
     `{{ CLI_CMD }} template apply <name> --<variable-name>=<value> ...`
     (or `{{ CLI_CMD }} feature apply <name> --<variable-name>=<value> ...`).
+
+13. Terminal state: "Capture complete. Return to the calling skill (if invoked
+    from `{{ CLI_NAME }}-implement`) or report to the user (if invoked
+    standalone)."
+
+### Mode B — Survey capture
+
+1. Survey the codebase to understand its structure:
+   - Check the project's file tree, key directories, and recent commits.
+   - Run `{{ CLI_CMD }} template search -q="..."` for the main domains you
+     find to see if templates already exist for them.
+
+2. Ask the user which area of the codebase they want to focus on:
+   - A directory, a feature area, or a specific set of files.
+   - If the user has no preference, survey broadly and propose the most
+     promising areas.
+
+3. For the chosen area, examine the code and identify patterns that are good
+   capture candidates. A pattern is a good candidate if:
+   - It generates files with a repeating structure (same file types, same wiring)
+   - It could be done again with different variable values
+   - The structure is stable enough that parameterizing it adds value
+
+   A pattern is NOT a good candidate if:
+   - It's project configuration (tsconfig, path aliases)
+   - It only adds npm dependencies (use `packageDependencies` in
+     `instructions.json` instead — the CLI handles `package.json` updates
+     and install automatically)
+   - It's a bridge or adapter specific to this project's setup
+   - It's content (locale strings, copy text, data files)
+   - It's a one-time wiring or edit
+
+4. Present the candidates to the user — for each one:
+   - Suggested name (short, kebab-case)
+   - Domain assessment: is this a template (recurring pattern) or a feature
+     (one-time addition)?
+   - Intent keywords
+   - Variables (the parts that would change between uses)
+   - Files it would generate (create), modify (modify), delete (delete)
+
+   Get user approval on which candidates to capture before proceeding.
+
+5. For each approved candidate, capture it using Mode A steps 6-12
+   (scaffold, copy, parameterize, validate, dry-run, self-review, report).
+   The domain assessment and structure identification are already done in
+   step 4 above (equivalent to Mode A steps 4-5).

@@ -125,6 +125,12 @@ test.case("should render template vs feature content", async assert => {
   assert(content.includes("Modify templates")).equals(true);
   assert(content.includes("outputPathOverride")).equals(true);
   assert(content.includes("doctor")).equals(true);
+  assert(content.includes("Skills")).equals(true);
+  assert(content.includes("brainstorm")).equals(true);
+  assert(content.includes("implement")).equals(true);
+  assert(content.includes("capture")).equals(true);
+  assert(content.includes("template info")).equals(true);
+  assert(content.includes("feature info")).equals(true);
 
   await testRoot.remove();
 });

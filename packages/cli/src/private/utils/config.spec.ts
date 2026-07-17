@@ -23,7 +23,7 @@ test.group("readConfig", () => {
     await testRoot.remove();
   });
 
-  test.case(`should return null when .${MAIN_FOLDER} folder does not exist`, async assert => {
+  test.case(`should return null when ${MAIN_FOLDER}} folder does not exist`, async assert => {
     await reset();
 
     const config = await readConfig(testRoot);

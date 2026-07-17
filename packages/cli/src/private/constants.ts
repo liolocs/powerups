@@ -1,4 +1,6 @@
-export const CLI_NAME = "pwrs";
+export const CLI_CMD = "pwrs";
+
+export const CLI_NAME = "powers";
 
 /** Name of the main cli project folder, created at the project root. */
 export const MAIN_FOLDER = ".powers";

@@ -9,7 +9,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 function createOutputListErrors(domain: string) {
   return error.coded({
     dry_folder_not_found: () => {
-      const errorText = `.${MAIN_FOLDER} folder not found. Run "${CLI_NAME} init" first.`;
+      const errorText = `${MAIN_FOLDER}} folder not found. Run "${CLI_NAME} init" first.`;
       return t`${errorBGText}${errorText}`;
     },
     no_matching: () => {

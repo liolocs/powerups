@@ -16,7 +16,7 @@ async function reset() {
   await fs.create(testRoot);
 }
 
-/** Run init to set up a .${MAIN_FOLDER} project, then return. */
+/** Run init to set up a ${MAIN_FOLDER}} project, then return. */
 async function setup(
   harness: string,
   context?: { root?: typeof testRoot; skipGlobal?: boolean },

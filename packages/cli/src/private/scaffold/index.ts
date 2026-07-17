@@ -51,19 +51,19 @@ const HARNESS_CONFIG: Record<Harness, {
 // file gets the same frontmatter regardless of the target harness.
 const SKILLS_TO_SCAFFOLD = [
   {
-    template: "powers-feature.njk",
+    template: `${MAIN_FOLDER}-feature.njk`,
     name: `${CLI_NAME}-feature`,
   },
   {
-    template: "powers-brainstorm.njk",
+    template: `${MAIN_FOLDER}-brainstorm.njk`,
     name: `${CLI_NAME}-brainstorm`,
   },
   {
-    template: "powers-template.njk",
+    template: `${MAIN_FOLDER}-template.njk`,
     name: `${CLI_NAME}-template`,
   },
   {
-    template: "powers-capture.njk",
+    template: `${MAIN_FOLDER}-capture.njk`,
     name: `${CLI_NAME}-capture`,
   },
 ];

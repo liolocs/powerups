@@ -171,7 +171,7 @@ test.group("search errors", () => {
     await testRoot.remove();
   });
 
-  test.case(`should fail with dry_folder_not_found without .${MAIN_FOLDER} folder`, async assert => {
+  test.case(`should fail with dry_folder_not_found without ${MAIN_FOLDER}} folder`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 

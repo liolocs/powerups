@@ -42,7 +42,7 @@ test.case("init --harness=claude scaffolds claude files only", async assert => {
     context: { root: testRoot },
   });
 
-  // .${MAIN_FOLDER} folder created
+  // ${MAIN_FOLDER}} folder created
   assert(await fs.exists(mainFolder)).equals(true);
   // CLAUDE.md created (instructions for claude)
   assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(true);
@@ -211,14 +211,14 @@ test.group("init errors", () => {
   test.case("should fail with dry_folder_exists when already initialized", async assert => {
     await reset();
 
-    // First run succeeds and creates .${MAIN_FOLDER}
+    // First run succeeds and creates ${MAIN_FOLDER}}
     await init.run({
       subcommands: [],
       flags: [{ flag: "--harness", value: "claude" }],
       context: { root: testRoot },
     });
 
-    // Second run should fail because .${MAIN_FOLDER} already exists
+    // Second run should fail because ${MAIN_FOLDER}} already exists
     let threw;
     try {
       await init.run({
@@ -317,7 +317,7 @@ test.group("init rollback", () => {
   // "project already initialized".
   // ─────────────────────────────────────────────────────────────────
 
-  test.case(`should remove .${MAIN_FOLDER} on detection error (multiple harnesses)`, async assert => {
+  test.case(`should remove ${MAIN_FOLDER}} on detection error (multiple harnesses)`, async assert => {
     await reset();
     await fs.create(testRoot.append("/.claude"));
     await fs.create(testRoot.append("/.pi"));
@@ -335,13 +335,13 @@ test.group("init rollback", () => {
     }
     assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
 
-    // .${MAIN_FOLDER} must NOT be left behind
+    // ${MAIN_FOLDER}} must NOT be left behind
     assert(await fs.exists(mainFolder)).equals(false);
 
     await testRoot.remove();
   });
 
-  test.case(`should remove .${MAIN_FOLDER} on invalid harness error`, async assert => {
+  test.case(`should remove ${MAIN_FOLDER}} on invalid harness error`, async assert => {
     await reset();
 
     let threw;
@@ -362,7 +362,7 @@ test.group("init rollback", () => {
     await testRoot.remove();
   });
 
-  test.case(`should remove .${MAIN_FOLDER} on no-harness-detected error`, async assert => {
+  test.case(`should remove ${MAIN_FOLDER}} on no-harness-detected error`, async assert => {
     await reset();
 
     let threw;
@@ -404,7 +404,7 @@ test.group("init rollback", () => {
     }
     assert(firstThrew).equals(true);
 
-    // .${MAIN_FOLDER} was cleaned up — second run with --harness succeeds
+    // ${MAIN_FOLDER}} was cleaned up — second run with --harness succeeds
     await init.run({
       subcommands: [],
       flags: [{ flag: "--harness", value: "pi" }],
@@ -465,7 +465,7 @@ test.case("init is idempotent — instruction section not duplicated", async ass
     context: { root: testRoot },
   });
 
-  // Remove .${MAIN_FOLDER} so second init can proceed
+  // Remove ${MAIN_FOLDER}} so second init can proceed
   await testRoot.append(`/${MAIN_FOLDER}`).remove();
 
   // Second run

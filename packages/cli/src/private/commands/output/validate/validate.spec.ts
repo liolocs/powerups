@@ -50,7 +50,7 @@ test.case("validate --name reports a single valid template", async assert => {
 });
 
 test.group("validate errors", () => {
-  test.case(`should fail with dry_folder_not_found without .${MAIN_FOLDER} folder`, async assert => {
+  test.case(`should fail with dry_folder_not_found without ${MAIN_FOLDER}} folder`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 

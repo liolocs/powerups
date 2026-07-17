@@ -4,6 +4,8 @@ description: "Brainstorm a plan using {{ CLI_NAME }} templates and features"
 ---
 Brainstorm a plan using {{ CLI_NAME }} templates and features.
 
+**Announce at start:** "I'm using the {{ CLI_NAME }}-brainstorm skill to plan this work."
+
 1. Explore the project context:
    - Check recent commits, existing files, and docs.
    - Run `{{ CLI_CMD }} template search -q="<what the user wants to plan>"` and
@@ -20,13 +22,29 @@ Brainstorm a plan using {{ CLI_NAME }} templates and features.
    - What constraints apply
    - What success looks like
 
+<HARD-GATE>
+Do NOT propose a plan, suggest any implementation approach, write any code,
+or run any create/apply command until you have:
+1. Identified the key intents (topics, domains, capabilities) this plan touches
+2. Run `{{ CLI_CMD }} template search -q="<intent>"` for every identified intent
+3. Run `{{ CLI_CMD }} feature search -q="<intent>"` for every identified intent
+4. Run `{{ CLI_CMD }} <template|feature> info <name>` for every match found
+5. Recorded the results (matches found or "no matching") for each search
+
+If you skip the search step, you risk duplicating existing work and planning
+the wrong approach. Search is not optional.
+</HARD-GATE>
+
 3. Identify the key intents (topics, domains, capabilities) this plan touches.
    For each intent, run `{{ CLI_CMD }} template search -q="<intent>"` and
    `{{ CLI_CMD }} feature search -q="<intent>"` to find existing items that
-   may be reusable.
+   may be reusable. For every match, run
+   `{{ CLI_CMD }} <template|feature> info <name>` to understand what variables
+   and files are available. Record all results.
 
 4. From the search results, determine:
-   - Which existing templates or features can be reused for this plan (list by name)
+   - Which existing templates or features can be reused for this plan (list by
+     name, with the key variables each requires)
    - What work doesn't fit any existing item
 
 5. For work that doesn't fit an existing item, classify each piece as:
@@ -68,7 +86,7 @@ Brainstorm a plan using {{ CLI_NAME }} templates and features.
 
 6. Present the plan in sections, covering:
    - Overview of the approach
-   - Existing templates/features to reuse (with names)
+   - Existing templates/features to reuse (with names and key variables)
    - Concrete implementation steps (what files to write or modify)
    - Template capture candidates (to capture after implementation is verified,
      with suggested name, intent keywords, and variables)
@@ -81,7 +99,19 @@ Brainstorm a plan using {{ CLI_NAME }} templates and features.
 
 7. Get user approval on the plan before proceeding.
 
-8. Once approved, save the plan to a spec file at
+8. Self-review the plan:
+   - Did every identified intent get searched? (Check your recorded results.)
+   - Are all capture candidates marked for post-implementation (not pre)?
+   - Is the build-first principle followed? (No "create template first" steps.)
+   - Are there any placeholders, gaps, or vague requirements?
+   Fix any issues inline before saving.
+
+9. Save the plan to a spec file at
    `docs/{{ CLI_NAME }}/specs/YYYY-MM-DD-<topic>-design.md` and commit it.
-   Then transition to implementation by following the `{{ CLI_NAME }}-feature`
-   or `{{ CLI_NAME }}-template` command workflow.
+
+10. Ask the user: "Plan written and committed to `<path>`. Please review it
+    and let me know if you want to make any changes before we start
+    implementation." Only proceed to the next step once the user approves.
+
+11. Once the user approves, transition to implementation by invoking the
+    `{{ CLI_NAME }}-implement` skill to execute the plan.

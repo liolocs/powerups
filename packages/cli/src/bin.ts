@@ -10,13 +10,12 @@ const program = new CLI({
   version: "0.0.1",
   commands: commands,
   examples: [
-    `$ ${CLI_CMD} init`,
-    `$ ${CLI_CMD} init --harness=claude`,
+    `$ ${CLI_CMD} gain`,
+    `$ ${CLI_CMD} gain --harness=claude`,
     `$ ${CLI_CMD} update`,
-    `$ ${CLI_CMD} update --harness=claude`,
-    `$ ${CLI_CMD} template create my-template`,
-    `$ ${CLI_CMD} template apply my-template --var name=foo`,
-    `$ ${CLI_CMD} feature search "summarize a pdf"`,
+    `$ ${CLI_CMD} search -q="summarize a pdf"`,
+    `$ ${CLI_CMD} info my-power`,
+    `$ ${CLI_CMD} use my-power --var name=foo`,
     `$ ${CLI_CMD} doctor`,
   ],
 });

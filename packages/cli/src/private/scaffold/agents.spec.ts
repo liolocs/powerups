@@ -6,9 +6,9 @@ import { runTemplate } from "#template-runners/index";
 import {
   CLI_NAME,
   MAIN_FOLDER,
-  OUTPUT_FOLDER,
-  TEMPLATE_FOLDER,
-  FEATURE_FOLDER,
+  ACTIVE_FOLDER,
+  MULTI_USE_FOLDER,
+  SINGLE_USE_FOLDER,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -21,9 +21,9 @@ async function renderAgents(): Promise<string> {
     variables: {
       CLI_NAME,
       MAIN_FOLDER,
-      OUTPUT_FOLDER,
-      TEMPLATE_FOLDER,
-      FEATURE_FOLDER,
+      ACTIVE_FOLDER,
+      MULTI_USE_FOLDER,
+      SINGLE_USE_FOLDER,
     },
   });
 }
@@ -111,7 +111,7 @@ test.case("should work for CLAUDE.md same as AGENTS.md", async assert => {
   await testRoot.remove();
 });
 
-test.case("should render template vs feature content", async assert => {
+test.case("should render multi-use vs single-use content", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
 
@@ -119,9 +119,9 @@ test.case("should render template vs feature content", async assert => {
   await writeToAgentsOrClaudeMD(testRoot, "AGENTS.md", rendered, CLI_NAME);
 
   const content = await testRoot.append("/AGENTS.md").text();
-  assert(content.includes("template")).equals(true);
-  assert(content.includes("feature")).equals(true);
-  assert(content.includes("Template vs Feature")).equals(true);
+  assert(content.includes("multi-use")).equals(true);
+  assert(content.includes("single-use")).equals(true);
+  assert(content.includes("Multi-use vs Single-use")).equals(true);
   assert(content.includes("Modify templates")).equals(true);
   assert(content.includes("outputPathOverride")).equals(true);
   assert(content.includes("doctor")).equals(true);
@@ -129,8 +129,9 @@ test.case("should render template vs feature content", async assert => {
   assert(content.includes("brainstorm")).equals(true);
   assert(content.includes("implement")).equals(true);
   assert(content.includes("capture")).equals(true);
-  assert(content.includes("template info")).equals(true);
-  assert(content.includes("feature info")).equals(true);
+  assert(content.includes("search")).equals(true);
+  assert(content.includes("use")).equals(true);
+  assert(content.includes("gain")).equals(true);
 
   await testRoot.remove();
 });

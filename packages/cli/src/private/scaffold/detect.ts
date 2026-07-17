@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import { homedir } from "node:os";
 import path from "node:path";
-import init_errors from "#errors/initErrors";
+import gain_errors from "#errors/gainErrors";
 
 export const VALID_HARNESSES = ["claude", "opencode", "pi", "codex"] as const;
 export type Harness = (typeof VALID_HARNESSES)[number];
@@ -29,7 +29,7 @@ export async function detectHarness(
   // 1. --harness override
   if (harnessFlag !== undefined) {
     if (!VALID_HARNESSES.includes(harnessFlag as Harness)) {
-      throw init_errors.invalid_harness(harnessFlag);
+      throw gain_errors.invalid_harness(harnessFlag);
     }
     return harnessFlag as Harness;
   }
@@ -43,12 +43,12 @@ export async function detectHarness(
 
   if (localFound.size === 1) return [...localFound][0];
   if (localFound.size > 1) {
-    throw init_errors.multiple_harnesses_detected([...localFound]);
+    throw gain_errors.multiple_harnesses_detected([...localFound]);
   }
 
   // 3. Global detection (only if nothing found locally)
   if (options?.skipGlobal) {
-    throw init_errors.no_harness_detected();
+    throw gain_errors.no_harness_detected();
   }
 
   const globalFound = new Set<Harness>();
@@ -58,9 +58,9 @@ export async function detectHarness(
 
   if (globalFound.size === 1) return [...globalFound][0];
   if (globalFound.size > 1) {
-    throw init_errors.multiple_harnesses_detected([...globalFound]);
+    throw gain_errors.multiple_harnesses_detected([...globalFound]);
   }
 
   // 4. Nothing found
-  throw init_errors.no_harness_detected();
+  throw gain_errors.no_harness_detected();
 }

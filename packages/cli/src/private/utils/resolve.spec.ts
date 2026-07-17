@@ -2,22 +2,22 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { resolveOutput, type RenderTask } from "#utils/resolve";
-import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
+import { MAIN_FOLDER, ACTIVE_FOLDER, MULTI_USE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const templateFolder: FileRef = mainFolder.append(`/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`);
+const multiUseFolder: FileRef = mainFolder.append(`/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(templateFolder);
+  await fs.create(multiUseFolder);
 }
 
 async function writeOutput(name: string, instructions: Record<string, unknown>) {
-  const dir = templateFolder.append(`/${name}`);
+  const dir = multiUseFolder.append(`/${name}`);
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
@@ -41,7 +41,7 @@ test.case("should produce one task per create file for a leaf output", async ass
   const tasks = await resolveOutput({
     outputName: "leaf",
     variables: { componentName: "Button" },
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(2);
@@ -68,7 +68,7 @@ test.case("should produce tasks with correct kind for output with both create an
   const tasks = await resolveOutput({
     outputName: "both",
     variables: { name: "User" },
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(2);
@@ -111,7 +111,7 @@ test.case("should produce own tasks plus suboutput tasks for output with include
   const tasks = await resolveOutput({
     outputName: "parent",
     variables: { theme: "dark" },
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(2);
@@ -154,7 +154,7 @@ test.case("should produce a flat list of all tasks for nested suboutputs", async
   const tasks = await resolveOutput({
     outputName: "nest-a",
     variables: { val: "test" },
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(3);
@@ -187,7 +187,7 @@ test.case("should pass a static value through for variable mapping", async asser
   const tasks = await resolveOutput({
     outputName: "static-parent",
     variables: {},
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks[0].variables.componentName).equals("Button");
@@ -215,7 +215,7 @@ test.case("should resolve a parentVar reference for variable mapping", async ass
   const tasks = await resolveOutput({
     outputName: "ref-parent",
     variables: { theme: "dark" },
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks[0].variables.theme).equals("dark");
@@ -243,7 +243,7 @@ test.case("should resolve mixed text and tokens for variable mapping", async ass
   const tasks = await resolveOutput({
     outputName: "mixed-parent",
     variables: { theme: "dark" },
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks[0].variables.variant).equals("dark-button");
@@ -280,7 +280,7 @@ test.case("should apply create output path override to the correct file by name"
   const tasks = await resolveOutput({
     outputName: "override-parent",
     variables: {},
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks[0].outputPath).equals("src/ui/{{componentName}}.tsx");
@@ -317,7 +317,7 @@ test.case("should apply modify output path override to the correct file by name"
   const tasks = await resolveOutput({
     outputName: "modify-override-parent",
     variables: {},
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(1);
@@ -350,7 +350,7 @@ test.case("should preserve the original outputPath when no override is given", a
   const tasks = await resolveOutput({
     outputName: "no-override-parent",
     variables: {},
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks[0].outputPath).equals("src/{{componentName}}.tsx");
@@ -381,7 +381,7 @@ test.case("should produce distinct tasks when the same suboutput is referenced t
   const tasks = await resolveOutput({
     outputName: "dual-parent",
     variables: {},
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(2);
@@ -425,7 +425,7 @@ test.case("should not cascade overrides to nested suboutputs", async assert => {
   const tasks = await resolveOutput({
     outputName: "cascade-parent",
     variables: {},
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   // Child's file is overridden
@@ -452,7 +452,7 @@ test.case("should produce a delete task with no templatePath for delete entries"
   const tasks = await resolveOutput({
     outputName: "delete-only",
     variables: {},
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(1);
@@ -479,7 +479,7 @@ test.case("should produce create, modify, and delete tasks in order", async asse
   const tasks = await resolveOutput({
     outputName: "mixed",
     variables: { name: "Widget" },
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(3);
@@ -521,7 +521,7 @@ test.case("should apply delete output path override to the correct file by name"
   const tasks = await resolveOutput({
     outputName: "delete-override-parent",
     variables: {},
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(1);
@@ -555,7 +555,7 @@ test.case("should resolve delete tasks from nested suboutputs", async assert => 
   const tasks = await resolveOutput({
     outputName: "delete-parent",
     variables: {},
-    outputsFolder: templateFolder,
+    outputsFolder: multiUseFolder,
   });
 
   assert(tasks.length).equals(2);

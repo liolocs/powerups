@@ -11,23 +11,23 @@ import doctorErrors from "#errors/doctorErrors";
 import {
   CLI_NAME,
   MAIN_FOLDER,
-  OUTPUT_FOLDER,
-  TEMPLATE_FOLDER,
-  FEATURE_FOLDER,
+  ACTIVE_FOLDER,
+  MULTI_USE_FOLDER,
+  SINGLE_USE_FOLDER,
 } from "#constants";
 
 const execAsync = promisify(exec);
 
 interface DoctorIssue {
   level: "WARN" | "ERROR";
-  domain: string;
+  type: string;
   name: string;
   message: string;
 }
 
 const doctor = new Command({
   name: "doctor",
-  description: `Health check for ${CLI_NAME} templates and features`,
+  description: `Health check for ${CLI_NAME}`,
   flags: [],
   subcommands: [],
   action: async (props) => {
@@ -46,7 +46,7 @@ const doctor = new Command({
         if (stdout.trim().length > 0) {
           issues.push({
             level: "WARN",
-            domain: "git",
+            type: "git",
             name: "status",
             message: "Working tree is not clean",
           });
@@ -54,7 +54,7 @@ const doctor = new Command({
       } catch {
         issues.push({
           level: "WARN",
-          domain: "git",
+          type: "git",
           name: "status",
           message: "Could not check git status",
         });
@@ -63,7 +63,7 @@ const doctor = new Command({
       gitOk = false;
       issues.push({
         level: "ERROR",
-        domain: "git",
+        type: "git",
         name: "repo",
         message: "Not a git repository",
       });
@@ -75,44 +75,44 @@ const doctor = new Command({
       throw doctorErrors.not_initialized();
     }
 
-    const outputFolder = mainFolder.append(`/${OUTPUT_FOLDER}`);
-    let templateCount = 0;
-    let featureCount = 0;
+    const activeFolder = mainFolder.append(`/${ACTIVE_FOLDER}`);
+    let multiUseCount = 0;
+    let singleUseCount = 0;
 
-    for (const [domain, folder] of [
-      ["template", TEMPLATE_FOLDER],
-      ["feature", FEATURE_FOLDER],
+    for (const [type, folder] of [
+      ["multi-use", MULTI_USE_FOLDER],
+      ["single-use", SINGLE_USE_FOLDER],
     ] as const) {
-      const domainFolder = outputFolder.append(`/${folder}`);
-      if (!(await fs.exists(domainFolder))) {
+      const typeFolder = activeFolder.append(`/${folder}`);
+      if (!(await fs.exists(typeFolder))) {
         issues.push({
           level: "WARN",
-          domain,
+          type,
           name: "structure",
-          message: `No ${domain} folder found`,
+          message: `No ${type} folder found`,
         });
         continue;
       }
 
-      // 3. Per-domain validation
-      const outputFiles = await domainFolder.files({
+      // 3. Per-type validation
+      const outputFiles = await typeFolder.files({
         recursive: true,
         filter: (file) => file.name === "instructions.json",
       });
 
-      if (domain === "template") templateCount = outputFiles.length;
-      else featureCount = outputFiles.length;
+      if (type === "multi-use") multiUseCount = outputFiles.length;
+      else singleUseCount = outputFiles.length;
 
       for (const outputFile of outputFiles) {
         const name = outputFile.directory.name;
 
         // Run standard checks (schema, templates, suboutput tree)
         const checkIssues = await checkOutput({
-          rootOutputDir: domainFolder,
+          rootOutputDir: typeFolder,
           currentOutputDir: outputFile.directory,
         });
         for (const issue of checkIssues) {
-          issues.push({ level: "ERROR", domain, name, message: issue });
+          issues.push({ level: "ERROR", type, name, message: issue });
         }
 
         // Additional: orphaned files check
@@ -135,7 +135,7 @@ const doctor = new Command({
             if (!referencedFiles.has(file.name)) {
               issues.push({
                 level: "WARN",
-                domain,
+                type,
                 name,
                 message: `Orphaned file: ${file.name}`,
               });
@@ -165,7 +165,7 @@ const doctor = new Command({
             } catch (parseErr) {
               issues.push({
                 level: "ERROR",
-                domain,
+                type,
                 name,
                 message: `Invalid modify template: ${modifyEntry.template} (${parseErr instanceof Error ? parseErr.message : "parse error"})`,
               });
@@ -182,13 +182,13 @@ const doctor = new Command({
     const warnCount = issues.filter(i => i.level === "WARN").length;
 
     cli.print(
-      `Doctor: checking git state, folder structure, ${templateCount} template(s), ${featureCount} feature(s)\n`,
+      `Doctor: checking git state, folder structure, ${multiUseCount} multi-use power(s), ${singleUseCount} single-use power(s)\n`,
     );
     cli.print("\n");
 
     for (const issue of issues) {
       const prefix = issue.level === "ERROR" ? "ERROR" : "WARN";
-      cli.print(`  [${prefix}] [${issue.domain}:${issue.name}] ${issue.message}\n`);
+      cli.print(`  [${prefix}] [${issue.type}:${issue.name}] ${issue.message}\n`);
     }
 
     if (errorCount === 0 && warnCount === 0) {

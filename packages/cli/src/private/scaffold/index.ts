@@ -8,9 +8,9 @@ import {
   CLI_NAME,
   CLI_CMD,
   MAIN_FOLDER,
-  OUTPUT_FOLDER,
-  TEMPLATE_FOLDER,
-  FEATURE_FOLDER,
+  ACTIVE_FOLDER,
+  MULTI_USE_FOLDER,
+  SINGLE_USE_FOLDER,
 } from "#constants";
 
 const SCAFFOLD_DIR = import.meta.dirname;
@@ -77,9 +77,9 @@ export async function scaffold(
     CLI_NAME,
     CLI_CMD,
     MAIN_FOLDER,
-    OUTPUT_FOLDER,
-    TEMPLATE_FOLDER,
-    FEATURE_FOLDER,
+    ACTIVE_FOLDER,
+    MULTI_USE_FOLDER,
+    SINGLE_USE_FOLDER,
   };
   const filesWritten: string[] = [];
   const rollback = options?.rollback;

@@ -9,9 +9,9 @@ import {
 } from "#utils/modify-engine";
 import { modificationArraySchema } from "#schemas/modification";
 import type { CodeError } from "@rcompat/error";
-import output_apply_errors from "#errors/outputApplyErrors";
+import use_errors from "#errors/useErrors";
 
-const errors = output_apply_errors["template"];
+const errors = use_errors;
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");

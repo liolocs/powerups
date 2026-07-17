@@ -2,7 +2,7 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import doctor from "#commands/doctor/index";
-import createCreateCommand from "#commands/output/create/index";
+import create from "#commands/create/index";
 import captureStdout, {
   captureStdoutOrError,
 } from "#test-utils/capture-stdout";
@@ -15,9 +15,9 @@ import { randomBytes } from "node:crypto";
 import path from "node:path";
 import {
   MAIN_FOLDER,
-  OUTPUT_FOLDER,
-  TEMPLATE_FOLDER,
-  FEATURE_FOLDER,
+  ACTIVE_FOLDER,
+  MULTI_USE_FOLDER,
+  SINGLE_USE_FOLDER,
 } from "#constants";
 
 const execAsync = promisify(exec);
@@ -25,11 +25,9 @@ const execAsync = promisify(exec);
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const outputFolder: FileRef = mainFolder.append(`/${OUTPUT_FOLDER}`);
-const templateFolder: FileRef = outputFolder.append(`/${TEMPLATE_FOLDER}`);
-const featureFolder: FileRef = outputFolder.append(`/${FEATURE_FOLDER}`);
-
-const createCmd = createCreateCommand("template");
+const activeFolder: FileRef = mainFolder.append(`/${ACTIVE_FOLDER}`);
+const multiUseFolder: FileRef = activeFolder.append(`/${MULTI_USE_FOLDER}`);
+const singleUseFolder: FileRef = activeFolder.append(`/${SINGLE_USE_FOLDER}`);
 
 async function gitInit(dir: FileRef): Promise<void> {
   await execAsync("git init", { cwd: dir.path });
@@ -53,15 +51,15 @@ async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(outputFolder);
-  await fs.create(templateFolder);
+  await fs.create(activeFolder);
+  await fs.create(multiUseFolder);
   await gitInit(testRoot);
 }
 
-test.case("doctor reports clean state with no templates or features", async assert => {
+test.case("doctor reports clean state with no powers", async assert => {
   await reset();
-  // Create feature folder too so there are no warnings
-  await fs.create(featureFolder);
+  // Create single-use folder too so there are no warnings
+  await fs.create(singleUseFolder);
   await gitCommit(testRoot, "add folders");
 
   const output = await captureStdout(() => doctor.run({
@@ -71,24 +69,25 @@ test.case("doctor reports clean state with no templates or features", async asse
   }));
 
   assert(output).includes("All checks passed.");
-  assert(output).includes("0 template(s)");
-  assert(output).includes("0 feature(s)");
+  assert(output).includes("0 multi-use power(s)");
+  assert(output).includes("0 single-use power(s)");
 
   await testRoot.remove();
 });
 
-test.case("doctor validates templates and features with no issues", async assert => {
+test.case("doctor validates powers with no issues", async assert => {
   await reset();
-  await fs.create(featureFolder);
+  await fs.create(singleUseFolder);
 
-  await createCmd.run({
+  await create.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "valid-template" },
+    flags: [{ flag: "--type", value: "multi-use" },
+      { flag: "--name", value: "valid-power" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
   // Commit so working tree is clean
-  await gitCommit(testRoot, "add template");
+  await gitCommit(testRoot, "add power");
 
   const output = await captureStdout(() => doctor.run({
     subcommands: [],
@@ -97,24 +96,25 @@ test.case("doctor validates templates and features with no issues", async assert
   }));
 
   assert(output).includes("All checks passed.");
-  assert(output).includes("1 template(s)");
+  assert(output).includes("1 multi-use power(s)");
 
   await testRoot.remove();
 });
 
-test.case("doctor reports orphaned file in a template folder", async assert => {
+test.case("doctor reports orphaned file in a power folder", async assert => {
   await reset();
-  await fs.create(featureFolder);
+  await fs.create(singleUseFolder);
 
-  await createCmd.run({
+  await create.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "with-orphan" },
+    flags: [{ flag: "--type", value: "multi-use" },
+      { flag: "--name", value: "with-orphan" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
 
   // Add an orphaned file
-  await templateFolder.append("/with-orphan/extra.txt").write("orphan");
+  await multiUseFolder.append("/with-orphan/extra.txt").write("orphan");
 
   const output = await captureStdout(() => doctor.run({
     subcommands: [],
@@ -129,11 +129,12 @@ test.case("doctor reports orphaned file in a template folder", async assert => {
 
 test.case("doctor reports invalid .json modify template", async assert => {
   await reset();
-  await fs.create(featureFolder);
+  await fs.create(singleUseFolder);
 
-  await createCmd.run({
+  await create.run({
     subcommands: [],
     flags: [
+      { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "bad-modify" },
       { flag: "--description", value: "test description" },
       { flag: "--output", value: JSON.stringify({
@@ -145,7 +146,7 @@ test.case("doctor reports invalid .json modify template", async assert => {
   });
 
   // Write invalid JSON modify template
-  await templateFolder.append("/bad-modify/wire.json").write("{not valid json}");
+  await multiUseFolder.append("/bad-modify/wire.json").write("{not valid json}");
 
   const { output } = await captureStdoutOrError(() => doctor.run({
     subcommands: [],
@@ -160,7 +161,7 @@ test.case("doctor reports invalid .json modify template", async assert => {
 
 test.case("doctor warns when git working tree is dirty", async assert => {
   await reset();
-  await fs.create(featureFolder);
+  await fs.create(singleUseFolder);
   await gitCommit(testRoot, "clean state");
 
   // Make a dirty change
@@ -183,8 +184,8 @@ test.case("doctor errors when not a git repo", async assert => {
   const noGitRoot = fs.ref(path.join(tmpdir(), `powers-test-nogit-${randomBytes(4).toString("hex")}`));
   await fs.create(noGitRoot);
   await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
-  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${OUTPUT_FOLDER}`));
-  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`));
+  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${ACTIVE_FOLDER}`));
+  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`));
 
   const { output } = await captureStdoutOrError(() => doctor.run({
     subcommands: [],
@@ -198,29 +199,30 @@ test.case("doctor errors when not a git repo", async assert => {
   await noGitRoot.remove();
 });
 
-test.case("doctor checks both domains in one pass", async assert => {
+test.case("doctor checks both types in one pass", async assert => {
   await reset();
-  await fs.create(featureFolder);
+  await fs.create(singleUseFolder);
 
-  // Create a template
-  await createCmd.run({
+  // Create a multi-use power
+  await create.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "tmpl" },
+    flags: [{ flag: "--type", value: "multi-use" },
+      { flag: "--name", value: "multi" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
 
-  // Create a feature
-  const createFeature = createCreateCommand("feature");
-  await createFeature.run({
+  // Create a single-use power
+  await create.run({
     subcommands: [],
-    flags: [{ flag: "--name", value: "feat" },
+    flags: [{ flag: "--type", value: "single-use" },
+      { flag: "--name", value: "single" },
       { flag: "--description", value: "test description" }],
     context: { root: testRoot },
   });
 
   // Commit so working tree is clean
-  await gitCommit(testRoot, "add template and feature");
+  await gitCommit(testRoot, "add powers");
 
   const output = await captureStdout(() => doctor.run({
     subcommands: [],
@@ -228,8 +230,8 @@ test.case("doctor checks both domains in one pass", async assert => {
     context: { root: testRoot },
   }));
 
-  assert(output).includes("1 template(s)");
-  assert(output).includes("1 feature(s)");
+  assert(output).includes("1 multi-use power(s)");
+  assert(output).includes("1 single-use power(s)");
   assert(output).includes("All checks passed.");
 
   await testRoot.remove();
@@ -259,12 +261,13 @@ test.group("doctor errors", () => {
 
   test.case("should fail with validation_failed when a template file is missing", async assert => {
     await reset();
-    await fs.create(featureFolder);
+    await fs.create(singleUseFolder);
 
-    await createCmd.run({
+    await create.run({
       subcommands: [],
       flags: [
-        { flag: "--name", value: "bad-template" },
+        { flag: "--type", value: "multi-use" },
+        { flag: "--name", value: "bad-power" },
       { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [{ name: "f", template: "missing.njk", outputPath: "out.ts" }],
@@ -275,7 +278,7 @@ test.group("doctor errors", () => {
     });
 
     // Remove the template file
-    await templateFolder.append("/bad-template/missing.njk").remove();
+    await multiUseFolder.append("/bad-power/missing.njk").remove();
 
     const { output, error } = await captureStdoutOrError(() => doctor.run({
       subcommands: [],

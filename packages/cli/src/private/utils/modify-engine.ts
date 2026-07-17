@@ -4,10 +4,9 @@ import { runTemplate } from "#template-runners/index";
 import type { FileRef } from "@rcompat/fs";
 import type { VariableResult } from "#utils/variables";
 import fs from "@rcompat/fs";
-import type output_apply_errors from "#errors/outputApplyErrors";
+import type use_errors from "#errors/useErrors";
 
-type ErrorSet = typeof output_apply_errors["template"] |
-  typeof output_apply_errors["feature"];
+type ErrorSet = typeof use_errors;
 
 export interface ModifyTask {
   templatePath: FileRef;

@@ -2,18 +2,18 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { validateOutputTree } from "#utils/validate-output";
-import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
+import { MAIN_FOLDER, ACTIVE_FOLDER, MULTI_USE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const templateFolder: FileRef = mainFolder.append(`/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`);
+const multiUseFolder: FileRef = mainFolder.append(`/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(templateFolder);
+  await fs.create(multiUseFolder);
 }
 
 async function writeOutput({
@@ -23,7 +23,7 @@ async function writeOutput({
   name: string;
   instructions: Record<string, unknown>;
 }) {
-  const dir = templateFolder.append(`/${name}`);
+  const dir = multiUseFolder.append(`/${name}`);
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
@@ -42,8 +42,8 @@ test.case("should return no issues for a valid tree with no includes", async ass
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/simple"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/simple"),
   });
 
   assert(issues.length).equals(0);
@@ -80,8 +80,8 @@ test.case("should return no issues for a valid tree with one suboutput", async a
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/all-components"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/all-components"),
   });
 
   assert(issues.length).equals(0);
@@ -124,8 +124,8 @@ test.case("should return no issues for valid nested suboutputs", async assert =>
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/a"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/a"),
   });
 
   assert(issues.length).equals(0);
@@ -147,8 +147,8 @@ test.case("should report an issue for a missing suboutput", async assert => {
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/parent"),
   });
 
   assert(issues.length).equals(1);
@@ -182,8 +182,8 @@ test.case("should report an issue with chain for a circular reference", async as
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/a-cycle"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/a-cycle"),
   });
 
   assert(issues.some(i => i.includes("circular reference"))).true();
@@ -228,8 +228,8 @@ test.case("should report an issue with chain for a deep circular reference", asy
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/deep-a"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/deep-a"),
   });
 
   assert(issues.some(i => i.includes("circular reference"))).true();
@@ -276,8 +276,8 @@ test.case("should not report a cycle for a diamond shape", async assert => {
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/diamond-a"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/diamond-a"),
   });
 
   assert(issues.length).equals(0);
@@ -311,8 +311,8 @@ test.case("should report an issue for an unmapped variable", async assert => {
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/parent-missing-map"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/parent-missing-map"),
   });
 
   assert(issues.some(i => i.includes("unmapped variable: theme"))).true();
@@ -347,8 +347,8 @@ test.case("should report an issue for an invalid parentVar reference", async ass
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/ref-parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/ref-parent"),
   });
 
   assert(issues.some(i => i.includes("invalid reference"))).true();
@@ -390,8 +390,8 @@ test.case("should report an issue for a create override file name not in suboutp
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/override-parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/override-parent"),
   });
 
   assert(issues.some(i => i.includes("override file not found"))).true();
@@ -433,8 +433,8 @@ test.case("should report an issue for a modify override file name not in suboutp
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/modify-override-parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/modify-override-parent"),
   });
 
   assert(issues.some(i => i.includes("override file not found"))).true();
@@ -477,8 +477,8 @@ test.case("should report an issue for a delete override file name not in suboutp
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/delete-override-parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/delete-override-parent"),
   });
 
   assert(issues.some(i => i.includes("override file not found"))).true();
@@ -521,8 +521,8 @@ test.case("should return no issues for a valid delete override", async assert =>
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/valid-delete-parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/valid-delete-parent"),
   });
 
   assert(issues.length).equals(0);
@@ -557,8 +557,8 @@ test.case("should validate both independently when the same suboutput is referen
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/dual-parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/dual-parent"),
   });
 
   assert(issues.length).equals(0);
@@ -567,7 +567,7 @@ test.case("should validate both independently when the same suboutput is referen
 
 test.case("should report an issue and skip recursion for a suboutput with unparseable instructions", async assert => {
   await reset();
-  const childDir = templateFolder.append("/broken-child");
+  const childDir = multiUseFolder.append("/broken-child");
   await fs.create(childDir);
   await childDir.append("/instructions.json").writeJSON({ name: 123 });
   await writeOutput({
@@ -583,8 +583,8 @@ test.case("should report an issue and skip recursion for a suboutput with unpars
   });
 
   const issues = await validateOutputTree({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/broken-parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/broken-parent"),
   });
 
   assert(issues.length).equals(1);

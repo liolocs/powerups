@@ -2,22 +2,22 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { checkOutput } from "#utils/check-output";
-import { MAIN_FOLDER, OUTPUT_FOLDER, TEMPLATE_FOLDER } from "#constants";
+import { MAIN_FOLDER, ACTIVE_FOLDER, MULTI_USE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const templateFolder: FileRef = mainFolder.append(`/${OUTPUT_FOLDER}/${TEMPLATE_FOLDER}`);
+const multiUseFolder: FileRef = mainFolder.append(`/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(templateFolder);
+  await fs.create(multiUseFolder);
 }
 
 async function writeOutput(name: string, instructions: Record<string, unknown>) {
-  const dir = templateFolder.append(`/${name}`);
+  const dir = multiUseFolder.append(`/${name}`);
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON(instructions as never);
 }
@@ -33,8 +33,8 @@ test.case("should return no issues for valid output with no includes", async ass
   });
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/simple"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/simple"),
   });
 
   assert(issues.length).equals(0);
@@ -43,11 +43,11 @@ test.case("should return no issues for valid output with no includes", async ass
 
 test.case("should return an issue for missing instructions.json", async assert => {
   await reset();
-  const dir = templateFolder.append("/empty");
+  const dir = multiUseFolder.append("/empty");
   await fs.create(dir);
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
+    rootOutputDir: multiUseFolder,
     currentOutputDir: dir,
   });
 
@@ -58,12 +58,12 @@ test.case("should return an issue for missing instructions.json", async assert =
 
 test.case("should return an issue for schema parse failure and skip suboutput checks", async assert => {
   await reset();
-  const dir = templateFolder.append("/bad-schema");
+  const dir = multiUseFolder.append("/bad-schema");
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON({ name: 123 });
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
+    rootOutputDir: multiUseFolder,
     currentOutputDir: dir,
   });
 
@@ -85,8 +85,8 @@ test.case("should return an issue for a missing create template file", async ass
   });
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/missing-tmpl"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/missing-tmpl"),
   });
 
   assert(issues.some(i => i.includes("missing template file: nonexistent.njk"))).true();
@@ -107,8 +107,8 @@ test.case("should return an issue for a missing modify template file", async ass
   });
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/missing-modify-tmpl"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/missing-modify-tmpl"),
   });
 
   assert(issues.some(i => i.includes("missing template file: nonexistent.json"))).true();
@@ -117,7 +117,7 @@ test.case("should return an issue for a missing modify template file", async ass
 
 test.case("should return no issues for valid output with both create and modify entries", async assert => {
   await reset();
-  const dir = templateFolder.append("/both");
+  const dir = multiUseFolder.append("/both");
   await fs.create(dir);
   await dir.append("/instructions.json").writeJSON({
     name: "both",
@@ -133,7 +133,7 @@ test.case("should return no issues for valid output with both create and modify 
   await dir.append("/wire.json").write("[]");
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
+    rootOutputDir: multiUseFolder,
     currentOutputDir: dir,
   });
 
@@ -160,8 +160,8 @@ test.case("should return no issues for valid output with valid suboutputs", asyn
   });
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/valid-parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/valid-parent"),
   });
 
   assert(issues.length).equals(0);
@@ -187,8 +187,8 @@ test.case("should merge suboutput issues for valid output with invalid suboutput
   });
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/bad-parent"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/bad-parent"),
   });
 
   assert(issues.some(i => i.includes("suboutput not found: nonexistent"))).true();
@@ -205,8 +205,8 @@ test.case("should report issue for required/optional variable name collision", a
   });
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/collision"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/collision"),
   });
 
   assert(issues.some(i => i.includes("declared as both required and optional"))).true();
@@ -227,8 +227,8 @@ test.case("should report issue for optional variable used in output path", async
   });
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/opt-in-path"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/opt-in-path"),
   });
 
   assert(issues.some(i => i.includes("used in an output path but declared optional"))).true();
@@ -249,8 +249,8 @@ test.case("should not report issue when optional variable is not in any output p
   });
 
   const issues = await checkOutput({
-    rootOutputDir: templateFolder,
-    currentOutputDir: templateFolder.append("/opt-clean"),
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/opt-clean"),
   });
 
   assert(issues.some(i => i.includes("optional"))).false();

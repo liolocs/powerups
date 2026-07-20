@@ -4,11 +4,11 @@
  *
  * Run with bun (from anywhere in the repo):
  *
- *   bun run packages/powers-cli/scripts/link.ts
+ *   bun run packages/cli/scripts/link.ts
  *
  * What it does:
  *   1. Reads CLI_CMD from src/private/constants.ts.
- *   2. Writes `bin: { [CLI_CMD]: "./lib/bin.js" }` into packages/powers-cli/package.json
+ *   2. Writes `bin: { [CLI_CMD]: "./lib/bin.js" }` into packages/cli/package.json
  *      (creating it if absent, correcting it if stale).
  *   3. Builds lib/bin.js if it doesn't already exist.
  *   4. Runs `pnpm link --global` from the package dir so `<CLI_CMD>` lands on PATH
@@ -47,7 +47,7 @@ async function run(command: string, cwd: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  // packages/powers-cli — the parent of this scripts/ directory.
+  // packages/cli — the parent of this scripts/ directory.
   const pkgDir = fs.ref(import.meta.dir).directory;
   const pkgJsonRef = pkgDir.append("/package.json");
 

@@ -1,10 +1,19 @@
+function toCamelCase(name: string): string {
+  return name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+function toPascalCase(name: string): string {
+  const camel = toCamelCase(name);
+  return camel.charAt(0).toUpperCase() + camel.slice(1);
+}
+
 export default function(variables: Record<string, string>): string {
   const { commandName, description, errorCases } = variables;
+  const varName = toCamelCase(commandName);
+  const pascalName = toPascalCase(commandName);
 
   const parsedErrorCases: Array<{ name: string; text: string }> =
     JSON.parse(errorCases || "[]");
-
-  const pascalName = commandName.charAt(0).toUpperCase() + commandName.slice(1);
 
   // Generate error test stubs
   let errorTests = "";
@@ -16,7 +25,7 @@ export default function(variables: Record<string, string>): string {
     // TODO: set up test conditions that trigger this error
     let threw;
     try {
-      await ${commandName}.run({
+      await ${varName}.run({
         subcommands: [],
         flags: [],
         context: { root: testRoot },
@@ -32,7 +41,7 @@ export default function(variables: Record<string, string>): string {
   }
 
   return `import test from "@rcompat/test";
-import ${commandName} from "#commands/${commandName}/index";
+import ${varName} from "#commands/${commandName}/index";
 import { ${pascalName}ErrorCode } from "#errors/${commandName}Errors";
 import { CodeError } from "@rcompat/error";
 import fs from "@rcompat/fs";
@@ -42,8 +51,8 @@ const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 
 test.case("${commandName} has correct name and description", async assert => {
-  assert(${commandName}.name).equals("${commandName}");
-  assert(${commandName}.description).equals("${description}");
+  assert(${varName}.name).equals("${commandName}");
+  assert(${varName}.description).equals("${description}");
 });
 ${errorTests}`;
 }

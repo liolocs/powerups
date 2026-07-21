@@ -1,5 +1,10 @@
+function toCamelCase(name: string): string {
+  return name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+}
+
 export default function(variables: Record<string, string>): string {
   const { commandName, description, flags, errorCases } = variables;
+  const varName = toCamelCase(commandName);
 
   const parsedFlags: Array<{
     name: string;
@@ -33,9 +38,9 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@powerups/program";
-import ${commandName}_errors from "#errors/${commandName}Errors";
+import ${varName}_errors from "#errors/${commandName}Errors";
 
-const ${commandName} = new Command({
+const ${varName} = new Command({
   name: "${commandName}",
   description: "${description}",
   flags: [
@@ -49,6 +54,6 @@ ${flagsCode}
   },
 });
 
-export default ${commandName};
+export default ${varName};
 `;
 }

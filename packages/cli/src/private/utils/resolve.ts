@@ -30,11 +30,17 @@ export async function resolveOutput(args: {
   createOverrides?: Record<string, string>;
   modifyOverrides?: Record<string, string>;
   deleteOverrides?: Record<string, string>;
+  createExcludes?: Set<string>;
+  modifyExcludes?: Set<string>;
+  deleteExcludes?: Set<string>;
 }): Promise<RenderTask[]> {
   const { outputName, variables, outputsFolder } = args;
   const createOverrides = args.createOverrides ?? {};
   const modifyOverrides = args.modifyOverrides ?? {};
   const deleteOverrides = args.deleteOverrides ?? {};
+  const createExcludes = args.createExcludes ?? new Set<string>();
+  const modifyExcludes = args.modifyExcludes ?? new Set<string>();
+  const deleteExcludes = args.deleteExcludes ?? new Set<string>();
 
   const outputFolder = outputsFolder.append(`/${outputName}`);
   const outputPath = outputFolder.append("/instructions.json");
@@ -44,6 +50,8 @@ export async function resolveOutput(args: {
 
   // Own create files
   for (const file of instructions.output.create) {
+    if (createExcludes.has(file.name)) continue;
+
     let fileOutputPath = file.outputPath;
 
     if (is.defined(createOverrides[file.name])) {
@@ -60,6 +68,8 @@ export async function resolveOutput(args: {
 
   // Own modify files
   for (const file of instructions.output.modify) {
+    if (modifyExcludes.has(file.name)) continue;
+
     let fileOutputPath = file.outputPath;
 
     if (is.defined(modifyOverrides[file.name])) {
@@ -76,6 +86,8 @@ export async function resolveOutput(args: {
 
   // Own delete files
   for (const file of instructions.output.delete ?? []) {
+    if (deleteExcludes.has(file.name)) continue;
+
     let fileOutputPath = file.outputPath;
 
     if (is.defined(deleteOverrides[file.name])) {
@@ -102,6 +114,10 @@ export async function resolveOutput(args: {
       const childModifyOverrides = ref.outputPathOverride?.modify ?? {};
       const childDeleteOverrides = ref.outputPathOverride?.delete ?? {};
 
+      const childCreateExcludes = new Set(ref.exclude?.create ?? []);
+      const childModifyExcludes = new Set(ref.exclude?.modify ?? []);
+      const childDeleteExcludes = new Set(ref.exclude?.delete ?? []);
+
       const childTasks = await resolveOutput({
         outputName: ref.name,
         variables: subVariables,
@@ -109,6 +125,9 @@ export async function resolveOutput(args: {
         createOverrides: childCreateOverrides,
         modifyOverrides: childModifyOverrides,
         deleteOverrides: childDeleteOverrides,
+        createExcludes: childCreateExcludes,
+        modifyExcludes: childModifyExcludes,
+        deleteExcludes: childDeleteExcludes,
       });
 
       tasks.push(...childTasks);

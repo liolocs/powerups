@@ -392,6 +392,79 @@ test.case("info omits empty sections when template has no files, deps, or includ
   await testRoot.remove();
 });
 
+test.case("info hides excluded files from includes in file listing", async assert => {
+  await reset();
+
+  // Create child template with two create files: comp and test
+  await create.run({
+    subcommands: [],
+    flags: [
+      { flag: "--pack", value: "test-pkg" },
+      { flag: "--type", value: "multi-use" },
+      { flag: "--name", value: "exclude-child" },
+      { flag: "--description", value: "A child with two files" },
+      { flag: "--variables", value: "componentName" },
+      { flag: "--output", value: JSON.stringify({
+        create: [
+          { name: "comp", template: "comp.njk", outputPath: "src/{{componentName}}.tsx" },
+          { name: "test", template: "test.njk", outputPath: "src/{{componentName}}.spec.ts" },
+        ],
+        modify: [],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+
+  // Create parent template that includes the child and excludes "test"
+  await create.run({
+    subcommands: [],
+    flags: [
+      { flag: "--pack", value: "test-pkg" },
+      { flag: "--type", value: "multi-use" },
+      { flag: "--name", value: "exclude-parent" },
+      { flag: "--description", value: "A parent that excludes a child file" },
+      { flag: "--variables", value: "theme" },
+      { flag: "--output", value: JSON.stringify({
+        create: [],
+        modify: [],
+      }) },
+    ],
+    context: { root: testRoot },
+  });
+
+  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  await multiUseFolder.append("/exclude-parent/instructions.json").writeJSON({
+    name: "exclude-parent",
+    description: "A parent that excludes a child file",
+    variables: { required: ["theme"] },
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "exclude-child",
+        variables: { componentName: "Button", theme: "{{theme}}" },
+        exclude: { create: ["test"] },
+      },
+    ],
+  });
+
+  const output = await captureStdout(() => info.run({
+    subcommands: ["exclude-parent"],
+    flags: [],
+    context: { root: testRoot },
+  }));
+
+  // The non-excluded file should appear
+  assert(output).includes("src/{{componentName}}.tsx");
+  // The excluded file should NOT appear
+  assert(output.includes(".spec.ts")).false();
+  // The include itself should still be listed
+  assert(output).includes("## Includes");
+  assert(output).includes("exclude-child");
+
+  await testRoot.remove();
+});
+
 test.group("info errors", () => {
   test.case("should fail with missing_name when no name provided", async assert => {
     await reset();

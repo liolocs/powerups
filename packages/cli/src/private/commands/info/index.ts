@@ -41,12 +41,18 @@ async function collectInfo(args: {
   createOverrides?: Record<string, string>;
   modifyOverrides?: Record<string, string>;
   deleteOverrides?: Record<string, string>;
+  createExcludes?: Set<string>;
+  modifyExcludes?: Set<string>;
+  deleteExcludes?: Set<string>;
   fromInclude?: string | null;
 }): Promise<CollectedInfo> {
   const { outputName, outputsFolder, pathStack } = args;
   const createOverrides = args.createOverrides ?? {};
   const modifyOverrides = args.modifyOverrides ?? {};
   const deleteOverrides = args.deleteOverrides ?? {};
+  const createExcludes = args.createExcludes ?? new Set<string>();
+  const modifyExcludes = args.modifyExcludes ?? new Set<string>();
+  const deleteExcludes = args.deleteExcludes ?? new Set<string>();
   const fromInclude = args.fromInclude ?? null;
 
   const outputFolder = outputsFolder.append(`/${outputName}`);
@@ -59,6 +65,8 @@ async function collectInfo(args: {
 
   // Own create files
   for (const file of instructions.output.create) {
+    if (createExcludes.has(file.name)) continue;
+
     let fileOutputPath = file.outputPath;
     if (is.defined(createOverrides[file.name])) {
       fileOutputPath = createOverrides[file.name];
@@ -73,6 +81,8 @@ async function collectInfo(args: {
 
   // Own modify files
   for (const file of instructions.output.modify) {
+    if (modifyExcludes.has(file.name)) continue;
+
     let fileOutputPath = file.outputPath;
     if (is.defined(modifyOverrides[file.name])) {
       fileOutputPath = modifyOverrides[file.name];
@@ -87,6 +97,8 @@ async function collectInfo(args: {
 
   // Own delete files
   for (const file of instructions.output.delete ?? []) {
+    if (deleteExcludes.has(file.name)) continue;
+
     let fileOutputPath = file.outputPath;
     if (is.defined(deleteOverrides[file.name])) {
       fileOutputPath = deleteOverrides[file.name];
@@ -139,6 +151,10 @@ async function collectInfo(args: {
       const childModifyOverrides = ref.outputPathOverride?.modify ?? {};
       const childDeleteOverrides = ref.outputPathOverride?.delete ?? {};
 
+      const childCreateExcludes = new Set(ref.exclude?.create ?? []);
+      const childModifyExcludes = new Set(ref.exclude?.modify ?? []);
+      const childDeleteExcludes = new Set(ref.exclude?.delete ?? []);
+
       const childInfo = await collectInfo({
         outputName: ref.name,
         outputsFolder,
@@ -146,6 +162,9 @@ async function collectInfo(args: {
         createOverrides: childCreateOverrides,
         modifyOverrides: childModifyOverrides,
         deleteOverrides: childDeleteOverrides,
+        createExcludes: childCreateExcludes,
+        modifyExcludes: childModifyExcludes,
+        deleteExcludes: childDeleteExcludes,
         fromInclude: ref.name,
       });
 

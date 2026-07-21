@@ -1039,6 +1039,71 @@ test.group("apply composite output", () => {
 
       await testRoot.remove();
     });
+
+  test.case("should skip excluded files when using a powerup with includes",
+    async assert => {
+      await reset();
+
+      await createCmd.run({
+        subcommands: [],
+        flags: [
+      { flag: "--pack", value: "test-pkg" },
+          { flag: "--type", value: "multi-use" },
+          { flag: "--name", value: "exclude-child" },
+      { flag: "--description", value: "test description" },
+          { flag: "--variables", value: "componentName" },
+          { flag: "--output", value: JSON.stringify({
+            create: [
+              { name: "comp", template: "comp.njk", outputPath: ".test-output/{{componentName}}.tsx" },
+              { name: "test", template: "test.njk", outputPath: ".test-output/{{componentName}}.spec.ts" },
+            ],
+            modify: [],
+          }) },
+        ],
+        context: { root: testRoot },
+      });
+      await multiUseFolder.append("/exclude-child/template/comp.njk")
+        .write("const {{componentName}} = 1;");
+      await multiUseFolder.append("/exclude-child/template/test.njk")
+        .write("// test for {{componentName}}");
+
+      await createCmd.run({
+        subcommands: [],
+              flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "exclude-parent" },
+      { flag: "--description", value: "test description" },],
+        context: { root: testRoot },
+      });
+      await multiUseFolder.append("/exclude-parent/instructions.json").writeJSON({
+        name: "exclude-parent",
+      description: "test description",
+        variables: { required: [] },
+        intent: [],
+        output: { create: [], modify: [] },
+        includes: [
+          {
+            name: "exclude-child",
+            variables: { componentName: "Button" },
+            exclude: { create: ["test"] },
+          },
+        ],
+      });
+
+      await use.run({
+        subcommands: ["exclude-parent"],
+        flags: [],
+        context: { root: testRoot },
+      });
+
+      // The non-excluded file should exist
+      const compPath = testRoot.append("/.test-output/Button.tsx");
+      assert(await fs.exists(compPath)).true();
+
+      // The excluded file should NOT exist
+      const testPath = testRoot.append("/.test-output/Button.spec.ts");
+      assert(await fs.exists(testPath)).false();
+
+      await testRoot.remove();
+    });
 });
 
 test.group("apply modify", () => {

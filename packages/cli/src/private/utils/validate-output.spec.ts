@@ -591,3 +591,180 @@ test.case("should report an issue and skip recursion for a suboutput with unpars
   assert(issues[0]).includes("broken-child");
   await testRoot.remove();
 });
+
+test.case("should return no issues for valid exclude", async assert => {
+  await reset();
+  await writeOutput({
+    name: "exclude-valid-child",
+    instructions: {
+      name: "exclude-valid-child",
+      description: "test description",
+      variables: { required: [] },
+      intent: [],
+      output: {
+        create: [
+          { name: "comp", template: "c.njk", outputPath: "src/comp.ts" },
+          { name: "test", template: "t.njk", outputPath: "src/test.ts" },
+        ],
+        modify: [],
+      },
+    },
+  });
+  await writeOutput({
+    name: "exclude-valid-parent",
+    instructions: {
+      name: "exclude-valid-parent",
+      description: "test description",
+      variables: { required: [] },
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        {
+          name: "exclude-valid-child",
+          variables: {},
+          exclude: { create: ["test"] },
+        },
+      ],
+    },
+  });
+
+  const issues = await validateOutputTree({
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/exclude-valid-parent"),
+  });
+
+  assert(issues.length).equals(0);
+  await testRoot.remove();
+});
+
+test.case("should report an issue for an exclude file name not in suboutput", async assert => {
+  await reset();
+  await writeOutput({
+    name: "exclude-notfound-child",
+    instructions: {
+      name: "exclude-notfound-child",
+      description: "test description",
+      variables: { required: [] },
+      intent: [],
+      output: {
+        create: [{ name: "real", template: "r.njk", outputPath: "src/real.ts" }],
+        modify: [],
+      },
+    },
+  });
+  await writeOutput({
+    name: "exclude-notfound-parent",
+    instructions: {
+      name: "exclude-notfound-parent",
+      description: "test description",
+      variables: { required: [] },
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        {
+          name: "exclude-notfound-child",
+          variables: {},
+          exclude: { create: ["nonexistent"] },
+        },
+      ],
+    },
+  });
+
+  const issues = await validateOutputTree({
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/exclude-notfound-parent"),
+  });
+
+  assert(issues.some(i => i.includes("exclude file not found"))).true();
+  assert(issues.some(i => i.includes("nonexistent"))).true();
+  await testRoot.remove();
+});
+
+test.case("should report a conflict when a file is in both exclude and outputPathOverride", async assert => {
+  await reset();
+  await writeOutput({
+    name: "exclude-conflict-child",
+    instructions: {
+      name: "exclude-conflict-child",
+      description: "test description",
+      variables: { required: [] },
+      intent: [],
+      output: {
+        create: [{ name: "comp", template: "c.njk", outputPath: "src/comp.ts" }],
+        modify: [],
+      },
+    },
+  });
+  await writeOutput({
+    name: "exclude-conflict-parent",
+    instructions: {
+      name: "exclude-conflict-parent",
+      description: "test description",
+      variables: { required: [] },
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        {
+          name: "exclude-conflict-child",
+          variables: {},
+          outputPathOverride: { create: { comp: "src/overridden.ts" } },
+          exclude: { create: ["comp"] },
+        },
+      ],
+    },
+  });
+
+  const issues = await validateOutputTree({
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/exclude-conflict-parent"),
+  });
+
+  assert(issues.some(i => i.includes("conflict"))).true();
+  assert(issues.some(i => i.includes("comp"))).true();
+  assert(issues.some(i => i.includes("exclude"))).true();
+  assert(issues.some(i => i.includes("outputPathOverride.create"))).true();
+  await testRoot.remove();
+});
+
+test.case("should return no issues for exclude with delete kind", async assert => {
+  await reset();
+  await writeOutput({
+    name: "exclude-delete-valid-child",
+    instructions: {
+      name: "exclude-delete-valid-child",
+      description: "test description",
+      variables: { required: [] },
+      intent: [],
+      output: {
+        create: [],
+        modify: [],
+        delete: [{ name: "legacy", outputPath: "src/legacy.ts" }],
+      },
+    },
+  });
+  await writeOutput({
+    name: "exclude-delete-valid-parent",
+    instructions: {
+      name: "exclude-delete-valid-parent",
+      description: "test description",
+      variables: { required: [] },
+      intent: [],
+      output: { create: [], modify: [] },
+      includes: [
+        {
+          name: "exclude-delete-valid-child",
+          variables: {},
+          exclude: { delete: ["legacy"] },
+        },
+      ],
+    },
+  });
+
+  const issues = await validateOutputTree({
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/exclude-delete-valid-parent"),
+  });
+
+  assert(issues.length).equals(0);
+  await testRoot.remove();
+});

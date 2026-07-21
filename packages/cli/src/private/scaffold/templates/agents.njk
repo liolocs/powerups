@@ -131,6 +131,10 @@ export default ({ componentName, theme }: Record<string, string>) =>
       "outputPathOverride": {
         "create": { "originalName": "overridden/path" },
         "delete": { "oldFile": "overridden/path" }
+      },
+      "exclude": {
+        "create": ["unwantedFile"],
+        "delete": ["legacyFile"]
       }
     }
   ]
@@ -259,6 +263,11 @@ needs a types file with the same structure.
   `entityName`." The `outputPathOverride` map says: "write the subtemplate's
   `types` file to this path instead of its default."
 - Validate: `{{ CLI_CMD }} validate api-route`
+
+`exclude` — optionally skip specific files from an included subtemplate entirely.
+Each kind (`create`, `modify`, `delete`) is an array of file names to skip. A file
+in both `exclude` and `outputPathOverride` for the same kind is a validation error
+— you can't both redirect and skip the same file.
 
 #### When to extract subtemplates
 

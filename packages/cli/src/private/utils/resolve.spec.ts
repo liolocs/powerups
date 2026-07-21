@@ -564,3 +564,181 @@ test.case("should resolve delete tasks from nested suboutputs", async assert => 
   assert(tasks[1].outputPath).equals("old.ts");
   await testRoot.remove();
 });
+
+test.case("should exclude a create file from an included suboutput", async assert => {
+  await reset();
+  await writeOutput("exclude-child", {
+    name: "exclude-child",
+    description: "test description",
+    variables: { required: ["componentName"] },
+    intent: [],
+    output: {
+      create: [
+        { name: "foo", template: "foo.njk", outputPath: "src/{{componentName}}.ts" },
+        { name: "bar", template: "bar.njk", outputPath: "src/{{componentName}}.bar.ts" },
+      ],
+      modify: [],
+    },
+  });
+  await writeOutput("exclude-parent", {
+    name: "exclude-parent",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "exclude-child",
+        variables: { componentName: "Button" },
+        exclude: { create: ["bar"] },
+      },
+    ],
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "exclude-parent",
+    variables: {},
+    outputsFolder: multiUseFolder,
+  });
+
+  assert(tasks.length).equals(1);
+  assert(tasks[0].outputPath).equals("src/{{componentName}}.ts");
+  assert(tasks.some(t => t.outputPath.includes(".bar."))).false();
+  await testRoot.remove();
+});
+
+test.case("should exclude a modify file from an included suboutput", async assert => {
+  await reset();
+  await writeOutput("exclude-modify-child", {
+    name: "exclude-modify-child",
+    description: "test description",
+    variables: { required: ["name"] },
+    intent: [],
+    output: {
+      create: [],
+      modify: [
+        { name: "wire", template: "wire.json", outputPath: "src/index.ts" },
+        { name: "config", template: "config.json", outputPath: "src/config.ts" },
+      ],
+    },
+  });
+  await writeOutput("exclude-modify-parent", {
+    name: "exclude-modify-parent",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "exclude-modify-child",
+        variables: { name: "User" },
+        exclude: { modify: ["config"] },
+      },
+    ],
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "exclude-modify-parent",
+    variables: {},
+    outputsFolder: multiUseFolder,
+  });
+
+  assert(tasks.length).equals(1);
+  assert(tasks[0].outputPath).equals("src/index.ts");
+  await testRoot.remove();
+});
+
+test.case("should exclude a delete file from an included suboutput", async assert => {
+  await reset();
+  await writeOutput("exclude-delete-child", {
+    name: "exclude-delete-child",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    output: {
+      create: [{ name: "comp", template: "c.njk", outputPath: "src/comp.ts" }],
+      modify: [],
+      delete: [
+        { name: "old", outputPath: "src/old.ts" },
+        { name: "legacy", outputPath: "src/legacy.ts" },
+      ],
+    },
+  });
+  await writeOutput("exclude-delete-parent", {
+    name: "exclude-delete-parent",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "exclude-delete-child",
+        variables: {},
+        exclude: { delete: ["legacy"] },
+      },
+    ],
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "exclude-delete-parent",
+    variables: {},
+    outputsFolder: multiUseFolder,
+  });
+
+  assert(tasks.length).equals(2);
+  assert(tasks[0].kind).equals("create");
+  assert(tasks[1].kind).equals("delete");
+  assert(tasks[1].outputPath).equals("src/old.ts");
+  assert(tasks.some(t => t.outputPath === "src/legacy.ts")).false();
+  await testRoot.remove();
+});
+
+test.case("should not cascade excludes to nested suboutputs", async assert => {
+  await reset();
+  await writeOutput("exclude-grandchild", {
+    name: "exclude-grandchild",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    output: {
+      create: [{ name: "f", template: "f.njk", outputPath: "grandchild.ts" }],
+      modify: [],
+    },
+  });
+  await writeOutput("exclude-cascade-child", {
+    name: "exclude-cascade-child",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    output: {
+      create: [{ name: "f", template: "f.njk", outputPath: "child.ts" }],
+      modify: [],
+    },
+    includes: [{ name: "exclude-grandchild", variables: {} }],
+  });
+  await writeOutput("exclude-cascade-parent", {
+    name: "exclude-cascade-parent",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "exclude-cascade-child",
+        variables: {},
+        exclude: { create: ["f"] },
+      },
+    ],
+  });
+
+  const tasks = await resolveOutput({
+    outputName: "exclude-cascade-parent",
+    variables: {},
+    outputsFolder: multiUseFolder,
+  });
+
+  // Child's "f" is excluded, but grandchild's "f" is still present
+  assert(tasks.length).equals(1);
+  assert(tasks[0].outputPath).equals("grandchild.ts");
+  await testRoot.remove();
+});

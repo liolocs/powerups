@@ -31,6 +31,11 @@ const suboutputSchema = p({
     modify: p.record(p.string, p.string).optional(),
     delete: p.record(p.string, p.string).optional(),
   }).optional(),
+  exclude: p({
+    create: p.array(p.string).optional(),
+    modify: p.array(p.string).optional(),
+    delete: p.array(p.string).optional(),
+  }).optional(),
 });
 
 const packageDependencyGroupSchema = p({

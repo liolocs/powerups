@@ -469,3 +469,64 @@ test.case("should reject instructions with non-string description", async assert
   }
   assert(threw).true();
 });
+
+test.case("should parse includes with exclude", async assert => {
+  const result = instructionsSchema.parse({
+    name: "parent",
+    description: "test description",
+    variables: { required: ["theme"] },
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "child",
+        variables: { componentName: "Button" },
+        exclude: { create: ["baz"] },
+      },
+    ],
+  });
+
+  assert(result.includes![0].exclude).defined();
+  assert(result.includes![0].exclude!.create![0]).equals("baz");
+  assert(result.includes![0].exclude!.modify).undefined();
+  assert(result.includes![0].exclude!.delete).undefined();
+});
+
+test.case("should parse includes with exclude for all kinds", async assert => {
+  const result = instructionsSchema.parse({
+    name: "parent",
+    description: "test description",
+    variables: { required: ["theme"] },
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "child",
+        variables: { componentName: "Button" },
+        exclude: { create: ["a"], modify: ["b"], delete: ["c"] },
+      },
+    ],
+  });
+
+  assert(result.includes![0].exclude!.create![0]).equals("a");
+  assert(result.includes![0].exclude!.modify![0]).equals("b");
+  assert(result.includes![0].exclude!.delete![0]).equals("c");
+});
+
+test.case("should parse includes without exclude (backward compat)", async assert => {
+  const result = instructionsSchema.parse({
+    name: "parent",
+    description: "test description",
+    variables: { required: ["theme"] },
+    intent: [],
+    output: { create: [], modify: [] },
+    includes: [
+      {
+        name: "child",
+        variables: { componentName: "Button" },
+      },
+    ],
+  });
+
+  assert(result.includes![0].exclude).undefined();
+});

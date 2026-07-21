@@ -128,6 +128,7 @@ test.case("should render multi-use vs single-use content", async assert => {
   assert(content.includes("Multi-use vs Single-use")).equals(true);
   assert(content.includes("Modify templates")).equals(true);
   assert(content.includes("outputPathOverride")).equals(true);
+  assert(content.includes("exclude")).equals(true);
   assert(content.includes("doctor")).equals(true);
   assert(content.includes("Skills")).equals(true);
   assert(content.includes("brainstorm")).equals(true);

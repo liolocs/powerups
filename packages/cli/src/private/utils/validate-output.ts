@@ -129,7 +129,59 @@ export async function validateOutputTree(args: {
       }
     }
 
-    // g. Recurse
+    // g. Exclude file names must match a file name in suboutput's output
+    if (is.defined(ref.exclude)) {
+      if (is.defined(ref.exclude.create)) {
+        for (const fileName of ref.exclude.create) {
+          const found = subInstructions.output.create.find(
+            f => f.name === fileName,
+          );
+          if (is.falsy(found)) {
+            issues.push(`exclude file not found: ${fileName} in suboutput: ${ref.name}`);
+          }
+        }
+      }
+      if (is.defined(ref.exclude.modify)) {
+        for (const fileName of ref.exclude.modify) {
+          const found = subInstructions.output.modify.find(
+            f => f.name === fileName,
+          );
+          if (is.falsy(found)) {
+            issues.push(`exclude file not found: ${fileName} in suboutput: ${ref.name}`);
+          }
+        }
+      }
+      if (is.defined(ref.exclude.delete)) {
+        for (const fileName of ref.exclude.delete) {
+          const found = subInstructions.output.delete?.find(
+            f => f.name === fileName,
+          );
+          if (is.falsy(found)) {
+            issues.push(`exclude file not found: ${fileName} in suboutput: ${ref.name}`);
+          }
+        }
+      }
+    }
+
+    // h. Exclude/override conflict: same file name in both exclude and outputPathOverride
+    const createOverrideNames = Object.keys(ref.outputPathOverride?.create ?? {});
+    const modifyOverrideNames = Object.keys(ref.outputPathOverride?.modify ?? {});
+    const deleteOverrideNames = Object.keys(ref.outputPathOverride?.delete ?? {});
+    const createExcludeNames = ref.exclude?.create ?? [];
+    const modifyExcludeNames = ref.exclude?.modify ?? [];
+    const deleteExcludeNames = ref.exclude?.delete ?? [];
+
+    for (const name of createOverrideNames.filter(n => createExcludeNames.includes(n))) {
+      issues.push(`conflict: "${name}" in both exclude and outputPathOverride.create for suboutput: ${ref.name}`);
+    }
+    for (const name of modifyOverrideNames.filter(n => modifyExcludeNames.includes(n))) {
+      issues.push(`conflict: "${name}" in both exclude and outputPathOverride.modify for suboutput: ${ref.name}`);
+    }
+    for (const name of deleteOverrideNames.filter(n => deleteExcludeNames.includes(n))) {
+      issues.push(`conflict: "${name}" in both exclude and outputPathOverride.delete for suboutput: ${ref.name}`);
+    }
+
+    // i. Recurse
     const childIssues = await validateOutputTree({
       rootOutputDir,
       currentOutputDir: suboutputDir,

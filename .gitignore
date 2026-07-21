@@ -4,4 +4,4 @@ node_modules
 .worktrees/
 tmp/
 lib/
-docs/
+docs/.pi-subagents/

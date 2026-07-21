@@ -8,12 +8,23 @@ import { CreateErrorCode } from "#errors/createErrors";
 import captureStdout, {
   captureStdoutOrError,
 } from "#test-utils/capture-stdout";
-import { MAIN_FOLDER, ACTIVE_FOLDER, MULTI_USE_FOLDER } from "#constants";
+import {
+  MAIN_FOLDER,
+  INTERNAL_FOLDER,
+  SRC_FOLDER,
+  ACTIVE_FOLDER,
+  MULTI_USE_FOLDER,
+  SINGLE_USE_FOLDER,
+  PACKAGE_FILE,
+  KEYWORD_PACKAGE,
+  CONFIG_FILE,
+} from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const multiUseFolder: FileRef = mainFolder.append(`/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
+const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
 
 const createCmd = create;
 
@@ -21,6 +32,24 @@ async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
+  await fs.create(internalFolder);
+  // Create test package
+  const pkgDir = internalFolder.append("/test-pkg");
+  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
+  await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
+  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+    name: "test-pkg",
+    version: "1.0.0",
+    description: "test",
+    keywords: [KEYWORD_PACKAGE],
+    powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+  });
+  // Create config with test-pkg listed
+  await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
+    harness: "claude",
+    packages: ["test-pkg"],
+  });
 }
 
 async function outputPath(name: string): Promise<FileRef> {
@@ -33,6 +62,7 @@ test.case("validate --name reports a single valid template", async assert => {
   await createCmd.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "ui-component" },
       { flag: "--description", value: "test description" }],
@@ -78,6 +108,7 @@ test.group("validate errors", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "missing-template" },
       { flag: "--description", value: "test description" },
@@ -122,6 +153,7 @@ test.group("validate errors", () => {
     await createCmd.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "bad-parent" },
       { flag: "--description", value: "test description" }],

@@ -14,8 +14,14 @@ import path from "node:path";
 import { readMetrics } from "#utils/metrics";
 import {
   MAIN_FOLDER,
+  INTERNAL_FOLDER,
+  SRC_FOLDER,
   ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
+  SINGLE_USE_FOLDER,
+  PACKAGE_FILE,
+  KEYWORD_PACKAGE,
+  CONFIG_FILE,
 } from "#constants";
 
 const execAsync = promisify(exec);
@@ -23,7 +29,8 @@ const execAsync = promisify(exec);
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const multiUseFolder: FileRef = mainFolder.append(`/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
+const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
 
 const createCmd = create;
 
@@ -49,7 +56,24 @@ async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(multiUseFolder);
+  await fs.create(internalFolder);
+  // Create test package
+  const pkgDir = internalFolder.append("/test-pkg");
+  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
+  await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
+  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+    name: "test-pkg",
+    version: "1.0.0",
+    description: "test",
+    keywords: [KEYWORD_PACKAGE],
+    powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+  });
+  // Create config with test-pkg listed
+  await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
+    harness: "claude",
+    packages: ["test-pkg"],
+  });
   await gitInit(testRoot);
 }
 
@@ -60,6 +84,7 @@ test.case("apply writes rendered .njk template files to outputPath",
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "ui-component" },
       { flag: "--description", value: "test description" },
@@ -99,6 +124,7 @@ test.case("apply writes rendered .ts template files to outputPath",
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "ts-output" },
       { flag: "--description", value: "test description" },
@@ -146,6 +172,7 @@ test.case("apply with --overwrite overwrites existing destination files", async 
   await createCmd.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "overwrite-test" },
       { flag: "--description", value: "test description" },
@@ -226,7 +253,7 @@ test.group("apply errors", () => {
 
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--type", value: "multi-use" }, { flag: "--name", value: "real" },
+            flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "real" },
       { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
@@ -253,6 +280,7 @@ test.group("apply errors", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "needs-vars" },
       { flag: "--description", value: "test description" },
@@ -298,6 +326,7 @@ test.group("apply errors", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "missing-tmpl" },
       { flag: "--description", value: "test description" },
@@ -342,6 +371,7 @@ test.group("apply errors", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "no-target" },
       { flag: "--description", value: "test description" },
@@ -382,6 +412,7 @@ test.group("apply errors", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "anchor-missing" },
       { flag: "--description", value: "test description" },
@@ -424,6 +455,7 @@ test.group("apply errors", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "anchor-ambiguous" },
       { flag: "--description", value: "test description" },
@@ -471,6 +503,7 @@ test.group("apply errors", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "no-overwrite-test" },
       { flag: "--description", value: "test description" },
@@ -513,13 +546,29 @@ test.group("apply errors", () => {
     const noGitRoot = fs.ref(path.join(tmpdir(), `powers-test-nogit-${randomBytes(4).toString("hex")}`));
     await fs.create(noGitRoot);
     await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
-    await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`));
+    // Create test-pkg package in noGitRoot
+    const noGitPkgDir = noGitRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg`);
+    const noGitSrcActive = noGitPkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+    await fs.create(noGitSrcActive.append(`/${MULTI_USE_FOLDER}`));
+    await fs.create(noGitSrcActive.append(`/${SINGLE_USE_FOLDER}`));
+    await noGitPkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+      name: "test-pkg",
+      version: "1.0.0",
+      description: "test",
+      keywords: [KEYWORD_PACKAGE],
+      powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+    });
+    await noGitRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({
+      harness: "claude",
+      packages: ["test-pkg"],
+    });
 
-    const noGitTemplateFolder = noGitRoot.append(`/${MAIN_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+    const noGitTemplateFolder = noGitSrcActive.append(`/${MULTI_USE_FOLDER}`);
 
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "no-git" },
       { flag: "--description", value: "test description" },
@@ -562,6 +611,7 @@ test.group("apply dry-run", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "dry-run-test" },
       { flag: "--description", value: "test description" },
@@ -609,6 +659,7 @@ test.group("apply dry-run", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "dry-modify" },
       { flag: "--description", value: "test description" },
@@ -652,6 +703,7 @@ test.group("apply composite output", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "shadcn-button" },
       { flag: "--description", value: "test description" },
@@ -674,6 +726,7 @@ test.group("apply composite output", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "shadcn-all" },
       { flag: "--description", value: "test description" },
@@ -751,6 +804,7 @@ test.group("apply composite output", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "dry-child" },
       { flag: "--description", value: "test description" },
@@ -772,6 +826,7 @@ test.group("apply composite output", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "dry-parent" },
       { flag: "--description", value: "test description" },
@@ -828,7 +883,7 @@ test.group("apply composite output", () => {
 
       await createCmd.run({
         subcommands: [],
-        flags: [{ flag: "--type", value: "multi-use" }, { flag: "--name", value: "bad-parent" },
+              flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "bad-parent" },
       { flag: "--description", value: "test description" },],
         context: { root: testRoot },
       });
@@ -866,6 +921,7 @@ test.group("apply composite output", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "override-child" },
       { flag: "--description", value: "test description" },
@@ -886,7 +942,7 @@ test.group("apply composite output", () => {
 
       await createCmd.run({
         subcommands: [],
-        flags: [{ flag: "--type", value: "multi-use" }, { flag: "--name", value: "override-parent" },
+              flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "override-parent" },
       { flag: "--description", value: "test description" },],
         context: { root: testRoot },
       });
@@ -929,6 +985,7 @@ test.group("apply composite output", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "dual-child" },
       { flag: "--description", value: "test description" },
@@ -949,7 +1006,7 @@ test.group("apply composite output", () => {
 
       await createCmd.run({
         subcommands: [],
-        flags: [{ flag: "--type", value: "multi-use" }, { flag: "--name", value: "dual-parent" },
+              flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "dual-parent" },
       { flag: "--description", value: "test description" },],
         context: { root: testRoot },
       });
@@ -996,6 +1053,7 @@ test.group("apply modify", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "modify-test" },
       { flag: "--description", value: "test description" },
@@ -1037,6 +1095,7 @@ test.group("apply modify", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "njk-modify" },
       { flag: "--description", value: "test description" },
@@ -1079,6 +1138,7 @@ test.group("apply metrics", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "metrics-test" },
       { flag: "--description", value: "test description" },
@@ -1119,6 +1179,7 @@ test.group("apply metrics", () => {
       await createCmd.run({
         subcommands: [],
         flags: [
+      { flag: "--pack", value: "test-pkg" },
           { flag: "--type", value: "multi-use" },
           { flag: "--name", value: "dry-metrics-test" },
       { flag: "--description", value: "test description" },
@@ -1167,6 +1228,7 @@ test.group("apply packageDependencies", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "dep-feature" },
       { flag: "--description", value: "test description" },
@@ -1202,6 +1264,7 @@ test.group("apply packageDependencies", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "no-dep-feature" },
       { flag: "--description", value: "test description" },
@@ -1238,6 +1301,7 @@ test.group("apply packageDependencies", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "real-dep" },
       { flag: "--description", value: "test description" },
@@ -1276,6 +1340,7 @@ test.group("apply packageDependencies", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "no-lock-dep" },
       { flag: "--description", value: "test description" },
@@ -1317,6 +1382,7 @@ test.group("apply rollback", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "rollback-test" },
       { flag: "--description", value: "test description" },
@@ -1367,6 +1433,7 @@ test.group("apply delete", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "delete-test" },
       { flag: "--description", value: "test description" },
@@ -1406,6 +1473,7 @@ test.group("apply delete", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "mixed-ops" },
       { flag: "--description", value: "test description" },
@@ -1455,6 +1523,7 @@ test.group("apply delete", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "delete-missing" },
       { flag: "--description", value: "test description" },
@@ -1493,6 +1562,7 @@ test.group("apply delete", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "failing-child" },
       { flag: "--description", value: "test description" },
@@ -1516,7 +1586,7 @@ test.group("apply delete", () => {
     // and continues instead of aborting, so the delete is still applied.
     await createCmd.run({
       subcommands: [],
-      flags: [{ flag: "--type", value: "multi-use" }, { flag: "--name", value: "atomic-delete-parent" },
+            flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "atomic-delete-parent" },
       { flag: "--description", value: "test description" },],
       context: { root: testRoot },
     });
@@ -1562,6 +1632,7 @@ test.group("apply delete dry-run", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "dry-delete" },
       { flag: "--description", value: "test description" },
@@ -1600,6 +1671,7 @@ test.group("apply delete dry-run", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "dry-mixed" },
       { flag: "--description", value: "test description" },

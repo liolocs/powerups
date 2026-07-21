@@ -5,16 +5,21 @@ import runtime from "@rcompat/runtime";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { checkOutput } from "#utils/check-output";
+import { readConfig } from "#utils/config";
 import { modificationArraySchema } from "#schemas/modification";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
 import doctorErrors from "#errors/doctorErrors";
 import {
   CLI_NAME,
   MAIN_FOLDER,
+  INTERNAL_FOLDER,
+  SRC_FOLDER,
   ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   TEMPLATE_FOLDER,
+  PACKAGE_FILE,
+  GLOBAL_INTERNAL_PATH,
 } from "#constants";
 
 const execAsync = promisify(exec);
@@ -76,124 +81,166 @@ const doctor = new Command({
       throw doctorErrors.not_initialized();
     }
 
-    const activeFolder = mainFolder.append(`/${ACTIVE_FOLDER}`);
+    const internalFolder = mainFolder.append(`/${INTERNAL_FOLDER}`);
     let multiUseCount = 0;
     let singleUseCount = 0;
 
-    for (const [type, folder] of [
-      ["multi-use", MULTI_USE_FOLDER],
-      ["single-use", SINGLE_USE_FOLDER],
-    ] as const) {
-      const typeFolder = activeFolder.append(`/${folder}`);
-      if (!(await fs.exists(typeFolder))) {
-        issues.push({
-          level: "WARN",
-          type,
-          name: "structure",
-          message: `No ${type} folder found`,
-        });
-        continue;
-      }
-
-      // 3. Per-type validation
-      const outputFiles = await typeFolder.files({
-        recursive: true,
-        filter: (file) => file.name === "instructions.json",
+    if (!(await fs.exists(internalFolder))) {
+      issues.push({
+        level: "WARN",
+        type: "structure",
+        name: "internal",
+        message: `No ${INTERNAL_FOLDER} folder found`,
       });
-
-      if (type === "multi-use") multiUseCount = outputFiles.length;
-      else singleUseCount = outputFiles.length;
-
-      for (const outputFile of outputFiles) {
-        const name = outputFile.directory.name;
-
-        // Run standard checks (schema, templates, suboutput tree)
-        const checkIssues = await checkOutput({
-          rootOutputDir: typeFolder,
-          currentOutputDir: outputFile.directory,
-        });
-        for (const issue of checkIssues) {
-          issues.push({ level: "ERROR", type, name, message: issue });
+    } else {
+      // Scan each package
+      const packageDirs = await internalFolder.dirs();
+      for (const packageDir of packageDirs) {
+        const pkgJsonPath = packageDir.append(`/${PACKAGE_FILE}`);
+        if (!(await fs.exists(pkgJsonPath))) {
+          issues.push({
+            level: "WARN",
+            type: "package",
+            name: packageDir.name,
+            message: "Missing package.json",
+          });
+          continue;
         }
 
-        // Additional: orphaned files check
+        // Validate package.json is parseable
         try {
-          const instructions: Instructions = instructionsSchema.parse(
-            await outputFile.json(),
-          );
-          const referencedFiles = new Set<string>();
-          referencedFiles.add("instructions.json");
-          for (const f of instructions.output.create) {
-            referencedFiles.add(f.template);
-          }
-          for (const f of instructions.output.modify) {
-            referencedFiles.add(f.template);
-          }
-
-          // List all files in the output directory (non-recursive top level).
-          // Directories (e.g. the `template/` subfolder) are excluded by
-          // `.files()`, so stray files next to instructions.json are caught
-          // here without the template directory itself being flagged.
-          const allFiles = await outputFile.directory.files();
-          for (const file of allFiles) {
-            if (!referencedFiles.has(file.name)) {
-              issues.push({
-                level: "WARN",
-                type,
-                name,
-                message: `Orphaned file: ${file.name}`,
-              });
-            }
-          }
-
-          // List files inside the `template/` subfolder — any template file
-          // not referenced by instructions.json is orphaned.
-          const templateDir = outputFile.directory.append(`/${TEMPLATE_FOLDER}`);
-          if (await fs.exists(templateDir)) {
-            const templateFiles = await templateDir.files();
-            for (const file of templateFiles) {
-              if (!referencedFiles.has(file.name)) {
-                issues.push({
-                  level: "WARN",
-                  type,
-                  name,
-                  message: `Orphaned file: ${TEMPLATE_FOLDER}/${file.name}`,
-                });
-              }
-            }
-          }
+          await pkgJsonPath.json();
         } catch {
-          // If we can't parse, the checkIssues already captured it
+          issues.push({
+            level: "ERROR",
+            type: "package",
+            name: packageDir.name,
+            message: "Invalid package.json",
+          });
+          continue;
         }
 
-        // Additional: modify template parseability (.json only)
-        try {
-          const instructions: Instructions = instructionsSchema.parse(
-            await outputFile.json(),
-          );
-          for (const modifyEntry of instructions.output.modify) {
-            const modTemplatePath = outputFile.directory.append(
-              `/${TEMPLATE_FOLDER}/${modifyEntry.template}`,
-            );
-            if (!(await fs.exists(modTemplatePath))) continue;
-            const ext = modTemplatePath.extension;
-            if (ext !== ".json") continue;
+        // Scan powers in this package
+        const activeFolder = packageDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+        for (const [type, folder] of [
+          ["multi-use", MULTI_USE_FOLDER],
+          ["single-use", SINGLE_USE_FOLDER],
+        ] as const) {
+          const typeFolder = activeFolder.append(`/${folder}`);
+          if (!(await fs.exists(typeFolder))) continue;
 
+          const outputFiles = await typeFolder.files({
+            recursive: true,
+            filter: (file) => file.name === "instructions.json",
+          });
+
+          if (type === "multi-use") multiUseCount += outputFiles.length;
+          else singleUseCount += outputFiles.length;
+
+          for (const outputFile of outputFiles) {
+            const powerName = outputFile.directory.name;
+            const label = `${packageDir.name}:${powerName}`;
+
+            // Run standard checks (schema, templates, suboutput tree)
+            const checkIssues = await checkOutput({
+              rootOutputDir: typeFolder,
+              currentOutputDir: outputFile.directory,
+            });
+            for (const issue of checkIssues) {
+              issues.push({ level: "ERROR", type, name: label, message: issue });
+            }
+
+            // Additional: orphaned files check
             try {
-              const content = await modTemplatePath.text();
-              const parsed = JSON.parse(content);
-              modificationArraySchema.parse(parsed);
-            } catch (parseErr) {
-              issues.push({
-                level: "ERROR",
-                type,
-                name,
-                message: `Invalid modify template: ${modifyEntry.template} (${parseErr instanceof Error ? parseErr.message : "parse error"})`,
-              });
+              const instructions: Instructions = instructionsSchema.parse(
+                await outputFile.json(),
+              );
+              const referencedFiles = new Set<string>();
+              referencedFiles.add("instructions.json");
+              for (const f of instructions.output.create) {
+                referencedFiles.add(f.template);
+              }
+              for (const f of instructions.output.modify) {
+                referencedFiles.add(f.template);
+              }
+
+              const allFiles = await outputFile.directory.files();
+              for (const file of allFiles) {
+                if (!referencedFiles.has(file.name)) {
+                  issues.push({
+                    level: "WARN",
+                    type,
+                    name: label,
+                    message: `Orphaned file: ${file.name}`,
+                  });
+                }
+              }
+
+              const templateDir = outputFile.directory.append(`/${TEMPLATE_FOLDER}`);
+              if (await fs.exists(templateDir)) {
+                const templateFiles = await templateDir.files();
+                for (const file of templateFiles) {
+                  if (!referencedFiles.has(file.name)) {
+                    issues.push({
+                      level: "WARN",
+                      type,
+                      name: label,
+                      message: `Orphaned file: ${TEMPLATE_FOLDER}/${file.name}`,
+                    });
+                  }
+                }
+              }
+            } catch {
+              // If we can't parse, the checkIssues already captured it
+            }
+
+            // Additional: modify template parseability (.json only)
+            try {
+              const instructions: Instructions = instructionsSchema.parse(
+                await outputFile.json(),
+              );
+              for (const modifyEntry of instructions.output.modify) {
+                const modTemplatePath = outputFile.directory.append(
+                  `/${TEMPLATE_FOLDER}/${modifyEntry.template}`,
+                );
+                if (!(await fs.exists(modTemplatePath))) continue;
+                const ext = modTemplatePath.extension;
+                if (ext !== ".json") continue;
+
+                try {
+                  const content = await modTemplatePath.text();
+                  const parsed = JSON.parse(content);
+                  modificationArraySchema.parse(parsed);
+                } catch (parseErr) {
+                  issues.push({
+                    level: "ERROR",
+                    type,
+                    name: label,
+                    message: `Invalid modify template: ${modifyEntry.template} (${parseErr instanceof Error ? parseErr.message : "parse error"})`,
+                  });
+                }
+              }
+            } catch {
+              // Already captured by checkIssues
             }
           }
-        } catch {
-          // Already captured by checkIssues
+        }
+      }
+    }
+
+    // 3.5 Config packages validation — verify each config-listed package resolves
+    const config = await readConfig(root);
+    if (config !== null) {
+      for (const packageName of config.packages) {
+        const localDir = root.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`);
+        const globalDir = fs.ref(`${GLOBAL_INTERNAL_PATH}/${packageName}`);
+        if (!(await fs.exists(localDir)) && !(await fs.exists(globalDir))) {
+          issues.push({
+            level: "WARN",
+            type: "config",
+            name: packageName,
+            message: `Package "${packageName}" listed in config but not found on disk (local or global)`,
+          });
         }
       }
     }

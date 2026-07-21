@@ -10,8 +10,6 @@ import { resolvePower } from "#utils/resolve-power";
 import { instructionsSchema } from "#schemas/instruction";
 import {
   MAIN_FOLDER,
-  ACTIVE_FOLDER,
-  powerFolderMap,
   type PowerType,
 } from "#constants";
 
@@ -24,6 +22,12 @@ const validate = new Command({
       long: "type",
       short: "t",
       description: "Power type (multi-use or single-use) for disambiguation",
+    },
+    {
+      name: "pack",
+      long: "pack",
+      short: "pk",
+      description: "Package name to validate powers in",
     },
   ],
   subcommands: [],
@@ -47,9 +51,13 @@ const validate = new Command({
       ? (flags.type as PowerType)
       : undefined;
     const resolved = await resolvePower(root, name, typeFlag);
-    const typeFolder = mainFolder.append(
-      `/${ACTIVE_FOLDER}/${powerFolderMap[resolved.type]}`,
-    );
+
+    // If --pack is provided, verify the power is in the specified package
+    if (is.defined(flags.pack) && resolved.packageName !== flags.pack) {
+      throw validate_errors.invalid(name, `power is in package "${resolved.packageName}", not "${flags.pack}"`);
+    }
+
+    const typeFolder = resolved.folder.up(1);
 
     // Validate the power itself
     const issues = await checkOutput({

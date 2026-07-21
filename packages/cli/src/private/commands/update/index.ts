@@ -57,7 +57,11 @@ const update = new Command({
     // Persist the harness override only after scaffold succeeds, so an
     // invalid harness value never gets written to config.
     if (flags.harness !== undefined) {
-      await writeConfig(root, { harness: result.harness });
+      const existingConfig = await readConfig(root);
+      await writeConfig(root, {
+        harness: result.harness,
+        packages: existingConfig?.packages ?? [],
+      });
     }
 
     const green = cli.fg.green;

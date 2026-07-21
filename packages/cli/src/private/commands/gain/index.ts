@@ -83,7 +83,7 @@ const gain = new Command({
       });
 
       // Persist the resolved harness so `powers update` can reuse it
-      await writeConfig(root, { harness: result.harness });
+      await writeConfig(root, { harness: result.harness, packages: [] });
 
       const green = cli.fg.green;
       const dim = cli.fg.dim;

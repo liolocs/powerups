@@ -2,35 +2,42 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import create_errors from "#errors/createErrors";
 import validate_errors from "#errors/validateErrors";
 import { checkOutput } from "#utils/check-output";
-import { resolvePower } from "#utils/resolve-power";
+import { resolvePowerUp } from "#utils/resolve-powerup";
 import { instructionsSchema } from "#schemas/instruction";
 import {
+  CAPITALIZED_SINGLULAR_CLI_NAME,
+  CLI_NAME,
   MAIN_FOLDER,
-  type PowerType,
+  SINGULAR_NAME,
+  type PowerUpType,
 } from "#constants";
 
 const validate = new Command({
   name: "validate",
-  description: "Validate a power and its sub-powers",
+
+  description: `Validate a ${SINGULAR_NAME} and its included ${CLI_NAME}`,
+
   flags: [
     {
       name: "type",
       long: "type",
       short: "t",
-      description: "Power type (multi-use or single-use) for disambiguation",
+      description: `${CAPITALIZED_SINGLULAR_CLI_NAME} type (multi-use or single-use) for disambiguation`,
     },
     {
       name: "pack",
       long: "pack",
       short: "pk",
-      description: "Package name to validate powers in",
+      description: `Package name that contains ${CLI_NAME} to validate`,
     },
   ],
+
   subcommands: [],
+
   action: async ({ subcommands, flags, context }) => {
     // Name is a required positional argument
     const name = subcommands?.[0];
@@ -46,20 +53,20 @@ const validate = new Command({
       throw create_errors.dry_folder_not_found();
     }
 
-    // Resolve power via resolvePower (searches both folders)
+    // Resolve powerup via resolvePowerUp (searches both folders)
     const typeFlag = is.defined(flags.type)
-      ? (flags.type as PowerType)
+      ? (flags.type as PowerUpType)
       : undefined;
-    const resolved = await resolvePower(root, name, typeFlag);
+    const resolved = await resolvePowerUp(root, name, typeFlag);
 
-    // If --pack is provided, verify the power is in the specified package
+    // If --pack is provided, verify the powerup is in the specified package
     if (is.defined(flags.pack) && resolved.packageName !== flags.pack) {
-      throw validate_errors.invalid(name, `power is in package "${resolved.packageName}", not "${flags.pack}"`);
+      throw validate_errors.invalid(name, `${SINGULAR_NAME} is in package "${resolved.packageName}", not "${flags.pack}"`);
     }
 
     const typeFolder = resolved.folder.up(1);
 
-    // Validate the power itself
+    // Validate the powerup itself
     const issues = await checkOutput({
       rootOutputDir: typeFolder,
       currentOutputDir: resolved.folder,
@@ -69,7 +76,7 @@ const validate = new Command({
       throw validate_errors.invalid(name, issues.join("; "));
     }
 
-    // Recursively validate includes/sub-powers
+    // Recursively validate included powerups
     const outputPath = resolved.folder.append("/instructions.json");
     const instructions = instructionsSchema.parse(await outputPath.json());
 
@@ -80,7 +87,7 @@ const validate = new Command({
         const subPowerFolder = typeFolder.append(`/${include.name}`);
 
         if (!(await fs.exists(subPowerFolder))) {
-          throw validate_errors.invalid(include.name, "sub-power folder not found");
+          throw validate_errors.invalid(include.name, `sub-${SINGULAR_NAME} folder not found`);
         }
 
         const subIssues = await checkOutput({
@@ -97,7 +104,7 @@ const validate = new Command({
     }
 
     if (subPowerCount > 0) {
-      cli.print(`${name} is valid (including ${subPowerCount} sub-power(s)).\n`);
+      cli.print(`${name} is valid (including ${subPowerCount} sub-${SINGULAR_NAME}(s)).\n`);
     } else {
       cli.print(`${name} is valid.\n`);
     }

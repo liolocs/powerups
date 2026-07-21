@@ -2,15 +2,17 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import info_errors from "#errors/infoErrors";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
 import { toKebabCase } from "#utils/variables";
-import { resolvePower } from "#utils/resolve-power";
+import { resolvePowerUp } from "#utils/resolve-powerup";
 import {
+  CAPITALIZED_SINGLULAR_CLI_NAME,
   CLI_CMD,
   MAIN_FOLDER,
-  type PowerType,
+  SINGULAR_NAME,
+  type PowerUpType,
 } from "#constants";
 
 interface CollectedFile {
@@ -158,13 +160,13 @@ async function collectInfo(args: {
 
 const info = new Command({
   name: "info",
-  description: "Show how to use a power",
+  description: `Show how to use a ${SINGULAR_NAME}`,
   flags: [
     {
       name: "type",
       long: "type",
       short: "t",
-      description: "Power type (multi-use or single-use) for disambiguation",
+      description: `${CAPITALIZED_SINGLULAR_CLI_NAME} type (multi-use or single-use) for disambiguation`,
     },
   ],
   subcommands: [],
@@ -181,11 +183,11 @@ const info = new Command({
       throw info_errors.dry_folder_not_found();
     }
 
-    // Resolve power via resolvePower (searches both folders)
+    // Resolve powerup via resolvePowerUp (searches both folders)
     const typeFlag = is.defined(props.flags.type)
-      ? (props.flags.type as PowerType)
+      ? (props.flags.type as PowerUpType)
       : undefined;
-    const resolved = await resolvePower(root, name, typeFlag);
+    const resolved = await resolvePowerUp(root, name, typeFlag);
     const outputFolder = resolved.folder;
     const typeFolder = resolved.folder.up(1);
 

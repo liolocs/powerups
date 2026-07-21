@@ -34,7 +34,7 @@ export async function verifyGitRepo(projectRoot: FileRef): Promise<void> {
  * Returns the worktree path and a FileRef to it.
  */
 export async function createWorktree(projectRoot: FileRef): Promise<Worktree> {
-  const worktreePath = path.join(tmpdir(), `powers-worktree-${randomBytes(6).toString("hex")}`);
+  const worktreePath = path.join(tmpdir(), `powerups-worktree-${randomBytes(6).toString("hex")}`);
   try {
     await execAsync(`git worktree add "${worktreePath}" --detach`, {
       cwd: projectRoot.path,

@@ -100,20 +100,38 @@ const harness = await detectHarness(projectRoot, harnessFlag, options);
   });
 ```
 
-<!-- BEGIN powers -->
-## powers (power engine)
+<!-- BEGIN powerups -->
+## powerups (powerup engine)
 
-This project uses the `powers` CLI to keep AI-generated content maintainable.
-Multi-use powers live in `.powers/active/multi-use/<name>/` and
-single-use powers live in `.powers/active/single-use/<name>/`.
-Always prefer powers over one-off generation.
+This project uses the `powerups` CLI to keep AI-generated content maintainable.
+
+Powerups live inside packages at `.powerups/internal/<package>/src/active/multi-use/<name>/` (multi-use) or
+`.powerups/internal/<package>/src/active/single-use/<name>/` (single-use).
+
+Always prefer powerups over one-off generation.
+
+### Packages
+
+Powerups are organized into **packages** — collections of one or more powerups that
+can be created locally and optionally moved to a global location (`~/.powerups/`)
+for sharing across projects.
+ has a `package.json` with a `powerups` property mapping powerup names
+  to their `instructions.json` paths.
+- The project config at `.powerups/config.json` lists installed packages in
+  its `packages` array. Only powerups from packages listed in the config are visible
+  to `find` and `use` (config acts as a gatekeeper).
+- Local packages (in `.powerups/internal/`) are prioritized over
+  global packages (in `~/.powerups/internal/`) when resolving a
+  powerup by name.
+- To create a new package: `pup pack create <package-name>`
+- To move a local package to global: `pup pack move <package-name> global`
 
 ### Multi-use vs Single-use
 
-- **Multi-use powers** are recurring patterns you add multiple times with different
+- **Multi-use powerups** are recurring patterns you add multiple times with different
   variables (e.g., new API route, new view component). They keep structure
   consistent across repeated additions.
-- **Single-use powers** are one-time additions to a project (e.g., add tailwind + shadcn,
+- **Single-use powerups** are one-time additions to a project (e.g., add tailwind + shadcn,
   set up auth). You use them once. They can take variables (e.g., a project
   name or framework choice).
 
@@ -123,31 +141,31 @@ This project scaffolds three skills:
 
 | Skill | When to use |
 |-------|-------------|
-| `powers-brainstorm` | Planning new work — searches for existing powers, classifies work, produces a plan document |
-| `powers-implement` | Executing a plan document — works through tasks, searches/uses inline, invokes capture when needed |
-| `powers-capture` | Capturing already-done work as a power — user-directed or survey mode |
+| `powerups-brainstorm` | Planning new work — finds existing powerups, classifies work, produces a plan document |
+| `powerups-implement` | Executing a plan document — works through tasks, finds/uses inline, invokes capture when needed |
+| `powerups-capture` | Capturing already-done work as a powerup — user-directed or survey mode |
 
-For ad-hoc work (not part of a plan), use the search → info → use pattern below directly.
+For ad-hoc work (not part of a plan), use the find → info → use pattern below directly.
 
 ### Before writing any new feature or file
 
-1. Run `pwrs search -q="<what you're about to do>"`.
-2. If a power matches (score > 0), run
-   `pwrs info <name>` to see its required
+1. Run `pup find -q="<what you're about to do>"`.
+2. If a powerup matches (score > 0), run
+   `pup info <name>` to see its required
    variables, generated files, and the exact use command.
 3. Use it:
-   `pwrs use <name> --<variable-name>=<value> ...`
+   `pup use <name> --<variable-name>=<value> ...`
    Preview first with `--dry-run` / `-d`, then use for real.
-4. Only write fresh content if no power matches.
+4. Only write fresh content if no powerup matches.
 
 ### After generating new files
 
 If you just generated new files and the work seems repeatable, ask the user
-whether they'd like to capture it as a multi-use power (recurring) or a single-use power
+whether they'd like to capture it as a multi-use powerup (recurring) or a single-use powerup
 (one-time) before moving on. Only do this for new file generation — not for
 one-off edits.
 
-If the user confirms, invoke the `powers-capture` skill — do not run
+If the user confirms, invoke the `powerups-capture` skill — do not run
 `create` directly. The capture skill handles the
 full workflow: assessment, scaffolding, parameterization, validation, and
 dry-run verification.
@@ -155,7 +173,7 @@ dry-run verification.
 ### `.ts` template format (recommended)
 
 A `.ts` template is a TypeScript module that `export default`s a function.
-At run time `pwrs` calls that function with the power's declared
+At run time `pup` calls that function with the powerup's declared
 variables (keyed by name, all strings) and writes the returned string to the
 file's `outputPath`.
 
@@ -176,10 +194,10 @@ export default ({ componentName, theme }: Record<string, string>) =>
 - If the module has no default function (or it isn't a function), `use`
   fails with `Invalid .ts template: must export a default function that returns a
   string`. Note: `validate` only checks that the template file exists —
-  it does not import or execute it, so use the power once to confirm the
+  it does not import or execute it, so use the powerup once to confirm the
   default export works.
 
-### Output schema (`.powers/active/multi-use/<name>/instructions.json`)
+### Output schema (`.powerups/internal/<package>/src/active/multi-use/<name>/instructions.json`)
 
 ```json
 {
@@ -230,10 +248,10 @@ doesn't exist, a warning is printed and the entry is skipped (no error).
 
 Template files referenced by `create` and `modify` entries live in a
 `template/` subdirectory alongside `instructions.json` — i.e.
-`.powers/active/multi-use/<name>/template/<file>`.
+`.powerups/internal/<package>/src/active/multi-use/<name>/template/<file>`.
 The `template` field holds just the bare filename; the CLI resolves it inside
-that subdirectory. Files placed directly in the power folder (outside
-`template/`) are reported as orphaned by `pwrs doctor`.
+that subdirectory. Files placed directly in the powerup folder (outside
+`template/`) are reported as orphaned by `pup doctor`.
 
 ### Required vs Optional Variables
 
@@ -247,7 +265,7 @@ The `variables` field has two arrays:
   output paths resolve to `""` instead of leaving unresolved tokens.
 
 Use `--<variable-name>=<value>` flags at use time for both required and
-optional variables. When creating a power, use `-v` for required variables
+optional variables. When creating a powerup, use `-v` for required variables
 and `-ov` for optional variables.
 
 A variable cannot be in both `required` and `optional` — validation will reject
@@ -257,7 +275,7 @@ when omitted — it should be required instead).
 
 ### Package Dependencies
 
-The `packageDependencies` field is optional — omit it entirely if the power
+The `packageDependencies` field is optional — omit it entirely if the powerup
 doesn't need npm packages. Each entry is a group with an optional
 `target` (a monorepo package path like `"packages/web"`, omitted for the root
 `package.json`) and dependency category arrays. Dependency strings use the
@@ -265,7 +283,7 @@ standard `"package@version"` format, including scoped packages like
 `"@scope/pkg@^1.0.0"`. Multiple groups can target different packages in a
 monorepo.
 
-When a power is used, the CLI writes the declared dependencies
+When a powerup is used, the CLI writes the declared dependencies
 to the target `package.json`, detects the package manager from the lock file
 (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lockb`/`bun.lock`),
 and runs the install command automatically.
@@ -306,23 +324,27 @@ Modify template files can be:
 
 ### Subtemplates
 
-A subtemplate is a regular power that another power includes via the
-`includes` field. When a power runs, it renders its own files, then resolves
+A subtemplate is a regular powerup that another powerup includes via the
+`includes` field. When a powerup runs, it renders its own files, then resolves
 each included subtemplate — mapping the subtemplate's declared variables to
 values from the parent (using `{{parentVar}}` tokens or literals),
 optionally overriding output paths, and rendering the subtemplate's templates.
-Subtemplates are just powers — they live in their own folder under
-`.powers/active/multi-use/`, have their own
+Subtemplates are just powerups — they live in their own folder under
+`.powerups/internal/<package>/src/active/multi-use/`, have their own
 `instructions.json` and templates, and can be used standalone or included
 by multiple parents.
 
+When a package is moved to global via `pup pack move <package> global`,
+all inherited sub-powerups are pulled into the package and recorded in the
+package's `package.json` `powerups` property using `parent:child` notation.
+
 #### Worked example
 
-- *Before:* You have an `api-route` power that generates a route handler, a
-types file, and a test. Later you build a `graphql-resolver` power that also
+- *Before:* You have an `api-route` powerup that generates a route handler, a
+types file, and a test. Later you build a `graphql-resolver` powerup that also
 needs a types file with the same structure.
-- *Extraction:* Create a standalone `types` power
-  (`pwrs create --type=multi-use -n=types ...`). Add it to both parents'
+- *Extraction:* Create a standalone `types` powerup
+  (`pup create --pack=<package> --type=multi-use -n=types ...`). Add it to both parents'
   `instructions.json`:
 
 ```json
@@ -338,34 +360,38 @@ needs a types file with the same structure.
 - The `variables` map says: "pass the parent's `modelName` as the subtemplate's
   `entityName`." The `outputPathOverride` map says: "write the subtemplate's
   `types` file to this path instead of its default."
-- Validate: `pwrs validate api-route`
+- Validate: `pup validate api-route`
 
 #### When to extract subtemplates
 
-Create powers first. Extract subtemplates only when a concrete use case
+Create powerups first. Extract subtemplates only when a concrete use case
 demands it — you often don't know what should be a subtemplate until you are
 faced with the actual repetition. Extract when:
 
-- You are duplicating the same template files across multiple powers
-- A power is generating files for two distinct concerns that change
+- You are duplicating the same template files across multiple powerups
+- A powerup is generating files for two distinct concerns that change
   independently
-- You find yourself copying a subset of one power's output into another
+- You find yourself copying a subset of one powerup's output into another
 
-Do NOT preemptively decompose a power into subtemplates upfront. Build the
-full power, verify it works, then extract when repetition emerges.
+Do NOT preemptively decompose a powerup into subtemplates upfront. Build the
+full powerup, verify it works, then extract when repetition emerges.
 
 ### Quick reference
 
 | Action | Command |
 |--------|---------|
-| Search powers | `pwrs search -q="..."` |
-| Search multi-use only | `pwrs search -q="..." --type=multi-use` |
-| Get info on a power | `pwrs info <name>` |
-| Use a power | `pwrs use <name> --<variable>=<value> [-d]` |
-| Create a multi-use power | `pwrs create --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
-| Create a single-use power | `pwrs create --type=single-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
-| Validate a power | `pwrs validate <name>` |
-| Gain powers | `pwrs gain` |
-| Health check all | `pwrs doctor` |
-| Usage metrics | `pwrs metrics summary` |
-<!-- END powers -->
+| Find powerups | `pup find -q="..."` |
+| Find multi-use only | `pup find -q="..." --type=multi-use` |
+| Get info on a powerup | `pup info <name>` |
+| Use a powerup | `pup use <name> --<variable>=<value> [-d]` |
+| Create a package | `pup pack create <package-name>` |
+| Create a global package | `pup pack create <package-name> -g` |
+| Move package to global | `pup pack move <package-name> global` |
+| Move & remove from config | `pup pack move <package-name> global -d` |
+| Create a multi-use powerup | `pup create --pack=<pkg> --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Create a single-use powerup | `pup create --pack=<pkg> --type=single-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Validate a powerup | `pup validate <name>` |
+| Gain powerups | `pup gain` |
+| Health check all | `pup doctor` |
+| Usage metrics | `pup metrics summary` |
+<!-- END powerups -->

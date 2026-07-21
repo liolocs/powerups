@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_NAME, CLI_CMD } from "#constants";
+import { CLI_NAME, CLI_CMD, MAIN_FOLDER } from "#constants";
 
 const t = error.template;
 
@@ -13,7 +13,7 @@ const specifyHarness = `Harness options: \n\t${printGain} --harness=claude\n\t${
 const gain_errors = error.coded({
   dry_folder_not_found: () => {
     const errorText =
-      `Dry folder not found. Run "${CLI_CMD} gain" first.`;
+      `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} gain" first.`;
     return t`${errorBGText}${errorText}`;
   },
   dry_folder_exists: () => {

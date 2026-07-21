@@ -1,4 +1,4 @@
-import { type Command } from "@powers/program";
+import { type Command } from "@powerups/program";
 import fs, { type FileInfo } from "@rcompat/fs";
 
 const currentDir = import.meta.dirname;

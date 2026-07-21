@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_CMD, MAIN_FOLDER } from "#constants";
+import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD, MAIN_FOLDER } from "#constants";
 
 const t = error.template;
 
@@ -12,12 +12,12 @@ const info_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
   missing_name: () => {
-    const errorText = `Power name required.\n\nUsage: ${CLI_CMD} info <name>`;
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} name required.\n\nUsage: ${CLI_CMD} info <name>`;
     return t`${errorBGText}${errorText}`;
   },
   not_found: (name: string) => {
     const nameText = cli.bg.yellow(" " + name + " ");
-    return t`${errorBGText}Power ${nameText} not found.`;
+    return t`${errorBGText}${CAPITALIZED_SINGLULAR_CLI_NAME} ${nameText} not found.`;
   },
 });
 

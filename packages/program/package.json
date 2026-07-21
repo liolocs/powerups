@@ -1,5 +1,5 @@
 {
-  "name": "@powers/program",
+  "name": "@powerups/program",
   "version": "0.0.1",
   "author": "lioloc@pm.me",
   "description": "Program for creating a cli",
@@ -21,13 +21,13 @@
   ],
   "imports": {
     "#*": {
-      "@powers/source": "./src/private/*.ts",
+      "@powerups/source": "./src/private/*.ts",
       "default": "./lib/private/*.js"
     }
   },
   "exports": {
     ".": {
-      "@powers/source": "./src/public/index.ts",
+      "@powerups/source": "./src/public/index.ts",
       "default": "./lib/public/index.js"
     }
   },

@@ -18,6 +18,8 @@ import {
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
   CONFIG_FILE,
+  CLI_NAME,
+  SINGULAR_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -39,21 +41,24 @@ async function createConfig(packages: string[]) {
   });
 }
 
-async function createPackageOnDisk(
-  packageName: string,
-  powers: { name: string; type: "multi-use" | "single-use" }[] = [],
-) {
+async function createPackageOnDisk({
+  packageName,
+  powerups = [],
+}: {
+  packageName: string;
+  powerups?: { name: string; type: "multi-use" | "single-use" }[];
+}) {
   const pkgDir = internalFolder.append(`/${packageName}`);
   const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
 
-  const powersProperty: Record<string, Record<string, string[]>> = {
+  const powerupsProperty: Record<string, Record<string, string[]>> = {
     [MULTI_USE_FOLDER]: {},
     [SINGLE_USE_FOLDER]: {},
   };
 
-  for (const power of powers) {
+  for (const power of powerups) {
     const typeFolder = power.type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
     const powerDir = srcActive.append(`/${typeFolder}/${power.name}`);
     await fs.create(powerDir);
@@ -64,7 +69,7 @@ async function createPackageOnDisk(
       intent: [],
       output: { create: [], modify: [] },
     });
-    powersProperty[typeFolder][power.name] = [
+    powerupsProperty[typeFolder][power.name] = [
       `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${power.name}/instructions.json`,
     ];
   }
@@ -74,7 +79,7 @@ async function createPackageOnDisk(
     version: "1.0.0",
     description: "test package",
     keywords: [KEYWORD_PACKAGE],
-    powers: { active: powersProperty },
+    powerups: { active: powerupsProperty },
   });
 }
 
@@ -127,16 +132,16 @@ test.group("pack create", () => {
     assert(pkg.description).equals("A test package");
     assert(pkg.keywords).equals([KEYWORD_PACKAGE]);
 
-    const powers = (pkg.powers as Record<string, Record<string, Record<string, string[]>>>).active;
-    assert(powers[MULTI_USE_FOLDER]).equals({});
-    assert(powers[SINGLE_USE_FOLDER]).equals({});
+    const powerups = (pkg[CLI_NAME] as Record<string, Record<string, Record<string, string[]>>>).active;
+    assert(powerups[MULTI_USE_FOLDER]).equals({});
+    assert(powerups[SINGLE_USE_FOLDER]).equals({});
 
     await testRoot.remove();
   });
 
   test.case("errors on duplicate package name", async assert => {
     await reset();
-    await createPackageOnDisk("existing-pkg");
+    await createPackageOnDisk({ packageName: "existing-pkg" });
 
     let threw;
     try {
@@ -189,7 +194,7 @@ test.group("pack create", () => {
     await testRoot.remove();
   });
 
-  test.case("errors when .powers folder does not exist", async assert => {
+  test.case(`errors when ${CLI_NAME} folder does not exist`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 
@@ -238,7 +243,7 @@ test.group("pack move", () => {
 
   test.case("errors on invalid move destination", async assert => {
     await reset();
-    await createPackageOnDisk("my-pkg");
+    await createPackageOnDisk({ packageName: "my-pkg" });
     await createConfig(["my-pkg"]);
 
     let threw;
@@ -259,11 +264,14 @@ test.group("pack move", () => {
 
   test.case("detects circular includes", async assert => {
     await reset();
-    // Create two powers that include each other
-    await createPackageOnDisk("circular-pkg", [
-      { name: "power-a", type: "multi-use" },
-      { name: "power-b", type: "multi-use" },
-    ]);
+    // Create two powerups that include each other
+    await createPackageOnDisk({
+      packageName: "circular-pkg",
+      powerups: [
+        { name: "power-a", type: "multi-use" },
+        { name: "power-b", type: "multi-use" },
+      ],
+    });
     await createConfig(["circular-pkg"]);
 
     // Make power-a include power-b and power-b include power-a
@@ -307,14 +315,17 @@ test.group("pack move", () => {
     await testRoot.remove();
   });
 
-  test.case("errors on unresolvable sub-power include", async assert => {
+  test.case(`errors on unresolvable sub-${SINGULAR_NAME} include`, async assert => {
     await reset();
-    await createPackageOnDisk("bad-include-pkg", [
-      { name: "main-power", type: "multi-use" },
-    ]);
+    await createPackageOnDisk({
+      packageName: "bad-include-pkg",
+      powerups: [
+        { name: "main-power", type: "multi-use" },
+      ],
+    });
     await createConfig(["bad-include-pkg"]);
 
-    // Make main-power include a non-existent power
+    // Make main-power include a non-existent powerup
     const powerDir = internalFolder
       .append(`/bad-include-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/main-power`);
     await powerDir.append("/instructions.json").writeJSON({

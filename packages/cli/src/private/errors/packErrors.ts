@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_CMD } from "#constants";
+import { CLI_CMD, CLI_NAME, SINGULAR_NAME } from "#constants";
 
 const t = error.template;
 
@@ -23,13 +23,13 @@ const pack_errors = error.coded({
     return t`${errorBGText}Invalid package name: "${name}". Package names must not be empty or contain slashes.`;
   },
   subpower_unresolvable: (subName: string, parentName: string) => {
-    return t`${errorBGText}Sub-power ${subName} included by ${parentName} could not be resolved. Ensure it is in a config-listed package.`;
+    return t`${errorBGText}Sub-${SINGULAR_NAME} ${subName} included by ${parentName} could not be resolved. Ensure it is in a config-listed package.`;
   },
   circular_include: (chain: string) => {
     return t`${errorBGText}Circular include detected: ${chain}`;
   },
   global_not_writable: () => {
-    return t`${errorBGText}Global powers directory is not accessible or writable.`;
+    return t`${errorBGText}Global ${CLI_NAME} directory is not accessible or writable.`;
   },
   invalid_move_destination: (dest: string) => {
     return t`${errorBGText}Invalid move destination: "${dest}". Only "global" is supported.`;

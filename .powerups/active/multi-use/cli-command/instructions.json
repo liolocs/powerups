@@ -10,7 +10,7 @@
   "intent": [
     "cli command",
     "new command",
-    "powers cli"
+    "powerups cli"
   ],
   "output": {
     "create": [

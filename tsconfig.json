@@ -2,7 +2,7 @@
   "extends": "apekit/tsconfig",
   "compilerOptions": {
     "customConditions": [
-      "@powers/source"
+      "@powerups/source"
     ],
     "types": [
       "node"

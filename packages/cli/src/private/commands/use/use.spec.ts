@@ -67,7 +67,7 @@ async function reset() {
     version: "1.0.0",
     description: "test",
     keywords: [KEYWORD_PACKAGE],
-    powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+    powerups: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
   });
   // Create config with test-pkg listed
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
@@ -543,7 +543,7 @@ test.group("apply errors", () => {
 
   test.case("should fail with git_repo_required when not in a git repo", async assert => {
     // Use a temp dir outside the project's git repo
-    const noGitRoot = fs.ref(path.join(tmpdir(), `powers-test-nogit-${randomBytes(4).toString("hex")}`));
+    const noGitRoot = fs.ref(path.join(tmpdir(), `powerups-test-nogit-${randomBytes(4).toString("hex")}`));
     await fs.create(noGitRoot);
     await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
     // Create test-pkg package in noGitRoot
@@ -556,7 +556,7 @@ test.group("apply errors", () => {
       version: "1.0.0",
       description: "test",
       keywords: [KEYWORD_PACKAGE],
-      powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+      powerups: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
     });
     await noGitRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({
       harness: "claude",

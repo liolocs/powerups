@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_CMD } from "#constants";
+import { CLI_CMD, CLI_NAME } from "#constants";
 
 const t = error.template;
 
@@ -8,7 +8,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const find_errors = error.coded({
   no_matching: () => {
-    const errorText = "No matching powers found.";
+    const errorText = `No matching ${CLI_NAME} found.`;
     return t`${errorBGText}${errorText}`;
   },
   no_query: () => {

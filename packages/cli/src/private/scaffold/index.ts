@@ -13,6 +13,8 @@ import {
   ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
+  CAPITALIZED_CLI_NAME,
+  SINGULAR_NAME,
 } from "#constants";
 
 const SCAFFOLD_DIR = import.meta.dirname;
@@ -81,6 +83,8 @@ export async function scaffold(
     ACTIVE_FOLDER,
     MULTI_USE_FOLDER,
     SINGLE_USE_FOLDER,
+    CAPITALIZED_CLI_NAME,
+    SINGULAR_NAME,
   };
   const filesWritten: string[] = [];
   const rollback = options?.rollback;

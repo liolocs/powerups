@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { resolvePower } from "#utils/resolve-power";
+import { resolvePowerUp } from "#utils/resolve-powerup";
 import { CodeError } from "@rcompat/error";
 import { PowerErrorCode } from "#errors/powerErrors";
 import {
@@ -14,6 +14,8 @@ import {
   CONFIG_FILE,
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
+  CLI_NAME,
+  SINGULAR_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -27,7 +29,7 @@ async function reset() {
 async function createPackage(
   projectRoot: FileRef,
   packageName: string,
-  powers: { name: string; type: "multi-use" | "single-use" }[] = [],
+  powerups: { name: string; type: "multi-use" | "single-use" }[] = [],
 ): Promise<void> {
   const pkgDir = projectRoot.append(
     `/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`,
@@ -37,24 +39,24 @@ async function createPackage(
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
 
-  const powersProperty: Record<string, Record<string, string[]>> = {
+  const powerupsProperty: Record<string, Record<string, string[]>> = {
     [MULTI_USE_FOLDER]: {},
     [SINGLE_USE_FOLDER]: {},
   };
 
-  for (const power of powers) {
-    const typeFolder = power.type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
-    const powerDir = srcActive.append(`/${typeFolder}/${power.name}`);
-    await fs.create(powerDir);
-    await powerDir.append("/instructions.json").writeJSON({
-      name: power.name,
+  for (const powerup of powerups) {
+    const typeFolder = powerup.type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
+    const powerupDir = srcActive.append(`/${typeFolder}/${powerup.name}`);
+    await fs.create(powerupDir);
+    await powerupDir.append("/instructions.json").writeJSON({
+      name: powerup.name,
       description: "test",
       variables: { required: [] },
       intent: [],
       output: { create: [], modify: [] },
     });
-    powersProperty[typeFolder][power.name] = [
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${power.name}/instructions.json`,
+    powerupsProperty[typeFolder][powerup.name] = [
+      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${powerup.name}/instructions.json`,
     ];
   }
 
@@ -63,7 +65,7 @@ async function createPackage(
     version: "1.0.0",
     description: "test package",
     keywords: [KEYWORD_PACKAGE],
-    powers: { active: powersProperty },
+    [CLI_NAME]: { active: powerupsProperty },
   });
 }
 
@@ -80,12 +82,12 @@ async function createConfig(
   });
 }
 
-test.case("resolves a power from a local package", async assert => {
+test.case(`resolves a ${SINGULAR_NAME} from a local package`, async assert => {
   await reset();
   await createPackage(testRoot, "my-pkg", [{ name: "my-power", type: "multi-use" }]);
   await createConfig(testRoot, ["my-pkg"]);
 
-  const result = await resolvePower(testRoot, "my-power");
+  const result = await resolvePowerUp(testRoot, "my-power");
   assert(result.type).equals("multi-use");
   assert(result.packageName).equals("my-pkg");
   assert(result.location).equals("local");
@@ -94,26 +96,26 @@ test.case("resolves a power from a local package", async assert => {
   await testRoot.remove();
 });
 
-test.case("resolves a single-use power", async assert => {
+test.case(`resolves a single-use ${SINGULAR_NAME}`, async assert => {
   await reset();
   await createPackage(testRoot, "my-pkg", [{ name: "my-power", type: "single-use" }]);
   await createConfig(testRoot, ["my-pkg"]);
 
-  const result = await resolvePower(testRoot, "my-power");
+  const result = await resolvePowerUp(testRoot, "my-power");
   assert(result.type).equals("single-use");
   assert(result.packageName).equals("my-pkg");
 
   await testRoot.remove();
 });
 
-test.case("throws not_found when power is not in any config-listed package", async assert => {
+test.case(`throws not_found when ${SINGULAR_NAME} is not in any config-listed package`, async assert => {
   await reset();
   await createPackage(testRoot, "my-pkg", [{ name: "my-power", type: "multi-use" }]);
   await createConfig(testRoot, ["my-pkg"]);
 
   let threw;
   try {
-    await resolvePower(testRoot, "missing");
+    await resolvePowerUp(testRoot, "missing");
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
     threw = (e as CodeError).code;
@@ -129,7 +131,7 @@ test.case("throws not_found when package is in config but missing from disk", as
 
   let threw;
   try {
-    await resolvePower(testRoot, "any-power");
+    await resolvePowerUp(testRoot, "any-power");
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
     threw = (e as CodeError).code;
@@ -145,13 +147,13 @@ test.case("resolves from second package when not in first", async assert => {
   await createPackage(testRoot, "pkg-b", [{ name: "power-b", type: "multi-use" }]);
   await createConfig(testRoot, ["pkg-a", "pkg-b"]);
 
-  const result = await resolvePower(testRoot, "power-b");
+  const result = await resolvePowerUp(testRoot, "power-b");
   assert(result.packageName).equals("pkg-b");
 
   await testRoot.remove();
 });
 
-test.case("throws ambiguous when same power name in multiple local packages", async assert => {
+test.case(`throws ambiguous when same ${SINGULAR_NAME} name in multiple local packages`, async assert => {
   await reset();
   await createPackage(testRoot, "pkg-a", [{ name: "shared", type: "multi-use" }]);
   await createPackage(testRoot, "pkg-b", [{ name: "shared", type: "multi-use" }]);
@@ -159,7 +161,7 @@ test.case("throws ambiguous when same power name in multiple local packages", as
 
   let threw;
   try {
-    await resolvePower(testRoot, "shared");
+    await resolvePowerUp(testRoot, "shared");
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
     threw = (e as CodeError).code;
@@ -169,7 +171,7 @@ test.case("throws ambiguous when same power name in multiple local packages", as
   await testRoot.remove();
 });
 
-test.case("disambiguates by type when same power in both types in same package", async assert => {
+test.case(`disambiguates by type when same ${SINGULAR_NAME} in both types in same package`, async assert => {
   await reset();
   await createPackage(testRoot, "my-pkg", [
     { name: "shared", type: "multi-use" },
@@ -177,7 +179,7 @@ test.case("disambiguates by type when same power in both types in same package",
   ]);
   await createConfig(testRoot, ["my-pkg"]);
 
-  const result = await resolvePower(testRoot, "shared", "multi-use");
+  const result = await resolvePowerUp(testRoot, "shared", "multi-use");
   assert(result.type).equals("multi-use");
 
   await testRoot.remove();
@@ -190,7 +192,7 @@ test.case("throws not_found when config has no packages", async assert => {
 
   let threw;
   try {
-    await resolvePower(testRoot, "my-power");
+    await resolvePowerUp(testRoot, "my-power");
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
     threw = (e as CodeError).code;

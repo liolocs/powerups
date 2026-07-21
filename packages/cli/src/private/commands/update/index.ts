@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import gain_errors from "#errors/gainErrors";
 import update_errors from "#errors/updateErrors";
 import { scaffold } from "#scaffold/index";

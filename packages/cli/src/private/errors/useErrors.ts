@@ -1,7 +1,7 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
 import type { FileRef } from "@rcompat/fs";
-import { CLI_CMD } from "#constants";
+import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD, MAIN_FOLDER } from "#constants";
 import { toKebabCase } from "#utils/variables";
 
 const t = error.template;
@@ -10,19 +10,19 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const use_errors = error.coded({
   dry_folder_not_found: () => {
-    const errorText = `Dry folder not found. Run "${CLI_CMD} gain" first.`;
+    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} gain" first.`;
     return t`${errorBGText}${errorText}`;
   },
 
   missing_name: () => {
     const errorText =
-      `Power name required.\n\nUsage: ${CLI_CMD} use <name> [variables]`;
+      `${CAPITALIZED_SINGLULAR_CLI_NAME} name required.\n\nUsage: ${CLI_CMD} use <name> [variables]`;
     return t`${errorBGText}${errorText}`;
   },
 
   not_found: (name: string) => {
     const nameText = cli.bg.yellow(" " + name + " ");
-    return t`${errorBGText}Power ${nameText} not found.`;
+    return t`${errorBGText}${CAPITALIZED_SINGLULAR_CLI_NAME} ${nameText} not found.`;
   },
 
   missing_variables: (
@@ -79,7 +79,7 @@ const use_errors = error.coded({
   invalid_composition: (issues: string[]) => {
     const issueList = issues.map(i => `  - ${i}`).join("\n");
     const errorText =
-      `Power composition is invalid:\n${issueList}`;
+      `${CAPITALIZED_SINGLULAR_CLI_NAME} composition is invalid:\n${issueList}`;
     return t`${errorBGText}${errorText}`;
   },
 

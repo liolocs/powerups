@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_CMD } from "#constants";
+import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD, MAIN_FOLDER } from "#constants";
 
 const t = error.template;
 
@@ -8,7 +8,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const create_errors = error.coded({
   dry_folder_not_found: () => {
-    const errorText = `Dry folder not found. Run "${CLI_CMD} gain" first.`;
+    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} gain" first.`;
     return t`${errorBGText}${errorText}`;
   },
   missing_type: () => {
@@ -19,7 +19,7 @@ const create_errors = error.coded({
   },
   already_exists: (name: string) => {
     const nameText = cli.bg.yellow(" " + name + " ");
-    const errorText = `Power ${nameText} already exists.`;
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} ${nameText} already exists.`;
     return t`${errorBGText}${errorText}`;
   },
   invalid_output_json: () => {

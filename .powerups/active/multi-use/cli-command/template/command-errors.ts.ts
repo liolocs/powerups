@@ -14,7 +14,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const ${snake}_errors = error.coded({
   not_found: () => {
-    const errorText = \`.powers folder not found. Run "\${CLI_NAME} init" first.\`;
+    const errorText = \`.powerups folder not found. Run "\${CLI_NAME} init" first.\`;
     return t\`\${errorBGText}\${errorText}\`;
   },
 });

@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import use_errors from "#errors/useErrors";
 import { instructionsSchema } from "#schemas/instruction";
 import { extractVariables } from "#utils/variables";
@@ -22,23 +22,36 @@ import {
   type ChangedFile,
 } from "#utils/worktree";
 import { applyDependencies, collectDependencies } from "#utils/dependencies";
-import { resolvePower } from "#utils/resolve-power";
+import { resolvePowerUp } from "#utils/resolve-powerup";
 import {
+  CAPITALIZED_SINGLULAR_CLI_NAME,
   MAIN_FOLDER,
-  type PowerType,
+  SINGULAR_NAME,
+  type PowerUpType,
 } from "#constants";
 
-const EXCLUDE_FLAGS = ["--dry-run", "-d", "--overwrite", "-O", "--help", "-h", "--type", "-t"];
+const EXCLUDE_FLAGS = [
+  "--dry-run",
+  "-d",
+  "--overwrite",
+  "-O",
+  "--help",
+  "-h",
+  "--type",
+  "-t",
+];
 
 const use = new Command({
   name: "use",
-  description: "Use a power, rendering templates with variables",
+
+  description: `Use a ${SINGULAR_NAME}, rendering templates with variables`,
+
   flags: [
     {
       name: "type",
       long: "type",
       short: "t",
-      description: "Power type (multi-use or single-use) for disambiguation",
+      description: `${CAPITALIZED_SINGLULAR_CLI_NAME} type (multi-use or single-use) for disambiguation`,
     },
     {
       name: "dry-run",
@@ -53,7 +66,9 @@ const use = new Command({
       description: "Overwrite existing destination files for create actions",
     },
   ],
+
   subcommands: [],
+
   action: async ({ subcommands, rawFlags, flags, context }) => {
     // 1. Extract name from positional args
     const name = subcommands?.[0];
@@ -61,7 +76,7 @@ const use = new Command({
       throw use_errors.missing_name();
     }
 
-    // 2. Locate .powers folder
+    // 2. Locate .<CLI_NAME> folder
     const root: FileRef = context?.root ?? await runtime.projectRoot();
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
     const hasMainFolder = await fs.exists(mainFolder);
@@ -70,11 +85,11 @@ const use = new Command({
       throw use_errors.dry_folder_not_found();
     }
 
-    // 3. Resolve power via resolvePower (searches both folders)
+    // 3. Resolve powerup via resolvePowerUp (searches both folders)
     const typeFlag = is.defined(flags.type)
-      ? (flags.type as PowerType)
+      ? (flags.type as PowerUpType)
       : undefined;
-    const resolved = await resolvePower(root, name, typeFlag);
+    const resolved = await resolvePowerUp(root, name, typeFlag);
     const outputFolder = resolved.folder;
     const typeFolder = resolved.folder.up(1);
 
@@ -105,7 +120,7 @@ const use = new Command({
 
     // 7. Detect --dry-run and --overwrite via rawFlags
     const isDryRun = (rawFlags ?? []).some(
-      f => f.flag === "--dry-run" || f.flag === "-d",
+      rawFlag => rawFlag.flag === "--dry-run" || rawFlag.flag === "-d",
     );
     const isOverwrite = (rawFlags ?? []).some(
       f => f.flag === "--overwrite" || f.flag === "-O",
@@ -119,7 +134,7 @@ const use = new Command({
     });
 
     // 9. If --dry-run: render to stdout, no file writes
-    if (isDryRun) {
+    if (is.truthy(isDryRun)) {
       let totalCharacters = 0;
 
       for (const task of tasks) {
@@ -194,9 +209,10 @@ const use = new Command({
     } catch {
       throw use_errors.git_repo_required();
     }
-    const worktree = await createWorktree(root);
 
+    const worktree = await createWorktree(root);
     const changedFiles: ChangedFile[] = [];
+
     let totalCharacters = 0;
 
     try {
@@ -206,17 +222,22 @@ const use = new Command({
         if (task.kind === "delete") {
           const targetPath = worktree.root.append(`/${resolvedPath}`);
           const exists = await fs.exists(targetPath);
+
           if (!exists) {
             cli.print(`Warning: file not found, skipping: ${resolvedPath}\n`);
             continue;
           }
+
           await targetPath.remove();
+
           changedFiles.push({
             worktreePath: targetPath.path,
             projectPath: resolvedPath,
             deleted: true,
           });
+
           cli.print(`Deleted ${resolvedPath}\n`);
+
           continue;
         }
 
@@ -229,6 +250,7 @@ const use = new Command({
             templatePath: task.templatePath!,
             variables: task.variables,
           });
+
           totalCharacters += rendered.length;
 
           const targetPath = worktree.root.append(`/${resolvedPath}`);
@@ -240,10 +262,12 @@ const use = new Command({
 
           await fs.create(targetPath.directory);
           await targetPath.write(rendered);
+
           changedFiles.push({
             worktreePath: targetPath.path,
             projectPath: resolvedPath,
           });
+
           cli.print(`Wrote ${resolvedPath}\n`);
         } else {
           try {
@@ -260,12 +284,15 @@ const use = new Command({
             totalCharacters += applied.content.length;
 
             const targetPath = worktree.root.append(`/${resolvedPath}`);
+
             await fs.create(targetPath.directory);
             await targetPath.write(applied.content);
+
             changedFiles.push({
               worktreePath: targetPath.path,
               projectPath: resolvedPath,
             });
+
             cli.print(`Modified ${resolvedPath}\n`);
           } catch (error) {
             // Warn and continue — don't abort the whole use

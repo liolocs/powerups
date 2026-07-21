@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import metricsErrors from "#errors/metricsErrors";
 import { readMetrics, type MetricsEntry } from "#utils/metrics";
 import { MAIN_FOLDER } from "#constants";
@@ -58,7 +58,7 @@ const summary = new Command({
     const totalEstTokens = Math.round(totalCharacters / 4);
 
     // Column definitions
-    const headers = ["Output", "Runs", "Characters", "Est. Tokens powers"];
+    const headers = ["Output", "Runs", "Characters", "Est. Tokens powerups"];
 
     // Build string rows for width calculation
     const dataRows = rows.map(r => [

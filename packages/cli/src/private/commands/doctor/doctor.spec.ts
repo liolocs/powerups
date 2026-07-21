@@ -66,7 +66,7 @@ async function reset() {
     version: "1.0.0",
     description: "test",
     keywords: [KEYWORD_PACKAGE],
-    powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+    powerups: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
   });
   // Create config with test-pkg listed
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
@@ -76,7 +76,7 @@ async function reset() {
   await gitInit(testRoot);
 }
 
-test.case("doctor reports clean state with no powers", async assert => {
+test.case("doctor reports clean state with no powerups", async assert => {
   await reset();
   // Create single-use folder too so there are no warnings
   await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
@@ -89,25 +89,25 @@ test.case("doctor reports clean state with no powers", async assert => {
   }));
 
   assert(output).includes("All checks passed.");
-  assert(output).includes("0 multi-use power(s)");
-  assert(output).includes("0 single-use power(s)");
+  assert(output).includes("0 multi-use powerup(s)");
+  assert(output).includes("0 single-use powerup(s)");
 
   await testRoot.remove();
 });
 
-test.case("doctor validates powers with no issues", async assert => {
+test.case("doctor validates powerups with no issues", async assert => {
   await reset();
   await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
 
   await create.run({
     subcommands: [],
           flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "valid-power" },
+            { flag: "--name", value: "valid-powerups" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
   // Commit so working tree is clean
-  await gitCommit(testRoot, "add power");
+  await gitCommit(testRoot, "add powerups");
 
   const output = await captureStdout(() => doctor.run({
     subcommands: [],
@@ -116,12 +116,12 @@ test.case("doctor validates powers with no issues", async assert => {
   }));
 
   assert(output).includes("All checks passed.");
-  assert(output).includes("1 multi-use power(s)");
+  assert(output).includes("1 multi-use powerup(s)");
 
   await testRoot.remove();
 });
 
-test.case("doctor reports orphaned file in a power folder", async assert => {
+test.case("doctor reports orphaned file in a powerups folder", async assert => {
   await reset();
   await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
 
@@ -202,7 +202,7 @@ test.case("doctor warns when git working tree is dirty", async assert => {
 
 test.case("doctor errors when not a git repo", async assert => {
   // Use a temp dir outside the project's git repo
-  const noGitRoot = fs.ref(path.join(tmpdir(), `powers-test-nogit-${randomBytes(4).toString("hex")}`));
+  const noGitRoot = fs.ref(path.join(tmpdir(), `powerups-test-nogit-${randomBytes(4).toString("hex")}`));
   await fs.create(noGitRoot);
   await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
   await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${ACTIVE_FOLDER}`));
@@ -224,7 +224,7 @@ test.case("doctor checks both types in one pass", async assert => {
   await reset();
   await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
 
-  // Create a multi-use power
+  // Create a multi-use powerups
   await create.run({
     subcommands: [],
           flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" },
@@ -233,7 +233,7 @@ test.case("doctor checks both types in one pass", async assert => {
     context: { root: testRoot },
   });
 
-  // Create a single-use power
+  // Create a single-use powerups
   await create.run({
     subcommands: [],
           flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "single-use" },
@@ -243,7 +243,7 @@ test.case("doctor checks both types in one pass", async assert => {
   });
 
   // Commit so working tree is clean
-  await gitCommit(testRoot, "add powers");
+  await gitCommit(testRoot, "add powerups");
 
   const output = await captureStdout(() => doctor.run({
     subcommands: [],
@@ -251,8 +251,8 @@ test.case("doctor checks both types in one pass", async assert => {
     context: { root: testRoot },
   }));
 
-  assert(output).includes("1 multi-use power(s)");
-  assert(output).includes("1 single-use power(s)");
+  assert(output).includes("1 multi-use powerup(s)");
+  assert(output).includes("1 single-use powerup(s)");
   assert(output).includes("All checks passed.");
 
   await testRoot.remove();
@@ -289,7 +289,7 @@ test.group("doctor errors", () => {
       flags: [
       { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "bad-power" },
+        { flag: "--name", value: "bad-powerups" },
       { flag: "--description", value: "test description" },
         { flag: "--output", value: JSON.stringify({
           create: [{ name: "f", template: "missing.njk", outputPath: "out.ts" }],
@@ -300,7 +300,7 @@ test.group("doctor errors", () => {
     });
 
     // Remove the template file
-    await multiUseFolder.append("/bad-power/template/missing.njk").remove();
+    await multiUseFolder.append("/bad-powerups/template/missing.njk").remove();
 
     const { output, error } = await captureStdoutOrError(() => doctor.run({
       subcommands: [],

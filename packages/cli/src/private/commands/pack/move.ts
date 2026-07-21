@@ -2,15 +2,15 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import pack_errors from "#errors/packErrors";
-import { packageJsonSchema, type PowersProperty } from "#schemas/package";
+import { packageJsonSchema, type PowerUpProperty } from "#schemas/package";
 import { instructionsSchema } from "#schemas/instruction";
 import {
   addPackageToGlobalConfig,
   removePackageFromConfig,
 } from "#utils/config";
-import { resolvePower } from "#utils/resolve-power";
+import { resolvePowerUp } from "#utils/resolve-powerup";
 import { CodeError } from "@rcompat/error";
 import { PowerErrorCode } from "#errors/powerErrors";
 import {
@@ -23,27 +23,43 @@ import {
   TEMPLATE_FOLDER,
   PACKAGE_FILE,
   GLOBAL_INTERNAL_PATH,
-  type PowerType,
+  type PowerUpType,
+  CLI_NAME,
 } from "#constants";
 
+type CollectedSubPowerUp = {
+  folder: FileRef;
+  type: PowerUpType;
+  parent: string;
+};
+
+type CollectSubPowerUpsParams = {
+  root: FileRef;
+  powerupsName: string;
+  powerupsType: PowerUpType;
+  powerupsFolder: FileRef;
+  pathStack: string[];
+  collected: Map<string, CollectedSubPowerUp>;
+};
+
 /**
- * Recursively collect all sub-powers included by a power.
- * Returns a map of sub-power names to their resolved folders.
+ * Recursively collect all sub-powerups included by a powerup.
+ * Returns a map of sub-powerup names to their resolved folders.
  * Detects circular includes.
  */
-async function collectSubPowers(
-  root: FileRef,
-  powerName: string,
-  powerType: PowerType,
-  powerFolder: FileRef,
-  pathStack: string[],
-  collected: Map<string, { folder: FileRef; type: PowerType; parent: string }>,
-): Promise<void> {
-  if (pathStack.includes(powerName)) {
-    throw pack_errors.circular_include([...pathStack, powerName].join(" → "));
+async function collectSubPowerUps({
+  root,
+  powerupsName,
+  powerupsType,
+  powerupsFolder,
+  pathStack,
+  collected,
+}: CollectSubPowerUpsParams): Promise<void> {
+  if (pathStack.includes(powerupsName)) {
+    throw pack_errors.circular_include([...pathStack, powerupsName].join(" → "));
   }
 
-  const outputPath = powerFolder.append("/instructions.json");
+  const outputPath = powerupsFolder.append("/instructions.json");
   const instructions = instructionsSchema.parse(await outputPath.json());
 
   if (is.defined(instructions.includes)) {
@@ -51,26 +67,26 @@ async function collectSubPowers(
       if (collected.has(ref.name)) continue;
 
       try {
-        const resolved = await resolvePower(root, ref.name);
+        const resolved = await resolvePowerUp(root, ref.name);
         collected.set(ref.name, {
           folder: resolved.folder,
           type: resolved.type,
-          parent: powerName,
+          parent: powerupsName,
         });
 
-        await collectSubPowers(
+        await collectSubPowerUps({
           root,
-          ref.name,
-          resolved.type,
-          resolved.folder,
-          [...pathStack, powerName],
+          powerupsName: ref.name,
+          powerupsType: resolved.type,
+          powerupsFolder: resolved.folder,
+          pathStack: [...pathStack, powerupsName],
           collected,
-        );
+        });
       } catch (e) {
         // Only mask not_found errors as subpower_unresolvable.
         // Re-throw other errors (ambiguous, circular_include) as-is.
         if (e instanceof CodeError && (e as CodeError).code === PowerErrorCode.not_found) {
-          throw pack_errors.subpower_unresolvable(ref.name, powerName);
+          throw pack_errors.subpower_unresolvable(ref.name, powerupsName);
         }
         throw e;
       }
@@ -79,7 +95,7 @@ async function collectSubPowers(
 }
 
 /**
- * Copy a power folder (instructions.json + template/) to a destination.
+ * Copy a powerup folder (instructions.json + template/) to a destination.
  */
 async function copyPowerFolder(
   sourceFolder: FileRef,
@@ -150,13 +166,9 @@ const packMove = new Command({
     const localPkgJsonPath = localPackageDir.append(`/${PACKAGE_FILE}`);
     const localPkgJson = packageJsonSchema.parse(await localPkgJsonPath.json());
 
-    // Walk all powers and collect inherited sub-powers
-    const collectedSubPowers = new Map<
-      string,
-      { folder: FileRef; type: PowerType; parent: string }
-    >();
+    const collectedSubPowerups = new Map<string, CollectedSubPowerUp>();
 
-    const active = localPkgJson.powers.active;
+    const active = localPkgJson[CLI_NAME].active;
     const activeRecord = active as Record<string, Record<string, string[]>>;
 
     for (const [typeFolder, powersMap] of Object.entries(activeRecord)) {
@@ -166,18 +178,18 @@ const packMove = new Command({
         // Skip parent:child entries (already collected)
         if (powerKey.includes(":")) continue;
 
-        const powerName = powerKey;
+        const powerupsName = powerKey;
         const instructionPath = instructionPaths[0];
-        const powerFolder = localPackageDir.append(`/${instructionPath}`).directory;
+        const powerupsFolder = localPackageDir.append(`/${instructionPath}`).directory;
 
-        await collectSubPowers(
+        await collectSubPowerUps({
           root,
-          powerName,
-          typeFolder === MULTI_USE_FOLDER ? "multi-use" : "single-use",
-          powerFolder,
-          [],
-          collectedSubPowers,
-        );
+          powerupsName,
+          powerupsType: typeFolder === MULTI_USE_FOLDER ? "multi-use" : "single-use",
+          powerupsFolder,
+          pathStack: [],
+          collected: collectedSubPowerups,
+        });
       }
     }
 
@@ -205,22 +217,22 @@ const packMove = new Command({
     }
 
     // Build updated powers property with parent:child entries for sub-powers
-    const updatedPowers: PowersProperty = {
+    const updatedPowerups: PowerUpProperty = {
       active: {
         [MULTI_USE_FOLDER]: { ...(activeRecord[MULTI_USE_FOLDER] ?? {}) },
         [SINGLE_USE_FOLDER]: { ...(activeRecord[SINGLE_USE_FOLDER] ?? {}) },
       },
     };
-    const updatedRecord = updatedPowers.active as Record<string, Record<string, string[]>>;
+    const updatedRecord = updatedPowerups.active as Record<string, Record<string, string[]>>;
 
-    for (const [subName, info] of collectedSubPowers) {
+    for (const [subName, info] of collectedSubPowerups) {
       const typeFolder = info.type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
       const destTypeDir = destSrcActiveDir.append(`/${typeFolder}`);
       if (!(await fs.exists(destTypeDir))) {
         await fs.create(destTypeDir);
       }
 
-      // Check if sub-power already exists in the package
+      // Check if sub-powerup already exists in the package
       const destPowerDir = destTypeDir.append(`/${subName}`);
       if (!(await fs.exists(destPowerDir))) {
         await copyPowerFolder(info.folder, destPowerDir);
@@ -236,7 +248,7 @@ const packMove = new Command({
     // Write the updated package.json to global
     const globalPkgJson = {
       ...localPkgJson,
-      powers: updatedPowers,
+      [CLI_NAME]: updatedPowerups,
     };
     await globalPackageDir.append(`/${PACKAGE_FILE}`).writeJSON(globalPkgJson as never);
 
@@ -258,9 +270,9 @@ const packMove = new Command({
     cli.print(`${green("✓")} Moved package: ${packageName} → global\n`);
     cli.print(`  ${dim("global location:")} ${globalPackageDir.path}\n`);
 
-    if (collectedSubPowers.size > 0) {
-      cli.print(`  ${dim("sub-powers pulled in:")} ${collectedSubPowers.size}\n`);
-      for (const [subName, info] of collectedSubPowers) {
+    if (collectedSubPowerups.size > 0) {
+      cli.print(`  ${dim(`sub-${CLI_NAME} pulled in:`)} ${collectedSubPowerups.size}\n`);
+      for (const [subName, info] of collectedSubPowerups) {
         cli.print(`    ${dim("-")} ${subName} (from ${info.parent})\n`);
       }
     }

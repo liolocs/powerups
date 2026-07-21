@@ -63,16 +63,16 @@ async function childProcessImport(
 
   // Write temp runner .mjs
   const tmpFile = fs.ref(
-    `${os.tmpdir()}/powers-runner-${Date.now()}.mjs`,
+    `${os.tmpdir()}/powerups-runner-${Date.now()}.mjs`,
   );
 
   const runnerContent = [
-    `const mod = await import(process.env.powers_TEMPLATE);`,
+    `const mod = await import(process.env.powerups_TEMPLATE);`,
     `if (typeof mod.default !== "function") {`,
     `  process.stderr.write("Template must export a default function");`,
     `  process.exit(1);`,
     `}`,
-    `const vars = JSON.parse(process.env.powers_VARS);`,
+    `const vars = JSON.parse(process.env.powerups_VARS);`,
     `process.stdout.write(String(mod.default(vars)));`,
   ].join("\n");
 
@@ -85,8 +85,8 @@ async function childProcessImport(
       {
         env: {
           ...process.env,
-          powers_TEMPLATE: templatePath.path,
-          powers_VARS: JSON.stringify(variables),
+          powerups_TEMPLATE: templatePath.path,
+          powerups_VARS: JSON.stringify(variables),
         },
       },
     );

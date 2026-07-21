@@ -18,6 +18,7 @@ import {
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
   CONFIG_FILE,
+  CLI_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -43,7 +44,7 @@ async function reset() {
     version: "1.0.0",
     description: "test",
     keywords: [KEYWORD_PACKAGE],
-    powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+    [CLI_NAME]: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
   });
   // Create config with test-pkg listed
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
@@ -88,7 +89,7 @@ test.group("validate errors", () => {
     let threw;
     try {
       await validate.run({
-        subcommands: ["some-power"],
+        subcommands: ["some-powerup"],
         flags: [],
         context: { root: testRoot },
       });

@@ -3,11 +3,11 @@ import { MULTI_USE_FOLDER, SINGLE_USE_FOLDER } from "#constants";
 
 /**
  * Schema for the "powers" property inside a package.json.
- * Maps power names to arrays of instruction.json paths.
+ * Maps powerup names to arrays of instruction.json paths.
  * Top-level powers use their name as the key.
  * Inherited sub-powers use "parent:child" notation.
  */
-export const powersPropertySchema = p({
+export const powerupPropertySchema = p({
   active: p({
     [MULTI_USE_FOLDER]: p.record(p.string, p.array(p.string)).optional(),
     [SINGLE_USE_FOLDER]: p.record(p.string, p.array(p.string)).optional(),
@@ -22,8 +22,8 @@ export const packageJsonSchema = p({
   version: p.string,
   description: p.string,
   keywords: p.array(p.string),
-  powers: powersPropertySchema,
+  powerups: powerupPropertySchema,
 });
 
 export type PackageJson = (typeof packageJsonSchema)["infer"];
-export type PowersProperty = (typeof powersPropertySchema)["infer"];
+export type PowerUpProperty = (typeof powerupPropertySchema)["infer"];

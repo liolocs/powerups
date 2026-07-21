@@ -63,7 +63,7 @@ test.case("summary prints table with aggregated data", async assert => {
   assert(output).includes("Output");
   assert(output).includes("Runs");
   assert(output).includes("Characters");
-  assert(output).includes("Est. Tokens powers");
+  assert(output).includes("Est. Tokens powerups");
 
   // Output rows — ui-component first (more characters, sorted descending)
   assert(output).includes("ui-component");

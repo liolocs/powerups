@@ -1,4 +1,4 @@
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
@@ -20,6 +20,7 @@ import {
   TEMPLATE_FOLDER,
   PACKAGE_FILE,
   GLOBAL_INTERNAL_PATH,
+  SINGULAR_NAME,
 } from "#constants";
 
 const execAsync = promisify(exec);
@@ -120,7 +121,6 @@ const doctor = new Command({
           continue;
         }
 
-        // Scan powers in this package
         const activeFolder = packageDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
         for (const [type, folder] of [
           ["multi-use", MULTI_USE_FOLDER],
@@ -138,8 +138,8 @@ const doctor = new Command({
           else singleUseCount += outputFiles.length;
 
           for (const outputFile of outputFiles) {
-            const powerName = outputFile.directory.name;
-            const label = `${packageDir.name}:${powerName}`;
+            const powerupsName = outputFile.directory.name;
+            const label = `${packageDir.name}:${powerupsName}`;
 
             // Run standard checks (schema, templates, suboutput tree)
             const checkIssues = await checkOutput({
@@ -250,7 +250,7 @@ const doctor = new Command({
     const warnCount = issues.filter(i => i.level === "WARN").length;
 
     cli.print(
-      `Doctor: checking git state, folder structure, ${multiUseCount} multi-use power(s), ${singleUseCount} single-use power(s)\n`,
+      `Doctor: checking git state, folder structure, ${multiUseCount} multi-use ${SINGULAR_NAME}(s), ${singleUseCount} single-use ${SINGULAR_NAME}(s)\n`,
     );
     cli.print("\n");
 

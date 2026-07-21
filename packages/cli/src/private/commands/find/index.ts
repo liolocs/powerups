@@ -2,19 +2,20 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import gain_errors from "#errors/gainErrors";
 import find_errors from "#errors/findErrors";
 import tokenize from "#utils/tokenize";
 import scoreIntent from "#utils/score-intent";
 import { readConfig } from "#utils/config";
-import { resolvePackage } from "#utils/resolve-power";
+import { resolvePackage } from "#utils/resolve-powerup";
 import { instructionsSchema } from "#schemas/instruction";
 import {
   MAIN_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  type PowerType,
+  SINGULAR_NAME,
+  type PowerUpType,
 } from "#constants";
 
 interface SearchResult {
@@ -22,14 +23,14 @@ interface SearchResult {
   description: string;
   score: number;
   fileCount: number;
-  type: PowerType;
+  type: PowerUpType;
   packageName: string;
   location: "local" | "global";
 }
 
 const find = new Command({
   name: "find",
-  description: "Find powers by intent across local and global packages",
+  description: "Find powerups by intent across local and global packages",
   flags: [
     {
       name: "query",
@@ -41,7 +42,7 @@ const find = new Command({
       name: "type",
       long: "type",
       short: "t",
-      description: "Filter by power type (multi-use or single-use)",
+      description: "Filter by type (multi-use or single-use)",
     },
   ],
   subcommands: [],
@@ -64,9 +65,9 @@ const find = new Command({
 
     // Determine which types to search
     const typeFlag = is.defined(flags.type)
-      ? (flags.type as PowerType)
+      ? (flags.type as PowerUpType)
       : undefined;
-    const types: PowerType[] = typeFlag ? [typeFlag] : ["multi-use", "single-use"];
+    const types: PowerUpType[] = typeFlag ? [typeFlag] : ["multi-use", "single-use"];
 
     // Read config to get list of packages
     const config = await readConfig(root);
@@ -78,7 +79,7 @@ const find = new Command({
       const pkgLoc = await resolvePackage(root, packageName);
       if (pkgLoc === null) continue;
 
-      const active = pkgLoc.powers.active as Record<string, Record<string, string[]>>;
+      const active = pkgLoc.powerups.active as Record<string, Record<string, string[]>>;
 
       for (const type of types) {
         const typeFolder = type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
@@ -87,7 +88,7 @@ const find = new Command({
         if (!is.defined(powersMap)) continue;
 
         for (const [powerKey, instructionPaths] of Object.entries(powersMap)) {
-          // Skip parent:child entries — only search top-level powers
+          // Skip parent:child entries — only search top-level powerups
           if (powerKey.includes(":")) continue;
 
           const instructionPath = instructionPaths[0];
@@ -125,7 +126,7 @@ const find = new Command({
       return b.score - a.score;
     });
 
-    cli.print(`Found ${results.length} matching power(s):\n`);
+    cli.print(`Found ${results.length} matching ${SINGULAR_NAME}(s):\n`);
     cli.print("Local first, highest rank first\n");
     cli.print("\n");
 

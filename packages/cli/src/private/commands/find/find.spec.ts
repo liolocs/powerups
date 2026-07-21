@@ -15,6 +15,8 @@ import {
   CONFIG_FILE,
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
+  CLI_NAME,
+  CAPITALIZED_SINGLULAR_CLI_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -29,18 +31,18 @@ async function reset() {
 
 async function createPackageWithPower(
   packageName: string,
-  powerName: string,
+  powerupsName: string,
   intent: string[],
   type: "multi-use" | "single-use" = "multi-use",
 ) {
   const typeFolder = type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
   const pkgDir = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`);
-  const powerDir = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${powerName}`);
+  const powerDir = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${powerupsName}`);
 
   await fs.create(powerDir);
   await powerDir.append("/instructions.json").writeJSON({
-    name: powerName,
-    description: `Power for ${intent.join(" ")}`,
+    name: powerupsName,
+    description: `${CAPITALIZED_SINGLULAR_CLI_NAME} for ${intent.join(" ")}`,
     variables: { required: [] },
     intent,
     output: { create: [], modify: [] },
@@ -51,13 +53,13 @@ async function createPackageWithPower(
     version: "1.0.0",
     description: "test",
     keywords: [KEYWORD_PACKAGE],
-    powers: {
+    [CLI_NAME]: {
       active: {
         [MULTI_USE_FOLDER]: type === "multi-use"
-          ? { [powerName]: [`./${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/${powerName}/instructions.json`] }
+          ? { [powerupsName]: [`./${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/${powerupsName}/instructions.json`] }
           : {},
         [SINGLE_USE_FOLDER]: type === "single-use"
-          ? { [powerName]: [`./${SRC_FOLDER}/${ACTIVE_FOLDER}/${SINGLE_USE_FOLDER}/${powerName}/instructions.json`] }
+          ? { [powerupsName]: [`./${SRC_FOLDER}/${ACTIVE_FOLDER}/${SINGLE_USE_FOLDER}/${powerupsName}/instructions.json`] }
           : {},
       },
     },
@@ -70,7 +72,7 @@ async function createConfig(packages: string[]) {
     .writeJSON({ harness: "claude", packages });
 }
 
-test.case("find returns matching powers from config-listed packages", async assert => {
+test.case(`find returns matching ${CLI_NAME} from config-listed packages`, async assert => {
   await reset();
   await createPackageWithPower("my-pkg", "pdf-summarizer", ["summarize", "pdf"]);
   await createConfig(["my-pkg"]);
@@ -107,7 +109,7 @@ test.case("find throws no_query when query is empty", async assert => {
   await testRoot.remove();
 });
 
-test.case("find throws no_matching when no powers match", async assert => {
+test.case(`find throws no_matching when no ${CLI_NAME} match`, async assert => {
   await reset();
   await createPackageWithPower("my-pkg", "pdf-summarizer", ["summarize", "pdf"]);
   await createConfig(["my-pkg"]);
@@ -127,7 +129,7 @@ test.case("find throws no_matching when no powers match", async assert => {
   await testRoot.remove();
 });
 
-test.case("find does not return powers from packages not in config", async assert => {
+test.case(`find does not return ${CLI_NAME} from packages not in config`, async assert => {
   await reset();
   await createPackageWithPower("my-pkg", "pdf-summarizer", ["summarize", "pdf"]);
   await createConfig([]);
@@ -148,8 +150,8 @@ test.case("find does not return powers from packages not in config", async asser
 });
 test.case("find shows package name and location in output", async assert => {
   await reset();
-  await createPackageWithPower("alpha-pkg", "alpha-power", ["alpha", "test"]);
-  await createPackageWithPower("beta-pkg", "beta-power", ["beta", "test"]);
+  await createPackageWithPower("alpha-pkg", "alpha-powerup", ["alpha", "test"]);
+  await createPackageWithPower("beta-pkg", "beta-powerup", ["beta", "test"]);
   await createConfig(["alpha-pkg", "beta-pkg"]);
 
   const output = await captureStdout(() => find.run({
@@ -158,7 +160,7 @@ test.case("find shows package name and location in output", async assert => {
     context: { root: testRoot },
   }));
 
-  assert(output).includes("alpha-power");
+  assert(output).includes("alpha-powerup");
   assert(output).includes("alpha-pkg");
   assert(output).includes("local");
 

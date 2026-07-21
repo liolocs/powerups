@@ -1,4 +1,4 @@
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import { CLI_NAME } from "#constants";
 import packCreate from "#commands/pack/create";
 import packMove from "#commands/pack/move";

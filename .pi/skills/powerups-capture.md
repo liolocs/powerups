@@ -1,17 +1,17 @@
 ---
-name: {{ CLI_NAME }}-capture
-description: "Capture already-done work as a {{ CLI_NAME }} power"
+name: powerups-capture
+description: "Capture already-done work as a powerups"
 ---
 Capture work the user has already done — files they wrote or changes they made
-outside the CLI — into a reusable {{ CLI_NAME }} power.
+outside the CLI — into a reusable powerups.
 
-**Announce at start:** "I'm using the {{ CLI_NAME }}-capture skill to capture this work."
+**Announce at start:** "I'm using the powerups-capture skill to capture this work."
 
 This skill has two entry modes. Determine which mode applies based on the
 user's request:
 
 **Mode A — User-directed capture:** The user points at specific files or a
-directory they've already written and wants to capture as a reusable power.
+directory they've already written and wants to capture as a reusable powerup.
 
 **Mode B — Survey capture:** The user wants you to survey an area of the
 codebase to find patterns worth capturing. No specific files are pointed at
@@ -19,9 +19,9 @@ codebase to find patterns worth capturing. No specific files are pointed at
 
 ### Prerequisites
 
-Before capturing a power, a package must exist for the power to live in. If no
+Before capturing a powerup, a package must exist for the powerup to live in. If no
 package exists yet, create one first:
-`{{ CLI_CMD }} pack create <package-name> --description="..."`
+`pup pack create <package-name> --description="..."`
 
 If you're unsure which package to use, ask the user. A package is a collection
 of related powers — powers that serve the same domain or feature area should
@@ -36,23 +36,23 @@ go in the same package.
 2. Read the files the user points at. Understand what was created or modified
    and what the work does.
 
-3. Run `{{ CLI_CMD }} find -q="<intent>"` to check if a similar power
-   already exists. If one does, run `{{ CLI_CMD }} info <name>`
+3. Run `pup find -q="<intent>"` to check if a similar powerup
+   already exists. If one does, run `pup info <name>`
    to understand it. If it's similar enough, suggest reusing or extending the
-   existing power rather than creating a new one.
+   existing powerup rather than creating a new one.
 
-4. Assess whether this is a single-use or multi-use power:
-   - A single-use power is a one-time addition to the project (e.g., add a dependency,
+4. Assess whether this is a single-use or multi-use powerup:
+   - A single-use powerup is a one-time addition to the project (e.g., add a dependency,
      set up auth). It can have variables (e.g., a project name, framework
      choice) or none at all.
-   - A multi-use power is a recurring pattern that will be repeated with different
+   - A multi-use powerup is a recurring pattern that will be repeated with different
      variable values (e.g., new API route, new view component).
 
    Present your assessment to the user and get confirmation on the type
    (single-use or multi-use) before proceeding. If the user later needs to
    switch types, the folder can simply be moved between
-   {{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/ and
-   {{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ SINGLE_USE_FOLDER }}/.
+   .powerups/internal/<package>/src/active/multi-use/ and
+   .powerups/internal/<package>/src/active/single-use/.
 
 5. Identify the capture structure:
    - Name (short, kebab-case)
@@ -74,13 +74,13 @@ go in the same package.
    Present this to the user and get approval before proceeding.
 
 6. Scaffold the folder structure by running:
-   `{{ CLI_CMD }} create --pack=<package> --type=multi-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
-   (or `{{ CLI_CMD }} create --pack=<package> --type=single-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   `pup create --pack=<package> --type=multi-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   (or `pup create --pack=<package> --type=single-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
    for single-use powers). Use `-ov` only if there are optional variables; omit it
    otherwise. This creates the instructions.json and empty template files inside
    the specified package.
 
-7. Copy the original files into the power's `template/` subdirectory,
+7. Copy the original files into the powerup's `template/` subdirectory,
    overwriting the empty stubs. Use `cp` for each file — this brings the
    full content onto disk without writing it as agent output. Do NOT write
    file contents from scratch — always copy first. The `create` command
@@ -92,7 +92,7 @@ go in the same package.
      replace concrete values with `${var}`. Keep it a pure function of
      `vars` — no imports, no filesystem access. Example:
      `export default ({ name }: Record<string, string>) => \`# ${name}\`;`.
-   - For .njk templates: replace concrete values with `{{ '{{var}}' }}` syntax.
+   - For .njk templates: replace concrete values with `{{var}}` syntax.
      Simpler when the original file needs significant transformation to become
      a .ts function.
    - For modify entries: author the modify template (.json for static,
@@ -102,9 +102,9 @@ go in the same package.
    Prefer .ts templates (the recommended format). Use .njk only when .ts
    is impractical.
 
-9. Run `{{ CLI_CMD }} validate <name>` to validate the structure.
+9. Run `pup validate <name>` to validate the structure.
 
-10. Run `{{ CLI_CMD }} use <name> --<variable-name>=<value> ... -d` to dry-run
+10. Run `pup use <name> --<variable-name>=<value> ... -d` to dry-run
     and verify the captured artifact regenerates faithfully. Compare the
     dry-run output to the original work. If there are discrepancies, fix
     the template and re-verify.
@@ -114,17 +114,17 @@ go in the same package.
 
 12. Report back to the user: what was captured, where it lives, and how to
     reuse it:
-    `{{ CLI_CMD }} use <name> --<variable-name>=<value> ...`.
+    `pup use <name> --<variable-name>=<value> ...`.
 
 13. Terminal state: "Capture complete. Return to the calling skill (if invoked
-    from `{{ CLI_NAME }}-implement`) or report to the user (if invoked
+    from `powerups-implement`) or report to the user (if invoked
     standalone)."
 
 ### Mode B — Survey capture
 
 1. Survey the codebase to understand its structure:
    - Check the project's file tree, key directories, and recent commits.
-   - Run `{{ CLI_CMD }} find -q="..."` for the main domains you
+   - Run `pup find -q="..."` for the main domains you
      find to see if powers already exist for them.
 
 2. Ask the user which area of the codebase they want to focus on:
@@ -149,7 +149,7 @@ go in the same package.
 
 4. Present the candidates to the user — for each one:
    - Suggested name (short, kebab-case)
-   - Type assessment: is this a multi-use power (recurring pattern) or a single-use power
+   - Type assessment: is this a multi-use powerup (recurring pattern) or a single-use powerup
      (one-time addition)?
    - Intent keywords
    - Variables (the parts that would change between uses)

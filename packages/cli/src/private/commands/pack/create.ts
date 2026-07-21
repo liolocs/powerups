@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import pack_errors from "#errors/packErrors";
 import gain_errors from "#errors/gainErrors";
 import {
@@ -16,6 +16,7 @@ import {
   KEYWORD_PACKAGE,
   GLOBAL_INTERNAL_PATH,
   GLOBAL_ROOT,
+  CLI_NAME,
 } from "#constants";
 
 const packCreate = new Command({
@@ -69,7 +70,7 @@ const packCreate = new Command({
       throw pack_errors.package_already_exists(packageName);
     }
 
-    // For global: ensure ~/.powers/ is writable
+    // For global: ensure <GLOBAL_FOLDER> is writable
     if (isGlobal) {
       const globalRoot = fs.ref(GLOBAL_ROOT);
       try {
@@ -90,7 +91,7 @@ const packCreate = new Command({
       version: "1.0.0",
       description,
       keywords: [KEYWORD_PACKAGE],
-      powers: {
+      [CLI_NAME]: {
         active: {
           [MULTI_USE_FOLDER]: {},
           [SINGLE_USE_FOLDER]: {},

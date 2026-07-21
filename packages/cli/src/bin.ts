@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import CLI from "@powers/program";
+import CLI from "@powerups/program";
 import { type TemplateError } from "@rcompat/error";
 import commands from "./commands/index.js";
 import { CLI_CMD } from "#constants";

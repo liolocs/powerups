@@ -1,4 +1,4 @@
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import summary from "#commands/metrics/summary";
 import { CLI_NAME } from "#constants";
 

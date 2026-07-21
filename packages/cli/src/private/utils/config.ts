@@ -47,7 +47,7 @@ export async function writeConfig(
 }
 
 /**
- * Read the global config from `~/.powers/config.json`.
+ * Read the global config from `<GLOBAL_FOLDER>/config.json`.
  * Returns { packages: [] } if the file doesn't exist (graceful degradation).
  */
 export async function readGlobalConfig(): Promise<{ packages: string[] }> {
@@ -64,7 +64,7 @@ export async function readGlobalConfig(): Promise<{ packages: string[] }> {
 }
 
 /**
- * Write the global config to `~/.powers/config.json`.
+ * Write the global config to `<GLOBAL_FOLDER>/config.json`.
  * Creates the folder structure if it doesn't exist.
  */
 export async function writeGlobalConfig(

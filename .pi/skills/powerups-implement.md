@@ -1,14 +1,14 @@
 ---
-name: powers-implement
-description: "Execute a powers plan document task-by-task"
+name: powerups-implement
+description: "Execute a powerups plan document task-by-task"
 ---
-Execute a plan saved by the powers-brainstorm skill.
+Execute a plan saved by the powerups-brainstorm skill.
 
-**Announce at start:** "I'm using the powers-implement skill to execute the plan."
+**Announce at start:** "I'm using the powerups-implement skill to execute the plan."
 
 1. Load the plan:
    - Read the plan file at the path provided (or find the most recent plan
-     in `docs/powers/specs/` if no path given).
+     in `docs/powerups/specs/` if no path given).
    - Review it critically. If anything is unclear or seems wrong, raise
      concerns with the user before starting.
 
@@ -19,24 +19,24 @@ Execute a plan saved by the powers-brainstorm skill.
 
    <CHECKLIST GATE>
    Before starting each task, confirm:
-   - [ ] Have you run `pwrs search -q="<task intent>"`?
+   - [ ] Have you run `pup find -q="<task intent>"`?
    - [ ] If a match was found, have you run
-         `pwrs info <name>` to understand
+         `pup info <name>` to understand
          its variables and files?
    If any of these haven't been done, do them now. Do not skip this even
    if you searched during brainstorming — the plan may have been written
    days ago and new items may exist.
    </CHECKLIST GATE>
 
-   a. If a power matches (score > 0):
-      - Run `pwrs info <name>` to see the
+   a. If a powerup matches (score > 0):
+      - Run `pup info <name>` to see the
         required variables, files it generates, dependencies, and the
         exact use command.
       - Present the info to the user so they understand what will be
         generated and what variables are needed.
       - Collect the required variable values from the user (or from the
         plan if the plan specifies them).
-      - Preview: `pwrs use <name> --<variable-name>=<value> ... -d`
+      - Preview: `pup use <name> --<variable-name>=<value> ... -d`
       - On approval, use for real (without `-d`).
 
    b. If no match, implement the task by writing the code directly.
@@ -44,13 +44,13 @@ Execute a plan saved by the powers-brainstorm skill.
 
    c. After the task is complete and verified working:
       - If the plan marked this as a capture candidate, invoke the
-        `powers-capture` skill to capture it.
+        `powerups-capture` skill to capture it.
       - If not marked as a capture candidate, move to the next task.
 
    d. Commit the task's work before moving to the next task.
 
 4. After all tasks are complete:
-   - Summarize what was done: tasks completed, powers used,
+   - Summarize what was done: tasks completed, powerups used,
      items captured, any tasks that were skipped or blocked.
    - Note any capture candidates that were identified but not yet captured
      (e.g., if the user declined capture for a specific item).

@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powers/program";
+import { Command } from "@powerups/program";
 import create_errors from "#errors/createErrors";
 import { outputSchema, packageDependencyGroupArraySchema, type Instructions } from "#schemas/instruction";
 import { packageJsonSchema } from "#schemas/package";
@@ -12,34 +12,37 @@ import {
   INTERNAL_FOLDER,
   SRC_FOLDER,
   ACTIVE_FOLDER,
-  powerFolderMap,
+  powerupsFolderMap,
   TEMPLATE_FOLDER,
   PACKAGE_FILE,
-  type PowerType,
+  type PowerUpType,
+  CLI_NAME,
+  SINGULAR_NAME,
+  CAPITALIZED_SINGLULAR_CLI_NAME,
 } from "#constants";
 
 const create = new Command({
   name: "create",
-  description: "Create a new power",
+  description: `Create a new ${SINGULAR_NAME}`,
   flags: [
     {
       name: "pack",
       long: "pack",
       short: "pk",
-      description: "Package name to create the power in",
+      description: `Package name to create the ${SINGULAR_NAME} in`,
     },
     {
       name: "type",
       long: "type",
       short: "t",
-      description: "Power type (multi-use or single-use)",
+      description: `${CAPITALIZED_SINGLULAR_CLI_NAME} type (multi-use or single-use)`,
       required: true,
     },
     {
       name: "name",
       long: "name",
       short: "n",
-      description: "Power name",
+      description: `${CAPITALIZED_SINGLULAR_CLI_NAME} name`,
       required: true,
     },
     {
@@ -108,10 +111,10 @@ const create = new Command({
     if (type !== "multi-use" && type !== "single-use") {
       throw create_errors.missing_type();
     }
-    const powerType = type as PowerType;
+    const powerupsType = type as PowerUpType;
 
     const name = flags.name!;
-    const typeFolderName = powerFolderMap[powerType];
+    const typeFolderName = powerupsFolderMap[powerupsType];
     const typeFolder = packageDir.append(
       `/${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolderName}`,
     );
@@ -201,22 +204,37 @@ const create = new Command({
       }
     }
 
-    // Update package.json powers property
     const packageJsonPath = packageDir.append(`/${PACKAGE_FILE}`);
     const pkgJson = packageJsonSchema.parse(await packageJsonPath.json());
+    const pkgJsonPowerups = pkgJson[CLI_NAME];
 
-    const powersMap = (pkgJson.powers.active as Record<string, Record<string, string[]>>)[typeFolderName] ?? {};
-    powersMap[name] = [
+    let powerupsMap: Record<string, string[]> = {};
+
+    if (is.truthy(
+      pkgJsonPowerups.active[
+      typeFolderName as keyof typeof pkgJsonPowerups.active
+      ],
+    )) {
+      powerupsMap = pkgJsonPowerups.active[
+        typeFolderName as keyof typeof pkgJsonPowerups.active
+      ] as Record<string, string[]>;
+    }
+
+    if (!is.truthy(powerupsMap[name])) {
+      powerupsMap[name] = [];
+    }
+    powerupsMap[name] = [
       `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolderName}/${name}/instructions.json`,
     ];
-    (pkgJson.powers.active as Record<string, Record<string, string[]>>)[typeFolderName] = powersMap;
+
+    (pkgJson[CLI_NAME].active as Record<string, Record<string, string[]>>)[typeFolderName] = powerupsMap;
 
     await packageJsonPath.writeJSON(pkgJson as never);
 
     // Add package to project config (if not already listed)
     await addPackageToConfig(root, packageName);
 
-    cli.print(`Created power: ${name} (${powerType}) in package: ${packageName}\n`);
+    cli.print(`Created ${SINGULAR_NAME}: ${name} (${powerupsType}) in package: ${packageName}\n`);
   },
 });
 

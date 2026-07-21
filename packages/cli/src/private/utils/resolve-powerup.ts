@@ -1,22 +1,21 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import { readConfig } from "#utils/config";
-import { packageJsonSchema, type PowersProperty } from "#schemas/package";
+import { packageJsonSchema, type PowerUpProperty } from "#schemas/package";
 import power_errors from "#errors/powerErrors";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   GLOBAL_INTERNAL_PATH,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
-  type PowerType,
+  type PowerUpType,
+  CLI_NAME,
 } from "#constants";
 
-export interface ResolvedPower {
-  type: PowerType;
+export interface ResolvedPowerUp {
+  type: PowerUpType;
   folder: FileRef;
   packageName: string;
   location: "local" | "global";
@@ -25,7 +24,7 @@ export interface ResolvedPower {
 interface PackageLocation {
   packageName: string;
   packageDir: FileRef;
-  powers: PowersProperty;
+  powerups: PowerUpProperty;
   location: "local" | "global";
 }
 
@@ -48,7 +47,7 @@ export async function resolvePackage(
       return {
         packageName,
         packageDir: localDir,
-        powers: pkgJson.powers,
+        powerups: pkgJson[CLI_NAME],
         location: "local",
       };
     }
@@ -63,7 +62,7 @@ export async function resolvePackage(
       return {
         packageName,
         packageDir: globalDir,
-        powers: pkgJson.powers,
+        powerups: pkgJson[CLI_NAME],
         location: "global",
       };
     }
@@ -73,54 +72,57 @@ export async function resolvePackage(
 }
 
 /**
- * Find a power by name across all config-listed packages.
+ * Find a powerup by name across all config-listed packages.
  *
  * - Reads the project config's packages array
  * - For each package, resolves its location (local first, then global)
- * - Searches the package's powers property for the requested power name
+ * - Searches the package's powers property for the requested powerup name
  * - Local packages are prioritized over global on name collision
- * - Throws not_found if the power doesn't exist in any config-listed package
- * - Throws ambiguous if the same power name is found in multiple local packages
+ * - Throws not_found if the powerup doesn't exist in any config-listed package
+ * - Throws ambiguous if the same powerup name is found in multiple local packages
  */
-export async function resolvePower(
+export async function resolvePowerUp(
   root: FileRef,
   name: string,
-  type?: PowerType,
-): Promise<ResolvedPower> {
+  type?: PowerUpType,
+): Promise<ResolvedPowerUp> {
   const config = await readConfig(root);
 
   if (config === null) {
     throw power_errors.not_found(name);
   }
 
-  const matches: ResolvedPower[] = [];
+  const matches: ResolvedPowerUp[] = [];
 
   for (const packageName of config.packages) {
     const pkgLoc = await resolvePackage(root, packageName);
     if (pkgLoc === null) continue;
 
-    const active = pkgLoc.powers.active;
+    const active = pkgLoc[CLI_NAME].active;
 
     // Determine which types to search
-    const typesToSearch: PowerType[] = type
-      ? [type]
+    const typesToSearch: PowerUpType[] = is.truthy(type)
+      ? [type!]
       : ["multi-use", "single-use"];
 
-    for (const t of typesToSearch) {
-      const typeFolder = t === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
+    for (const typeToSearch of typesToSearch) {
+      const typeFolder = typeToSearch === "multi-use"
+        ? MULTI_USE_FOLDER
+        : SINGLE_USE_FOLDER;
+
       const powersMap = active[typeFolder as keyof typeof active];
 
       if (is.defined(powersMap)) {
-        // Look for exact power name match (not parent:child entries)
+        // Look for exact powerup name match (not parent:child entries)
         if (is.defined(powersMap[name])) {
           const instructionPath = powersMap[name][0];
-          const powerFolder = pkgLoc.packageDir.append(
+          const powerupsFolder = pkgLoc.packageDir.append(
             `/${instructionPath}`,
           ).directory;
 
           matches.push({
-            type: t,
-            folder: powerFolder,
+            type: typeToSearch,
+            folder: powerupsFolder,
             packageName: pkgLoc.packageName,
             location: pkgLoc.location,
           });
@@ -145,7 +147,7 @@ export async function resolvePower(
   }
 
   if (localMatches.length > 1) {
-    // Multiple local packages have the same power name
+    // Multiple local packages have the same powerup name
     throw power_errors.ambiguous(name);
   }
 

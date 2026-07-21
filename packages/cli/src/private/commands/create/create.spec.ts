@@ -15,6 +15,8 @@ import {
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
   CONFIG_FILE,
+  SINGULAR_NAME,
+  CLI_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -39,7 +41,7 @@ async function createTestPackage(name: string) {
     version: "1.0.0",
     description: "test",
     keywords: [KEYWORD_PACKAGE],
-    powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+    powerups: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
   });
 }
 
@@ -386,7 +388,7 @@ test.case("should omit optional from JSON when --optional-variables is not provi
   await testRoot.remove();
 });
 
-test.case("should update package.json powers property after creating a power", async assert => {
+test.case(`should update package.json ${CLI_NAME} property after creating a ${SINGULAR_NAME}`, async assert => {
   await reset();
   await createTestPackage("test-pkg");
 
@@ -395,7 +397,7 @@ test.case("should update package.json powers property after creating a power", a
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "test-power" },
+      { flag: "--name", value: "test-powerup" },
       { flag: "--description", value: "test" },
     ],
     context: { root: testRoot },
@@ -404,13 +406,13 @@ test.case("should update package.json powers property after creating a power", a
   const pkgJson = await internalFolder
     .append(`/test-pkg/${PACKAGE_FILE}`)
     .json() as Record<string, unknown>;
-  const powers = (pkgJson.powers as Record<string, Record<string, Record<string, string[]>>>).active;
-  assert(powers[MULTI_USE_FOLDER]["test-power"]).defined();
+  const powerups = (pkgJson.powerups as Record<string, Record<string, Record<string, string[]>>>).active;
+  assert(powerups[MULTI_USE_FOLDER]["test-powerup"]).defined();
 
   await testRoot.remove();
 });
 
-test.case("should add package to project config after creating a power", async assert => {
+test.case(`should add package to project config after creating a ${SINGULAR_NAME}`, async assert => {
   await reset();
   await createTestPackage("test-pkg");
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({ harness: "claude", packages: [] });
@@ -420,7 +422,7 @@ test.case("should add package to project config after creating a power", async a
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "test-power" },
+      { flag: "--name", value: "test-powerup" },
       { flag: "--description", value: "test" },
     ],
     context: { root: testRoot },

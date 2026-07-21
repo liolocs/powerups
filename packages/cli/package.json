@@ -1,8 +1,8 @@
 {
-  "name": "@powers/cli",
+  "name": "@powerups/cli",
   "version": "0.0.1",
   "author": "lioloc@pm.me",
-  "description": "CLI for powers.dev",
+  "description": "CLI for powerups.dev",
   "license": "MIT",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
@@ -23,13 +23,13 @@
   ],
   "imports": {
     "#*": {
-      "@powers/source": "./src/private/*.ts",
+      "@powerups/source": "./src/private/*.ts",
       "default": "./lib/private/*.js"
     }
   },
   "exports": {
     ".": {
-      "@powers/source": "./src/public/index.ts",
+      "@powerups/source": "./src/public/index.ts",
       "default": "./lib/public/index.js"
     }
   },
@@ -42,7 +42,7 @@
     "@rcompat/runtime": "^0.17.0",
     "@rcompat/string": "^0.22.0",
     "@rcompat/type": "^0.18.0",
-    "@powers/program": "workspace:^",
+    "@powerups/program": "workspace:^",
     "nunjucks": "^3.2.4",
     "pema": "^0.8.2"
   },
@@ -50,6 +50,6 @@
     "@types/nunjucks": "^3.2.6"
   },
   "bin": {
-    "pwrs": "./lib/bin.js"
+    "pup": "./lib/bin.js"
   }
 }

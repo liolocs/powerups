@@ -3,7 +3,7 @@ export default ({ name, sub }: Record<string, string>) => {
   return JSON.stringify(
     [
       {
-        where: { after: 'import { Command } from "@powers/program";' },
+        where: { after: 'import { Command } from "@powerups/program";' },
         content: `\nimport ${subCamel} from "#commands/${name}/${sub}";`,
       },
       {

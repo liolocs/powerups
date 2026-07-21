@@ -66,7 +66,7 @@ importers:
       '@rcompat/type':
         specifier: ^0.18.0
         version: 0.18.0
-      '@powers/program':
+      '@powerups/program':
         specifier: workspace:^
         version: link:../program
       nunjucks:

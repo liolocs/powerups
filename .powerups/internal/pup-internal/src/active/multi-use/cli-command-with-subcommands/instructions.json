@@ -1,0 +1,57 @@
+{
+  "name": "cli-command-with-subcommands",
+  "description": "Scaffold a parent command with requiresSubcommand and its first subcommand together",
+  "variables": {
+    "required": [
+      "commandName",
+      "description",
+      "subcommandName",
+      "subcommandDescription",
+      "subcommandFlags",
+      "subcommandErrorCases"
+    ],
+    "optional": [
+      "errorCases"
+    ]
+  },
+  "intent": [
+    "cli",
+    "command",
+    "subcommand",
+    "parent",
+    "scaffold",
+    "generate",
+    "combined"
+  ],
+  "output": {
+    "create": [
+      {
+        "name": "barrel.ts",
+        "template": "barrel.ts.ts",
+        "outputPath": "packages/cli/src/commands/{{commandName}}.ts"
+      },
+      {
+        "name": "parent-command.ts",
+        "template": "parent-command.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
+      },
+      {
+        "name": "errors.ts",
+        "template": "combined-errors.ts.ts",
+        "outputPath": "packages/cli/src/private/errors/{{commandName}}Errors.ts"
+      },
+      {
+        "name": "subcommand.ts",
+        "template": "subcommand.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{commandName}}/{{subcommandName}}.ts"
+      },
+      {
+        "name": "subcommand-spec.ts",
+        "template": "subcommand-spec.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{commandName}}/{{subcommandName}}.spec.ts"
+      }
+    ],
+    "modify": [],
+    "delete": []
+  }
+}

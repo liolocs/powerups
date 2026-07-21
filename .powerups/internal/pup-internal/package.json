@@ -13,6 +13,9 @@
         ],
         "cli-subcommand": [
           "./src/active/multi-use/cli-subcommand/instructions.json"
+        ],
+        "cli-command-with-subcommands": [
+          "./src/active/multi-use/cli-command-with-subcommands/instructions.json"
         ]
       },
       "single-use": {}

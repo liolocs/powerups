@@ -1,0 +1,14 @@
+{
+  "name": "pup-internal",
+  "version": "1.0.0",
+  "description": "Powerups for scaffolding pup CLI commands",
+  "keywords": [
+    "powerups-package"
+  ],
+  "powerups": {
+    "active": {
+      "multi-use": {},
+      "single-use": {}
+    }
+  }
+}

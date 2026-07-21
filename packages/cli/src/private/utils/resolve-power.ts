@@ -33,7 +33,7 @@ interface PackageLocation {
  * Resolve a package by name, checking local first then global.
  * Returns null if the package doesn't exist in either location.
  */
-async function resolvePackage(
+export async function resolvePackage(
   projectRoot: FileRef,
   packageName: string,
 ): Promise<PackageLocation | null> {

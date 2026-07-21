@@ -23,6 +23,12 @@ const validate = new Command({
       short: "t",
       description: "Power type (multi-use or single-use) for disambiguation",
     },
+    {
+      name: "pack",
+      long: "pack",
+      short: "pk",
+      description: "Package name to validate powers in",
+    },
   ],
   subcommands: [],
   action: async ({ subcommands, flags, context }) => {
@@ -45,6 +51,12 @@ const validate = new Command({
       ? (flags.type as PowerType)
       : undefined;
     const resolved = await resolvePower(root, name, typeFlag);
+
+    // If --pack is provided, verify the power is in the specified package
+    if (is.defined(flags.pack) && resolved.packageName !== flags.pack) {
+      throw validate_errors.invalid(name, `power is in package "${resolved.packageName}", not "${flags.pack}"`);
+    }
+
     const typeFolder = resolved.folder.up(1);
 
     // Validate the power itself

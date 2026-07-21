@@ -8,15 +8,12 @@ import find_errors from "#errors/findErrors";
 import tokenize from "#utils/tokenize";
 import scoreIntent from "#utils/score-intent";
 import { readConfig } from "#utils/config";
-import { packageJsonSchema, type PackageJson } from "#schemas/package";
+import { resolvePackage } from "#utils/resolve-power";
 import { instructionsSchema } from "#schemas/instruction";
 import {
   MAIN_FOLDER,
-  INTERNAL_FOLDER,
-  GLOBAL_INTERNAL_PATH,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
   type PowerType,
 } from "#constants";
 
@@ -28,37 +25,6 @@ interface SearchResult {
   type: PowerType;
   packageName: string;
   location: "local" | "global";
-}
-
-/**
- * Resolve a package to its directory and package.json.
- * Local first, then global. Returns null if not found.
- */
-async function resolvePackageDir(
-  root: FileRef,
-  packageName: string,
-): Promise<{ dir: FileRef; pkgJson: PackageJson; location: "local" | "global" } | null> {
-  // Check local first
-  const localDir = root.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`);
-  if (await fs.exists(localDir)) {
-    const pkgJsonPath = localDir.append(`/${PACKAGE_FILE}`);
-    if (await fs.exists(pkgJsonPath)) {
-      const pkgJson = packageJsonSchema.parse(await pkgJsonPath.json());
-      return { dir: localDir, pkgJson, location: "local" };
-    }
-  }
-
-  // Check global
-  const globalDir = fs.ref(`${GLOBAL_INTERNAL_PATH}/${packageName}`);
-  if (await fs.exists(globalDir)) {
-    const pkgJsonPath = globalDir.append(`/${PACKAGE_FILE}`);
-    if (await fs.exists(pkgJsonPath)) {
-      const pkgJson = packageJsonSchema.parse(await pkgJsonPath.json());
-      return { dir: globalDir, pkgJson, location: "global" };
-    }
-  }
-
-  return null;
 }
 
 const find = new Command({
@@ -109,10 +75,10 @@ const find = new Command({
     const results: SearchResult[] = [];
 
     for (const packageName of packages) {
-      const pkgLoc = await resolvePackageDir(root, packageName);
+      const pkgLoc = await resolvePackage(root, packageName);
       if (pkgLoc === null) continue;
 
-      const active = pkgLoc.pkgJson.powers.active as Record<string, Record<string, string[]>>;
+      const active = pkgLoc.powers.active as Record<string, Record<string, string[]>>;
 
       for (const type of types) {
         const typeFolder = type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
@@ -125,7 +91,7 @@ const find = new Command({
           if (powerKey.includes(":")) continue;
 
           const instructionPath = instructionPaths[0];
-          const fullPath = pkgLoc.dir.append(`/${instructionPath}`);
+          const fullPath = pkgLoc.packageDir.append(`/${instructionPath}`);
 
           if (!(await fs.exists(fullPath))) continue;
 

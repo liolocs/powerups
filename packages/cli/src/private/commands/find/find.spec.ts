@@ -1,9 +1,10 @@
 import test from "@rcompat/test";
-import fs, { type FileRef } from "@rcompat/fs";
+import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import find from "#commands/find/index";
 import { CodeError } from "@rcompat/error";
 import { FindErrorCode } from "#errors/findErrors";
+import captureStdout from "#test-utils/capture-stdout";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
@@ -74,14 +75,16 @@ test.case("find returns matching powers from config-listed packages", async asse
   await createPackageWithPower("my-pkg", "pdf-summarizer", ["summarize", "pdf"]);
   await createConfig(["my-pkg"]);
 
-  // Should not throw — find should return results
-  await find.run({
+  const output = await captureStdout(() => find.run({
     subcommands: [],
     flags: [{ flag: "--query", value: "summarize pdf" }],
     context: { root: testRoot },
-  });
+  }));
 
-  assert(true).true();
+  assert(output).includes("pdf-summarizer");
+  assert(output).includes("my-pkg");
+  assert(output).includes("local");
+
   await testRoot.remove();
 });
 
@@ -141,5 +144,23 @@ test.case("find does not return powers from packages not in config", async asser
     threw = (e as CodeError).code;
   }
   assert(threw).equals(FindErrorCode.no_matching);
+  await testRoot.remove();
+});
+test.case("find shows package name and location in output", async assert => {
+  await reset();
+  await createPackageWithPower("alpha-pkg", "alpha-power", ["alpha", "test"]);
+  await createPackageWithPower("beta-pkg", "beta-power", ["beta", "test"]);
+  await createConfig(["alpha-pkg", "beta-pkg"]);
+
+  const output = await captureStdout(() => find.run({
+    subcommands: [],
+    flags: [{ flag: "--query", value: "alpha test" }],
+    context: { root: testRoot },
+  }));
+
+  assert(output).includes("alpha-power");
+  assert(output).includes("alpha-pkg");
+  assert(output).includes("local");
+
   await testRoot.remove();
 });

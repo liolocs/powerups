@@ -11,6 +11,8 @@ import {
   removePackageFromConfig,
 } from "#utils/config";
 import { resolvePower } from "#utils/resolve-power";
+import { CodeError } from "@rcompat/error";
+import { PowerErrorCode } from "#errors/powerErrors";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
@@ -64,8 +66,13 @@ async function collectSubPowers(
           [...pathStack, powerName],
           collected,
         );
-      } catch {
-        throw pack_errors.subpower_unresolvable(ref.name, powerName);
+      } catch (e) {
+        // Only mask not_found errors as subpower_unresolvable.
+        // Re-throw other errors (ambiguous, circular_include) as-is.
+        if (e instanceof CodeError && (e as CodeError).code === PowerErrorCode.not_found) {
+          throw pack_errors.subpower_unresolvable(ref.name, powerName);
+        }
+        throw e;
       }
     }
   }

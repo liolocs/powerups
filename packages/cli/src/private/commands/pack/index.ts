@@ -1,7 +1,7 @@
 import { Command } from "@powers/program";
 import { CLI_NAME } from "#constants";
-import packCreate from "./create.js";
-import packMove from "./move.js";
+import packCreate from "#commands/pack/create";
+import packMove from "#commands/pack/move";
 
 const pack = new Command({
   name: "pack",

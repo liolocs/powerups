@@ -5,6 +5,7 @@ import runtime from "@rcompat/runtime";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { checkOutput } from "#utils/check-output";
+import { readConfig } from "#utils/config";
 import { modificationArraySchema } from "#schemas/modification";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
 import doctorErrors from "#errors/doctorErrors";
@@ -18,6 +19,7 @@ import {
   SINGLE_USE_FOLDER,
   TEMPLATE_FOLDER,
   PACKAGE_FILE,
+  GLOBAL_INTERNAL_PATH,
 } from "#constants";
 
 const execAsync = promisify(exec);
@@ -222,6 +224,23 @@ const doctor = new Command({
               // Already captured by checkIssues
             }
           }
+        }
+      }
+    }
+
+    // 3.5 Config packages validation — verify each config-listed package resolves
+    const config = await readConfig(root);
+    if (config !== null) {
+      for (const packageName of config.packages) {
+        const localDir = root.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`);
+        const globalDir = fs.ref(`${GLOBAL_INTERNAL_PATH}/${packageName}`);
+        if (!(await fs.exists(localDir)) && !(await fs.exists(globalDir))) {
+          issues.push({
+            level: "WARN",
+            type: "config",
+            name: packageName,
+            message: `Package "${packageName}" listed in config but not found on disk (local or global)`,
+          });
         }
       }
     }

@@ -26,32 +26,39 @@
   "output": {
     "create": [
       {
-        "name": "barrel.ts",
-        "template": "barrel.ts.ts",
-        "outputPath": "packages/cli/src/commands/{{commandName}}.ts"
-      },
-      {
         "name": "parent-command.ts",
         "template": "parent-command.ts.ts",
         "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
-      },
-      {
-        "name": "errors.ts",
-        "template": "combined-errors.ts.ts",
-        "outputPath": "packages/cli/src/private/errors/{{commandName}}Errors.ts"
-      },
-      {
-        "name": "subcommand.ts",
-        "template": "subcommand.ts.ts",
-        "outputPath": "packages/cli/src/private/commands/{{commandName}}/{{subcommandName}}.ts"
-      },
-      {
-        "name": "subcommand-spec.ts",
-        "template": "subcommand-spec.ts.ts",
-        "outputPath": "packages/cli/src/private/commands/{{commandName}}/{{subcommandName}}.spec.ts"
       }
     ],
     "modify": [],
     "delete": []
-  }
+  },
+  "includes": [
+    {
+      "name": "cli-command",
+      "variables": {
+        "commandName": "{{commandName}}",
+        "description": "{{description}}",
+        "flags": "[]",
+        "errorCases": "{{errorCases}}"
+      },
+      "exclude": {
+        "create": ["command.ts", "spec.ts"]
+      }
+    },
+    {
+      "name": "cli-subcommand",
+      "variables": {
+        "parentCommand": "{{commandName}}",
+        "subcommandName": "{{subcommandName}}",
+        "description": "{{subcommandDescription}}",
+        "flags": "{{subcommandFlags}}",
+        "errorCases": "{{subcommandErrorCases}}"
+      },
+      "exclude": {
+        "modify": ["modify-index"]
+      }
+    }
+  ]
 }

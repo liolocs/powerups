@@ -7,7 +7,14 @@
   ],
   "powerups": {
     "active": {
-      "multi-use": {},
+      "multi-use": {
+        "cli-command": [
+          "./src/active/multi-use/cli-command/instructions.json"
+        ],
+        "cli-subcommand": [
+          "./src/active/multi-use/cli-subcommand/instructions.json"
+        ]
+      },
       "single-use": {}
     }
   }

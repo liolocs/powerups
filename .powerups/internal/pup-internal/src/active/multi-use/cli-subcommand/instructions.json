@@ -1,0 +1,48 @@
+{
+  "name": "cli-subcommand",
+  "description": "Scaffold a subcommand that attaches to an existing parent command",
+  "variables": {
+    "required": [
+      "parentCommand",
+      "subcommandName",
+      "description",
+      "flags",
+      "errorCases"
+    ]
+  },
+  "intent": [
+    "cli",
+    "command",
+    "subcommand",
+    "scaffold",
+    "generate",
+    "nested"
+  ],
+  "output": {
+    "create": [
+      {
+        "name": "subcommand.ts",
+        "template": "subcommand.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{parentCommand}}/{{subcommandName}}.ts"
+      },
+      {
+        "name": "subcommand-spec.ts",
+        "template": "subcommand-spec.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{parentCommand}}/{{subcommandName}}.spec.ts"
+      }
+    ],
+    "modify": [
+      {
+        "name": "modify-index",
+        "template": "modify-index.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{parentCommand}}/index.ts"
+      },
+      {
+        "name": "modify-errors",
+        "template": "modify-errors.ts.ts",
+        "outputPath": "packages/cli/src/private/errors/{{parentCommand}}Errors.ts"
+      }
+    ],
+    "delete": []
+  }
+}

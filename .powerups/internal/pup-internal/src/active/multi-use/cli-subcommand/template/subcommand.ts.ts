@@ -2,9 +2,15 @@ function toCamelCase(name: string): string {
   return name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 }
 
+function toPascalCase(name: string): string {
+  const camel = toCamelCase(name);
+  return camel.charAt(0).toUpperCase() + camel.slice(1);
+}
+
 export default function(variables: Record<string, string>): string {
-  const { commandName, description, flags, errorCases } = variables;
-  const varName = toCamelCase(commandName);
+  const { parentCommand, subcommandName, description, flags, errorCases } = variables;
+  const parentVar = toCamelCase(parentCommand);
+  const subVar = parentVar + toPascalCase(subcommandName);
 
   const parsedFlags: Array<{
     name: string;
@@ -35,10 +41,11 @@ export default function(variables: Record<string, string>): string {
     return lines.join("\n");
   }).join(",\n");
 
+  // Subcommands always need subcommands (positional args).
   // When flags exist, props is required and we can destructure.
-  // When no flags, props is optional — use props?.context?.root.
+  // When no flags, props is optional — use props?.subcommands, props?.context.
   const actionLine = hasFlags
-    ? "  action: async ({ flags, context }) => {"
+    ? "  action: async ({ subcommands, flags, context }) => {"
     : "  action: async (props) => {";
   const rootLine = hasFlags
     ? "    const root: FileRef = context?.root ?? await runtime.projectRoot();"
@@ -53,20 +60,20 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@powerups/program";
-import ${varName}_errors from "#errors/${commandName}Errors";
+import ${parentVar}_errors from "#errors/${parentCommand}Errors";
 
-const ${varName} = new Command({
-  name: "${commandName}",
+const ${subVar} = new Command({
+  name: "${subcommandName}",
   description: "${description}",
 ${flagsBlock}
   subcommands: [],
 ${actionLine}
 ${rootLine}
 
-    // TODO: implement command logic
+    // TODO: implement subcommand logic
   },
 });
 
-export default ${varName};
+export default ${subVar};
 `;
 }

@@ -1,0 +1,45 @@
+{
+  "name": "cli-command",
+  "description": "Scaffold a standalone CLI command with flags, action, errors, and spec",
+  "variables": {
+    "required": [
+      "commandName",
+      "description",
+      "flags",
+      "errorCases"
+    ]
+  },
+  "intent": [
+    "cli",
+    "command",
+    "scaffold",
+    "generate",
+    "standalone"
+  ],
+  "output": {
+    "create": [
+      {
+        "name": "barrel.ts",
+        "template": "barrel.ts.ts",
+        "outputPath": "packages/cli/src/commands/{{commandName}}.ts"
+      },
+      {
+        "name": "command.ts",
+        "template": "command.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
+      },
+      {
+        "name": "errors.ts",
+        "template": "errors.ts.ts",
+        "outputPath": "packages/cli/src/private/errors/{{commandName}}Errors.ts"
+      },
+      {
+        "name": "spec.ts",
+        "template": "spec.ts.ts",
+        "outputPath": "packages/cli/src/private/commands/{{commandName}}/{{commandName}}.spec.ts"
+      }
+    ],
+    "modify": [],
+    "delete": []
+  }
+}

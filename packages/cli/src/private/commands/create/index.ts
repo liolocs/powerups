@@ -5,11 +5,16 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@powers/program";
 import create_errors from "#errors/createErrors";
 import { outputSchema, packageDependencyGroupArraySchema, type Instructions } from "#schemas/instruction";
+import { packageJsonSchema } from "#schemas/package";
+import { addPackageToConfig } from "#utils/config";
 import {
   MAIN_FOLDER,
+  INTERNAL_FOLDER,
+  SRC_FOLDER,
   ACTIVE_FOLDER,
   powerFolderMap,
   TEMPLATE_FOLDER,
+  PACKAGE_FILE,
   type PowerType,
 } from "#constants";
 
@@ -17,6 +22,12 @@ const create = new Command({
   name: "create",
   description: "Create a new power",
   flags: [
+    {
+      name: "pack",
+      long: "pack",
+      short: "pk",
+      description: "Package name to create the power in",
+    },
     {
       name: "type",
       long: "type",
@@ -81,6 +92,17 @@ const create = new Command({
       throw create_errors.dry_folder_not_found();
     }
 
+    // Validate --pack
+    const packageName = flags.pack;
+    if (!is.defined(packageName) || packageName.length === 0) {
+      throw create_errors.missing_pack();
+    }
+
+    const packageDir = mainFolder.append(`/${INTERNAL_FOLDER}/${packageName}`);
+    if (!(await fs.exists(packageDir))) {
+      throw create_errors.pack_not_found(packageName);
+    }
+
     // Validate --type
     const type = flags.type as string | undefined;
     if (type !== "multi-use" && type !== "single-use") {
@@ -89,8 +111,9 @@ const create = new Command({
     const powerType = type as PowerType;
 
     const name = flags.name!;
-    const typeFolder = mainFolder.append(
-      `/${ACTIVE_FOLDER}/${powerFolderMap[powerType]}`,
+    const typeFolderName = powerFolderMap[powerType];
+    const typeFolder = packageDir.append(
+      `/${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolderName}`,
     );
 
     // Ensure type folder exists
@@ -178,7 +201,22 @@ const create = new Command({
       }
     }
 
-    cli.print(`Created power: ${name} (${powerType})\n`);
+    // Update package.json powers property
+    const packageJsonPath = packageDir.append(`/${PACKAGE_FILE}`);
+    const pkgJson = packageJsonSchema.parse(await packageJsonPath.json());
+
+    const powersMap = (pkgJson.powers.active as Record<string, Record<string, string[]>>)[typeFolderName] ?? {};
+    powersMap[name] = [
+      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolderName}/${name}/instructions.json`,
+    ];
+    (pkgJson.powers.active as Record<string, Record<string, string[]>>)[typeFolderName] = powersMap;
+
+    await packageJsonPath.writeJSON(pkgJson as never);
+
+    // Add package to project config (if not already listed)
+    await addPackageToConfig(root, packageName);
+
+    cli.print(`Created power: ${name} (${powerType}) in package: ${packageName}\n`);
   },
 });
 

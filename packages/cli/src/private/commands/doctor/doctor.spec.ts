@@ -15,9 +15,14 @@ import { randomBytes } from "node:crypto";
 import path from "node:path";
 import {
   MAIN_FOLDER,
+  INTERNAL_FOLDER,
+  SRC_FOLDER,
   ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
+  PACKAGE_FILE,
+  KEYWORD_PACKAGE,
+  CONFIG_FILE,
 } from "#constants";
 
 const execAsync = promisify(exec);
@@ -25,9 +30,8 @@ const execAsync = promisify(exec);
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const activeFolder: FileRef = mainFolder.append(`/${ACTIVE_FOLDER}`);
-const multiUseFolder: FileRef = activeFolder.append(`/${MULTI_USE_FOLDER}`);
-const singleUseFolder: FileRef = activeFolder.append(`/${SINGLE_USE_FOLDER}`);
+const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
+const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
 
 async function gitInit(dir: FileRef): Promise<void> {
   await execAsync("git init", { cwd: dir.path });
@@ -51,15 +55,31 @@ async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
-  await fs.create(activeFolder);
-  await fs.create(multiUseFolder);
+  await fs.create(internalFolder);
+  // Create test package
+  const pkgDir = internalFolder.append("/test-pkg");
+  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
+  await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
+  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+    name: "test-pkg",
+    version: "1.0.0",
+    description: "test",
+    keywords: [KEYWORD_PACKAGE],
+    powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+  });
+  // Create config with test-pkg listed
+  await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
+    harness: "claude",
+    packages: ["test-pkg"],
+  });
   await gitInit(testRoot);
 }
 
 test.case("doctor reports clean state with no powers", async assert => {
   await reset();
   // Create single-use folder too so there are no warnings
-  await fs.create(singleUseFolder);
+  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
   await gitCommit(testRoot, "add folders");
 
   const output = await captureStdout(() => doctor.run({
@@ -77,11 +97,11 @@ test.case("doctor reports clean state with no powers", async assert => {
 
 test.case("doctor validates powers with no issues", async assert => {
   await reset();
-  await fs.create(singleUseFolder);
+  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
 
   await create.run({
     subcommands: [],
-    flags: [{ flag: "--type", value: "multi-use" },
+          flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "valid-power" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
@@ -103,11 +123,11 @@ test.case("doctor validates powers with no issues", async assert => {
 
 test.case("doctor reports orphaned file in a power folder", async assert => {
   await reset();
-  await fs.create(singleUseFolder);
+  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
 
   await create.run({
     subcommands: [],
-    flags: [{ flag: "--type", value: "multi-use" },
+          flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "with-orphan" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
@@ -129,11 +149,12 @@ test.case("doctor reports orphaned file in a power folder", async assert => {
 
 test.case("doctor reports invalid .json modify template", async assert => {
   await reset();
-  await fs.create(singleUseFolder);
+  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
 
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "bad-modify" },
       { flag: "--description", value: "test description" },
@@ -161,7 +182,7 @@ test.case("doctor reports invalid .json modify template", async assert => {
 
 test.case("doctor warns when git working tree is dirty", async assert => {
   await reset();
-  await fs.create(singleUseFolder);
+  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
   await gitCommit(testRoot, "clean state");
 
   // Make a dirty change
@@ -201,12 +222,12 @@ test.case("doctor errors when not a git repo", async assert => {
 
 test.case("doctor checks both types in one pass", async assert => {
   await reset();
-  await fs.create(singleUseFolder);
+  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
 
   // Create a multi-use power
   await create.run({
     subcommands: [],
-    flags: [{ flag: "--type", value: "multi-use" },
+          flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "multi" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
@@ -215,7 +236,7 @@ test.case("doctor checks both types in one pass", async assert => {
   // Create a single-use power
   await create.run({
     subcommands: [],
-    flags: [{ flag: "--type", value: "single-use" },
+          flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "single-use" },
       { flag: "--name", value: "single" },
       { flag: "--description", value: "test description" }],
     context: { root: testRoot },
@@ -261,11 +282,12 @@ test.group("doctor errors", () => {
 
   test.case("should fail with validation_failed when a template file is missing", async assert => {
     await reset();
-    await fs.create(singleUseFolder);
+    await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
 
     await create.run({
       subcommands: [],
       flags: [
+      { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "bad-power" },
       { flag: "--description", value: "test description" },

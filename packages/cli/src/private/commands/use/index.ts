@@ -25,8 +25,6 @@ import { applyDependencies, collectDependencies } from "#utils/dependencies";
 import { resolvePower } from "#utils/resolve-power";
 import {
   MAIN_FOLDER,
-  ACTIVE_FOLDER,
-  powerFolderMap,
   type PowerType,
 } from "#constants";
 
@@ -78,9 +76,7 @@ const use = new Command({
       : undefined;
     const resolved = await resolvePower(root, name, typeFlag);
     const outputFolder = resolved.folder;
-    const typeFolder = mainFolder.append(
-      `/${ACTIVE_FOLDER}/${powerFolderMap[resolved.type]}`,
-    );
+    const typeFolder = resolved.folder.up(1);
 
     // 4. Validate (checkOutput)
     const issues = await checkOutput({

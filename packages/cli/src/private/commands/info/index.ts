@@ -10,8 +10,6 @@ import { resolvePower } from "#utils/resolve-power";
 import {
   CLI_CMD,
   MAIN_FOLDER,
-  ACTIVE_FOLDER,
-  powerFolderMap,
   type PowerType,
 } from "#constants";
 
@@ -189,9 +187,7 @@ const info = new Command({
       : undefined;
     const resolved = await resolvePower(root, name, typeFlag);
     const outputFolder = resolved.folder;
-    const typeFolder = mainFolder.append(
-      `/${ACTIVE_FOLDER}/${powerFolderMap[resolved.type]}`,
-    );
+    const typeFolder = resolved.folder.up(1);
 
     const outputPath = outputFolder.append("/instructions.json");
     const instructions = instructionsSchema.parse(await outputPath.json());
@@ -205,6 +201,7 @@ const info = new Command({
     const lines: string[] = [];
 
     lines.push(`# ${instructions.name} (${resolved.type})`);
+    lines.push(`   package: ${resolved.packageName} (${resolved.location})`);
     lines.push("");
     lines.push(instructions.description);
     lines.push("");

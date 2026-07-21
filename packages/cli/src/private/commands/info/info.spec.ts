@@ -6,17 +6,46 @@ import create from "#commands/create/index";
 import captureStdout from "#test-utils/capture-stdout";
 import { CodeError } from "@rcompat/error";
 import { InfoErrorCode } from "#errors/infoErrors";
-import { CLI_CMD, MAIN_FOLDER } from "#constants";
+import {
+  CLI_CMD,
+  MAIN_FOLDER,
+  INTERNAL_FOLDER,
+  SRC_FOLDER,
+  ACTIVE_FOLDER,
+  MULTI_USE_FOLDER,
+  SINGLE_USE_FOLDER,
+  PACKAGE_FILE,
+  KEYWORD_PACKAGE,
+  CONFIG_FILE,
+} from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-
+const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
+  await fs.create(internalFolder);
+  // Create test package
+  const pkgDir = internalFolder.append("/test-pkg");
+  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
+  await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
+  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+    name: "test-pkg",
+    version: "1.0.0",
+    description: "test",
+    keywords: [KEYWORD_PACKAGE],
+    powers: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
+  });
+  // Create config with test-pkg listed
+  await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
+    harness: "claude",
+    packages: ["test-pkg"],
+  });
 }
 
 test.case("info prints name, description, intent, and usage", async assert => {
@@ -25,6 +54,7 @@ test.case("info prints name, description, intent, and usage", async assert => {
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "ui-component" },
       { flag: "--description", value: "A UI component template" },
@@ -56,6 +86,7 @@ test.case("info prints required and optional variables", async assert => {
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "api-route" },
       { flag: "--description", value: "An API route template" },
@@ -88,6 +119,7 @@ test.case("info prints create, modify, and delete files", async assert => {
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "full-output" },
       { flag: "--description", value: "A template with all file types" },
@@ -135,6 +167,7 @@ test.case("info prints package dependencies", async assert => {
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "add-tailwind" },
       { flag: "--description", value: "Adds tailwind to a project" },
@@ -170,6 +203,7 @@ test.case("info prints includes with variable bindings for composite templates",
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "child-component" },
       { flag: "--description", value: "A child component template" },
@@ -190,6 +224,7 @@ test.case("info prints includes with variable bindings for composite templates",
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "parent-composite" },
       { flag: "--description", value: "A composite template" },
@@ -207,7 +242,7 @@ test.case("info prints includes with variable bindings for composite templates",
   });
 
   // Overwrite parent instructions.json to add includes
-  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/active/multi-use`);
+  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
   const parentInstructionsPath = multiUseFolder.append("/parent-composite/instructions.json");
   await parentInstructionsPath.writeJSON({
     name: "parent-composite",
@@ -258,6 +293,7 @@ test.case("info applies outputPathOverride from includes in file listing", async
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "override-child" },
       { flag: "--description", value: "A child with overrideable paths" },
@@ -278,6 +314,7 @@ test.case("info applies outputPathOverride from includes in file listing", async
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "override-parent" },
       { flag: "--description", value: "A parent with outputPathOverride" },
@@ -290,7 +327,7 @@ test.case("info applies outputPathOverride from includes in file listing", async
     context: { root: testRoot },
   });
 
-  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/active/multi-use`);
+  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
   const parentInstructionsPath = multiUseFolder.append("/override-parent/instructions.json");
   await parentInstructionsPath.writeJSON({
     name: "override-parent",
@@ -329,6 +366,7 @@ test.case("info omits empty sections when template has no files, deps, or includ
   await create.run({
     subcommands: [],
     flags: [
+      { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "simple-template" },
       { flag: "--description", value: "A simple template" },

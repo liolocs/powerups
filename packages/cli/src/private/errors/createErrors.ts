@@ -30,6 +30,16 @@ const create_errors = error.coded({
     const errorText = "Invalid JSON for --package-deps flag.";
     return t`${errorBGText}${errorText}`;
   },
+  missing_pack: () => {
+    const errorText =
+      `--pack flag is required.\n\n` +
+      `Usage: ${CLI_CMD} create --pack=<package-name> --type=<multi-use|single-use> -n=<name> ...`;
+    return t`${errorBGText}${errorText}`;
+  },
+  pack_not_found: (name: string) => {
+    const nameText = cli.bg.yellow(" " + name + " ");
+    return t`${errorBGText}Package ${nameText} not found. Run "${CLI_CMD} pack create ${name}" first.`;
+  },
 });
 
 export type CreateErrorCode = keyof typeof create_errors;

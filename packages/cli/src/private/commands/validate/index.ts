@@ -10,8 +10,6 @@ import { resolvePower } from "#utils/resolve-power";
 import { instructionsSchema } from "#schemas/instruction";
 import {
   MAIN_FOLDER,
-  ACTIVE_FOLDER,
-  powerFolderMap,
   type PowerType,
 } from "#constants";
 
@@ -47,9 +45,7 @@ const validate = new Command({
       ? (flags.type as PowerType)
       : undefined;
     const resolved = await resolvePower(root, name, typeFlag);
-    const typeFolder = mainFolder.append(
-      `/${ACTIVE_FOLDER}/${powerFolderMap[resolved.type]}`,
-    );
+    const typeFolder = resolved.folder.up(1);
 
     // Validate the power itself
     const issues = await checkOutput({

@@ -30,7 +30,7 @@ const update = new Command({
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
 
     if (!(await fs.exists(mainFolder))) {
-      throw gain_errors.dry_folder_not_found();
+      throw gain_errors.main_folder_not_found();
     }
 
     // Resolve the harness: --harness flag takes priority, otherwise read

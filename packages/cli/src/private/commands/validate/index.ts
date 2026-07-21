@@ -50,7 +50,7 @@ const validate = new Command({
     const hasMainFolder = await fs.exists(mainFolder);
 
     if (!hasMainFolder) {
-      throw create_errors.dry_folder_not_found();
+      throw create_errors.main_folder_not_found();
     }
 
     // Resolve powerup via resolvePowerUp (searches both folders)

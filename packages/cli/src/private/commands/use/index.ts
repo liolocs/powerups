@@ -82,7 +82,7 @@ const use = new Command({
     const hasMainFolder = await fs.exists(mainFolder);
 
     if (!hasMainFolder) {
-      throw use_errors.dry_folder_not_found();
+      throw use_errors.main_folder_not_found();
     }
 
     // 3. Resolve powerup via resolvePowerUp (searches both folders)

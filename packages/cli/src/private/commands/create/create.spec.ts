@@ -177,7 +177,7 @@ test.case("create template without -p flag omits packageDependencies", async ass
 });
 
 test.group("create errors", () => {
-  test.case(`should fail with dry_folder_not_found without ${MAIN_FOLDER} folder`, async assert => {
+  test.case(`should fail with main_folder_not_found without ${MAIN_FOLDER} folder`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 
@@ -197,7 +197,7 @@ test.group("create errors", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(CreateErrorCode.dry_folder_not_found);
+    assert(threw).equals(CreateErrorCode.main_folder_not_found);
 
     await testRoot.remove();
   });

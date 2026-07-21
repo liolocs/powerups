@@ -180,7 +180,7 @@ const info = new Command({
     const root: FileRef = props.context?.root ?? await runtime.projectRoot();
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
     if (!(await fs.exists(mainFolder))) {
-      throw info_errors.dry_folder_not_found();
+      throw info_errors.main_folder_not_found();
     }
 
     // Resolve powerup via resolvePowerUp (searches both folders)

@@ -209,8 +209,8 @@ test.group("pack create", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    // gain_errors.dry_folder_not_found uses the create error code
-    assert(threw).equals("dry_folder_not_found");
+    // gain_errors.main_folder_not_found uses the create error code
+    assert(threw).equals("main_folder_not_found");
 
     await testRoot.remove();
   });

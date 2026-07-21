@@ -11,7 +11,7 @@ const printGain = CLI_CMD + " gain";
 const specifyHarness = `Harness options: \n\t${printGain} --harness=claude\n\t${printGain} --harness=opencode\n\t${printGain} --harness=pi\n\t${printGain} --harness=codex`;
 
 const gain_errors = error.coded({
-  dry_folder_not_found: () => {
+  main_folder_not_found: () => {
     const errorText =
       `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} gain" first.`;
     return t`${errorBGText}${errorText}`;

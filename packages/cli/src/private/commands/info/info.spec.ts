@@ -431,7 +431,7 @@ test.group("info errors", () => {
     await testRoot.remove();
   });
 
-  test.case(`should fail with dry_folder_not_found without ${MAIN_FOLDER}} folder`, async assert => {
+  test.case(`should fail with main_folder_not_found without ${MAIN_FOLDER}} folder`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 
@@ -446,7 +446,7 @@ test.group("info errors", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(InfoErrorCode.dry_folder_not_found);
+    assert(threw).equals(InfoErrorCode.main_folder_not_found);
 
     await testRoot.remove();
   });

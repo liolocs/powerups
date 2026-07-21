@@ -206,7 +206,7 @@ test.case("apply with --overwrite overwrites existing destination files", async 
 });
 
 test.group("apply errors", () => {
-  test.case(`should fail with dry_folder_not_found without ${MAIN_FOLDER}} folder`, async assert => {
+  test.case(`should fail with main_folder_not_found without ${MAIN_FOLDER}} folder`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
     await gitInit(testRoot);
@@ -222,7 +222,7 @@ test.group("apply errors", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(UseErrorCode.dry_folder_not_found);
+    assert(threw).equals(UseErrorCode.main_folder_not_found);
 
     await testRoot.remove();
   });

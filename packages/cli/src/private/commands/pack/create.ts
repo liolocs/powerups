@@ -58,7 +58,7 @@ const packCreate = new Command({
       const root: FileRef = context?.root ?? await runtime.projectRoot();
       const mainFolder = root.append(`/${MAIN_FOLDER}`);
       if (!(await fs.exists(mainFolder))) {
-        throw gain_errors.dry_folder_not_found();
+        throw gain_errors.main_folder_not_found();
       }
       baseDir = mainFolder.append(`/${INTERNAL_FOLDER}`);
     }

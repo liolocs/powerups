@@ -112,7 +112,7 @@ test.case("update fails when not initialized", async assert => {
     assert(e instanceof CodeError).true();
     threw = (e as CodeError).code;
   }
-  assert(threw).equals(GainErrorCode.dry_folder_not_found);
+  assert(threw).equals(GainErrorCode.main_folder_not_found);
 
   await testRoot.remove();
 });

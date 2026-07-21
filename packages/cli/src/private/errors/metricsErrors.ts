@@ -7,7 +7,7 @@ const t = error.template;
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const metrics_errors = error.coded({
-  dry_folder_not_found: () => {
+  main_folder_not_found: () => {
     const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_NAME} init" first.`;
     return t`${errorBGText}${errorText}`;
   },

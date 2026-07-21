@@ -22,7 +22,7 @@ const summary = new Command({
     const hasMainFolder = await fs.exists(mainFolder);
 
     if (!hasMainFolder) {
-      throw metricsErrors.dry_folder_not_found();
+      throw metricsErrors.main_folder_not_found();
     }
 
     const entries: MetricsEntry[] = await readMetrics(root);

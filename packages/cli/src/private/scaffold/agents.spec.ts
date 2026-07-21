@@ -6,6 +6,8 @@ import { runTemplate } from "#template-runners/index";
 import {
   CLI_NAME,
   MAIN_FOLDER,
+  INTERNAL_FOLDER,
+  SRC_FOLDER,
   ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
@@ -21,6 +23,8 @@ async function renderAgents(): Promise<string> {
     variables: {
       CLI_NAME,
       MAIN_FOLDER,
+      INTERNAL_FOLDER,
+      SRC_FOLDER,
       ACTIVE_FOLDER,
       MULTI_USE_FOLDER,
       SINGLE_USE_FOLDER,
@@ -129,7 +133,8 @@ test.case("should render multi-use vs single-use content", async assert => {
   assert(content.includes("brainstorm")).equals(true);
   assert(content.includes("implement")).equals(true);
   assert(content.includes("capture")).equals(true);
-  assert(content.includes("search")).equals(true);
+  assert(content.includes("find")).equals(true);
+  assert(content.includes("pack")).equals(true);
   assert(content.includes("use")).equals(true);
   assert(content.includes("gain")).equals(true);
 

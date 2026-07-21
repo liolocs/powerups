@@ -8,12 +8,11 @@ Brainstorm a plan using {{ CLI_NAME }} powers.
 
 1. Explore the project context:
    - Check recent commits, existing files, and docs.
-   - Run `{{ CLI_CMD }} search -q="<what the user wants to plan>"` to see if
+   - Run `{{ CLI_CMD }} find -q="<what the user wants to plan>"` to see if
      any powers already relate to this area.
-   - If the search returns "No matching powers found", check whether
-     `{{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/` or
-     `{{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ SINGLE_USE_FOLDER }}/` exist and
-     contain any `instructions.json` files. This distinguishes "nothing exists
+   - If the find returns "No matching powers found", check whether
+     `{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/` exists and contains any
+     packages with `instructions.json` files. This distinguishes "nothing exists
      yet" (greenfield) from "items exist but none match this request."
 
 2. Ask the user clarifying questions — one at a time — to understand:
@@ -25,21 +24,21 @@ Brainstorm a plan using {{ CLI_NAME }} powers.
 Do NOT propose a plan, suggest any implementation approach, write any code,
 or run any create/use command until you have:
 1. Identified the key intents (topics, domains, capabilities) this plan touches
-2. Run `{{ CLI_CMD }} search -q="<intent>"` for every identified intent
+2. Run `{{ CLI_CMD }} find -q="<intent>"` for every identified intent
 3. Run `{{ CLI_CMD }} info <name>` for every match found
 4. Recorded the results (matches found or "no matching") for each search
 
-If you skip the search step, you risk duplicating existing work and planning
-the wrong approach. Search is not optional.
+If you skip the find step, you risk duplicating existing work and planning
+the wrong approach. Find is not optional.
 </HARD-GATE>
 
 3. Identify the key intents (topics, domains, capabilities) this plan touches.
-   For each intent, run `{{ CLI_CMD }} search -q="<intent>"` to find existing
+   For each intent, run `{{ CLI_CMD }} find -q="<intent>"` to find existing
    powers that may be reusable. For every match, run
    `{{ CLI_CMD }} info <name>` to understand what variables
    and files are available. Record all results.
 
-4. From the search results, determine:
+4. From the find results, determine:
    - Which existing powers can be reused for this plan (list by
      name, with the key variables each requires)
    - What work doesn't fit any existing item

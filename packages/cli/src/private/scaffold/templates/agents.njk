@@ -2,9 +2,26 @@
 ## {{ CLI_NAME }} (power engine)
 
 This project uses the `{{ CLI_NAME }}` CLI to keep AI-generated content maintainable.
-Multi-use powers live in `{{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/` and
-single-use powers live in `{{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ SINGLE_USE_FOLDER }}/<name>/`.
+Powers live inside packages at `{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/` (multi-use) or
+`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ SINGLE_USE_FOLDER }}/<name>/` (single-use).
 Always prefer powers over one-off generation.
+
+### Packages
+
+Powers are organized into **packages** — collections of one or more powers that
+can be created locally and optionally moved to a global location (`~/.{{ CLI_NAME }}/`)
+for sharing across projects.
+
+- Each package has a `package.json` with a `powers` property mapping power names
+  to their `instructions.json` paths.
+- The project config at `{{ MAIN_FOLDER }}/config.json` lists installed packages in
+  its `packages` array. Only powers from packages listed in the config are visible
+  to `find` and `use` (config acts as a gatekeeper).
+- Local packages (in `{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/`) are prioritized over
+  global packages (in `~/.{{ CLI_NAME }}/{{ INTERNAL_FOLDER }}/`) when resolving a
+  power by name.
+- To create a new package: `{{ CLI_CMD }} pack create <package-name>`
+- To move a local package to global: `{{ CLI_CMD }} pack move <package-name> global`
 
 ### Multi-use vs Single-use
 
@@ -21,15 +38,15 @@ This project scaffolds three skills:
 
 | Skill | When to use |
 |-------|-------------|
-| `{{ CLI_NAME }}-brainstorm` | Planning new work — searches for existing powers, classifies work, produces a plan document |
-| `{{ CLI_NAME }}-implement` | Executing a plan document — works through tasks, searches/uses inline, invokes capture when needed |
+| `{{ CLI_NAME }}-brainstorm` | Planning new work — finds existing powers, classifies work, produces a plan document |
+| `{{ CLI_NAME }}-implement` | Executing a plan document — works through tasks, finds/uses inline, invokes capture when needed |
 | `{{ CLI_NAME }}-capture` | Capturing already-done work as a power — user-directed or survey mode |
 
-For ad-hoc work (not part of a plan), use the search → info → use pattern below directly.
+For ad-hoc work (not part of a plan), use the find → info → use pattern below directly.
 
 ### Before writing any new feature or file
 
-1. Run `{{ CLI_CMD }} search -q="<what you're about to do>"`.
+1. Run `{{ CLI_CMD }} find -q="<what you're about to do>"`.
 2. If a power matches (score > 0), run
    `{{ CLI_CMD }} info <name>` to see its required
    variables, generated files, and the exact use command.
@@ -77,7 +94,7 @@ export default ({ componentName, theme }: Record<string, string>) =>
   it does not import or execute it, so use the power once to confirm the
   default export works.
 
-### Output schema (`{{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/instructions.json`)
+### Output schema (`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/instructions.json`)
 
 ```json
 {
@@ -128,7 +145,7 @@ doesn't exist, a warning is printed and the entry is skipped (no error).
 
 Template files referenced by `create` and `modify` entries live in a
 `template/` subdirectory alongside `instructions.json` — i.e.
-`{{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/template/<file>`.
+`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/template/<file>`.
 The `template` field holds just the bare filename; the CLI resolves it inside
 that subdirectory. Files placed directly in the power folder (outside
 `template/`) are reported as orphaned by `{{ CLI_CMD }} doctor`.
@@ -210,9 +227,13 @@ each included subtemplate — mapping the subtemplate's declared variables to
 values from the parent (using `{{ '{{parentVar}}' }}` tokens or literals),
 optionally overriding output paths, and rendering the subtemplate's templates.
 Subtemplates are just powers — they live in their own folder under
-`{{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/`, have their own
+`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/`, have their own
 `instructions.json` and templates, and can be used standalone or included
 by multiple parents.
+
+When a package is moved to global via `{{ CLI_CMD }} pack move <package> global`,
+all inherited sub-powers are pulled into the package and recorded in the
+package's `package.json` `powers` property using `parent:child` notation.
 
 #### Worked example
 
@@ -220,7 +241,7 @@ by multiple parents.
 types file, and a test. Later you build a `graphql-resolver` power that also
 needs a types file with the same structure.
 - *Extraction:* Create a standalone `types` power
-  (`{{ CLI_CMD }} create --type=multi-use -n=types ...`). Add it to both parents'
+  (`{{ CLI_CMD }} create --pack=<package> --type=multi-use -n=types ...`). Add it to both parents'
   `instructions.json`:
 
 ```json
@@ -256,12 +277,16 @@ full power, verify it works, then extract when repetition emerges.
 
 | Action | Command |
 |--------|---------|
-| Search powers | `{{ CLI_CMD }} search -q="..."` |
-| Search multi-use only | `{{ CLI_CMD }} search -q="..." --type=multi-use` |
+| Find powers | `{{ CLI_CMD }} find -q="..."` |
+| Find multi-use only | `{{ CLI_CMD }} find -q="..." --type=multi-use` |
 | Get info on a power | `{{ CLI_CMD }} info <name>` |
 | Use a power | `{{ CLI_CMD }} use <name> --<variable>=<value> [-d]` |
-| Create a multi-use power | `{{ CLI_CMD }} create --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
-| Create a single-use power | `{{ CLI_CMD }} create --type=single-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Create a package | `{{ CLI_CMD }} pack create <package-name>` |
+| Create a global package | `{{ CLI_CMD }} pack create <package-name> -g` |
+| Move package to global | `{{ CLI_CMD }} pack move <package-name> global` |
+| Move & remove from config | `{{ CLI_CMD }} pack move <package-name> global -d` |
+| Create a multi-use power | `{{ CLI_CMD }} create --pack=<pkg> --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Create a single-use power | `{{ CLI_CMD }} create --pack=<pkg> --type=single-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
 | Validate a power | `{{ CLI_CMD }} validate <name>` |
 | Gain powers | `{{ CLI_CMD }} gain` |
 | Health check all | `{{ CLI_CMD }} doctor` |

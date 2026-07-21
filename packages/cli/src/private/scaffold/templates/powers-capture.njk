@@ -17,6 +17,16 @@ directory they've already written and wants to capture as a reusable power.
 codebase to find patterns worth capturing. No specific files are pointed at
 — you discover candidates.
 
+### Prerequisites
+
+Before capturing a power, a package must exist for the power to live in. If no
+package exists yet, create one first:
+`{{ CLI_CMD }} pack create <package-name> --description="..."`
+
+If you're unsure which package to use, ask the user. A package is a collection
+of related powers — powers that serve the same domain or feature area should
+go in the same package.
+
 ### Mode A — User-directed capture
 
 1. Ask the user to point at the work they want to capture — specific files or
@@ -26,7 +36,7 @@ codebase to find patterns worth capturing. No specific files are pointed at
 2. Read the files the user points at. Understand what was created or modified
    and what the work does.
 
-3. Run `{{ CLI_CMD }} search -q="<intent>"` to check if a similar power
+3. Run `{{ CLI_CMD }} find -q="<intent>"` to check if a similar power
    already exists. If one does, run `{{ CLI_CMD }} info <name>`
    to understand it. If it's similar enough, suggest reusing or extending the
    existing power rather than creating a new one.
@@ -41,8 +51,8 @@ codebase to find patterns worth capturing. No specific files are pointed at
    Present your assessment to the user and get confirmation on the type
    (single-use or multi-use) before proceeding. If the user later needs to
    switch types, the folder can simply be moved between
-   {{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/ and
-   {{ MAIN_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ SINGLE_USE_FOLDER }}/.
+   {{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/ and
+   {{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ SINGLE_USE_FOLDER }}/.
 
 5. Identify the capture structure:
    - Name (short, kebab-case)
@@ -64,10 +74,11 @@ codebase to find patterns worth capturing. No specific files are pointed at
    Present this to the user and get approval before proceeding.
 
 6. Scaffold the folder structure by running:
-   `{{ CLI_CMD }} create --type=multi-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
-   (or `{{ CLI_CMD }} create --type=single-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   `{{ CLI_CMD }} create --pack=<package> --type=multi-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
+   (or `{{ CLI_CMD }} create --pack=<package> --type=single-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
    for single-use powers). Use `-ov` only if there are optional variables; omit it
-   otherwise. This creates the instructions.json and empty template files.
+   otherwise. This creates the instructions.json and empty template files inside
+   the specified package.
 
 7. Copy the original files into the power's `template/` subdirectory,
    overwriting the empty stubs. Use `cp` for each file — this brings the
@@ -113,7 +124,7 @@ codebase to find patterns worth capturing. No specific files are pointed at
 
 1. Survey the codebase to understand its structure:
    - Check the project's file tree, key directories, and recent commits.
-   - Run `{{ CLI_CMD }} search -q="..."` for the main domains you
+   - Run `{{ CLI_CMD }} find -q="..."` for the main domains you
      find to see if powers already exist for them.
 
 2. Ask the user which area of the codebase they want to focus on:

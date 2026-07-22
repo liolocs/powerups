@@ -3,7 +3,7 @@ import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { detectHarness, VALID_HARNESSES } from "#scaffold/detect";
 import { CodeError } from "@rcompat/error";
-import { GainErrorCode } from "#errors/gainErrors";
+import { InitErrorCode } from "#errors/initErrors";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -100,7 +100,7 @@ test.group("detect errors", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.multiple_harnesses_detected);
+    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
 
     await testRoot.remove();
   });
@@ -116,7 +116,7 @@ test.group("detect errors", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.no_harness_detected);
+    assert(threw).equals(InitErrorCode.no_harness_detected);
 
     await testRoot.remove();
   });
@@ -132,7 +132,7 @@ test.group("detect errors", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.invalid_harness);
+    assert(threw).equals(InitErrorCode.invalid_harness);
 
     await testRoot.remove();
   });

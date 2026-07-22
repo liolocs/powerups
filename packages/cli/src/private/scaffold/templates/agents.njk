@@ -190,11 +190,10 @@ to the target `package.json`, detects the package manager from the lock file
 (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lockb`/`bun.lock`),
 and runs the install command automatically.
 
-**Do NOT create `modify` entries for `package.json`.** Use the
-`packageDependencies` field instead. The CLI manages `package.json` updates and
-install automatically — a modify template for `package.json` will not work
-correctly because the use flow uses a git worktree and does not stage
-`package.json` changes through the modify engine.
+**Do NOT create `modify` dependency properties for `package.json`.** Use the
+`packageDependencies` field instead. The CLI manages `package.json` dependency updates and
+install automatically — a modify template for `package.json` for dependencies will not work
+correctly because the use flow uses a git worktree.
 
 ### Modify templates
 

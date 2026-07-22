@@ -38,6 +38,8 @@ const suboutputSchema = p({
   }).optional(),
 });
 
+// so that monorepo setups can list a target location
+// where you'd want to add the dependency
 const packageDependencyGroupSchema = p({
   target: p.string.optional(),
   dependencies: p.array(p.string).optional(),

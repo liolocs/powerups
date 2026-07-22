@@ -53,7 +53,7 @@ const init = new Command({
 
   subcommands: [],
 
-  action: async ({ context, subcommands }) => {
+  action: async ({ context, subcommands }: any) => {
     const root: FileRef = context?.root ?? await runtime.projectRoot();
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
 

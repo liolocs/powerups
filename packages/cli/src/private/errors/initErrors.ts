@@ -7,13 +7,13 @@ const t = error.template;
 const errorLabel = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
-const printGain = CLI_CMD + " gain";
-const specifyHarness = `Harness options: \n\t${printGain} --harness=claude\n\t${printGain} --harness=opencode\n\t${printGain} --harness=pi\n\t${printGain} --harness=codex`;
+const printInit = CLI_CMD + " init";
+const specifyHarness = `Harness options: \n\t${printInit} claude\n\t${printInit} opencode\n\t${printInit} pi\n\t${printInit} codex`;
 
-const gain_errors = error.coded({
+const init_errors = error.coded({
   main_folder_not_found: () => {
     const errorText =
-      `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} gain" first.`;
+      `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} init" first.`;
     return t`${errorBGText}${errorText}`;
   },
   dry_folder_exists: () => {
@@ -33,10 +33,10 @@ const gain_errors = error.coded({
   },
 });
 
-export type GainErrorCode = keyof typeof gain_errors;
+export type InitErrorCode = keyof typeof init_errors;
 
-export const GainErrorCode = Object.fromEntries(
-  Object.keys(gain_errors).map(k => [k, k]),
-) as { [K in GainErrorCode]: K };
+export const InitErrorCode = Object.fromEntries(
+  Object.keys(init_errors).map(k => [k, k]),
+) as { [K in InitErrorCode]: K };
 
-export default gain_errors;
+export default init_errors;

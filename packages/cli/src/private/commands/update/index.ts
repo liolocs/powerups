@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import { Command } from "@powerups/program";
-import gain_errors from "#errors/gainErrors";
+import init_errors from "#errors/initErrors";
 import update_errors from "#errors/updateErrors";
 import { scaffold } from "#scaffold/index";
 import { readConfig, writeConfig } from "#utils/config";
@@ -30,7 +30,7 @@ const update = new Command({
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
 
     if (!(await fs.exists(mainFolder))) {
-      throw gain_errors.main_folder_not_found();
+      throw init_errors.main_folder_not_found();
     }
 
     // Resolve the harness: --harness flag takes priority, otherwise read

@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import { Command } from "@powerups/program";
-import gain_errors from "#errors/gainErrors";
+import init_errors from "#errors/initErrors";
 import { scaffold, type RollbackInfo } from "#scaffold/index";
 import { writeConfig } from "#utils/config";
 import { MAIN_FOLDER, CLI_NAME } from "#constants";
@@ -10,7 +10,7 @@ import { MAIN_FOLDER, CLI_NAME } from "#constants";
 /**
  * Revert all filesystem changes recorded in `rollback`.
  *
- * - `rollback.remove`  – paths that were **newly created** by gain: delete them.
+ * - `rollback.remove`  – paths that were **newly created** by init: delete them.
  * - `rollback.restore` – files that **already existed** but were modified:
  *                        overwrite them with the backed-up original content.
  *
@@ -44,29 +44,21 @@ async function rollbackChanges({
   }
 }
 
-const gain = new Command({
-  name: "gain",
+const init = new Command({
+  name: "init",
 
-  description: `Gain ${CLI_NAME} for the current project`,
+  description: `Initialize ${CLI_NAME} for the current project`,
 
-  flags: [
-    {
-      name: "harness",
-      long: "harness",
-      short: "H",
-      description:
-        "Override harness detection ( claude | opencode | pi | codex )",
-    },
-  ],
+  flags: [],
 
   subcommands: [],
 
-  action: async ({ context, flags }) => {
+  action: async ({ context, subcommands }: any) => {
     const root: FileRef = context?.root ?? await runtime.projectRoot();
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
 
     if (await fs.exists(mainFolder)) {
-      throw gain_errors.dry_folder_exists();
+      throw init_errors.dry_folder_exists();
     }
 
     const rollback: RollbackInfo = { remove: [], restore: [] };
@@ -75,9 +67,9 @@ const gain = new Command({
       await fs.create(mainFolder);
       rollback.remove.push(MAIN_FOLDER);
 
-      // Run scaffold with optional --harness override
-      const harnessFlag = flags.harness as string | undefined;
-      const result = await scaffold(root, harnessFlag, {
+      // Run scaffold with optional harness positional argument
+      const harnessArg = subcommands?.[0] as string | undefined;
+      const result = await scaffold(root, harnessArg, {
         skipGlobal: context?.skipGlobal,
         rollback,
       });
@@ -88,18 +80,18 @@ const gain = new Command({
       const green = cli.fg.green;
       const dim = cli.fg.dim;
 
-      cli.print(`${green("✓")} Gained ${CLI_NAME} for project\n`);
+      cli.print(`${green("✓")} Initialized ${CLI_NAME} for project\n`);
       cli.print(`  ${dim("harness:")} ${result.harness}\n`);
 
       for (const file of result.filesWritten) {
         cli.print(`  ${dim("wrote:")} ${file}\n`);
       }
     } catch (error) {
-      // Revert any filesystem changes so re-running gain works cleanly.
+      // Revert any filesystem changes so re-running init works cleanly.
       await rollbackChanges({ root, rollback });
       throw error;
     }
   },
 });
 
-export default gain;
+export default init;

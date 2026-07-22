@@ -1,10 +1,10 @@
 import test from "@rcompat/test";
-import gain from "#commands/gain/index";
+import init from "#commands/init/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { MAIN_FOLDER, CLI_NAME, CONFIG_FILE } from "#constants";
 import { CodeError } from "@rcompat/error";
-import { GainErrorCode } from "#errors/gainErrors";
+import { InitErrorCode } from "#errors/initErrors";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -15,12 +15,12 @@ async function reset() {
   await fs.create(testRoot);
 }
 
-test.case(`gain generates a ${MAIN_FOLDER} folder`, async assert => {
+test.case(`init generates a ${MAIN_FOLDER} folder`, async assert => {
   await reset();
 
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "claude" }],
+  await init.run({
+    subcommands: ["claude"],
+    flags: [],
     context: { root: testRoot },
   });
 
@@ -33,12 +33,12 @@ test.case(`gain generates a ${MAIN_FOLDER} folder`, async assert => {
   assert(hasMainFolderAgain).equals(false);
 });
 
-test.case("gain --harness=claude scaffolds claude files only", async assert => {
+test.case("init claude scaffolds claude files only", async assert => {
   await reset();
 
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "claude" }],
+  await init.run({
+    subcommands: ["claude"],
+    flags: [],
     context: { root: testRoot },
   });
 
@@ -62,12 +62,12 @@ test.case("gain --harness=claude scaffolds claude files only", async assert => {
   await testRoot.remove();
 });
 
-test.case("gain --harness=opencode scaffolds opencode files only", async assert => {
+test.case("init opencode scaffolds opencode files only", async assert => {
   await reset();
 
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "opencode" }],
+  await init.run({
+    subcommands: ["opencode"],
+    flags: [],
     context: { root: testRoot },
   });
 
@@ -89,12 +89,12 @@ test.case("gain --harness=opencode scaffolds opencode files only", async assert 
   await testRoot.remove();
 });
 
-test.case("gain --harness=pi scaffolds pi files only", async assert => {
+test.case("init pi scaffolds pi files only", async assert => {
   await reset();
 
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "pi" }],
+  await init.run({
+    subcommands: ["pi"],
+    flags: [],
     context: { root: testRoot },
   });
 
@@ -113,12 +113,12 @@ test.case("gain --harness=pi scaffolds pi files only", async assert => {
   await testRoot.remove();
 });
 
-test.case("gain --harness=codex scaffolds codex files", async assert => {
+test.case("init codex scaffolds codex files", async assert => {
   await reset();
 
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "codex" }],
+  await init.run({
+    subcommands: ["codex"],
+    flags: [],
     context: { root: testRoot },
   });
 
@@ -139,14 +139,14 @@ test.case("gain --harness=codex scaffolds codex files", async assert => {
   await testRoot.remove();
 });
 
-test.group("gain errors", () => {
+test.group("init errors", () => {
   test.case("should fail with the correct error when no harness detected",
     async assert => {
       await reset();
 
       let threw;
       try {
-        await gain.run({
+        await init.run({
           subcommands: [],
           flags: [],
           context: { root: testRoot, skipGlobal: true },
@@ -155,26 +155,26 @@ test.group("gain errors", () => {
         assert(e instanceof CodeError).true();
         threw = (e as CodeError).code;
       }
-      assert(threw).equals(GainErrorCode.no_harness_detected);
+      assert(threw).equals(InitErrorCode.no_harness_detected);
 
       await testRoot.remove();
     });
 
-  test.case("should fail with invalid_harness when --harness value is invalid", async assert => {
+  test.case("should fail with invalid_harness when harness value is invalid", async assert => {
     await reset();
 
     let threw;
     try {
-      await gain.run({
-        subcommands: [],
-        flags: [{ flag: "--harness", value: "foo" }],
+      await init.run({
+        subcommands: ["foo"],
+        flags: [],
         context: { root: testRoot },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.invalid_harness);
+    assert(threw).equals(InitErrorCode.invalid_harness);
 
     await testRoot.remove();
   });
@@ -186,7 +186,7 @@ test.group("gain errors", () => {
 
     let threw;
     try {
-      await gain.run({
+      await init.run({
         subcommands: [],
         flags: [],
         context: { root: testRoot, skipGlobal: true },
@@ -195,7 +195,7 @@ test.group("gain errors", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.multiple_harnesses_detected);
+    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
 
     await testRoot.remove();
   });
@@ -204,25 +204,25 @@ test.group("gain errors", () => {
     await reset();
 
     // First run succeeds and creates ${MAIN_FOLDER}}
-    await gain.run({
-      subcommands: [],
-      flags: [{ flag: "--harness", value: "claude" }],
+    await init.run({
+      subcommands: ["claude"],
+      flags: [],
       context: { root: testRoot },
     });
 
     // Second run should fail because ${MAIN_FOLDER}} already exists
     let threw;
     try {
-      await gain.run({
-        subcommands: [],
-        flags: [{ flag: "--harness", value: "claude" }],
+      await init.run({
+        subcommands: ["claude"],
+        flags: [],
         context: { root: testRoot },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.dry_folder_exists);
+    assert(threw).equals(InitErrorCode.dry_folder_exists);
 
     await testRoot.remove();
   });
@@ -233,7 +233,7 @@ test.group("init detection", () => {
     await reset();
     await testRoot.append("/CLAUDE.md").write("# Existing project");
 
-    await gain.run({
+    await init.run({
       subcommands: [],
       flags: [],
       context: { root: testRoot, skipGlobal: true },
@@ -253,7 +253,7 @@ test.group("init detection", () => {
     await reset();
     await fs.create(testRoot.append("/.opencode"));
 
-    await gain.run({
+    await init.run({
       subcommands: [],
       flags: [],
       context: { root: testRoot, skipGlobal: true },
@@ -270,7 +270,7 @@ test.group("init detection", () => {
     await reset();
     await fs.create(testRoot.append("/.pi"));
 
-    await gain.run({
+    await init.run({
       subcommands: [],
       flags: [],
       context: { root: testRoot, skipGlobal: true },
@@ -282,15 +282,15 @@ test.group("init detection", () => {
     await testRoot.remove();
   });
 
-  test.case("should resolve multiple detection ambiguity with --harness flag", async assert => {
+  test.case("should resolve multiple detection ambiguity with harness arg", async assert => {
     await reset();
     await fs.create(testRoot.append("/.claude"));
     await fs.create(testRoot.append("/.pi"));
 
-    // Should succeed with --harness=pi despite multiple detected
-    await gain.run({
-      subcommands: [],
-      flags: [{ flag: "--harness", value: "pi" }],
+    // Should succeed with harness=pi despite multiple detected
+    await init.run({
+      subcommands: ["pi"],
+      flags: [],
       context: { root: testRoot },
     });
 
@@ -316,7 +316,7 @@ test.group("init rollback", () => {
 
     let threw;
     try {
-      await gain.run({
+      await init.run({
         subcommands: [],
         flags: [],
         context: { root: testRoot, skipGlobal: true },
@@ -325,7 +325,7 @@ test.group("init rollback", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.multiple_harnesses_detected);
+    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
 
     // ${MAIN_FOLDER}} must NOT be left behind
     assert(await fs.exists(mainFolder)).equals(false);
@@ -338,16 +338,16 @@ test.group("init rollback", () => {
 
     let threw;
     try {
-      await gain.run({
-        subcommands: [],
-        flags: [{ flag: "--harness", value: "bogus" }],
+      await init.run({
+        subcommands: ["bogus"],
+        flags: [],
         context: { root: testRoot },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.invalid_harness);
+    assert(threw).equals(InitErrorCode.invalid_harness);
 
     assert(await fs.exists(mainFolder)).equals(false);
 
@@ -359,7 +359,7 @@ test.group("init rollback", () => {
 
     let threw;
     try {
-      await gain.run({
+      await init.run({
         subcommands: [],
         flags: [],
         context: { root: testRoot, skipGlobal: true },
@@ -368,7 +368,7 @@ test.group("init rollback", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.no_harness_detected);
+    assert(threw).equals(InitErrorCode.no_harness_detected);
 
     assert(await fs.exists(mainFolder)).equals(false);
 
@@ -378,15 +378,15 @@ test.group("init rollback", () => {
   test.case("should be re-runnable immediately after detection error", async assert => {
     // This is the exact scenario from the bug report:
     //   $ ${CLI_NAME} init                              → multiple harnesses error
-    //   $ ${CLI_NAME} gain --harness=pi               → should work, not "already initialized"
+    //   $ ${CLI_NAME} init pi               → should work, not "already initialized"
     await reset();
     await fs.create(testRoot.append("/.claude"));
     await fs.create(testRoot.append("/.pi"));
 
-    // First run fails (multiple harnesses, no --harness)
+    // First run fails (multiple harnesses, no harness arg)
     let firstThrew = false;
     try {
-      await gain.run({
+      await init.run({
         subcommands: [],
         flags: [],
         context: { root: testRoot, skipGlobal: true },
@@ -396,10 +396,10 @@ test.group("init rollback", () => {
     }
     assert(firstThrew).equals(true);
 
-    // ${MAIN_FOLDER}} was cleaned up — second run with --harness succeeds
-    await gain.run({
-      subcommands: [],
-      flags: [{ flag: "--harness", value: "pi" }],
+    // ${MAIN_FOLDER}} was cleaned up — second run with harness arg succeeds
+    await init.run({
+      subcommands: ["pi"],
+      flags: [],
       context: { root: testRoot },
     });
 
@@ -427,7 +427,7 @@ test.group("init rollback", () => {
 
     let threw;
     try {
-      await gain.run({
+      await init.run({
         subcommands: [],
         flags: [],
         context: { root: testRoot, skipGlobal: true },
@@ -436,7 +436,7 @@ test.group("init rollback", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(GainErrorCode.multiple_harnesses_detected);
+    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
 
     // AGENTS.md should be unchanged (detection threw before any writes)
     const content = await testRoot.append("/AGENTS.md").text();
@@ -451,9 +451,9 @@ test.case("init is idempotent — instruction section not duplicated", async ass
   await reset();
 
   // First run
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "claude" }],
+  await init.run({
+    subcommands: ["claude"],
+    flags: [],
     context: { root: testRoot },
   });
 
@@ -461,9 +461,9 @@ test.case("init is idempotent — instruction section not duplicated", async ass
   await testRoot.append(`/${MAIN_FOLDER}`).remove();
 
   // Second run
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "claude" }],
+  await init.run({
+    subcommands: ["claude"],
+    flags: [],
     context: { root: testRoot },
   });
 
@@ -478,9 +478,9 @@ test.case("init appends to existing AGENTS.md", async assert => {
   await reset();
   await testRoot.append("/AGENTS.md").write("# My Project\n\nExisting content.");
 
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "codex" }],
+  await init.run({
+    subcommands: ["codex"],
+    flags: [],
     context: { root: testRoot },
   });
 
@@ -494,9 +494,9 @@ test.case("init appends to existing AGENTS.md", async assert => {
 test.case("init writes skill files with constants substituted", async assert => {
   await reset();
 
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: "claude" }],
+  await init.run({
+    subcommands: ["claude"],
+    flags: [],
     context: { root: testRoot },
   });
 
@@ -512,9 +512,9 @@ test.case(`init writes ${CLI_NAME}-implement skill file for each harness`, async
   for (const harness of ["claude", "opencode", "pi", "codex"] as const) {
     await reset();
 
-    await gain.run({
-      subcommands: [],
-      flags: [{ flag: "--harness", value: harness }],
+    await init.run({
+      subcommands: [harness],
+      flags: [],
       context: { root: testRoot },
     });
 
@@ -541,9 +541,9 @@ test.case("init injects frontmatter into skill files for every harness", async a
   for (const harness of ["claude", "opencode", "pi", "codex"] as const) {
     await reset();
 
-    await gain.run({
-      subcommands: [],
-      flags: [{ flag: "--harness", value: harness }],
+    await init.run({
+      subcommands: [harness],
+      flags: [],
       context: { root: testRoot },
     });
 
@@ -568,9 +568,9 @@ test.group("init config", () => {
   test.case("init writes config.json with the chosen harness", async assert => {
     await reset();
 
-    await gain.run({
-      subcommands: [],
-      flags: [{ flag: "--harness", value: "pi" }],
+    await init.run({
+      subcommands: ["pi"],
+      flags: [],
       context: { root: testRoot },
     });
 
@@ -587,7 +587,7 @@ test.group("init config", () => {
     await reset();
     await testRoot.append("/CLAUDE.md").write("# Existing project");
 
-    await gain.run({
+    await init.run({
       subcommands: [],
       flags: [],
       context: { root: testRoot, skipGlobal: true },
@@ -606,9 +606,9 @@ test.group("init config", () => {
     for (const harness of ["claude", "opencode", "pi", "codex"] as const) {
       await reset();
 
-      await gain.run({
-        subcommands: [],
-        flags: [{ flag: "--harness", value: harness }],
+      await init.run({
+        subcommands: [harness],
+        flags: [],
         context: { root: testRoot },
       });
 

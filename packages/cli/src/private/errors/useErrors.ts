@@ -10,7 +10,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const use_errors = error.coded({
   main_folder_not_found: () => {
-    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} gain" first.`;
+    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} init" first.`;
     return t`${errorBGText}${errorText}`;
   },
 

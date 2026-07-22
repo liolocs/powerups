@@ -137,7 +137,7 @@ test.case("should render multi-use vs single-use content", async assert => {
   assert(content.includes("find")).equals(true);
   assert(content.includes("pack")).equals(true);
   assert(content.includes("use")).equals(true);
-  assert(content.includes("gain")).equals(true);
+  assert(content.includes("init")).equals(true);
 
   await testRoot.remove();
 });

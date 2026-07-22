@@ -2,9 +2,9 @@ import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import update from "#commands/update/index";
-import gain from "#commands/gain/index";
+import init from "#commands/init/index";
 import { CodeError } from "@rcompat/error";
-import { GainErrorCode } from "#errors/gainErrors";
+import { InitErrorCode } from "#errors/initErrors";
 import { UpdateErrorCode } from "#errors/updateErrors";
 import { MAIN_FOLDER, CLI_NAME, CONFIG_FILE } from "#constants";
 
@@ -16,14 +16,14 @@ async function reset() {
   await fs.create(testRoot);
 }
 
-/** Run gain to set up a ${MAIN_FOLDER}} project, then return. */
+/** Run init to set up a ${MAIN_FOLDER}} project, then return. */
 async function setup(
   harness: string,
   context?: { root?: typeof testRoot; skipGlobal?: boolean },
 ) {
-  await gain.run({
-    subcommands: [],
-    flags: [{ flag: "--harness", value: harness }],
+  await init.run({
+    subcommands: [harness],
+    flags: [],
     context: { root: testRoot, ...context },
   });
 }
@@ -112,7 +112,7 @@ test.case("update fails when not initialized", async assert => {
     assert(e instanceof CodeError).true();
     threw = (e as CodeError).code;
   }
-  assert(threw).equals(GainErrorCode.main_folder_not_found);
+  assert(threw).equals(InitErrorCode.main_folder_not_found);
 
   await testRoot.remove();
 });
@@ -178,7 +178,7 @@ test.case("update fails with invalid --harness", async assert => {
     assert(e instanceof CodeError).true();
     threw = (e as CodeError).code;
   }
-  assert(threw).equals(GainErrorCode.invalid_harness);
+  assert(threw).equals(InitErrorCode.invalid_harness);
 
   // Config should NOT have been overwritten with the invalid value
   const config = JSON.parse(

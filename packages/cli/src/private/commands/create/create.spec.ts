@@ -104,8 +104,8 @@ test.case("create template creates empty files for create and modify entries", a
 
   const muFolder = pkgMultiUse("test-pkg");
   const outputPath = muFolder.append("/ui-component/instructions.json");
-  const createTemplatePath = muFolder.append("/ui-component/template/button.svelte.tmpl");
-  const modifyTemplatePath = muFolder.append("/ui-component/template/wire.json");
+  const createTemplatePath = muFolder.append("/ui-component/button.svelte.tmpl");
+  const modifyTemplatePath = muFolder.append("/ui-component/wire.json");
 
   assert(await fs.exists(outputPath)).equals(true);
   assert(await fs.exists(createTemplatePath)).equals(true);

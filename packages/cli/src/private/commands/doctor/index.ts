@@ -4,6 +4,7 @@ import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
+import path from "node:path";
 import { checkOutput } from "#utils/check-output";
 import { readConfig } from "#utils/config";
 import { modificationArraySchema } from "#schemas/modification";
@@ -17,7 +18,6 @@ import {
   ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  TEMPLATE_FOLDER,
   PACKAGE_FILE,
   GLOBAL_INTERNAL_PATH,
   SINGULAR_NAME,
@@ -164,30 +164,21 @@ const doctor = new Command({
                 referencedFiles.add(f.template);
               }
 
-              const allFiles = await outputFile.directory.files();
+              const allFiles = await outputFile.directory.files({
+                recursive: true,
+              });
               for (const file of allFiles) {
-                if (!referencedFiles.has(file.name)) {
+                const relPath = path.relative(
+                  outputFile.directory.path,
+                  file.path,
+                );
+                if (!referencedFiles.has(relPath)) {
                   issues.push({
                     level: "WARN",
                     type,
                     name: label,
-                    message: `Orphaned file: ${file.name}`,
+                    message: `Orphaned file: ${relPath}`,
                   });
-                }
-              }
-
-              const templateDir = outputFile.directory.append(`/${TEMPLATE_FOLDER}`);
-              if (await fs.exists(templateDir)) {
-                const templateFiles = await templateDir.files();
-                for (const file of templateFiles) {
-                  if (!referencedFiles.has(file.name)) {
-                    issues.push({
-                      level: "WARN",
-                      type,
-                      name: label,
-                      message: `Orphaned file: ${TEMPLATE_FOLDER}/${file.name}`,
-                    });
-                  }
                 }
               }
             } catch {
@@ -201,7 +192,7 @@ const doctor = new Command({
               );
               for (const modifyEntry of instructions.output.modify) {
                 const modTemplatePath = outputFile.directory.append(
-                  `/${TEMPLATE_FOLDER}/${modifyEntry.template}`,
+                  `/${modifyEntry.template}`,
                 );
                 if (!(await fs.exists(modTemplatePath))) continue;
                 const ext = modTemplatePath.extension;

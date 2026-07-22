@@ -12,7 +12,7 @@ type CopyActiveStructureParams = {
  * powerup directory inside them) from source to destination.
  *
  * Uses `FileRef.copy()` for recursive directory copying so that nested
- * template sub-folders and their files are preserved.
+ * sub-folders and their files are preserved.
  */
 export async function copyActiveStructure({
   srcActiveDir,

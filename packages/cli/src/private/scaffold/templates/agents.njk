@@ -148,12 +148,12 @@ Delete entries have no `template` field (nothing to render); at use time
 the file at `outputPath` is removed from the project. If the target file
 doesn't exist, a warning is printed and the entry is skipped (no error).
 
-Template files referenced by `create` and `modify` entries live in a
-`template/` subdirectory alongside `instructions.json` — i.e.
-`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/template/<file>`.
-The `template` field holds just the bare filename; the CLI resolves it inside
-that subdirectory. Files placed directly in the {{ SINGULAR_NAME }} folder (outside
-`template/`) are reported as orphaned by `{{ CLI_CMD }} doctor`.
+Template files referenced by `create` and `modify` entries live anywhere
+inside the {{ SINGULAR_NAME }}'s folder (the directory containing `instructions.json`).
+The `template` field holds the full relative path from that folder — e.g.
+`button.svelte.tmpl`, `templates/button.ts`, or `src/sub/deep.njk`. The CLI
+resolves the file at that path. Files in the {{ SINGULAR_NAME }} folder not referenced
+by any `template` field are reported as orphaned by `{{ CLI_CMD }} doctor`.
 
 ### Required vs Optional Variables
 

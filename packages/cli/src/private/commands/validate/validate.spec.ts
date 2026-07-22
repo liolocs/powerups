@@ -126,7 +126,7 @@ test.group("validate errors", () => {
     });
 
     const templatePath = multiUseFolder.append(
-      "/missing-template/template/button.svelte.tmpl",
+      "/missing-template/button.svelte.tmpl",
     );
     await templatePath.remove();
 

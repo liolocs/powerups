@@ -8,7 +8,6 @@ import {
   ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  TEMPLATE_FOLDER,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -21,7 +20,7 @@ async function reset() {
 
 /**
  * Build a source src/active tree with powerup folders, instructions.json,
- * and a template/ that contains both flat files AND nested sub-folders.
+ * and files that include both flat files AND nested sub-folders.
  */
 async function buildSourceTree(srcActive: FileRef): Promise<void> {
   // multi-use/my-power/
@@ -35,12 +34,10 @@ async function buildSourceTree(srcActive: FileRef): Promise<void> {
     output: { create: [], modify: [] },
   });
 
-  // template/ with a flat file AND a nested sub-folder containing a file
-  const templateDir = powerDir.append(`/${TEMPLATE_FOLDER}`);
-  await fs.create(templateDir);
-  await templateDir.append("/flat.txt").write("flat content");
+  // flat file AND a nested sub-folder containing a file
+  await powerDir.append("/flat.txt").write("flat content");
 
-  const nestedDir = templateDir.append("/nested/sub");
+  const nestedDir = powerDir.append("/nested/sub");
   await fs.create(nestedDir);
   await nestedDir.append("/deep.txt").write("deep content");
 
@@ -89,7 +86,7 @@ test.group("copyActiveStructure", () => {
     assert(instr.name).equals("my-power");
   });
 
-  test.case("copies template/ flat files", async assert => {
+  test.case("copies flat files", async assert => {
     await reset();
     const srcActive = testRoot.append("/src-active");
     const destActive = testRoot.append("/dest-active");
@@ -100,12 +97,12 @@ test.group("copyActiveStructure", () => {
     await copyActiveStructure({ srcActiveDir: srcActive, destSrcActiveDir: destActive });
 
     const flat = await destActive
-      .append(`/${MULTI_USE_FOLDER}/my-power/${TEMPLATE_FOLDER}/flat.txt`)
+      .append(`/${MULTI_USE_FOLDER}/my-power/flat.txt`)
       .text();
     assert(flat.trim()).equals("flat content");
   });
 
-  test.case("copies nested sub-folders and their files inside template/", async assert => {
+  test.case("copies nested sub-folders and their files", async assert => {
     await reset();
     const srcActive = testRoot.append("/src-active");
     const destActive = testRoot.append("/dest-active");
@@ -119,7 +116,7 @@ test.group("copyActiveStructure", () => {
     // nested directories entirely. After fix (copy()), the deep file
     // should exist.
     const deep = await destActive
-      .append(`/${MULTI_USE_FOLDER}/my-power/${TEMPLATE_FOLDER}/nested/sub/deep.txt`)
+      .append(`/${MULTI_USE_FOLDER}/my-power/nested/sub/deep.txt`)
       .text();
     assert(deep.trim()).equals("deep content");
   });

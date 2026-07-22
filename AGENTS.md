@@ -68,9 +68,8 @@ const harness = await detectHarness(projectRoot, harnessFlag, options);
     CLI_NAME,
     CLI_CMD,
     MAIN_FOLDER,
-    OUTPUT_FOLDER,
-    TEMPLATE_FOLDER,
-    FEATURE_FOLDER,
+    INTERNAL_FOLDER,
+    SRC_FOLDER,
   };
   const filesWritten: string[] = [];
   const rollback = options?.rollback;
@@ -88,9 +87,8 @@ const harness = await detectHarness(projectRoot, harnessFlag, options);
     CLI_NAME,
     CLI_CMD,
     MAIN_FOLDER,
-    OUTPUT_FOLDER,
-    TEMPLATE_FOLDER,
-    FEATURE_FOLDER,
+    INTERNAL_FOLDER,
+    SRC_FOLDER,
   };
   const filesWritten: string[] = [];
   const rollback = options?.rollback;
@@ -256,12 +254,12 @@ Delete entries have no `template` field (nothing to render); at use time
 the file at `outputPath` is removed from the project. If the target file
 doesn't exist, a warning is printed and the entry is skipped (no error).
 
-Template files referenced by `create` and `modify` entries live in a
-`template/` subdirectory alongside `instructions.json` — i.e.
-`.powerups/internal/<package>/src/active/multi-use/<name>/template/<file>`.
-The `template` field holds just the bare filename; the CLI resolves it inside
-that subdirectory. Files placed directly in the powerup folder (outside
-`template/`) are reported as orphaned by `pup doctor`.
+Template files referenced by `create` and `modify` entries live anywhere
+inside the powerup's folder (the directory containing `instructions.json`).
+The `template` field holds the full relative path from that folder — e.g.
+`button.svelte.tmpl`, `templates/button.ts`, or `src/sub/deep.njk`. The CLI
+resolves the file at that path. Files in the powerup folder not referenced
+by any `template` field are reported as orphaned by `pup doctor`.
 
 ### Required vs Optional Variables
 

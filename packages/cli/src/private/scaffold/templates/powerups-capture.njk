@@ -87,12 +87,12 @@ go in the same package.
    otherwise. This creates the instructions.json and empty template files inside
    the specified package.
 
-7. Copy the original files into the {{ SINGULAR_NAME }}'s `template/` subdirectory,
-   overwriting the empty stubs. Use `cp` for each file — this brings the
-   full content onto disk without writing it as agent output. Do NOT write
-   file contents from scratch — always copy first. The `create` command
-   already scaffolded the `template/` subdirectory and empty stub files; copy
-   the originals over them.
+7. Copy the original files into the {{ SINGULAR_NAME }}'s folder, overwriting
+   the empty stubs. Use `cp` for each file — this brings the full content onto
+   disk without writing it as agent output. Do NOT write file contents from
+   scratch — always copy first. The `create` command already scaffolded empty
+   stub files at the paths specified by the `template` field; copy the originals
+   over them.
 
 8. Edit the copied files in place to parameterize them:
    - For .ts templates: wrap the content in a default-export function and

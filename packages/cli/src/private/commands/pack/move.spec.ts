@@ -13,7 +13,6 @@ import {
   ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  TEMPLATE_FOLDER,
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
   CONFIG_FILE,
@@ -92,14 +91,12 @@ async function createPackageOnDisk({
 }
 
 /**
- * Add a template/ folder (with flat + nested files) to a powerup dir.
+ * Add files (flat + nested) to a powerup dir to verify recursive copy.
  */
 async function addTemplate(powerupDir: FileRef) {
-  const templateDir = powerupDir.append(`/${TEMPLATE_FOLDER}`);
-  await fs.create(templateDir);
-  await templateDir.append("/flat.txt").write("flat content");
+  await powerupDir.append("/flat.txt").write("flat content");
 
-  const nestedDir = templateDir.append("/nested/sub");
+  const nestedDir = powerupDir.append("/nested/sub");
   await fs.create(nestedDir);
   await nestedDir.append("/deep.txt").write("deep content");
 }
@@ -314,15 +311,15 @@ test.group("pack move (success)", () => {
         .json() as Record<string, unknown>;
       assert(instr.name).equals("my-power");
 
-      // Verify template flat file was copied
+      // Verify flat file was copied
       const flat = await globalPower
-        .append(`/${TEMPLATE_FOLDER}/flat.txt`)
+        .append("/flat.txt")
         .text();
       assert(flat.trim()).equals("flat content");
 
-      // Verify nested template sub-folder file was copied
+      // Verify nested sub-folder file was copied
       const deep = await globalPower
-        .append(`/${TEMPLATE_FOLDER}/nested/sub/deep.txt`)
+        .append("/nested/sub/deep.txt")
         .text();
       assert(deep.trim()).equals("deep content");
 

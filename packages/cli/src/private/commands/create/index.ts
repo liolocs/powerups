@@ -13,7 +13,6 @@ import {
   SRC_FOLDER,
   ACTIVE_FOLDER,
   powerupsFolderMap,
-  TEMPLATE_FOLDER,
   PACKAGE_FILE,
   type PowerUpType,
   CLI_NAME,
@@ -181,13 +180,13 @@ const create = new Command({
     await outputPath.writeJSON(instructions as never);
 
     // Scaffold empty files for both create and modify entries
-    const templateDir = outputFolder.append(`/${TEMPLATE_FOLDER}`);
     for (const file of output.create) {
       if (is.defined(file.template) === true) {
-        const templatePath = templateDir.append(`/${file.template}`);
+        const templatePath = outputFolder.append(`/${file.template}`);
 
         const hasTemplate = await fs.exists(templatePath);
         if (!hasTemplate) {
+          await fs.create(templatePath.directory);
           await templatePath.write("");
         }
       }
@@ -195,10 +194,11 @@ const create = new Command({
 
     for (const file of output.modify) {
       if (is.defined(file.template) === true) {
-        const templatePath = templateDir.append(`/${file.template}`);
+        const templatePath = outputFolder.append(`/${file.template}`);
 
         const hasTemplate = await fs.exists(templatePath);
         if (!hasTemplate) {
+          await fs.create(templatePath.directory);
           await templatePath.write("");
         }
       }

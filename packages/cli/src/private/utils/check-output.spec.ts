@@ -129,8 +129,8 @@ test.case("should return no issues for valid output with both create and modify 
       modify: [{ name: "wire", template: "wire.json", outputPath: "src/index.ts" }],
     },
   } as never);
-  await dir.append("/template/controller.ts").write("test");
-  await dir.append("/template/wire.json").write("[]");
+  await dir.append("/controller.ts").write("test");
+  await dir.append("/wire.json").write("[]");
 
   const issues = await checkOutput({
     rootOutputDir: multiUseFolder,

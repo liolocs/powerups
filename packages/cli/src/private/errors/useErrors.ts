@@ -49,6 +49,21 @@ const use_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  read_file_not_found: (path: string) => {
+    const errorText = `Read step target file not found: ${path}`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  read_json_path_not_found: (path: string, jsonPath: string) => {
+    const errorText = `JSON path "${jsonPath}" not found in: ${path}`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  read_json_parse_error: (path: string) => {
+    const errorText = `Read step target is not valid JSON: ${path}`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   unsupported_template_type: (ext: string, templatePath: FileRef) => {
     const errorText =
       `Unsupported template type: ${ext}\n` +

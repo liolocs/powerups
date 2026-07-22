@@ -10,8 +10,8 @@ const program = new CLI({
   version: "0.0.1",
   commands: commands,
   examples: [
-    `$ ${CLI_CMD} gain`,
-    `$ ${CLI_CMD} gain --harness=claude`,
+    `$ ${CLI_CMD} init`,
+    `$ ${CLI_CMD} init claude`,
     `$ ${CLI_CMD} update`,
     `$ ${CLI_CMD} pack create my-package`,
     `$ ${CLI_CMD} create --pack=my-package -t=multi-use -n=my-power -d="..."`,

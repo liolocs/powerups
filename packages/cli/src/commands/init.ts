@@ -1,3 +1,3 @@
-import gain from "../private/commands/gain/index.js";
+import init from "../private/commands/init/index.js";
 
-export default gain;
+export default init;

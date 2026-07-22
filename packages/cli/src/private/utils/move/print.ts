@@ -32,6 +32,8 @@ export function printMoveResult({
     }
   }
 
+  cli.print(`  ${dim("removed local package from project")}\n`);
+
   if (shouldDelete) {
     cli.print(`  ${dim("removed from project config")}\n`);
   } else {

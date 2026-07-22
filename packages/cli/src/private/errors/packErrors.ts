@@ -34,6 +34,10 @@ const pack_errors = error.coded({
   invalid_move_destination: (dest: string) => {
     return t`${errorBGText}Invalid move destination: "${dest}". Only "global" is supported.`;
   },
+  move_verification_failed: (name: string, detail: string) => {
+    const nameText = cli.bg.yellow(" " + name + " ");
+    return t`${errorBGText}Move verification failed for ${nameText}: ${detail}. Source was not removed.`;
+  },
 });
 
 export type PackErrorCode = keyof typeof pack_errors;

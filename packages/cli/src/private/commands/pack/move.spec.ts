@@ -3,6 +3,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import packMove from "#commands/pack/move";
 import { readGlobalConfig, writeGlobalConfig } from "#utils/config";
+import { verifyMoveSuccess } from "#utils/move/verify";
 import { CodeError } from "@rcompat/error";
 import { PackErrorCode } from "#errors/packErrors";
 import {
@@ -331,6 +332,10 @@ test.group("pack move (success)", () => {
         .json() as Record<string, unknown>;
       assert(globalPkgJson.name).equals(pkgName);
 
+      // Verify the local package directory was removed
+      const localPkgDir = internalFolder.append(`/${pkgName}`);
+      assert(await fs.exists(localPkgDir)).false();
+
       // Verify package was added to global config
       const globalConfig = await readGlobalConfig();
       assert(globalConfig.packages.includes(pkgName)).true();
@@ -403,6 +408,10 @@ test.group("pack move (success)", () => {
       // Both packages should be in global config
       const globalConfig = await readGlobalConfig();
       assert(globalConfig.packages.includes(pkgName)).true();
+
+      // Verify the local package directory was removed
+      const localPkgDir = internalFolder.append(`/${pkgName}`);
+      assert(await fs.exists(localPkgDir)).false();
     } finally {
       await restoreGlobalState([pkgName, "sub-pkg"]);
     }
@@ -433,6 +442,10 @@ test.group("pack move (success)", () => {
         .json() as Record<string, unknown>;
       const packages = config.packages as string[];
       assert(packages.includes(pkgName)).false();
+
+      // Verify the local package directory was removed
+      const localPkgDir = internalFolder.append(`/${pkgName}`);
+      assert(await fs.exists(localPkgDir)).false();
 
       // Verify it was added to global config
       const globalConfig = await readGlobalConfig();
@@ -467,10 +480,135 @@ test.group("pack move (success)", () => {
         .json() as Record<string, unknown>;
       const packages = config.packages as string[];
       assert(packages.includes(pkgName)).true();
+
+      // Verify the local package directory was removed
+      const localPkgDir = internalFolder.append(`/${pkgName}`);
+      assert(await fs.exists(localPkgDir)).false();
     } finally {
       await restoreGlobalState([pkgName]);
     }
 
+    await testRoot.remove();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// verifyMoveSuccess unit tests
+// ---------------------------------------------------------------------------
+
+test.group("verifyMoveSuccess", () => {
+  test.case("passes when global dir, package.json, and src/active all exist", async assert => {
+    await reset();
+    const pkgName = "verify-ok";
+    const globalPkg = globalInternal.append(`/${pkgName}`);
+    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+    await fs.create(destSrcActive);
+    await globalPkg.append(`/${PACKAGE_FILE}`).writeJSON({ name: pkgName });
+
+    await verifyMoveSuccess({
+      packageName: pkgName,
+      globalPackageDir: globalPkg,
+      destSrcActiveDir: destSrcActive,
+    });
+
+    // If we get here without throwing, the test passes
+    assert(true).true();
+
+    await globalPkg.remove({ recursive: true });
+    await testRoot.remove();
+  });
+
+  test.case("throws when global package directory is missing", async assert => {
+    const pkgName = "verify-missing-dir";
+    const globalPkg = globalInternal.append(`/${pkgName}`);
+    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+
+    let threw;
+    try {
+      await verifyMoveSuccess({
+        packageName: pkgName,
+        globalPackageDir: globalPkg,
+        destSrcActiveDir: destSrcActive,
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(PackErrorCode.move_verification_failed);
+  });
+
+  test.case("throws when global package.json is missing", async assert => {
+    await reset();
+    const pkgName = "verify-missing-json";
+    const globalPkg = globalInternal.append(`/${pkgName}`);
+    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+    await fs.create(destSrcActive);
+    // NOTE: no package.json written
+
+    let threw;
+    try {
+      await verifyMoveSuccess({
+        packageName: pkgName,
+        globalPackageDir: globalPkg,
+        destSrcActiveDir: destSrcActive,
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(PackErrorCode.move_verification_failed);
+
+    await globalPkg.remove({ recursive: true });
+    await testRoot.remove();
+  });
+
+  test.case("throws when global package.json is invalid JSON", async assert => {
+    await reset();
+    const pkgName = "verify-bad-json";
+    const globalPkg = globalInternal.append(`/${pkgName}`);
+    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+    await fs.create(destSrcActive);
+    await globalPkg.append(`/${PACKAGE_FILE}`).write("{ this is not valid json ");
+
+    let threw;
+    try {
+      await verifyMoveSuccess({
+        packageName: pkgName,
+        globalPackageDir: globalPkg,
+        destSrcActiveDir: destSrcActive,
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(PackErrorCode.move_verification_failed);
+
+    await globalPkg.remove({ recursive: true });
+    await testRoot.remove();
+  });
+
+  test.case("throws when src/active directory is missing", async assert => {
+    await reset();
+    const pkgName = "verify-missing-active";
+    const globalPkg = globalInternal.append(`/${pkgName}`);
+    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+    await globalPkg.append(`/${PACKAGE_FILE}`).writeJSON({ name: pkgName });
+    // NOTE: src/active not created
+
+    let threw;
+    try {
+      await verifyMoveSuccess({
+        packageName: pkgName,
+        globalPackageDir: globalPkg,
+        destSrcActiveDir: destSrcActive,
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(PackErrorCode.move_verification_failed);
+
+    await globalPkg.remove({ recursive: true });
     await testRoot.remove();
   });
 });

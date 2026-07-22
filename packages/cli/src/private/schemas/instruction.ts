@@ -1,51 +1,77 @@
 import p from "pema";
 
-const createFileSchema = p({
+// ── Step schemas (discriminated union on `type`) ─────────────────────
+
+const createStepSchema = p({
+  type: p.literal("create"),
   name: p.string,
   template: p.string,
   outputPath: p.string,
 });
 
-const modifyFileSchema = p({
+const modifyStepSchema = p({
+  type: p.literal("modify"),
   name: p.string,
   template: p.string,
   outputPath: p.string,
 });
 
-const deleteFileSchema = p({
+const deleteStepSchema = p({
+  type: p.literal("delete"),
   name: p.string,
   outputPath: p.string,
 });
 
-export const outputSchema = p({
-  create: p.array(createFileSchema),
-  modify: p.array(modifyFileSchema),
-  delete: p.array(deleteFileSchema).optional(),
+const readStepSchema = p({
+  type: p.literal("read"),
+  name: p.string,
+  path: p.string,
+  as: p.string,
+  jsonPath: p.string.optional(),
+  template: p.string.optional(),
 });
 
-const suboutputSchema = p({
+// Step override value schemas (step minus `name`) — derived via p.omit
+const createStepOverrideSchema = p.omit(createStepSchema, "name");
+const modifyStepOverrideSchema = p.omit(modifyStepSchema, "name");
+const deleteStepOverrideSchema = p.omit(deleteStepSchema, "name");
+const readStepOverrideSchema = p.omit(readStepSchema, "name");
+
+const stepOverrideValueSchema = p.union(
+  createStepOverrideSchema,
+  modifyStepOverrideSchema,
+  deleteStepOverrideSchema,
+  readStepOverrideSchema,
+);
+
+const includeStepSchema = p({
+  type: p.literal("include"),
   name: p.string,
   variables: p.record(p.string, p.string),
-  outputPathOverride: p({
-    create: p.record(p.string, p.string).optional(),
-    modify: p.record(p.string, p.string).optional(),
-    delete: p.record(p.string, p.string).optional(),
-  }).optional(),
-  exclude: p({
-    create: p.array(p.string).optional(),
-    modify: p.array(p.string).optional(),
-    delete: p.array(p.string).optional(),
-  }).optional(),
+  stepOverride: p.record(p.string, stepOverrideValueSchema).optional(),
+  excludeSteps: p.array(p.string).optional(),
 });
 
-// so that monorepo setups can list a target location
-// where you'd want to add the dependency
+export const stepSchema = p.union(
+  createStepSchema,
+  modifyStepSchema,
+  deleteStepSchema,
+  readStepSchema,
+  includeStepSchema,
+);
+
+export const stepsSchema = p.array(stepSchema);
+
+// ── Package dependencies (unchanged) ─────────────────────────────────
+
 const packageDependencyGroupSchema = p({
   target: p.string.optional(),
   dependencies: p.array(p.string).optional(),
   devDependencies: p.array(p.string).optional(),
   peerDependencies: p.array(p.string).optional(),
 });
+
+// ── Top-level instructions ─────────────────────────────────────────
 
 export const instructionsSchema = p({
   name: p.string,
@@ -56,11 +82,11 @@ export const instructionsSchema = p({
   }),
   intent: p.array(p.string),
   packageDependencies: p.array(packageDependencyGroupSchema).optional(),
-  output: outputSchema,
-  includes: p.array(suboutputSchema).optional(),
+  steps: stepsSchema,
 });
 
 export const packageDependencyGroupArraySchema = p.array(packageDependencyGroupSchema);
 
+export type Step = (typeof stepSchema)["infer"];
+export type StepOverrideValue = (typeof stepOverrideValueSchema)["infer"];
 export type Instructions = (typeof instructionsSchema)["infer"];
-export type SuboutputRef = (typeof suboutputSchema)["infer"];

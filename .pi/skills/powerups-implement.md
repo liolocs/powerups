@@ -37,7 +37,15 @@ Execute a plan saved by the powerups-brainstorm skill.
       - Collect the required variable values from the user (or from the
         plan if the plan specifies them).
       - Preview: `pup use <name> --<variable-name>=<value> ... -d`
-      - On approval, use for real (without `-d`).
+      - On approval, use for real (without `-d`). The `use` command renders
+        in a git worktree and copies results back to the project. If you
+        need to verify the full output before committing to the project,
+        test in an isolated worktree first:
+        `git worktree add /tmp/test-<name> --detach && cd /tmp/test-<name>`
+        Run `pup use <name> --<variable-name>=<value> ...` there,
+        verify the generated files, then clean up:
+        `cd - && git worktree remove --force /tmp/test-<name>`
+        Only apply to the real project once the worktree test passes.
 
    b. If no match, implement the task by writing the code directly.
       Follow the plan's concrete implementation steps.

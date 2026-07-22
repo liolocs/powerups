@@ -42,6 +42,16 @@ the wrong approach. Find is not optional.
    - Which existing powerups can be reused for this plan (list by
      name, with the key variables each requires)
    - What work doesn't fit any existing item
+   - For work that partially overlaps existing powerups: check whether a
+     new powerup can COMPOSE existing ones via the `includes` mechanism
+     (subtemplate) rather than duplicating their templates. If a planned
+     powerup's output is mostly "existing powerup A + existing powerup B +
+     a small glue file," plan it as a parent that `includes` A and B,
+     adding only the unique glue files as its own templates. This avoids
+     duplicating template content across powerups. Run
+     `pup info <name>` on each candidate to see its exact
+     variables and file mapping, then determine how to map the parent's
+     variables into the included subtemplates.
 
 5. For work that doesn't fit an existing item, classify each piece as:
    - A one-off task
@@ -74,11 +84,18 @@ the wrong approach. Find is not optional.
    captured AFTER the implementation is verified working, using the
    `powerups-capture` skill.
 
-   Subtemplates: Do NOT plan subtemplate decomposition upfront. Plan
-   concrete, standalone powerups. If two planned powerups clearly share
-   a file structure, note it as a future subtemplate extraction candidate
-   — to be extracted after both powerups are built and verified working.
-   See the main instruction file for subtemplate mechanics.
+   Subtemplates: Distinguish two scenarios:
+   - Greenfield (no overlapping powerups exist): Do NOT plan subtemplate
+     decomposition upfront. Plan concrete, standalone powerups. If two
+     planned powerups clearly share a file structure, note it as a future
+     subtemplate extraction candidate — to be extracted after both
+     powerups are built and verified working.
+   - Existing overlap (powerups already exist that cover part of the
+     planned output): COMPOSE via `includes`. If an existing powerup
+     already generates files that a new powerup would duplicate, the new
+     powerup should `include` the existing one rather than recreating its
+     templates. Only create new template files for the parts that are
+     genuinely new. See the main instruction file for subtemplate mechanics.
 
 6. Present the plan in sections, covering:
    - Overview of the approach
@@ -99,6 +116,14 @@ the wrong approach. Find is not optional.
    - Did every identified intent get searched? (Check your recorded results.)
    - Are all capture candidates marked for post-implementation (not pre)?
    - Is the build-first principle followed? (No "create powerup first" steps.)
+   - Are there any planned powerups that duplicate template content from
+     existing powerups? If so, they should use `includes` to reference the
+     existing ones instead of recreating templates. Check every planned
+     powerup against find results — if an existing powerup generates the
+     same file with the same structure, that file belongs in an `includes`
+     entry, not a new template.
+   - Does the plan specify testing in a worktree (or dry-run) before
+     applying to the project? No `use` without `-d` during testing.
    - Are there any placeholders, gaps, or vague requirements?
    Fix any issues inline before saving.
 

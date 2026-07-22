@@ -124,7 +124,7 @@ Powerups are organized into **packages** — collections of one or more powerups
 can be created locally and optionally moved to a global location (`~/.powerups/`)
 for sharing across projects.
  has a `package.json` with a `powerups` property mapping powerup names
-  to their `instructions.json` path.
+  to their `instructions.json` paths.
 - The project config at `.powerups/config.json` lists installed packages in
   its `packages` array. Only powerups from packages listed in the config are visible
   to `find` and `use` (config acts as a gatekeeper).
@@ -241,6 +241,10 @@ export default ({ componentName, theme }: Record<string, string>) =>
       "outputPathOverride": {
         "create": { "originalName": "overridden/path" },
         "delete": { "oldFile": "overridden/path" }
+      },
+      "exclude": {
+        "create": ["unwantedFile"],
+        "delete": ["legacyFile"]
       }
     }
   ]
@@ -296,11 +300,10 @@ to the target `package.json`, detects the package manager from the lock file
 (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lockb`/`bun.lock`),
 and runs the install command automatically.
 
-**Do NOT create `modify` entries for `package.json`.** Use the
-`packageDependencies` field instead. The CLI manages `package.json` updates and
-install automatically — a modify template for `package.json` will not work
-correctly because the use flow uses a git worktree and does not stage
-`package.json` changes through the modify engine.
+**Do NOT create `modify` dependency properties for `package.json`.** Use the
+`packageDependencies` field instead. The CLI manages `package.json` dependency updates and
+install automatically — a modify template for `package.json` for dependencies will not work
+correctly because the use flow uses a git worktree.
 
 ### Modify templates
 
@@ -370,6 +373,11 @@ needs a types file with the same structure.
   `types` file to this path instead of its default."
 - Validate: `pup validate api-route`
 
+`exclude` — optionally skip specific files from an included subtemplate entirely.
+Each kind (`create`, `modify`, `delete`) is an array of file names to skip. A file
+in both `exclude` and `outputPathOverride` for the same kind is a validation error
+— you can't both redirect and skip the same file.
+
 #### When to extract subtemplates
 
 Create powerups first. Extract subtemplates only when a concrete use case
@@ -383,6 +391,16 @@ faced with the actual repetition. Extract when:
 
 Do NOT preemptively decompose a powerup into subtemplates upfront. Build the
 full powerup, verify it works, then extract when repetition emerges.
+
+#### When to compose via includes (existing overlap)
+
+When existing powerups already cover part of a new powerup's output, COMPOSE
+via `includes` instead of duplicating templates. If powerup A already generates
+files that a new powerup B would recreate, B should `include` A and only add
+the genuinely new files as its own templates. Before creating any new
+powerup, run `pup find` and `pup info` on existing matches — if
+an existing powerup generates the same file with the same structure, that
+file belongs in an `includes` entry, not a copied template.
 
 ### Quick reference
 
@@ -399,7 +417,7 @@ full powerup, verify it works, then extract when repetition emerges.
 | Create a multi-use powerup | `pup create --pack=<pkg> --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
 | Create a single-use powerup | `pup create --pack=<pkg> --type=single-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
 | Validate a powerup | `pup validate <name>` |
-| Gain powerups | `pup gain` |
+| Initialize powerups | `pup init` |
 | Health check all | `pup doctor` |
 | Usage metrics | `pup metrics summary` |
 <!-- END powerups -->

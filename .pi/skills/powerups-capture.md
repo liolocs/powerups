@@ -39,7 +39,14 @@ go in the same package.
 3. Run `pup find -q="<intent>"` to check if a similar powerup
    already exists. If one does, run `pup info <name>`
    to understand it. If it's similar enough, suggest reusing or extending the
-   existing powerup rather than creating a new one.
+   existing powerup rather than creating a new one. If the new
+   work partially overlaps existing powerups (same template files with minor
+   variations), plan to use the `includes` mechanism to reference the existing
+   powerups as subtemplates — only create new template files for the parts
+   that are genuinely new. Do NOT duplicate template content that already
+   exists in another powerup. Run `pup info <name>` on each
+   overlapping powerup to understand its variables and file mapping, then
+   determine how to compose the new powerup via `includes`.
 
 4. Assess whether this is a single-use or multi-use powerup:
    - A single-use powerup is a one-time addition to the project (e.g., add a dependency,
@@ -80,12 +87,12 @@ go in the same package.
    otherwise. This creates the instructions.json and empty template files inside
    the specified package.
 
-7. Copy the original files into the powerup's `template/` subdirectory,
-   overwriting the empty stubs. Use `cp` for each file — this brings the
-   full content onto disk without writing it as agent output. Do NOT write
-   file contents from scratch — always copy first. The `create` command
-   already scaffolded the `template/` subdirectory and empty stub files; copy
-   the originals over them.
+7. Copy the original files into the powerup's folder, overwriting
+   the empty stubs. Use `cp` for each file — this brings the full content onto
+   disk without writing it as agent output. Do NOT write file contents from
+   scratch — always copy first. The `create` command already scaffolded empty
+   stub files at the paths specified by the `template` field; copy the originals
+   over them.
 
 8. Edit the copied files in place to parameterize them:
    - For .ts templates: wrap the content in a default-export function and
@@ -109,8 +116,23 @@ go in the same package.
     dry-run output to the original work. If there are discrepancies, fix
     the template and re-verify.
 
+    Testing safety: Do NOT run `use` without `-d` against the project
+    during testing. The `use` command applies files to the project via a
+    git worktree and copies them back — only run it for real when you are
+    confident the output is correct. Use dry-run (`-d`) for all
+    verification during capture. If you need to test the full `use` flow
+    (including file writes), create a git worktree manually and test there
+    first:
+    `git worktree add /tmp/test-<name> --detach && cd /tmp/test-<name>`
+    Run `pup use <name> --<variable-name>=<value> ...` in the
+    worktree, verify the output, then clean up:
+    `cd - && git worktree remove --force /tmp/test-<name>`
+    Only apply to the real project once the worktree test passes.
+
 11. Self-review: Confirm the dry-run output matches the original work.
     Confirm all variables are declared. Confirm no placeholders remain.
+    Confirm no template content is duplicated from existing powerups —
+    overlapping files should use `includes` instead of copied templates.
 
 12. Report back to the user: what was captured, where it lives, and how to
     reuse it:

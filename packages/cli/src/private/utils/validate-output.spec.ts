@@ -37,7 +37,7 @@ test.case("should return no issues for a valid tree with no includes", async ass
       description: "test description",
       variables: { required: ["ComponentName"] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     },
   });
 
@@ -59,7 +59,7 @@ test.case("should return no issues for a valid tree with one suboutput", async a
       description: "test description",
       variables: { required: ["componentName", "theme"] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     },
   });
   await writeOutput({
@@ -69,12 +69,8 @@ test.case("should return no issues for a valid tree with one suboutput", async a
       description: "test description",
       variables: { required: ["theme"] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
-        {
-          name: "button",
-          variables: { componentName: "Button", theme: "{{theme}}" },
-        },
+      steps: [
+        { type: "include", name: "button", variables: { componentName: "Button", theme: "{{theme}}" } },
       ],
     },
   });
@@ -97,7 +93,7 @@ test.case("should return no issues for valid nested suboutputs", async assert =>
       description: "test description",
       variables: { required: ["val"] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     },
   });
   await writeOutput({
@@ -107,8 +103,9 @@ test.case("should return no issues for valid nested suboutputs", async assert =>
       description: "test description",
       variables: { required: ["val"] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "c", variables: { val: "{{val}}" } }],
+      steps: [
+        { type: "include", name: "c", variables: { val: "{{val}}" } },
+      ],
     },
   });
   await writeOutput({
@@ -118,8 +115,9 @@ test.case("should return no issues for valid nested suboutputs", async assert =>
       description: "test description",
       variables: { required: ["val"] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "b", variables: { val: "{{val}}" } }],
+      steps: [
+        { type: "include", name: "b", variables: { val: "{{val}}" } },
+      ],
     },
   });
 
@@ -141,8 +139,9 @@ test.case("should report an issue for a missing suboutput", async assert => {
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "nonexistent", variables: {} }],
+      steps: [
+        { type: "include", name: "nonexistent", variables: {} },
+      ],
     },
   });
 
@@ -165,8 +164,9 @@ test.case("should report an issue with chain for a circular reference", async as
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "b-cycle", variables: {} }],
+      steps: [
+        { type: "include", name: "b-cycle", variables: {} },
+      ],
     },
   });
   await writeOutput({
@@ -176,8 +176,9 @@ test.case("should report an issue with chain for a circular reference", async as
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "a-cycle", variables: {} }],
+      steps: [
+        { type: "include", name: "a-cycle", variables: {} },
+      ],
     },
   });
 
@@ -200,8 +201,9 @@ test.case("should report an issue with chain for a deep circular reference", asy
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "deep-b", variables: {} }],
+      steps: [
+        { type: "include", name: "deep-b", variables: {} },
+      ],
     },
   });
   await writeOutput({
@@ -211,8 +213,9 @@ test.case("should report an issue with chain for a deep circular reference", asy
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "deep-c", variables: {} }],
+      steps: [
+        { type: "include", name: "deep-c", variables: {} },
+      ],
     },
   });
   await writeOutput({
@@ -222,8 +225,9 @@ test.case("should report an issue with chain for a deep circular reference", asy
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "deep-b", variables: {} }],
+      steps: [
+        { type: "include", name: "deep-b", variables: {} },
+      ],
     },
   });
 
@@ -246,7 +250,7 @@ test.case("should not report a cycle for a diamond shape", async assert => {
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     },
   });
   await writeOutput({
@@ -256,8 +260,9 @@ test.case("should not report a cycle for a diamond shape", async assert => {
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "diamond-b", variables: {} }],
+      steps: [
+        { type: "include", name: "diamond-b", variables: {} },
+      ],
     },
   });
   await writeOutput({
@@ -267,10 +272,9 @@ test.case("should not report a cycle for a diamond shape", async assert => {
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
-        { name: "diamond-b", variables: {} },
-        { name: "diamond-c", variables: {} },
+      steps: [
+        { type: "include", name: "diamond-b", variables: {} },
+        { type: "include", name: "diamond-c", variables: {} },
       ],
     },
   });
@@ -293,7 +297,7 @@ test.case("should report an issue for an unmapped variable", async assert => {
       description: "test description",
       variables: { required: ["componentName", "theme"] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     },
   });
   await writeOutput({
@@ -303,9 +307,8 @@ test.case("should report an issue for an unmapped variable", async assert => {
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
-        { name: "child-needs-vars", variables: { componentName: "Button" } },
+      steps: [
+        { type: "include", name: "child-needs-vars", variables: { componentName: "Button" } },
       ],
     },
   });
@@ -329,7 +332,7 @@ test.case("should report an issue for an invalid parentVar reference", async ass
       description: "test description",
       variables: { required: ["val"] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     },
   });
   await writeOutput({
@@ -339,9 +342,8 @@ test.case("should report an issue for an invalid parentVar reference", async ass
       description: "test description",
       variables: { required: ["theme"] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
-        { name: "ref-child", variables: { val: "{{nonexistent}}" } },
+      steps: [
+        { type: "include", name: "ref-child", variables: { val: "{{nonexistent}}" } },
       ],
     },
   });
@@ -356,7 +358,7 @@ test.case("should report an issue for an invalid parentVar reference", async ass
   await testRoot.remove();
 });
 
-test.case("should report an issue for a create override file name not in suboutput", async assert => {
+test.case("should report an issue for a stepOverride key not in suboutput steps", async assert => {
   await reset();
   await writeOutput({
     name: "override-child",
@@ -365,10 +367,9 @@ test.case("should report an issue for a create override file name not in suboutp
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: {
-        create: [{ name: "real-file", template: "t.njk", outputPath: "out.ts" }],
-        modify: [],
-      },
+      steps: [
+        { type: "create", name: "real-file", template: "t.njk", outputPath: "out.ts" },
+      ],
     },
   });
   await writeOutput({
@@ -378,12 +379,14 @@ test.case("should report an issue for a create override file name not in suboutp
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
+      steps: [
         {
+          type: "include",
           name: "override-child",
           variables: {},
-          outputPathOverride: { create: { "nonexistent-file": "src/new.ts" } },
+          stepOverride: {
+            "nonexistent-file": { type: "create", template: "t.njk", outputPath: "src/new.ts" },
+          },
         },
       ],
     },
@@ -394,12 +397,12 @@ test.case("should report an issue for a create override file name not in suboutp
     currentOutputDir: multiUseFolder.append("/override-parent"),
   });
 
-  assert(issues.some(i => i.includes("override file not found"))).true();
+  assert(issues.some(i => i.includes("stepOverride target not found"))).true();
   assert(issues.some(i => i.includes("nonexistent-file"))).true();
   await testRoot.remove();
 });
 
-test.case("should report an issue for a modify override file name not in suboutput", async assert => {
+test.case("should report an issue for a modify stepOverride key not in suboutput steps", async assert => {
   await reset();
   await writeOutput({
     name: "modify-override-child",
@@ -408,10 +411,9 @@ test.case("should report an issue for a modify override file name not in suboutp
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: {
-        create: [],
-        modify: [{ name: "real-modify", template: "m.json", outputPath: "out.ts" }],
-      },
+      steps: [
+        { type: "modify", name: "real-modify", template: "m.json", outputPath: "out.ts" },
+      ],
     },
   });
   await writeOutput({
@@ -421,12 +423,14 @@ test.case("should report an issue for a modify override file name not in suboutp
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
+      steps: [
         {
+          type: "include",
           name: "modify-override-child",
           variables: {},
-          outputPathOverride: { modify: { "nonexistent-modify": "src/new.ts" } },
+          stepOverride: {
+            "nonexistent-modify": { type: "modify", template: "m.json", outputPath: "src/new.ts" },
+          },
         },
       ],
     },
@@ -437,12 +441,12 @@ test.case("should report an issue for a modify override file name not in suboutp
     currentOutputDir: multiUseFolder.append("/modify-override-parent"),
   });
 
-  assert(issues.some(i => i.includes("override file not found"))).true();
+  assert(issues.some(i => i.includes("stepOverride target not found"))).true();
   assert(issues.some(i => i.includes("nonexistent-modify"))).true();
   await testRoot.remove();
 });
 
-test.case("should report an issue for a delete override file name not in suboutput", async assert => {
+test.case("should report an issue for a delete stepOverride key not in suboutput steps", async assert => {
   await reset();
   await writeOutput({
     name: "delete-override-child",
@@ -451,11 +455,9 @@ test.case("should report an issue for a delete override file name not in suboutp
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: {
-        create: [],
-        modify: [],
-        delete: [{ name: "real-delete", outputPath: "src/old.ts" }],
-      },
+      steps: [
+        { type: "delete", name: "real-delete", outputPath: "src/old.ts" },
+      ],
     },
   });
   await writeOutput({
@@ -465,12 +467,14 @@ test.case("should report an issue for a delete override file name not in suboutp
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
+      steps: [
         {
+          type: "include",
           name: "delete-override-child",
           variables: {},
-          outputPathOverride: { delete: { "nonexistent-delete": "src/custom.ts" } },
+          stepOverride: {
+            "nonexistent-delete": { type: "delete", outputPath: "src/custom.ts" },
+          },
         },
       ],
     },
@@ -481,12 +485,12 @@ test.case("should report an issue for a delete override file name not in suboutp
     currentOutputDir: multiUseFolder.append("/delete-override-parent"),
   });
 
-  assert(issues.some(i => i.includes("override file not found"))).true();
+  assert(issues.some(i => i.includes("stepOverride target not found"))).true();
   assert(issues.some(i => i.includes("nonexistent-delete"))).true();
   await testRoot.remove();
 });
 
-test.case("should return no issues for a valid delete override", async assert => {
+test.case("should return no issues for a valid delete stepOverride", async assert => {
   await reset();
   await writeOutput({
     name: "valid-delete-child",
@@ -495,11 +499,9 @@ test.case("should return no issues for a valid delete override", async assert =>
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: {
-        create: [],
-        modify: [],
-        delete: [{ name: "legacy", outputPath: "src/legacy.ts" }],
-      },
+      steps: [
+        { type: "delete", name: "legacy", outputPath: "src/legacy.ts" },
+      ],
     },
   });
   await writeOutput({
@@ -509,12 +511,14 @@ test.case("should return no issues for a valid delete override", async assert =>
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
+      steps: [
         {
+          type: "include",
           name: "valid-delete-child",
           variables: {},
-          outputPathOverride: { delete: { legacy: "src/custom/legacy.ts" } },
+          stepOverride: {
+            legacy: { type: "delete", outputPath: "src/custom/legacy.ts" },
+          },
         },
       ],
     },
@@ -538,7 +542,7 @@ test.case("should validate both independently when the same suboutput is referen
       description: "test description",
       variables: { required: ["componentName"] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     },
   });
   await writeOutput({
@@ -548,10 +552,9 @@ test.case("should validate both independently when the same suboutput is referen
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
-        { name: "dual-child", variables: { componentName: "Primary" } },
-        { name: "dual-child", variables: { componentName: "Secondary" } },
+      steps: [
+        { type: "include", name: "dual-child", variables: { componentName: "Primary" } },
+        { type: "include", name: "dual-child", variables: { componentName: "Secondary" } },
       ],
     },
   });
@@ -577,8 +580,9 @@ test.case("should report an issue and skip recursion for a suboutput with unpars
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "broken-child", variables: {} }],
+      steps: [
+        { type: "include", name: "broken-child", variables: {} },
+      ],
     },
   });
 
@@ -592,7 +596,7 @@ test.case("should report an issue and skip recursion for a suboutput with unpars
   await testRoot.remove();
 });
 
-test.case("should return no issues for valid exclude", async assert => {
+test.case("should return no issues for valid excludeSteps", async assert => {
   await reset();
   await writeOutput({
     name: "exclude-valid-child",
@@ -601,13 +605,10 @@ test.case("should return no issues for valid exclude", async assert => {
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: {
-        create: [
-          { name: "comp", template: "c.njk", outputPath: "src/comp.ts" },
-          { name: "test", template: "t.njk", outputPath: "src/test.ts" },
-        ],
-        modify: [],
-      },
+      steps: [
+        { type: "create", name: "comp", template: "c.njk", outputPath: "src/comp.ts" },
+        { type: "create", name: "test", template: "t.njk", outputPath: "src/test.ts" },
+      ],
     },
   });
   await writeOutput({
@@ -617,12 +618,12 @@ test.case("should return no issues for valid exclude", async assert => {
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
+      steps: [
         {
+          type: "include",
           name: "exclude-valid-child",
           variables: {},
-          exclude: { create: ["test"] },
+          excludeSteps: ["test"],
         },
       ],
     },
@@ -637,7 +638,7 @@ test.case("should return no issues for valid exclude", async assert => {
   await testRoot.remove();
 });
 
-test.case("should report an issue for an exclude file name not in suboutput", async assert => {
+test.case("should report an issue for an excludeSteps name not in suboutput steps", async assert => {
   await reset();
   await writeOutput({
     name: "exclude-notfound-child",
@@ -646,10 +647,9 @@ test.case("should report an issue for an exclude file name not in suboutput", as
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: {
-        create: [{ name: "real", template: "r.njk", outputPath: "src/real.ts" }],
-        modify: [],
-      },
+      steps: [
+        { type: "create", name: "real", template: "r.njk", outputPath: "src/real.ts" },
+      ],
     },
   });
   await writeOutput({
@@ -659,12 +659,12 @@ test.case("should report an issue for an exclude file name not in suboutput", as
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
+      steps: [
         {
+          type: "include",
           name: "exclude-notfound-child",
           variables: {},
-          exclude: { create: ["nonexistent"] },
+          excludeSteps: ["nonexistent"],
         },
       ],
     },
@@ -675,12 +675,12 @@ test.case("should report an issue for an exclude file name not in suboutput", as
     currentOutputDir: multiUseFolder.append("/exclude-notfound-parent"),
   });
 
-  assert(issues.some(i => i.includes("exclude file not found"))).true();
+  assert(issues.some(i => i.includes("excludeSteps target not found"))).true();
   assert(issues.some(i => i.includes("nonexistent"))).true();
   await testRoot.remove();
 });
 
-test.case("should report a conflict when a file is in both exclude and outputPathOverride", async assert => {
+test.case("should report a conflict when a step name is in both excludeSteps and stepOverride", async assert => {
   await reset();
   await writeOutput({
     name: "exclude-conflict-child",
@@ -689,10 +689,9 @@ test.case("should report a conflict when a file is in both exclude and outputPat
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: {
-        create: [{ name: "comp", template: "c.njk", outputPath: "src/comp.ts" }],
-        modify: [],
-      },
+      steps: [
+        { type: "create", name: "comp", template: "c.njk", outputPath: "src/comp.ts" },
+      ],
     },
   });
   await writeOutput({
@@ -702,13 +701,15 @@ test.case("should report a conflict when a file is in both exclude and outputPat
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
+      steps: [
         {
+          type: "include",
           name: "exclude-conflict-child",
           variables: {},
-          outputPathOverride: { create: { comp: "src/overridden.ts" } },
-          exclude: { create: ["comp"] },
+          stepOverride: {
+            comp: { type: "create", template: "c.njk", outputPath: "src/overridden.ts" },
+          },
+          excludeSteps: ["comp"],
         },
       ],
     },
@@ -721,12 +722,12 @@ test.case("should report a conflict when a file is in both exclude and outputPat
 
   assert(issues.some(i => i.includes("conflict"))).true();
   assert(issues.some(i => i.includes("comp"))).true();
-  assert(issues.some(i => i.includes("exclude"))).true();
-  assert(issues.some(i => i.includes("outputPathOverride.create"))).true();
+  assert(issues.some(i => i.includes("excludeSteps"))).true();
+  assert(issues.some(i => i.includes("stepOverride"))).true();
   await testRoot.remove();
 });
 
-test.case("should return no issues for exclude with delete kind", async assert => {
+test.case("should return no issues for excludeSteps with delete step", async assert => {
   await reset();
   await writeOutput({
     name: "exclude-delete-valid-child",
@@ -735,11 +736,9 @@ test.case("should return no issues for exclude with delete kind", async assert =
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: {
-        create: [],
-        modify: [],
-        delete: [{ name: "legacy", outputPath: "src/legacy.ts" }],
-      },
+      steps: [
+        { type: "delete", name: "legacy", outputPath: "src/legacy.ts" },
+      ],
     },
   });
   await writeOutput({
@@ -749,12 +748,12 @@ test.case("should return no issues for exclude with delete kind", async assert =
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [
+      steps: [
         {
+          type: "include",
           name: "exclude-delete-valid-child",
           variables: {},
-          exclude: { delete: ["legacy"] },
+          excludeSteps: ["legacy"],
         },
       ],
     },

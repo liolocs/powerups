@@ -76,34 +76,43 @@ export async function checkOutput(args: {
     }
   }
 
-  // d) Variable ordering validation
+  // d) Step name uniqueness
+  const seenNames = new Set<string>();
+  for (const step of instructions.steps) {
+    if (seenNames.has(step.name)) {
+      issues.push(`duplicate step name: ${step.name}`);
+    }
+    seenNames.add(step.name);
+  }
+
+  // e) Variable ordering validation
   const available = new Set<string>([
     ...required.map(r => r.toLowerCase()),
     ...optional.map(o => o.toLowerCase()),
   ]);
 
   for (const step of instructions.steps) {
-    const tokens = new Set<string>();
+    const tokens = new Map<string, string>();
 
     if (step.type === "create" || step.type === "modify" || step.type === "delete") {
       for (const [, token] of step.outputPath.matchAll(/\{\{(\w+)\}\}/g)) {
-        tokens.add(token.toLowerCase());
+        tokens.set(token.toLowerCase(), token);
       }
     } else if (step.type === "read") {
       for (const [, token] of step.path.matchAll(/\{\{(\w+)\}\}/g)) {
-        tokens.add(token.toLowerCase());
+        tokens.set(token.toLowerCase(), token);
       }
     } else if (step.type === "include") {
       for (const value of Object.values(step.variables)) {
         for (const [, token] of value.matchAll(/\{\{(\w+)\}\}/g)) {
-          tokens.add(token.toLowerCase());
+          tokens.set(token.toLowerCase(), token);
         }
       }
     }
 
-    for (const token of tokens) {
-      if (!available.has(token)) {
-        issues.push(`step "${step.name}" uses {{${token}}} before it is available`);
+    for (const [lower, original] of tokens) {
+      if (!available.has(lower)) {
+        issues.push(`step "${step.name}" uses {{${original}}} before it is available`);
       }
     }
 

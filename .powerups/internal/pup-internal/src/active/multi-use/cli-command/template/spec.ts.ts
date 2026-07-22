@@ -24,6 +24,7 @@ export default function(variables: Record<string, string>): string {
   test.case("should throw ${e.name}", async assert => {
     // TODO: set up test conditions that trigger this error
     let threw;
+
     try {
       await ${varName}.run({
         subcommands: [],
@@ -32,8 +33,10 @@ export default function(variables: Record<string, string>): string {
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
+
       threw = (e as CodeError).code;
     }
+
     assert(threw).equals(${pascalName}ErrorCode.${e.name});
   });`;
     }
@@ -54,5 +57,6 @@ test.case("${commandName} has correct name and description", async assert => {
   assert(${varName}.name).equals("${commandName}");
   assert(${varName}.description).equals("${description}");
 });
+
 ${errorTests}`;
 }

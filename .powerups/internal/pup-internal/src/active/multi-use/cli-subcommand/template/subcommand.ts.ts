@@ -20,12 +20,8 @@ export default function(variables: Record<string, string>): string {
     required?: boolean;
   }> = JSON.parse(flags || "[]");
 
-  const _parsedErrorCases: Array<{ name: string; text: string }> =
-    JSON.parse(errorCases || "[]");
-
   const hasFlags = parsedFlags.length > 0;
 
-  // Generate flags array
   const flagsCode = parsedFlags.map(f => {
     const lines = [
       "    {",
@@ -64,10 +60,14 @@ import ${parentVar}_errors from "#errors/${parentCommand}Errors";
 
 const ${subVar} = new Command({
   name: "${subcommandName}",
+
   description: "${description}",
+
 ${flagsBlock}
+
   subcommands: [],
 ${actionLine}
+
 ${rootLine}
 
     // TODO: implement subcommand logic

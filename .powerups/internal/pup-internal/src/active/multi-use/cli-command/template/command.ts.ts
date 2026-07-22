@@ -57,10 +57,15 @@ import ${varName}_errors from "#errors/${commandName}Errors";
 
 const ${varName} = new Command({
   name: "${commandName}",
+
   description: "${description}",
+
 ${flagsBlock}
+
   subcommands: [],
+
 ${actionLine}
+
 ${rootLine}
 
     // TODO: implement command logic

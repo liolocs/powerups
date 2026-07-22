@@ -17,10 +17,15 @@ import ${subVar} from "#commands/${commandName}/${subcommandName}";
 
 const ${varName} = new Command({
   name: "${commandName}",
+
   description: "${description}",
+
   flags: [],
+
   subcommands: [${subVar}],
+
   requiresSubcommand: true,
+
   action: async () => {
     // This action is never called because requiresSubcommand is true
   },

@@ -197,7 +197,7 @@ test.group("pack create (errors)", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    // gain_errors.main_folder_not_found uses this error code
+    // init_errors.main_folder_not_found uses this error code
     assert(threw).equals("main_folder_not_found");
 
     await testRoot.remove();

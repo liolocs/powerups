@@ -7,6 +7,16 @@ const configSchema = p({
   [PACKAGES_KEY]: p.array(p.string).optional(),
 });
 
+/**
+ * Schema for the global config (~/.<MAIN_FOLDER>/config.json).
+ * Unlike the project config, the global config only stores a packages
+ * array — `harness` is optional so legacy files without it don't crash.
+ */
+const globalConfigSchema = p({
+  harness: p.string.optional(),
+  [PACKAGES_KEY]: p.array(p.string).optional(),
+});
+
 export type Config = {
   harness: string;
   packages: string[];
@@ -57,7 +67,7 @@ export async function readGlobalConfig(): Promise<{ packages: string[] }> {
     return { packages: [] };
   }
 
-  const raw = configSchema.parse(await configPath.json());
+  const raw = globalConfigSchema.parse(await configPath.json());
   return {
     packages: raw.packages ?? [],
   };

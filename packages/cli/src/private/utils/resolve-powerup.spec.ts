@@ -39,7 +39,7 @@ async function createPackage(
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
 
-  const powerupsProperty: Record<string, Record<string, string[]>> = {
+  const powerupsProperty: Record<string, Record<string, string>> = {
     [MULTI_USE_FOLDER]: {},
     [SINGLE_USE_FOLDER]: {},
   };
@@ -55,9 +55,8 @@ async function createPackage(
       intent: [],
       output: { create: [], modify: [] },
     });
-    powerupsProperty[typeFolder][powerup.name] = [
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${powerup.name}/instructions.json`,
-    ];
+    powerupsProperty[typeFolder][powerup.name] =
+      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${powerup.name}/instructions.json`;
   }
 
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({

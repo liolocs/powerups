@@ -56,10 +56,10 @@ async function createPackageWithPower(
     [CLI_NAME]: {
       active: {
         [MULTI_USE_FOLDER]: type === "multi-use"
-          ? { [powerupsName]: [`./${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/${powerupsName}/instructions.json`] }
+          ? { [powerupsName]: `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/${powerupsName}/instructions.json` }
           : {},
         [SINGLE_USE_FOLDER]: type === "single-use"
-          ? { [powerupsName]: [`./${SRC_FOLDER}/${ACTIVE_FOLDER}/${SINGLE_USE_FOLDER}/${powerupsName}/instructions.json`] }
+          ? { [powerupsName]: `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${SINGLE_USE_FOLDER}/${powerupsName}/instructions.json` }
           : {},
       },
     },

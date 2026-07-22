@@ -115,7 +115,7 @@ export async function resolvePowerUp(
       if (is.defined(powersMap)) {
         // Look for exact powerup name match (not parent:child entries)
         if (is.defined(powersMap[name])) {
-          const instructionPath = powersMap[name][0];
+          const instructionPath = powersMap[name];
           const powerupsFolder = pkgLoc.packageDir.append(
             `/${instructionPath}`,
           ).directory;

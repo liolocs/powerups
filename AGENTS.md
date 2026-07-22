@@ -100,6 +100,16 @@ const harness = await detectHarness(projectRoot, harnessFlag, options);
   });
 ```
 
+### Comments
+
+Don't add comments to code like
+```ts
+// 1. this section does this
+
+// 2. this section does that
+```
+The code should be self-documenting. Only add comments when it makes absolute sense.
+
 <!-- BEGIN powerups -->
 ## powerups (powerup engine)
 
@@ -116,7 +126,7 @@ Powerups are organized into **packages** — collections of one or more powerups
 can be created locally and optionally moved to a global location (`~/.powerups/`)
 for sharing across projects.
  has a `package.json` with a `powerups` property mapping powerup names
-  to their `instructions.json` paths.
+  to their `instructions.json` path.
 - The project config at `.powerups/config.json` lists installed packages in
   its `packages` array. Only powerups from packages listed in the config are visible
   to `find` and `use` (config acts as a gatekeeper).

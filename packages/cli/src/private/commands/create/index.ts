@@ -208,7 +208,7 @@ const create = new Command({
     const pkgJson = packageJsonSchema.parse(await packageJsonPath.json());
     const pkgJsonPowerups = pkgJson[CLI_NAME];
 
-    let powerupsMap: Record<string, string[]> = {};
+    let powerupsMap: Record<string, string> = {};
 
     if (is.truthy(
       pkgJsonPowerups.active[
@@ -217,17 +217,13 @@ const create = new Command({
     )) {
       powerupsMap = pkgJsonPowerups.active[
         typeFolderName as keyof typeof pkgJsonPowerups.active
-      ] as Record<string, string[]>;
+      ] as Record<string, string>;
     }
 
-    if (!is.truthy(powerupsMap[name])) {
-      powerupsMap[name] = [];
-    }
-    powerupsMap[name] = [
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolderName}/${name}/instructions.json`,
-    ];
+    powerupsMap[name] =
+      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolderName}/${name}/instructions.json`;
 
-    (pkgJson[CLI_NAME].active as Record<string, Record<string, string[]>>)[typeFolderName] = powerupsMap;
+    (pkgJson[CLI_NAME].active as Record<string, Record<string, string>>)[typeFolderName] = powerupsMap;
 
     await packageJsonPath.writeJSON(pkgJson as never);
 

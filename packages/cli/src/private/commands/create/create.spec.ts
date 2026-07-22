@@ -406,7 +406,7 @@ test.case(`should update package.json ${CLI_NAME} property after creating a ${SI
   const pkgJson = await internalFolder
     .append(`/test-pkg/${PACKAGE_FILE}`)
     .json() as Record<string, unknown>;
-  const powerups = (pkgJson.powerups as Record<string, Record<string, Record<string, string[]>>>).active;
+  const powerups = (pkgJson.powerups as Record<string, Record<string, Record<string, string>>>).active;
   assert(powerups[MULTI_USE_FOLDER]["test-powerup"]).defined();
 
   await testRoot.remove();

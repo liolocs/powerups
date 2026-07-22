@@ -79,7 +79,7 @@ const find = new Command({
       const pkgLoc = await resolvePackage(root, packageName);
       if (pkgLoc === null) continue;
 
-      const active = pkgLoc.powerups.active as Record<string, Record<string, string[]>>;
+      const active = pkgLoc.powerups.active as Record<string, Record<string, string>>;
 
       for (const type of types) {
         const typeFolder = type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
@@ -87,11 +87,10 @@ const find = new Command({
 
         if (!is.defined(powersMap)) continue;
 
-        for (const [powerKey, instructionPaths] of Object.entries(powersMap)) {
+        for (const [powerKey, instructionPath] of Object.entries(powersMap)) {
           // Skip parent:child entries — only search top-level powerups
           if (powerKey.includes(":")) continue;
 
-          const instructionPath = instructionPaths[0];
           const fullPath = pkgLoc.packageDir.append(`/${instructionPath}`);
 
           if (!(await fs.exists(fullPath))) continue;

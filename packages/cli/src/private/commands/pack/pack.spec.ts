@@ -53,7 +53,7 @@ async function createPackageOnDisk({
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
 
-  const powerupsProperty: Record<string, Record<string, string[]>> = {
+  const powerupsProperty: Record<string, Record<string, string>> = {
     [MULTI_USE_FOLDER]: {},
     [SINGLE_USE_FOLDER]: {},
   };
@@ -69,9 +69,8 @@ async function createPackageOnDisk({
       intent: [],
       output: { create: [], modify: [] },
     });
-    powerupsProperty[typeFolder][power.name] = [
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${power.name}/instructions.json`,
-    ];
+    powerupsProperty[typeFolder][power.name] =
+      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${power.name}/instructions.json`;
   }
 
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
@@ -132,7 +131,7 @@ test.group("pack create", () => {
     assert(pkg.description).equals("A test package");
     assert(pkg.keywords).equals([KEYWORD_PACKAGE]);
 
-    const powerups = (pkg[CLI_NAME] as Record<string, Record<string, Record<string, string[]>>>).active;
+    const powerups = (pkg[CLI_NAME] as Record<string, Record<string, Record<string, string>>>).active;
     assert(powerups[MULTI_USE_FOLDER]).equals({});
     assert(powerups[SINGLE_USE_FOLDER]).equals({});
 

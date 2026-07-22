@@ -214,7 +214,7 @@ test.case("executeSteps read step (raw mode) stores entire file content", async 
     changedFiles: [],
   });
 
-  assert(variables.licenseText).equals("MIT License Text");
+  assert(variables.licenseText).equals("MIT License Text\n");
   await testRoot.remove();
 });
 

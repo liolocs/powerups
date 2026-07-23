@@ -1,4 +1,5 @@
 import test from "@rcompat/test";
+import is from "@rcompat/is";
 import fs from "@rcompat/fs";
 import io from "@rcompat/io";
 import runtime from "@rcompat/runtime";
@@ -32,9 +33,9 @@ async function setup(harness: string) {
     pi: ".pi/agent",
     opencode: ".config/opencode",
   };
-  const fp = extraFingerprints[harness];
-  if (fp) {
-    const dir = testRoot.append(`/${fp}`);
+  const fingerprint = extraFingerprints[harness];
+  if (is.truthy(fingerprint)) {
+    const dir = testRoot.append(`/${fingerprint}`);
     if (!(await fs.exists(dir))) {
       await fs.create(dir);
     }

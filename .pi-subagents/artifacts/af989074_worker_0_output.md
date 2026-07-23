@@ -1,1 +1,0 @@
-Let me verify no staged files remain:

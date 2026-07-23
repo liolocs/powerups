@@ -24,6 +24,20 @@ async function setup(
     flags: [],
     context: { homeDir: testRoot.path },
   });
+  // Some harness fingerprints are not created by scaffold (they come from
+  // the harness installation itself). Create them so detectHarnesses can
+  // find the harness when update runs without --harness.
+  const extraFingerprints: Record<string, string> = {
+    pi: ".pi/agent",
+    opencode: ".config/opencode",
+  };
+  const fp = extraFingerprints[harness];
+  if (fp) {
+    const dir = testRoot.append(`/${fp}`);
+    if (!(await fs.exists(dir))) {
+      await fs.create(dir);
+    }
+  }
 }
 
 test.case("update regenerates skill files globally", async assert => {

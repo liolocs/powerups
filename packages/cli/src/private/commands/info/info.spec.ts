@@ -304,6 +304,18 @@ test.case("info applies outputPathOverride from includes in file listing", async
   });
 
   const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+
+  // Overwrite child instructions.json with a create step
+  await multiUseFolder.append("/override-child/instructions.json").writeJSON({
+    name: "override-child",
+    description: "A child with overrideable paths",
+    variables: { required: ["componentName"] },
+    intent: [],
+    steps: [
+      { type: "create", name: "comp", template: "comp.njk", outputPath: "src/original/{{componentName}}.tsx" },
+    ],
+  });
+
   const parentInstructionsPath = multiUseFolder.append("/override-parent/instructions.json");
   await parentInstructionsPath.writeJSON({
     name: "override-parent",

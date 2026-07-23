@@ -76,9 +76,11 @@ export async function checkOutput(args: {
     }
   }
 
-  // d) Step name uniqueness
+  // d) Step name uniqueness (exclude include steps — same child can be included
+  //    multiple times with different variables)
   const seenNames = new Set<string>();
   for (const step of instructions.steps) {
+    if (step.type === "include") continue;
     if (seenNames.has(step.name)) {
       issues.push(`duplicate step name: ${step.name}`);
     }

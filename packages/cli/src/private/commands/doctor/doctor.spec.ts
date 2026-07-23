@@ -70,7 +70,6 @@ async function reset() {
   });
   // Create config with test-pkg listed
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
-    harness: "claude",
     packages: ["test-pkg"],
   });
   await gitInit(testRoot);

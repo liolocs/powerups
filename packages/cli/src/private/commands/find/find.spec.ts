@@ -69,7 +69,7 @@ async function createPackageWithPower(
 async function createConfig(packages: string[]) {
   await testRoot
     .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-    .writeJSON({ harness: "claude", packages });
+    .writeJSON({ packages });
 }
 
 test.case(`find returns matching ${CLI_NAME} from config-listed packages`, async assert => {

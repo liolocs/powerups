@@ -388,7 +388,7 @@ test.case(`should update package.json ${CLI_NAME} property after creating a ${SI
 test.case(`should add package to project config after creating a ${SINGULAR_NAME}`, async assert => {
   await reset();
   await createTestPackage("test-pkg");
-  await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({ harness: "claude", packages: [] });
+  await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({ packages: [] });
 
   await create.run({
     subcommands: [],

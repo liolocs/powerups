@@ -42,7 +42,6 @@ async function reset() {
 
 async function createConfig(packages: string[]) {
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
-    harness: "claude",
     packages,
   });
 }

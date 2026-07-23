@@ -12,6 +12,9 @@ const program = new CLI({
   examples: [
     `$ ${CLI_CMD} init`,
     `$ ${CLI_CMD} init claude`,
+    `$ ${CLI_CMD} project init`,
+    `$ ${CLI_CMD} install npm:my-package`,
+    `$ ${CLI_CMD} install npm:my-package -l`,
     `$ ${CLI_CMD} update`,
     `$ ${CLI_CMD} pack create my-package`,
     `$ ${CLI_CMD} create --pack=my-package -t=multi-use -n=my-power -d="..."`,

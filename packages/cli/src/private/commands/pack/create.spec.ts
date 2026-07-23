@@ -197,7 +197,7 @@ test.group("pack create (errors)", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    // init_errors.main_folder_not_found uses this error code
+    // create_errors.main_folder_not_found uses this error code
     assert(threw).equals("main_folder_not_found");
 
     await testRoot.remove();
@@ -274,7 +274,6 @@ test.group("pack create (local)", () => {
 
     // Even if a config exists, create should not modify it
     await mainFolder.append("/config.json").writeJSON({
-      harness: "claude",
       packages: [],
     });
 

@@ -409,6 +409,19 @@ test.case("info hides excluded files from includes in file listing", async asser
   });
 
   const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+
+  // Overwrite child instructions.json with two create steps
+  await multiUseFolder.append("/exclude-child/instructions.json").writeJSON({
+    name: "exclude-child",
+    description: "A child with two files",
+    variables: { required: ["componentName"] },
+    intent: [],
+    steps: [
+      { type: "create", name: "main", template: "comp.njk", outputPath: "src/{{componentName}}.tsx" },
+      { type: "create", name: "test", template: "test.njk", outputPath: "src/{{componentName}}.spec.ts" },
+    ],
+  });
+
   await multiUseFolder.append("/exclude-parent/instructions.json").writeJSON({
     name: "exclude-parent",
     description: "A parent that excludes a child file",

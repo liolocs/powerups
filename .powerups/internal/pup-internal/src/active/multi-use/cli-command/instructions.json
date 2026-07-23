@@ -16,30 +16,30 @@
     "generate",
     "standalone"
   ],
-  "output": {
-    "create": [
-      {
-        "name": "barrel.ts",
-        "template": "barrel.ts.ts",
-        "outputPath": "packages/cli/src/commands/{{commandName}}.ts"
-      },
-      {
-        "name": "command.ts",
-        "template": "command.ts.ts",
-        "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
-      },
-      {
-        "name": "errors.ts",
-        "template": "errors.ts.ts",
-        "outputPath": "packages/cli/src/private/errors/{{commandName}}Errors.ts"
-      },
-      {
-        "name": "spec.ts",
-        "template": "spec.ts.ts",
-        "outputPath": "packages/cli/src/private/commands/{{commandName}}/{{commandName}}.spec.ts"
-      }
-    ],
-    "modify": [],
-    "delete": []
-  }
+  "steps": [
+    {
+      "type": "create",
+      "name": "barrel.ts",
+      "template": "barrel.ts.ts",
+      "outputPath": "packages/cli/src/commands/{{commandName}}.ts"
+    },
+    {
+      "type": "create",
+      "name": "command.ts",
+      "template": "command.ts.ts",
+      "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
+    },
+    {
+      "type": "create",
+      "name": "errors.ts",
+      "template": "errors.ts.ts",
+      "outputPath": "packages/cli/src/private/errors/{{commandName}}Errors.ts"
+    },
+    {
+      "type": "create",
+      "name": "spec.ts",
+      "template": "spec.ts.ts",
+      "outputPath": "packages/cli/src/private/commands/{{commandName}}/{{commandName}}.spec.ts"
+    }
+  ]
 }

@@ -3,7 +3,8 @@ build/
 node_modules
 .worktrees/
 tmp/
-lib/
+lib
 docs/.pi-subagents/
 docs/
 pi-subagents/
+**/lib/

@@ -41,25 +41,12 @@ test.group("readConfig", () => {
     await testRoot.remove();
   });
 
-  test.case("should read harness from config file", async assert => {
-    await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
-    await testRoot
-      .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-      .write(JSON.stringify({ harness: "pi" }));
-
-    const config = await readConfig(testRoot);
-    assert(config?.harness).equals("pi");
-
-    await testRoot.remove();
-  });
-
   test.case("should read packages array from config file", async assert => {
     await reset();
     await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
     await testRoot
       .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-      .write(JSON.stringify({ harness: "pi", packages: ["my-pkg", "other-pkg"] }));
+      .write(JSON.stringify({ packages: ["my-pkg", "other-pkg"] }));
 
     const config = await readConfig(testRoot);
     assert(config?.packages).equals(["my-pkg", "other-pkg"]);
@@ -73,7 +60,7 @@ test.group("readConfig", () => {
     const entry: PackageEntry = { package: "npm:other", powerups: { include: ["a"] } };
     await testRoot
       .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-      .write(JSON.stringify({ harness: "pi", packages: ["my-pkg", entry] }));
+      .write(JSON.stringify({ packages: ["my-pkg", entry] }));
 
     const config = await readConfig(testRoot);
     assert(config?.packages[0]).equals("my-pkg");
@@ -87,7 +74,7 @@ test.group("readConfig", () => {
     await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
     await testRoot
       .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-      .write(JSON.stringify({ harness: "pi" }));
+      .write(JSON.stringify({}));
 
     const config = await readConfig(testRoot);
     assert(config?.packages).equals([]);
@@ -97,27 +84,30 @@ test.group("readConfig", () => {
 });
 
 test.group("writeConfig", () => {
-  test.case("should write config file with harness", async assert => {
+  test.case("should write config file", async assert => {
     await reset();
 
-    await writeConfig(testRoot, { harness: "claude", packages: [] });
+    await writeConfig(testRoot, { packages: [] });
 
     const configPath = testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`);
     assert(await fs.exists(configPath)).equals(true);
 
     const config = await readConfig(testRoot);
-    assert(config?.harness).equals("claude");
+    assert(config?.packages).equals([]);
+    // Verify no harness field in written config
+    const raw = await configPath.json();
+    assert(raw.harness).undefined();
 
     await testRoot.remove();
   });
 
   test.case("should overwrite existing config file", async assert => {
     await reset();
-    await writeConfig(testRoot, { harness: "pi", packages: [] });
-    await writeConfig(testRoot, { harness: "claude", packages: [] });
+    await writeConfig(testRoot, { packages: [] });
+    await writeConfig(testRoot, { packages: ["my-pkg"] });
 
     const config = await readConfig(testRoot);
-    assert(config?.harness).equals("claude");
+    assert(config?.packages).equals(["my-pkg"]);
 
     await testRoot.remove();
   });
@@ -125,7 +115,7 @@ test.group("writeConfig", () => {
   test.case("should write config file with packages array", async assert => {
     await reset();
 
-    await writeConfig(testRoot, { harness: "claude", packages: ["my-pkg"] });
+    await writeConfig(testRoot, { packages: ["my-pkg"] });
 
     const config = await readConfig(testRoot);
     assert(config?.packages).equals(["my-pkg"]);
@@ -135,10 +125,21 @@ test.group("writeConfig", () => {
 });
 
 test.group("readGlobalConfig", () => {
-  test.case("should return empty packages array when global config does not exist or is missing packages", async assert => {
-    const config = await readGlobalConfig();
-    assert(config).defined();
-    assert(Array.isArray(config.packages)).true();
+  test.case("should return null when global config does not exist", async assert => {
+    const config = await readGlobalConfig(testRoot.path);
+    assert(config).equals(null);
+  });
+
+  test.case("should read packages from global config", async assert => {
+    await reset();
+    const globalDir = testRoot.append(`/${MAIN_FOLDER}`);
+    await fs.create(globalDir);
+    await globalDir.append(`/${CONFIG_FILE}`).writeJSON({ packages: ["global-pkg"] });
+
+    const config = await readGlobalConfig(testRoot.path);
+    assert(config?.packages).equals(["global-pkg"]);
+
+    await testRoot.remove();
   });
 });
 
@@ -181,7 +182,7 @@ test.group("addPackageToConfig", () => {
     await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
     await testRoot
       .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-      .writeJSON({ harness: "pi", packages: [] });
+      .writeJSON({ packages: [] });
 
     await addPackageToConfig(testRoot, "npm:pkg");
     const config = await readConfig(testRoot);
@@ -195,7 +196,7 @@ test.group("addPackageToConfig", () => {
     await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
     await testRoot
       .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-      .writeJSON({ harness: "pi", packages: [] });
+      .writeJSON({ packages: [] });
 
     const entry: PackageEntry = { package: "npm:pkg", powerups: { include: ["a"] } };
     await addPackageToConfig(testRoot, entry);
@@ -211,7 +212,7 @@ test.group("addPackageToConfig", () => {
     await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
     await testRoot
       .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-      .writeJSON({ harness: "pi", packages: ["npm:pkg"] });
+      .writeJSON({ packages: ["npm:pkg"] });
 
     const entry: PackageEntry = { package: "npm:pkg", powerups: { include: ["a"] } };
     await addPackageToConfig(testRoot, entry);
@@ -229,7 +230,7 @@ test.group("removePackageFromConfig", () => {
     await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
     await testRoot
       .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-      .writeJSON({ harness: "pi", packages: ["npm:pkg", "other"] });
+      .writeJSON({ packages: ["npm:pkg", "other"] });
 
     await removePackageFromConfig(testRoot, "npm:pkg");
     const config = await readConfig(testRoot);
@@ -244,7 +245,7 @@ test.group("removePackageFromConfig", () => {
     const entry: PackageEntry = { package: "npm:pkg", powerups: { include: ["a"] } };
     await testRoot
       .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
-      .writeJSON({ harness: "pi", packages: [entry, "other"] });
+      .writeJSON({ packages: [entry, "other"] });
 
     await removePackageFromConfig(testRoot, "npm:pkg");
     const config = await readConfig(testRoot);

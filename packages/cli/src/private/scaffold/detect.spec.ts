@@ -1,117 +1,109 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { detectHarness, VALID_HARNESSES } from "#scaffold/detect";
+import { detectHarnesses, VALID_HARNESSES } from "#scaffold/detect";
 import { CodeError } from "@rcompat/error";
 import { InitErrorCode } from "#errors/initErrors";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 
-test.case("should detect claude from CLAUDE.md", async assert => {
+test.case("--harness override returns single-element array", async assert => {
+  const result = await detectHarnesses("codex");
+  assert(result).equals(["codex"]);
+});
+
+test.case("--harness override works with each valid harness", async assert => {
+  for (const harness of VALID_HARNESSES) {
+    const result = await detectHarnesses(harness);
+    assert(result).equals([harness]);
+  }
+});
+
+test.case("invalid --harness throws invalid_harness", async assert => {
+  let threw;
+  try {
+    await detectHarnesses("foo");
+  } catch (e: unknown) {
+    assert(e instanceof CodeError).true();
+    threw = (e as CodeError).code;
+  }
+  assert(threw).equals(InitErrorCode.invalid_harness);
+});
+
+test.case("returns all detected harnesses when multiple found", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
-  await testRoot.append("/CLAUDE.md").write("# Test");
+  await fs.create(testRoot.append("/.claude"));
+  await fs.create(testRoot.append("/.pi/agent"));
 
-  const result = await detectHarness(testRoot, undefined, { skipGlobal: true });
-  assert(result).equals("claude");
+  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  assert(result.length).equals(2);
+  assert(result.includes("claude")).true();
+  assert(result.includes("pi")).true();
 
   await testRoot.remove();
 });
 
-test.case("should detect claude from .claude/ dir", async assert => {
+test.case("detects single harness from global fingerprints", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(testRoot.append("/.claude"));
 
-  const result = await detectHarness(testRoot, undefined, { skipGlobal: true });
-  assert(result).equals("claude");
+  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  assert(result).equals(["claude"]);
 
   await testRoot.remove();
 });
 
-test.case("should detect opencode from .opencode/ dir", async assert => {
+test.case("detects opencode from .config/opencode fingerprint", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
-  await fs.create(testRoot.append("/.opencode"));
+  await fs.create(testRoot.append("/.config/opencode"));
 
-  const result = await detectHarness(testRoot, undefined, { skipGlobal: true });
-  assert(result).equals("opencode");
+  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  assert(result).equals(["opencode"]);
 
   await testRoot.remove();
 });
 
-test.case("should detect pi from .pi/ dir", async assert => {
+test.case("detects codex from .codex fingerprint", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
-  await fs.create(testRoot.append("/.pi"));
+  await fs.create(testRoot.append("/.codex"));
 
-  const result = await detectHarness(testRoot, undefined, { skipGlobal: true });
-  assert(result).equals("pi");
-
-  await testRoot.remove();
-});
-
-test.case("should count CLAUDE.md and .claude/ as one harness (claude)", async assert => {
-  await testRoot.remove();
-  await fs.create(testRoot);
-  await testRoot.append("/CLAUDE.md").write("# Test");
-  await fs.create(testRoot.append("/.claude"));
-
-  const result = await detectHarness(testRoot, undefined, { skipGlobal: true });
-  assert(result).equals("claude");
+  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  assert(result).equals(["codex"]);
 
   await testRoot.remove();
 });
 
-test.case("should override detection with --harness flag", async assert => {
-  await testRoot.remove();
-  await fs.create(testRoot);
-
-  const result = await detectHarness(testRoot, "codex");
-  assert(result).equals("codex");
-
-  await testRoot.remove();
-});
-
-test.case("should work with --harness even when multiple detected", async assert => {
+test.case("detects all four harnesses when all fingerprints present", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(testRoot.append("/.claude"));
-  await fs.create(testRoot.append("/.pi"));
+  await fs.create(testRoot.append("/.pi/agent"));
+  await fs.create(testRoot.append("/.config/opencode"));
+  await fs.create(testRoot.append("/.codex"));
 
-  const result = await detectHarness(testRoot, "pi");
-  assert(result).equals("pi");
+  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  assert(result.length).equals(4);
+  assert(result.includes("claude")).true();
+  assert(result.includes("pi")).true();
+  assert(result.includes("opencode")).true();
+  assert(result.includes("codex")).true();
 
   await testRoot.remove();
 });
 
 test.group("detect errors", () => {
-  test.case("should fail with multiple_harnesses_detected when several harnesses found locally", async assert => {
-    await testRoot.remove();
-    await fs.create(testRoot);
-    await fs.create(testRoot.append("/.claude"));
-    await fs.create(testRoot.append("/.pi"));
-
-    let threw;
-    try {
-      await detectHarness(testRoot, undefined, { skipGlobal: true });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
-
-    await testRoot.remove();
-  });
-
-  test.case("should fail with no_harness_detected when none found", async assert => {
+  test.case("throws no_harness_detected when none found", async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 
     let threw;
     try {
-      await detectHarness(testRoot, undefined, { skipGlobal: true });
+      await detectHarnesses(undefined, { homeDir: testRoot.path });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
@@ -121,19 +113,14 @@ test.group("detect errors", () => {
     await testRoot.remove();
   });
 
-  test.case("should fail with invalid_harness for an invalid --harness value", async assert => {
-    await testRoot.remove();
-    await fs.create(testRoot);
-
+  test.case("throws invalid_harness for an invalid --harness value", async assert => {
     let threw;
     try {
-      await detectHarness(testRoot, "foo");
+      await detectHarnesses("foo");
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
     assert(threw).equals(InitErrorCode.invalid_harness);
-
-    await testRoot.remove();
   });
 });

@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_NAME, CLI_CMD, MAIN_FOLDER } from "#constants";
+import { CLI_NAME, CLI_CMD } from "#constants";
 
 const t = error.template;
 
@@ -11,22 +11,19 @@ const printInit = CLI_CMD + " init";
 const specifyHarness = `Harness options: \n\t${printInit} claude\n\t${printInit} opencode\n\t${printInit} pi\n\t${printInit} codex`;
 
 const init_errors = error.coded({
-  main_folder_not_found: () => {
-    const errorText =
-      `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} init" first.`;
-    return t`${errorBGText}${errorText}`;
+  global_already_initialized: () => {
+    return t`${errorLabel} ${CLI_NAME} is already initialized globally.`;
   },
-  dry_folder_exists: () => {
-    return t`${errorLabel} ${CLI_NAME} project already initialized.`;
+  global_not_initialized: () => {
+    const errorText =
+      `${CLI_NAME} is not initialized. Run "${CLI_CMD} init" first.`;
+    return t`${errorBGText}${errorText}`;
   },
   no_harness_detected: () => {
     return t`${errorLabel} No AI coding harness detected.\n\n  ${specifyHarness}`;
   },
   invalid_harness: (value: string) => {
     return t`${errorLabel} Invalid harness: ${cli.fg.yellow(value)}\n\n  Valid values: claude, opencode, pi, codex`;
-  },
-  multiple_harnesses_detected: (harnesses: string[]) => {
-    return t`${errorLabel} Multiple harnesses detected: ${cli.fg.yellow(harnesses.join(", "))}\n\n  ${specifyHarness}`;
   },
   agents_section_render_failed: (detail: string) => {
     return t`${errorLabel} Failed to render instruction section: ${detail}`;

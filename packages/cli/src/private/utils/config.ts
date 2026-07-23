@@ -1,4 +1,5 @@
 import fs, { type FileRef } from "@rcompat/fs";
+import path from "node:path";
 import p from "pema";
 import { MAIN_FOLDER, CONFIG_FILE, PACKAGES_KEY, GLOBAL_CONFIG_PATH } from "#constants";
 
@@ -29,22 +30,10 @@ export type NormalizedPackageEntry = {
 };
 
 const configSchema = p({
-  harness: p.string,
-  [PACKAGES_KEY]: p.array(p.unknown).optional(),
-});
-
-/**
- * Schema for the global config (~/.<MAIN_FOLDER>/config.json).
- * Unlike the project config, the global config only stores a packages
- * array — `harness` is optional so legacy files without it don't crash.
- */
-const globalConfigSchema = p({
-  harness: p.string.optional(),
   [PACKAGES_KEY]: p.array(p.unknown).optional(),
 });
 
 export type Config = {
-  harness: string;
   packages: PackageEntry[];
 };
 
@@ -88,7 +77,6 @@ export async function readConfig(
 
   const raw = configSchema.parse(await configPath.json());
   return {
-    harness: raw.harness,
     packages: (raw.packages ?? []) as PackageEntry[],
   };
 }
@@ -107,30 +95,38 @@ export async function writeConfig(
 }
 
 /**
- * Read the global config from `<GLOBAL_FOLDER>/config.json`.
- * Returns { packages: [] } if the file doesn't exist (graceful degradation).
+ * Read the global config from `~/.<MAIN_FOLDER>/config.json`.
+ * Returns null if the file doesn't exist.
+ * Accepts an optional `homeDir` for testability (overrides the default
+ * global config path derived from `GLOBAL_CONFIG_PATH`).
  */
-export async function readGlobalConfig(): Promise<{ packages: PackageEntry[] }> {
-  const configPath = fs.ref(GLOBAL_CONFIG_PATH);
+export async function readGlobalConfig(homeDir?: string): Promise<Config | null> {
+  const configPath = homeDir
+    ? fs.ref(path.join(homeDir, MAIN_FOLDER, CONFIG_FILE))
+    : fs.ref(GLOBAL_CONFIG_PATH);
 
   if (!(await fs.exists(configPath))) {
-    return { packages: [] };
+    return null;
   }
 
-  const raw = globalConfigSchema.parse(await configPath.json());
+  const raw = configSchema.parse(await configPath.json());
   return {
     packages: (raw.packages ?? []) as PackageEntry[],
   };
 }
 
 /**
- * Write the global config to `<GLOBAL_FOLDER>/config.json`.
+ * Write the global config to `~/.<MAIN_FOLDER>/config.json`.
  * Creates the folder structure if it doesn't exist.
+ * Accepts an optional `homeDir` for testability.
  */
 export async function writeGlobalConfig(
-  config: { packages: PackageEntry[] },
+  config: Config,
+  homeDir?: string,
 ): Promise<void> {
-  const configPath = fs.ref(GLOBAL_CONFIG_PATH);
+  const configPath = homeDir
+    ? fs.ref(path.join(homeDir, MAIN_FOLDER, CONFIG_FILE))
+    : fs.ref(GLOBAL_CONFIG_PATH);
   await fs.create(configPath.directory);
   await configPath.write(JSON.stringify(config, null, 2) + "\n");
 }
@@ -179,11 +175,13 @@ export async function removePackageFromConfig(
 /**
  * Add a package entry to the global config's packages array.
  * If an entry with the same source already exists, it is replaced (update).
+ * Accepts an optional `homeDir` for testability.
  */
 export async function addPackageToGlobalConfig(
   entry: PackageEntry,
+  homeDir?: string,
 ): Promise<void> {
-  const config = await readGlobalConfig();
+  const config = (await readGlobalConfig(homeDir)) ?? { packages: [] };
 
   const source = getPackageSource(entry);
   const existingIndex = config.packages.findIndex(
@@ -195,5 +193,5 @@ export async function addPackageToGlobalConfig(
   } else {
     config.packages.push(entry);
   }
-  await writeGlobalConfig(config);
+  await writeGlobalConfig(config, homeDir);
 }

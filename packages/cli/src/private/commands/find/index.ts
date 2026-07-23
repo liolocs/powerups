@@ -3,7 +3,7 @@ import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@powerups/program";
-import init_errors from "#errors/initErrors";
+import create_errors from "#errors/createErrors";
 import find_errors from "#errors/findErrors";
 import tokenize from "#utils/tokenize";
 import scoreIntent from "#utils/score-intent";
@@ -52,7 +52,7 @@ const find = new Command({
     const mainFolder = root.append(`/${MAIN_FOLDER}`);
 
     if (!(await fs.exists(mainFolder))) {
-      throw init_errors.main_folder_not_found();
+      throw create_errors.main_folder_not_found();
     }
 
     const query = is.defined(flags.query) && flags.query.length > 0

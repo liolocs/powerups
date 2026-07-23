@@ -72,12 +72,10 @@ async function createPackage(
 async function createConfig(
   projectRoot: FileRef,
   packages: PackageEntry[],
-  harness = "claude",
 ): Promise<void> {
   const configDir = projectRoot.append(`/${MAIN_FOLDER}`);
   await fs.create(configDir);
   await configDir.append(`/${CONFIG_FILE}`).writeJSON({
-    harness,
     packages,
   });
 }
@@ -286,6 +284,89 @@ test.group("resolvePowerUp with powerups filters", () => {
 
     const result = await resolvePowerUp(testRoot, "a");
     assert(result.packageName).equals("my-pkg");
+
+    await testRoot.remove();
+  });
+});
+
+test.group("resolvePowerUp with fallbackToGlobal", () => {
+  test.case("throws not_initialized when neither local nor global config exists", async assert => {
+    await reset();
+
+    let threw;
+    try {
+      await resolvePowerUp(testRoot, "any-power", undefined, {
+        fallbackToGlobal: true,
+        homeDir: testRoot.path,
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(PowerErrorCode.not_initialized);
+
+    await testRoot.remove();
+  });
+
+  test.case("resolves from global config when no local config exists", async assert => {
+    await reset();
+    // Create a package in the local store
+    await createPackage(testRoot, "global-pkg", [{ name: "global-power", type: "multi-use" }]);
+    // Create global config (no local config)
+    const homeDir = testRoot.append("/home");
+    await fs.create(homeDir.append(`/${MAIN_FOLDER}`));
+    await homeDir.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({ packages: ["global-pkg"] });
+
+    // Resolve with fallbackToGlobal — package exists in local store, config entry from global
+    const result = await resolvePowerUp(testRoot, "global-power", undefined, {
+      fallbackToGlobal: true,
+      homeDir: homeDir.path,
+    });
+    assert(result.packageName).equals("global-pkg");
+    assert(result.location).equals("local");
+
+    await testRoot.remove();
+  });
+
+  test.case("merges local + global config, local takes priority by source", async assert => {
+    await reset();
+    // Create packages
+    await createPackage(testRoot, "local-pkg", [{ name: "local-power", type: "multi-use" }]);
+    await createPackage(testRoot, "global-pkg", [{ name: "global-power", type: "multi-use" }]);
+    // Create local config with local-pkg
+    await createConfig(testRoot, ["local-pkg"]);
+    // Create global config with both packages (local-pkg should be deduped)
+    const homeDir = testRoot.append("/home");
+    await fs.create(homeDir.append(`/${MAIN_FOLDER}`));
+    await homeDir.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({ packages: ["local-pkg", "global-pkg"] });
+
+    // Both powers should be found
+    const localResult = await resolvePowerUp(testRoot, "local-power", undefined, {
+      fallbackToGlobal: true,
+      homeDir: homeDir.path,
+    });
+    assert(localResult.packageName).equals("local-pkg");
+
+    const globalResult = await resolvePowerUp(testRoot, "global-power", undefined, {
+      fallbackToGlobal: true,
+      homeDir: homeDir.path,
+    });
+    assert(globalResult.packageName).equals("global-pkg");
+
+    await testRoot.remove();
+  });
+
+  test.case("without fallbackToGlobal, throws not_found when no local config", async assert => {
+    await reset();
+
+    let threw;
+    try {
+      await resolvePowerUp(testRoot, "any-power");
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(PowerErrorCode.not_found);
 
     await testRoot.remove();
   });

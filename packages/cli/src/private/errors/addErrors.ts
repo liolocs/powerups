@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_CMD } from "#constants";
+import { CLI_CMD, MAIN_FOLDER } from "#constants";
 
 const t = error.template;
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
@@ -23,6 +23,11 @@ const add_errors = error.coded({
     const errorText =
       `${source} is not a valid powerups package.\n` +
       `Package must have a "powerups" property in its package.json.`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  project_not_initialized: () => {
+    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} project init" first.`;
     return t`${errorBGText}${errorText}`;
   },
 });

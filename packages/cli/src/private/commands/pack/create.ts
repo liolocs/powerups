@@ -4,7 +4,7 @@ import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@powerups/program";
 import pack_errors from "#errors/packErrors";
-import init_errors from "#errors/initErrors";
+import create_errors from "#errors/createErrors";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
@@ -58,7 +58,7 @@ const packCreate = new Command({
       const root: FileRef = context?.root ?? await runtime.projectRoot();
       const mainFolder = root.append(`/${MAIN_FOLDER}`);
       if (!(await fs.exists(mainFolder))) {
-        throw init_errors.main_folder_not_found();
+        throw create_errors.main_folder_not_found();
       }
       baseDir = mainFolder.append(`/${INTERNAL_FOLDER}`);
     }

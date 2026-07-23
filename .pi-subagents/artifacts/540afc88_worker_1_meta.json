@@ -1,0 +1,37 @@
+{
+  "runId": "540afc88",
+  "agent": "worker",
+  "task": "[Read from: /Users/lioloc/Development/powers/powers_dev/context.md, /Users/lioloc/Development/powers/powers_dev/plan.md]\n\nYou are a delegated subagent running from a fork of the parent session. Treat the inherited conversation as reference-only context, not a live thread to continue. Do not continue or answer prior messages as if they are waiting for a reply. Your sole job is to execute the task below and return a focused result for that task using your tools.\n\nTask:\nImplement the detection and scaffold changes from the implementation plan at `docs/superpowers/specs/2026-07-23-global-init-harness-removal-plan.md`.\n\nRead that plan file and focus on these sections:\n- **Phase 2: Detection — detectHarness → detectHarnesses**\n- **Phase 3: Scaffold — Multi-Harness Support**\n- **Phase 8: CLI Wiring & Misc** (only the `constants.ts` part — adding `HARNESS_FINGERPRINTS`)\n\nAlso read the design spec at `docs/superpowers/specs/2026-07-23-global-init-harness-removal-design.md` for broader context.\n\n**Files you must modify:**\n1. `packages/cli/src/private/scaffold/detect.ts` — Rename `detectHarness` → `detectHarnesses`. Change return type from `Promise<Harness>` to `Promise<Harness[]>`. Remove `projectRoot` parameter and `options` parameter (no `skipGlobal`). Add optional `options?: { homeDir?: string }` parameter for testability. Remove local fingerprint scanning (the projectRoot.append blocks). Keep global fingerprint scanning only. Add `codex` global fingerprint at `~/.codex`. Use `HARNESS_FINGERPRINTS` from constants. When `--harness` flag is passed, return `[singleHarness]`. When multiple harnesses detected, return all (NO error). When zero detected, throw `init_errors.no_harness_detected()`.\n2. `packages/cli/src/private/scaffold/detect.spec.ts` — Rewrite tests for new signature. Tests call `detectHarnesses(flag, { homeDir })` with a temp dir. Test: `--harness` override returns single-element array, invalid harness throws, multiple harnesses detected returns all, zero detected throws `no_harness_detected`. Remove all `multiple_harnesses_detected` tests. Remove all local-dir-based detection tests.\n3. `packages/cli/src/private/scaffold/index.ts` — Update `ScaffoldResult` type: `harnesses: Harness[]` (was `harness: Harness`). Update `scaffold` function: first param renamed to `homeDir` (was `projectRoot`), remove `skipGlobal` from options. Call `detectHarnesses(harnessFlag, { homeDir: homeDir.path })`. Loop over all harnesses, writing files to each. Render agents template once, reuse for all harnesses. Return `{ harnesses, filesWritten }`.\n4. `packages/cli/src/private/constants.ts` — Add `HARNESS_FINGERPRINTS` map: `{ claude: path.join(homedir(), '.claude'), pi: path.join(homedir(), '.pi/agent'), opencode: path.join(homedir(), '.config/opencode'), codex: path.join(homedir(), '.codex') }`. Import `homedir` from `node:os` and `path` from `node:path`.\n\n**Key interface contracts you must implement exactly (other workers depend on these):**\n- `detectHarnesses(harnessFlag: string | undefined, options?: { homeDir?: string }): Promise<Harness[]>` — returns array, never throws for multiple\n- `scaffold(homeDir: FileRef, harnessFlag: string | undefined, options?: { rollback?: RollbackInfo }): Promise<{ harnesses: Harness[], filesWritten: string[] }>`\n- `HARNESS_FINGERPRINTS: Record<string, string>` exported from constants\n- `Harness` type and `VALID_HARNESSES` array stay the same\n\nRead each source file before editing to understand the current implementation.\n\n---\nUpdate progress at: /Users/lioloc/Development/powers/powers_dev/.pi-subagents/artifacts/progress/540afc88/progress.md",
+  "exitCode": 0,
+  "usage": {
+    "input": 1234656,
+    "output": 9857,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "cost": 0,
+    "turns": 31
+  },
+  "model": "ollama/glm-5.2:cloud:high",
+  "attemptedModels": [
+    "ollama/glm-5.2:cloud:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "ollama/glm-5.2:cloud:high",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 1234656,
+        "output": 9857,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": 0,
+        "turns": 31
+      }
+    }
+  ],
+  "durationMs": 234568,
+  "toolCount": 37,
+  "transcriptPath": "/Users/lioloc/Development/powers/powers_dev/.pi-subagents/artifacts/540afc88_worker_1_transcript.jsonl",
+  "timestamp": 1784815964205
+}

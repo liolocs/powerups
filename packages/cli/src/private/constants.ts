@@ -72,3 +72,11 @@ export const GLOBAL_NPM_PATH = path.join(GLOBAL_ROOT, NPM_STORE);
 
 /** Path to the global git store (~/.<MAIN_FOLDER>/git/). */
 export const GLOBAL_GIT_PATH = path.join(GLOBAL_ROOT, GIT_STORE);
+
+/** Global harness fingerprint paths for detection. */
+export const HARNESS_FINGERPRINTS: Record<string, string> = {
+  claude: path.join(homedir(), ".claude"),
+  pi: path.join(homedir(), ".pi", "agent"),
+  opencode: path.join(homedir(), ".config", "opencode"),
+  codex: path.join(homedir(), ".codex"),
+};

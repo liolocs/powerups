@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD } from "#constants";
+import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_NAME, CLI_CMD } from "#constants";
 
 const t = error.template;
 
@@ -21,6 +21,10 @@ const power_errors = error.coded({
   missing_name: (command: string) => {
     const errorText =
       `${CAPITALIZED_SINGLULAR_CLI_NAME} name required.\n\nUsage: ${CLI_CMD} ${command} <name>`;
+    return t`${errorBGText}${errorText}`;
+  },
+  not_initialized: () => {
+    const errorText = `${CLI_NAME} is not initialized — run "${CLI_CMD} init" first`;
     return t`${errorBGText}${errorText}`;
   },
 });

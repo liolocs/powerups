@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import { runTemplate } from "#template-runners/index";
-import { detectHarness, type Harness } from "#scaffold/detect";
+import { detectHarnesses, type Harness } from "#scaffold/detect";
 import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { writeSkillFile } from "#scaffold/write";
 import {
@@ -20,7 +20,7 @@ import {
 const SCAFFOLD_DIR = import.meta.dirname;
 
 export interface ScaffoldResult {
-  harness: Harness;
+  harnesses: Harness[];
   filesWritten: string[];
 }
 
@@ -67,12 +67,13 @@ const SKILLS_TO_SCAFFOLD = [
 ];
 
 export async function scaffold(
-  projectRoot: FileRef,
+  homeDir: FileRef,
   harnessFlag: string | undefined,
-  options?: { skipGlobal?: boolean; rollback?: RollbackInfo },
+  options?: { rollback?: RollbackInfo },
 ): Promise<ScaffoldResult> {
-  const harness = await detectHarness(projectRoot, harnessFlag, options);
-  const config = HARNESS_CONFIG[harness];
+  const harnesses = await detectHarnesses(harnessFlag, { homeDir: homeDir.path });
+  const filesWritten: string[] = [];
+  const rollback = options?.rollback;
 
   const variables = {
     CLI_NAME,
@@ -86,57 +87,69 @@ export async function scaffold(
     CAPITALIZED_CLI_NAME,
     SINGULAR_NAME,
   };
-  const filesWritten: string[] = [];
-  const rollback = options?.rollback;
 
-  // output is either (AGENTS.md or CLAUDE.md)
+  // Render the agents template once — same content for all harnesses
   const agentsRendered = await runTemplate({
     templatePath: fs.ref(`${SCAFFOLD_DIR}/templates/agents.njk`),
     variables,
   });
 
-  // Back up the existing instruction file before modifying it, so the caller
-  // can restore it on rollback.  Done *after* rendering so that a render
-  // failure does not create a spurious backup entry.
-  const instructionRef = projectRoot.append(`/${config.instructionFile}`);
-  const hasExistingInstructionFile = await fs.exists(instructionRef);
-
-  if (is.defined(rollback) && hasExistingInstructionFile) {
-    rollback.restore.push({
-      path: config.instructionFile,
-      content: await instructionRef.text(),
-    });
-  }
-
-  const hasCreatedNewAgentsOrClaudeMD = await writeToAgentsOrClaudeMD(
-    projectRoot,
-    config.instructionFile,
-    agentsRendered,
-    CLI_NAME,
+  // Render each skill template once — same content for all harnesses
+  const renderedSkills = await Promise.all(
+    SKILLS_TO_SCAFFOLD.map(async skill => ({
+      ...skill,
+      content: await runTemplate({
+        templatePath: fs.ref(`${SCAFFOLD_DIR}/templates/${skill.template}`),
+        variables,
+      }),
+    })),
   );
 
-  if (is.defined(rollback) && hasCreatedNewAgentsOrClaudeMD) {
-    rollback.remove.push(config.instructionFile);
-  }
+  for (const harness of harnesses) {
+    const config = HARNESS_CONFIG[harness];
 
-  filesWritten.push(config.instructionFile);
+    // --- Instruction file (AGENTS.md or CLAUDE.md) ---
 
-  for (const skill of SKILLS_TO_SCAFFOLD) {
-    const rendered = await runTemplate({
-      templatePath: fs.ref(`${SCAFFOLD_DIR}/templates/${skill.template}`),
-      variables,
-    });
+    // Back up the existing instruction file before modifying it, so the caller
+    // can restore it on rollback. Done *after* rendering so that a render
+    // failure does not create a spurious backup entry.
+    const instructionRef = homeDir.append(`/${config.instructionFile}`);
+    const hasExistingInstructionFile = await fs.exists(instructionRef);
 
-    const outputPath = `${config.skillDir}/${skill.name}.md`;
-
-    await writeSkillFile(projectRoot, outputPath, rendered);
-
-    if (is.defined(rollback)) {
-      rollback.remove.push(outputPath);
+    if (is.defined(rollback) && hasExistingInstructionFile) {
+      rollback.restore.push({
+        path: config.instructionFile,
+        content: await instructionRef.text(),
+      });
     }
 
-    filesWritten.push(outputPath);
+    const hasCreatedNewAgentsOrClaudeMD = await writeToAgentsOrClaudeMD(
+      homeDir,
+      config.instructionFile,
+      agentsRendered,
+      CLI_NAME,
+    );
+
+    if (is.defined(rollback) && hasCreatedNewAgentsOrClaudeMD) {
+      rollback.remove.push(config.instructionFile);
+    }
+
+    filesWritten.push(config.instructionFile);
+
+    // --- Skill files ---
+
+    for (const skill of renderedSkills) {
+      const outputPath = `${config.skillDir}/${skill.name}.md`;
+
+      await writeSkillFile(homeDir, outputPath, skill.content);
+
+      if (is.defined(rollback)) {
+        rollback.remove.push(outputPath);
+      }
+
+      filesWritten.push(outputPath);
+    }
   }
 
-  return { harness, filesWritten };
+  return { harnesses, filesWritten };
 }

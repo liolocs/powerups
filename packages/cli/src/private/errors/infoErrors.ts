@@ -1,16 +1,12 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD, MAIN_FOLDER } from "#constants";
+import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD } from "#constants";
 
 const t = error.template;
 
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const info_errors = error.coded({
-  main_folder_not_found: () => {
-    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} init" first.`;
-    return t`${errorBGText}${errorText}`;
-  },
   missing_name: () => {
     const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} name required.\n\nUsage: ${CLI_CMD} info <name>`;
     return t`${errorBGText}${errorText}`;

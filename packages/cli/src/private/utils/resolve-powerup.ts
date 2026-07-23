@@ -1,6 +1,6 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
-import { readConfig, normalizePackageEntry, type PackageEntry } from "#utils/config";
+import { readConfig, readGlobalConfig, normalizePackageEntry, getPackageSource, type PackageEntry } from "#utils/config";
 import { parseSpecifier } from "#utils/parse-specifier";
 import { packageJsonSchema, type PowerUpProperty } from "#schemas/package";
 import power_errors from "#errors/powerErrors";
@@ -90,16 +90,41 @@ export async function resolvePowerUp(
   root: FileRef,
   name: string,
   type?: PowerUpType,
+  options?: { fallbackToGlobal?: boolean; homeDir?: string },
 ): Promise<ResolvedPowerUp> {
-  const config = await readConfig(root);
+  const localConfig = await readConfig(root);
+  const fallbackToGlobal = options?.fallbackToGlobal ?? false;
 
-  if (config === null) {
+  // Build the merged list of package entries to search
+  let entries: PackageEntry[];
+
+  if (localConfig !== null) {
+    entries = [...localConfig.packages];
+    if (fallbackToGlobal) {
+      const globalConfig = await readGlobalConfig(options?.homeDir);
+      if (globalConfig !== null) {
+        // Add global packages not already in local (by source)
+        const localSources = new Set(localConfig.packages.map(getPackageSource));
+        for (const entry of globalConfig.packages) {
+          if (!localSources.has(getPackageSource(entry))) {
+            entries.push(entry);
+          }
+        }
+      }
+    }
+  } else if (fallbackToGlobal) {
+    const globalConfig = await readGlobalConfig(options?.homeDir);
+    if (globalConfig === null) {
+      throw power_errors.not_initialized();
+    }
+    entries = globalConfig.packages;
+  } else {
     throw power_errors.not_found(name);
   }
 
   const matches: ResolvedPowerUp[] = [];
 
-  for (const entry of config.packages) {
+  for (const entry of entries) {
     const normalized = normalizePackageEntry(entry);
     const pkgLoc = await resolvePackage(root, normalized.package);
     if (pkgLoc === null) continue;

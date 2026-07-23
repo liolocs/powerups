@@ -31,7 +31,7 @@ async function buildSourceTree(srcActive: FileRef): Promise<void> {
     description: "test",
     variables: { required: [] },
     intent: [],
-    output: { create: [], modify: [] },
+    steps: [],
   });
 
   // flat file AND a nested sub-folder containing a file
@@ -49,7 +49,7 @@ async function buildSourceTree(srcActive: FileRef): Promise<void> {
     description: "test",
     variables: { required: [] },
     intent: [],
-    output: { create: [], modify: [] },
+    steps: [],
   });
 }
 
@@ -134,7 +134,7 @@ test.group("copyActiveStructure", () => {
       description: "test",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     });
 
     await copyActiveStructure({ srcActiveDir: srcActive, destSrcActiveDir: destActive });
@@ -159,7 +159,7 @@ test.group("copySubPowerUps", () => {
       description: "test",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     });
 
     const collected = new Map<string, CollectedSubPowerUp>([

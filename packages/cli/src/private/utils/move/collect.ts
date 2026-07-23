@@ -102,7 +102,7 @@ export async function collectSubPowerUps({
         // Recurse and merge sub-results
         const subCollected = await collectSubPowerUps({
           root,
-          powerupsName: ref.name,
+          powerupsName: step.name,
           powerupsFolder: resolved.folder,
           pathStack: newPathStack,
           deps,
@@ -114,7 +114,7 @@ export async function collectSubPowerUps({
         // Only mask not_found errors as subpower_unresolvable.
         // Re-throw other errors (ambiguous, circular_include) as-is.
         if (e instanceof CodeError && (e as CodeError).code === PowerErrorCode.not_found) {
-          throw pack_errors.subpower_unresolvable(ref.name, powerupsName);
+          throw pack_errors.subpower_unresolvable(step.name, powerupsName);
         }
         throw e;
       }

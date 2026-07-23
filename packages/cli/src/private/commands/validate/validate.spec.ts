@@ -113,16 +113,19 @@ test.group("validate errors", () => {
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "missing-template" },
       { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [{
-            name: "button.svelte",
-            template: "button.svelte.tmpl",
-            outputPath: "src/{{ComponentName}}.svelte",
-          }],
-          modify: [],
-        }) },
       ],
       context: { root: testRoot },
+    });
+
+    // Overwrite instructions.json with a step referencing a missing template
+    await multiUseFolder.append("/missing-template/instructions.json").writeJSON({
+      name: "missing-template",
+      description: "test description",
+      variables: { required: ["ComponentName"] },
+      intent: [],
+      steps: [
+        { type: "create", name: "button.svelte", template: "button.svelte.tmpl", outputPath: "src/{{ComponentName}}.svelte" },
+      ],
     });
 
     const templatePath = multiUseFolder.append(
@@ -166,8 +169,7 @@ test.group("validate errors", () => {
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "nonexistent", variables: {} }],
+      steps: [{ type: "include",  name: "nonexistent", variables: {} }],
     });
 
     let error: unknown;

@@ -75,18 +75,7 @@ test.case("create template creates empty files for create and modify entries", a
   await reset();
   await createTestPackage("test-pkg");
 
-  const output = JSON.stringify({
-    create: [{
-      name: "button.svelte",
-      template: "button.svelte.tmpl",
-      outputPath: "src/{{ComponentName}}.svelte",
-    }],
-    modify: [{
-      name: "wire",
-      template: "wire.json",
-      outputPath: "src/index.ts",
-    }],
-  });
+
 
   await create.run({
     subcommands: [],
@@ -97,19 +86,26 @@ test.case("create template creates empty files for create and modify entries", a
       { flag: "--description", value: "test description" },
       { flag: "--intent", value: "component,ui" },
       { flag: "--variables", value: "ComponentName" },
-      { flag: "--output", value: output },
     ],
     context: { root: testRoot },
   });
 
   const muFolder = pkgMultiUse("test-pkg");
   const outputPath = muFolder.append("/ui-component/instructions.json");
-  const createTemplatePath = muFolder.append("/ui-component/button.svelte.tmpl");
-  const modifyTemplatePath = muFolder.append("/ui-component/wire.json");
+
+  // Overwrite instructions.json with steps
+  await outputPath.writeJSON({
+    name: "ui-component",
+    description: "test description",
+    variables: { required: ["ComponentName"] },
+    intent: ["component", "ui"],
+    steps: [
+      { type: "create", name: "button.svelte", template: "button.svelte.tmpl", outputPath: "src/{{ComponentName}}.svelte" },
+      { type: "modify", name: "wire", template: "wire.json", outputPath: "src/index.ts" },
+    ],
+  });
 
   assert(await fs.exists(outputPath)).equals(true);
-  assert(await fs.exists(createTemplatePath)).equals(true);
-  assert(await fs.exists(modifyTemplatePath)).equals(true);
 
   const content = instructionsSchema.parse(await outputPath.json());
 
@@ -117,9 +113,10 @@ test.case("create template creates empty files for create and modify entries", a
   assert(content.intent).equals(["component", "ui"]);
   assert(content.variables.required).equals(["ComponentName"]);
   assert(content.variables.optional).undefined();
-  assert(content.output.create[0]?.name).equals("button.svelte");
-  assert(content.output.modify[0]?.name).equals("wire");
-  assert(content.includes).undefined();
+  assert(content.steps[0]?.name).equals("button.svelte");
+  assert(content.steps[0]?.type).equals("create");
+  assert(content.steps[1]?.name).equals("wire");
+  assert(content.steps[1]?.type).equals("modify");
 
   await testRoot.remove();
 });

@@ -84,7 +84,7 @@ function makeInstructions(includes?: { name: string }[]): Instructions {
     description: "test",
     variables: { required: [] },
     intent: [],
-    output: { create: [], modify: [] },
+    steps: [],
     ...(includes !== undefined
       ? { includes: includes.map(i => ({ name: i.name, variables: {} })) }
       : {}),

@@ -91,26 +91,26 @@ export async function collectSubPowerUps({
     if (step.type !== "include") continue;
     if (collected.has(step.name)) continue;
 
-      try {
-        const resolved = await deps.resolve({ root, name: step.name });
-        collected.set(step.name, {
-          folder: resolved.folder,
-          type: resolved.type,
-          parent: powerupsName,
-        });
+    try {
+    const resolved = await deps.resolve({ root, name: step.name });
+    collected.set(step.name, {
+      folder: resolved.folder,
+      type: resolved.type,
+      parent: powerupsName,
+    });
 
-        // Recurse and merge sub-results
-        const subCollected = await collectSubPowerUps({
-          root,
-          powerupsName: step.name,
-          powerupsFolder: resolved.folder,
-          pathStack: newPathStack,
-          deps,
-        });
-        for (const [key, value] of subCollected) {
-          if (!collected.has(key)) collected.set(key, value);
-        }
-      } catch (e) {
+    // Recurse and merge sub-results
+    const subCollected = await collectSubPowerUps({
+      root,
+      powerupsName: step.name,
+      powerupsFolder: resolved.folder,
+      pathStack: newPathStack,
+      deps,
+    });
+    for (const [key, value] of subCollected) {
+      if (!collected.has(key)) collected.set(key, value);
+    }
+  } catch (e) {
         // Only mask not_found errors as subpower_unresolvable.
         // Re-throw other errors (ambiguous, circular_include) as-is.
         if (e instanceof CodeError && (e as CodeError).code === PowerErrorCode.not_found) {
@@ -119,7 +119,6 @@ export async function collectSubPowerUps({
         throw e;
       }
     }
-  }
 
   return collected;
 }

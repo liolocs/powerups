@@ -129,6 +129,19 @@ test.case("info prints create, modify, and delete files", async assert => {
     context: { root: testRoot },
   });
 
+  const muFolder1 = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  await muFolder1.append("/full-output/instructions.json").writeJSON({
+    name: "full-output",
+    description: "A template with all file types",
+    variables: { required: ["ComponentName"] },
+    intent: [],
+    steps: [
+      { type: "create", name: "component", template: "component.njk", outputPath: "src/{{ComponentName}}.tsx" },
+      { type: "modify", name: "index", template: "index.json", outputPath: "src/index.ts" },
+      { type: "delete", name: "legacy", outputPath: "src/legacy.ts" },
+    ],
+  });
+
   const output = await captureStdout(() => info.run({
     subcommands: ["full-output"],
     flags: [],
@@ -195,6 +208,18 @@ test.case("info prints includes with variable bindings for composite templates",
       { flag: "--variables", value: "componentName,theme" },
     ],
     context: { root: testRoot },
+  });
+
+  // Overwrite child instructions.json with a create step
+  const muFolder2 = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  await muFolder2.append("/child-component/instructions.json").writeJSON({
+    name: "child-component",
+    description: "A child component template",
+    variables: { required: ["componentName", "theme"] },
+    intent: [],
+    steps: [
+      { type: "create", name: "comp", template: "comp.njk", outputPath: "src/ui/{{componentName}}.tsx" },
+    ],
   });
 
   // Create parent template with includes

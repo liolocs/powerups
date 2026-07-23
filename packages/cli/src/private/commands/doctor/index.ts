@@ -210,7 +210,7 @@ const doctor = new Command({
                     level: "ERROR",
                     type,
                     name: label,
-                    message: `Invalid modify template: ${modifyEntry.template} (${parseErr instanceof Error ? parseErr.message : "parse error"})`,
+                    message: `Invalid modify template: ${step.template} (${parseErr instanceof Error ? parseErr.message : "parse error"})`,
                   });
                 }
               }

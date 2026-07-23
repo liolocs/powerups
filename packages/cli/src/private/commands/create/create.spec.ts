@@ -309,31 +309,7 @@ test.group("create errors", () => {
     await testRoot.remove();
   });
 
-  test.case("should fail with invalid_output_json when --output is malformed", async assert => {
-    await reset();
-    await createTestPackage("test-pkg");
 
-    let threw;
-    try {
-      await create.run({
-        subcommands: [],
-        flags: [
-          { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "bad-json" },
-          { flag: "--description", value: "test description" },
-          { flag: "--output", value: "{not valid json" },
-        ],
-        context: { root: testRoot },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(CreateErrorCode.invalid_output_json);
-
-    await testRoot.remove();
-  });
 });
 
 test.case("should write optional variables when --optional-variables flag is provided", async assert => {

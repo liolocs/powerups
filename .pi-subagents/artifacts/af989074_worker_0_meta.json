@@ -1,0 +1,40 @@
+{
+  "runId": "af989074",
+  "agent": "worker",
+  "task": "You are a delegated subagent running from a fork of the parent session. Treat the inherited conversation as reference-only context, not a live thread to continue. Do not continue or answer prior messages as if they are waiting for a reply. Your sole job is to execute the task below and return a focused result for that task using your tools.\n\nTask:\nYou are implementing Task 1: New Schema (`instruction.ts`)\n\n## Task Description\n\n**Files:**\n- Modify: `packages/cli/src/private/schemas/instruction.ts`\n- Modify: `packages/cli/src/private/schemas/instruction.spec.ts`\n\n### Step 1: Rewrite `instruction.ts` with the new steps schema\n\nReplace the entire contents of `packages/cli/src/private/schemas/instruction.ts`:\n\n```typescript\nimport p from \"pema\";\n\n// ── Step schemas (discriminated union on `type`) ─────────────────────\n\nconst createStepSchema = p({\n  type: p.literal(\"create\"),\n  name: p.string,\n  template: p.string,\n  outputPath: p.string,\n});\n\nconst modifyStepSchema = p({\n  type: p.literal(\"modify\"),\n  name: p.string,\n  template: p.string,\n  outputPath: p.string,\n});\n\nconst deleteStepSchema = p({\n  type: p.literal(\"delete\"),\n  name: p.string,\n  outputPath: p.string,\n});\n\nconst readStepSchema = p({\n  type: p.literal(\"read\"),\n  name: p.string,\n  path: p.string,\n  as: p.string,\n  jsonPath: p.string.optional(),\n  template: p.string.optional(),\n});\n\n// Step override value schemas (step minus `name`) — derived via p.omit\nconst createStepOverrideSchema = p.omit(createStepSchema, \"name\");\nconst modifyStepOverrideSchema = p.omit(modifyStepSchema, \"name\");\nconst deleteStepOverrideSchema = p.omit(deleteStepSchema, \"name\");\nconst readStepOverrideSchema = p.omit(readStepSchema, \"name\");\n\nconst stepOverrideValueSchema = p.union(\n  createStepOverrideSchema,\n  modifyStepOverrideSchema,\n  deleteStepOverrideSchema,\n  readStepOverrideSchema,\n);\n\nconst includeStepSchema = p({\n  type: p.literal(\"include\"),\n  name: p.string,\n  variables: p.record(p.string, p.string),\n  stepOverride: p.record(p.string, stepOverrideValueSchema).optional(),\n  excludeSteps: p.array(p.string).optional(),\n});\n\nexport const stepSchema = p.union(\n  createStepSchema,\n  modifyStepSchema,\n  deleteStepSchema,\n  readStepSchema,\n  includeStepSchema,\n);\n\nexport const stepsSchema = p.array(stepSchema);\n\n// ── Package dependencies (unchanged) ─────────────────────────────────\n\nconst packageDependencyGroupSchema = p({\n  target: p.string.optional(),\n  dependencies: p.array(p.string).optional(),\n  devDependencies: p.array(p.string).optional(),\n  peerDependencies: p.array(p.string).optional(),\n});\n\n// ── Top-level instructions ─────────────────────────────────────────\n\nexport const instructionsSchema = p({\n  name: p.string,\n  description: p.string,\n  variables: p({\n    required: p.array(p.string),\n    optional: p.array(p.string).optional(),\n  }),\n  intent: p.array(p.string),\n  packageDependencies: p.array(packageDependencyGroupSchema).optional(),\n  steps: stepsSchema,\n});\n\nexport const packageDependencyGroupArraySchema = p.array(packageDependencyGroupSchema);\n\nexport type Step = (typeof stepSchema)[\"infer\"];\nexport type StepOverrideValue = (typeof stepOverrideValueSchema)[\"infer\"];\nexport type Instructions = (typeof instructionsSchema)[\"infer\"];\n```\n\n### Step 2: Rewrite `instruction.spec.ts` with tests for the new schema\n\nReplace the entire contents of `packages/cli/src/private/schemas/instruction.spec.ts` with tests covering all 5 step types, stepOverride, excludeSteps, empty steps, packageDependencies, required/optional variables, and rejection cases (missing steps, missing name, missing as, missing variables, missing description, old output format, old includes format).\n\nKey test cases to include:\n- Parse instructions with create steps\n- Parse instructions with modify steps\n- Parse instructions with delete steps\n- Parse instructions with read step (jsonPath mode)\n- Parse instructions with read step (template mode)\n- Parse instructions with read step (raw mode)\n- Parse instructions with include step\n- Parse include step with stepOverride\n- Parse include step with excludeSteps\n- Parse instructions with mixed step types in order\n- Parse instructions with empty steps array\n- Parse instructions with packageDependencies\n- Parse instructions with required and optional variables\n- Reject: missing steps, create step missing name, read step missing as, include step missing variables, missing description, old output format, old includes format\n\nUse the test pattern from the existing file: `import test from \"@rcompat/test\"` with `test.case(\"...\", async assert => { ... })`.\n\n### Step 3: Run tests to verify they pass\n\nRun: `cd packages/cli && npx proby --filter instruction`\nExpected: All cases PASS\n\n### Step 4: Commit\n\n```bash\ncd packages/cli\ngit add src/private/schemas/instruction.ts src/private/schemas/instruction.spec.ts\ngit commit -m \"feat: replace output+includes schema with unified steps array\"\n```\n\n## Context\n\nThis is the first task in a 16-task plan to replace the `output` + `includes` schema with a unified `steps` array. This is a hard breaking change — no backward compatibility needed. The project uses pema for schema validation (similar to zod). The test framework is @rcompat/test with `test.case()` and `assert` pattern. The test runner is proby (run via `npx proby`).\n\nKey import patterns:\n- `#schemas/instruction` resolves to `./src/private/schemas/instruction.ts` (source mode)\n- Tests use `import test from \"@rcompat/test\"`\n\nThe existing `instruction.ts` exports: `instructionsSchema`, `outputSchema`, `packageDependencyGroupArraySchema`, `Instructions`, `SuboutputRef`. After this change, it should export: `instructionsSchema`, `stepSchema`, `stepsSchema`, `packageDependencyGroupArraySchema`, `Step`, `StepOverrideValue`, `Instructions`. The old `outputSchema` and `SuboutputRef` are eliminated.\n\nWork from: /Users/lioloc/Development/powers/powers_dev/.worktrees/steps-and-read-step\n\nIMPORTANT: Do NOT try to run the full test suite or build — other files still reference the old schema. Only run the instruction spec tests specifically. Other tests will break and that's expected — they'll be fixed in subsequent tasks.",
+  "exitCode": 0,
+  "usage": {
+    "input": 2799493,
+    "output": 8078,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "cost": 0,
+    "turns": 20
+  },
+  "model": "ollama/glm-5.2:cloud:high",
+  "attemptedModels": [
+    "ollama/glm-5.2:cloud:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "ollama/glm-5.2:cloud:high",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 2799493,
+        "output": 8078,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": 0,
+        "turns": 20
+      }
+    }
+  ],
+  "durationMs": 180638,
+  "toolCount": 20,
+  "transcriptPath": "/Users/lioloc/Development/powers/powers_dev/.worktrees/steps-and-read-step/.pi-subagents/artifacts/af989074_worker_0_transcript.jsonl",
+  "skills": [
+    "test-driven-development"
+  ],
+  "timestamp": 1784741295565
+}

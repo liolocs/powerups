@@ -53,7 +53,7 @@ async function createPackage(
       description: "test",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     });
     powerupsProperty[typeFolder][powerup.name] =
       `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${powerup.name}/instructions.json`;

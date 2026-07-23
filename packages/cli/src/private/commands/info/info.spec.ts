@@ -125,24 +125,21 @@ test.case("info prints create, modify, and delete files", async assert => {
       { flag: "--name", value: "full-output" },
       { flag: "--description", value: "A template with all file types" },
       { flag: "--variables", value: "ComponentName" },
-      { flag: "--output", value: JSON.stringify({
-        create: [{
-          name: "component",
-          template: "component.njk",
-          outputPath: "src/{{ComponentName}}.tsx",
-        }],
-        modify: [{
-          name: "index",
-          template: "index.json",
-          outputPath: "src/index.ts",
-        }],
-        delete: [{
-          name: "old-file",
-          outputPath: "src/legacy.ts",
-        }],
-      }) },
     ],
     context: { root: testRoot },
+  });
+
+  const muFolder1 = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  await muFolder1.append("/full-output/instructions.json").writeJSON({
+    name: "full-output",
+    description: "A template with all file types",
+    variables: { required: ["ComponentName"] },
+    intent: [],
+    steps: [
+      { type: "create", name: "component", template: "component.njk", outputPath: "src/{{ComponentName}}.tsx" },
+      { type: "modify", name: "index", template: "index.json", outputPath: "src/index.ts" },
+      { type: "delete", name: "legacy", outputPath: "src/legacy.ts" },
+    ],
   });
 
   const output = await captureStdout(() => info.run({
@@ -209,16 +206,20 @@ test.case("info prints includes with variable bindings for composite templates",
       { flag: "--name", value: "child-component" },
       { flag: "--description", value: "A child component template" },
       { flag: "--variables", value: "componentName,theme" },
-      { flag: "--output", value: JSON.stringify({
-        create: [{
-          name: "comp",
-          template: "comp.njk",
-          outputPath: "src/ui/{{componentName}}.tsx",
-        }],
-        modify: [],
-      }) },
     ],
     context: { root: testRoot },
+  });
+
+  // Overwrite child instructions.json with a create step
+  const muFolder2 = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  await muFolder2.append("/child-component/instructions.json").writeJSON({
+    name: "child-component",
+    description: "A child component template",
+    variables: { required: ["componentName", "theme"] },
+    intent: [],
+    steps: [
+      { type: "create", name: "comp", template: "comp.njk", outputPath: "src/ui/{{componentName}}.tsx" },
+    ],
   });
 
   // Create parent template with includes
@@ -230,14 +231,6 @@ test.case("info prints includes with variable bindings for composite templates",
       { flag: "--name", value: "parent-composite" },
       { flag: "--description", value: "A composite template" },
       { flag: "--variables", value: "theme" },
-      { flag: "--output", value: JSON.stringify({
-        create: [{
-          name: "barrel",
-          template: "barrel.njk",
-          outputPath: "src/index.ts",
-        }],
-        modify: [],
-      }) },
     ],
     context: { root: testRoot },
   });
@@ -250,15 +243,9 @@ test.case("info prints includes with variable bindings for composite templates",
     description: "A composite template",
     variables: { required: ["theme"] },
     intent: [],
-    output: {
-      create: [{ name: "barrel", template: "barrel.njk", outputPath: "src/index.ts" }],
-      modify: [],
-    },
-    includes: [
-      {
-        name: "child-component",
-        variables: { componentName: "Button", theme: "{{theme}}" },
-      },
+    steps: [
+      { type: "create", name: "barrel", template: "barrel.njk", outputPath: "src/index.ts" },
+      { type: "include", name: "child-component", variables: { componentName: "Button", theme: "{{theme}}" } },
     ],
   });
 
@@ -299,14 +286,6 @@ test.case("info applies outputPathOverride from includes in file listing", async
       { flag: "--name", value: "override-child" },
       { flag: "--description", value: "A child with overrideable paths" },
       { flag: "--variables", value: "componentName" },
-      { flag: "--output", value: JSON.stringify({
-        create: [{
-          name: "comp",
-          template: "comp.njk",
-          outputPath: "src/original/{{componentName}}.tsx",
-        }],
-        modify: [],
-      }) },
     ],
     context: { root: testRoot },
   });
@@ -320,28 +299,36 @@ test.case("info applies outputPathOverride from includes in file listing", async
       { flag: "--name", value: "override-parent" },
       { flag: "--description", value: "A parent with outputPathOverride" },
       { flag: "--variables", value: "theme" },
-      { flag: "--output", value: JSON.stringify({
-        create: [],
-        modify: [],
-      }) },
     ],
     context: { root: testRoot },
   });
 
   const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+
+  // Overwrite child instructions.json with a create step
+  await multiUseFolder.append("/override-child/instructions.json").writeJSON({
+    name: "override-child",
+    description: "A child with overrideable paths",
+    variables: { required: ["componentName"] },
+    intent: [],
+    steps: [
+      { type: "create", name: "comp", template: "comp.njk", outputPath: "src/original/{{componentName}}.tsx" },
+    ],
+  });
+
   const parentInstructionsPath = multiUseFolder.append("/override-parent/instructions.json");
   await parentInstructionsPath.writeJSON({
     name: "override-parent",
     description: "A parent with outputPathOverride",
     variables: { required: ["theme"] },
     intent: [],
-    output: { create: [], modify: [] },
-    includes: [
+    steps: [
       {
+        type: "include",
         name: "override-child",
         variables: { componentName: "Button", theme: "{{theme}}" },
-        outputPathOverride: {
-          create: { comp: "src/ui/overridden/{{componentName}}.tsx" },
+        stepOverride: {
+          comp: { type: "create", template: "comp.njk", outputPath: "src/ui/overridden/{{componentName}}.tsx" },
         },
       },
     ],
@@ -404,13 +391,6 @@ test.case("info hides excluded files from includes in file listing", async asser
       { flag: "--name", value: "exclude-child" },
       { flag: "--description", value: "A child with two files" },
       { flag: "--variables", value: "componentName" },
-      { flag: "--output", value: JSON.stringify({
-        create: [
-          { name: "comp", template: "comp.njk", outputPath: "src/{{componentName}}.tsx" },
-          { name: "test", template: "test.njk", outputPath: "src/{{componentName}}.spec.ts" },
-        ],
-        modify: [],
-      }) },
     ],
     context: { root: testRoot },
   });
@@ -424,26 +404,35 @@ test.case("info hides excluded files from includes in file listing", async asser
       { flag: "--name", value: "exclude-parent" },
       { flag: "--description", value: "A parent that excludes a child file" },
       { flag: "--variables", value: "theme" },
-      { flag: "--output", value: JSON.stringify({
-        create: [],
-        modify: [],
-      }) },
     ],
     context: { root: testRoot },
   });
 
   const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+
+  // Overwrite child instructions.json with two create steps
+  await multiUseFolder.append("/exclude-child/instructions.json").writeJSON({
+    name: "exclude-child",
+    description: "A child with two files",
+    variables: { required: ["componentName"] },
+    intent: [],
+    steps: [
+      { type: "create", name: "main", template: "comp.njk", outputPath: "src/{{componentName}}.tsx" },
+      { type: "create", name: "test", template: "test.njk", outputPath: "src/{{componentName}}.spec.ts" },
+    ],
+  });
+
   await multiUseFolder.append("/exclude-parent/instructions.json").writeJSON({
     name: "exclude-parent",
     description: "A parent that excludes a child file",
     variables: { required: ["theme"] },
     intent: [],
-    output: { create: [], modify: [] },
-    includes: [
+    steps: [
       {
+        type: "include",
         name: "exclude-child",
         variables: { componentName: "Button", theme: "{{theme}}" },
-        exclude: { create: ["test"] },
+        excludeSteps: ["test"],
       },
     ],
   });

@@ -29,7 +29,7 @@ test.case("should return no issues for valid output with no includes", async ass
     description: "test description",
     variables: { required: ["ComponentName"] },
     intent: [],
-    output: { create: [], modify: [] },
+    steps: [],
   });
 
   const issues = await checkOutput({
@@ -78,10 +78,9 @@ test.case("should return an issue for a missing create template file", async ass
     description: "test description",
     variables: { required: [] },
     intent: [],
-    output: {
-      create: [{ name: "f", template: "nonexistent.njk", outputPath: "out.ts" }],
-      modify: [],
-    },
+    steps: [
+      { type: "create", name: "f", template: "nonexistent.njk", outputPath: "out.ts" },
+    ],
   });
 
   const issues = await checkOutput({
@@ -100,10 +99,9 @@ test.case("should return an issue for a missing modify template file", async ass
     description: "test description",
     variables: { required: [] },
     intent: [],
-    output: {
-      create: [],
-      modify: [{ name: "wire", template: "nonexistent.json", outputPath: "src/index.ts" }],
-    },
+    steps: [
+      { type: "modify", name: "wire", template: "nonexistent.json", outputPath: "src/index.ts" },
+    ],
   });
 
   const issues = await checkOutput({
@@ -124,10 +122,10 @@ test.case("should return no issues for valid output with both create and modify 
     description: "test description",
     variables: { required: [] },
     intent: [],
-    output: {
-      create: [{ name: "controller", template: "controller.ts", outputPath: "src/c.ts" }],
-      modify: [{ name: "wire", template: "wire.json", outputPath: "src/index.ts" }],
-    },
+    steps: [
+      { type: "create", name: "controller", template: "controller.ts", outputPath: "src/c.ts" },
+      { type: "modify", name: "wire", template: "wire.json", outputPath: "src/index.ts" },
+    ],
   } as never);
   await dir.append("/controller.ts").write("test");
   await dir.append("/wire.json").write("[]");
@@ -148,15 +146,16 @@ test.case("should return no issues for valid output with valid suboutputs", asyn
     description: "test description",
     variables: { required: ["componentName"] },
     intent: [],
-    output: { create: [], modify: [] },
+    steps: [],
   });
   await writeOutput("valid-parent", {
     name: "valid-parent",
     description: "test description",
     variables: { required: [] },
     intent: [],
-    output: { create: [], modify: [] },
-    includes: [{ name: "valid-child", variables: { componentName: "Button" } }],
+    steps: [
+      { type: "include", name: "valid-child", variables: { componentName: "Button" } },
+    ],
   });
 
   const issues = await checkOutput({
@@ -175,15 +174,16 @@ test.case("should merge suboutput issues for valid output with invalid suboutput
     description: "test description",
     variables: { required: ["componentName"] },
     intent: [],
-    output: { create: [], modify: [] },
+    steps: [],
   });
   await writeOutput("bad-parent", {
     name: "bad-parent",
     description: "test description",
     variables: { required: [] },
     intent: [],
-    output: { create: [], modify: [] },
-    includes: [{ name: "nonexistent", variables: {} }],
+    steps: [
+      { type: "include", name: "nonexistent", variables: {} },
+    ],
   });
 
   const issues = await checkOutput({
@@ -194,6 +194,7 @@ test.case("should merge suboutput issues for valid output with invalid suboutput
   assert(issues.some(i => i.includes("suboutput not found: nonexistent"))).true();
   await testRoot.remove();
 });
+
 test.case("should report issue for required/optional variable name collision", async assert => {
   await reset();
   await writeOutput("collision", {
@@ -201,7 +202,7 @@ test.case("should report issue for required/optional variable name collision", a
     description: "test description",
     variables: { required: ["name"], optional: ["name"] },
     intent: [],
-    output: { create: [], modify: [] },
+    steps: [],
   });
 
   const issues = await checkOutput({
@@ -220,10 +221,9 @@ test.case("should report issue for optional variable used in output path", async
     description: "test description",
     variables: { required: [], optional: ["name"] },
     intent: [],
-    output: {
-      create: [{ name: "f", template: "f.njk", outputPath: "src/{{name}}.ts" }],
-      modify: [],
-    },
+    steps: [
+      { type: "create", name: "f", template: "f.njk", outputPath: "src/{{name}}.ts" },
+    ],
   });
 
   const issues = await checkOutput({
@@ -242,10 +242,9 @@ test.case("should not report issue when optional variable is not in any output p
     description: "test description",
     variables: { required: ["name"], optional: ["sub"] },
     intent: [],
-    output: {
-      create: [{ name: "f", template: "f.njk", outputPath: "src/{{name}}.ts" }],
-      modify: [],
-    },
+    steps: [
+      { type: "create", name: "f", template: "f.njk", outputPath: "src/{{name}}.ts" },
+    ],
   });
 
   const issues = await checkOutput({
@@ -254,5 +253,94 @@ test.case("should not report issue when optional variable is not in any output p
   });
 
   assert(issues.some(i => i.includes("optional"))).false();
+  await testRoot.remove();
+});
+
+test.case("should report issue for duplicate step name", async assert => {
+  await reset();
+  await writeOutput("dup-names", {
+    name: "dup-names",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    steps: [
+      { type: "create", name: "comp", template: "a.njk", outputPath: "src/a.ts" },
+      { type: "create", name: "comp", template: "b.njk", outputPath: "src/b.ts" },
+    ],
+  });
+
+  const issues = await checkOutput({
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/dup-names"),
+  });
+
+  assert(issues.some(i => i.includes("duplicate step name: comp"))).true();
+  await testRoot.remove();
+});
+
+test.case("should flag variable used before its read step", async assert => {
+  await reset();
+  await writeOutput("bad-order", {
+    name: "bad-order",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    steps: [
+      { type: "create", name: "comp", template: "c.njk", outputPath: "packages/{{packageName}}/config.ts" },
+      { type: "read", name: "read-pkg", path: "package.json", as: "packageName", jsonPath: "name" },
+    ],
+  });
+
+  const issues = await checkOutput({
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/bad-order"),
+  });
+
+  assert(issues.some(i => i.includes("uses {{packageName}} before it is available"))).true();
+  await testRoot.remove();
+});
+
+test.case("should not flag variable used after its read step", async assert => {
+  await reset();
+  await writeOutput("good-order", {
+    name: "good-order",
+    description: "test description",
+    variables: { required: ["componentName"] },
+    intent: [],
+    steps: [
+      { type: "read", name: "read-pkg", path: "package.json", as: "packageName", jsonPath: "name" },
+      { type: "create", name: "comp", template: "c.njk", outputPath: "packages/{{packageName}}/src/{{componentName}}.ts" },
+    ],
+  });
+
+  const issues = await checkOutput({
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/good-order"),
+  });
+
+  // Should only have template missing issue, not variable ordering issue
+  assert(issues.some(i => i.includes("before it is available"))).false();
+  await testRoot.remove();
+});
+
+test.case("should flag read step as shadowing a declared variable", async assert => {
+  await reset();
+  await writeOutput("shadow", {
+    name: "shadow",
+    description: "test description",
+    variables: { required: ["packageName"] },
+    intent: [],
+    steps: [
+      { type: "read", name: "read-pkg", path: "package.json", as: "packageName", jsonPath: "name" },
+      { type: "create", name: "comp", template: "c.njk", outputPath: "src/{{packageName}}.ts" },
+    ],
+  });
+
+  const issues = await checkOutput({
+    rootOutputDir: multiUseFolder,
+    currentOutputDir: multiUseFolder.append("/shadow"),
+  });
+
+  assert(issues.some(i => i.includes("shadows a declared variable"))).true();
   await testRoot.remove();
 });

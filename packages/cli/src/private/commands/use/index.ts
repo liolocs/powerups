@@ -6,14 +6,9 @@ import { Command } from "@powerups/program";
 import use_errors from "#errors/useErrors";
 import { instructionsSchema } from "#schemas/instruction";
 import { extractVariables } from "#utils/variables";
-import { resolveOutputPath } from "#utils/output-path";
 import { checkOutput } from "#utils/check-output";
-import { resolveOutput } from "#utils/resolve";
+import { executeSteps } from "#utils/execute-steps";
 import { logRun } from "#utils/metrics";
-import { runTemplate } from "#template-runners/index";
-import {
-  applyMultipleModifications,
-} from "#utils/modify-engine";
 import {
   verifyGitRepo,
   createWorktree,
@@ -126,69 +121,22 @@ const use = new Command({
       f => f.flag === "--overwrite" || f.flag === "-O",
     );
 
-    // 8. Resolve output tree → flat list of render tasks
-    const tasks = await resolveOutput({
-      outputName: name,
-      variables,
-      outputsFolder: typeFolder,
-    });
-
-    // 9. If --dry-run: render to stdout, no file writes
+    // 8. Dry-run: execute steps printing to stdout
     if (is.truthy(isDryRun)) {
-      let totalCharacters = 0;
+      await executeSteps({
+        steps: instructions.steps,
+        variables,
+        outputFolder,
+        rootDir: root,
+        worktreeRoot: undefined,
+        outputsFolder: typeFolder,
+        isDryRun: true,
+        isOverwrite,
+        changedFiles: [],
+      });
 
-      for (const task of tasks) {
-        if (task.kind === "delete") {
-          const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
-
-          cli.print(`=== ${resolvedPath} (delete) ===\n`);
-          cli.print("Would delete\n");
-          cli.print("\n");
-
-          continue;
-        }
-
-        if (!(await fs.exists(task.templatePath!))) {
-          throw use_errors.template_not_found(task.templatePath!.name);
-        }
-
-        if (task.kind === "create") {
-          const rendered = await runTemplate({
-            templatePath: task.templatePath!,
-            variables: task.variables,
-          });
-
-          totalCharacters += rendered.length;
-
-          const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
-
-          cli.print(`=== ${resolvedPath} ===\n`);
-          cli.print(rendered);
-          cli.print("\n");
-        } else {
-          // Modify: show what would change
-          const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
-
-          cli.print(`=== ${resolvedPath} (modify) ===\n`);
-          // Render the modify template to preview modifications
-          const ext = task.templatePath!.extension;
-
-          let modContent: string;
-
-          if (ext === ".json") {
-            modContent = await task.templatePath!.text();
-          } else {
-            modContent = await runTemplate({
-              templatePath: task.templatePath!,
-              variables: task.variables,
-            });
-          }
-          cli.print(modContent);
-          cli.print("\n");
-        }
-      }
       // Process packageDependencies in dry-run mode
-      if (instructions.packageDependencies || instructions.includes) {
+      if (instructions.packageDependencies || instructions.steps.some(s => s.type === "include")) {
         const collectedDeps = await collectDependencies({ outputName: name, outputsFolder: typeFolder });
 
         if (collectedDeps.length > 0) {
@@ -203,7 +151,7 @@ const use = new Command({
       return;
     }
 
-    // 10. Non-dry-run: use git worktree
+    // 9. Non-dry-run: use git worktree
     try {
       await verifyGitRepo(root);
     } catch {
@@ -216,102 +164,28 @@ const use = new Command({
     let totalCharacters = 0;
 
     try {
-      for (const task of tasks) {
-        const resolvedPath = resolveOutputPath(task.outputPath, task.variables);
-
-        if (task.kind === "delete") {
-          const targetPath = worktree.root.append(`/${resolvedPath}`);
-          const exists = await fs.exists(targetPath);
-
-          if (!exists) {
-            cli.print(`Warning: file not found, skipping: ${resolvedPath}\n`);
-            continue;
-          }
-
-          await targetPath.remove();
-
-          changedFiles.push({
-            worktreePath: targetPath.path,
-            projectPath: resolvedPath,
-            deleted: true,
-          });
-
-          cli.print(`Deleted ${resolvedPath}\n`);
-
-          continue;
-        }
-
-        if (!(await fs.exists(task.templatePath!))) {
-          throw use_errors.template_not_found(task.templatePath!.name);
-        }
-
-        if (task.kind === "create") {
-          const rendered = await runTemplate({
-            templatePath: task.templatePath!,
-            variables: task.variables,
-          });
-
-          totalCharacters += rendered.length;
-
-          const targetPath = worktree.root.append(`/${resolvedPath}`);
-          const targetExists = await fs.exists(targetPath);
-
-          if (targetExists && !isOverwrite) {
-            throw use_errors.destination_file_exists(resolvedPath);
-          }
-
-          await fs.create(targetPath.directory);
-          await targetPath.write(rendered);
-
-          changedFiles.push({
-            worktreePath: targetPath.path,
-            projectPath: resolvedPath,
-          });
-
-          cli.print(`Wrote ${resolvedPath}\n`);
-        } else {
-          try {
-            const applied = await applyMultipleModifications({
-              task: {
-                templatePath: task.templatePath!,
-                outputPath: resolvedPath,
-                variables: task.variables,
-              },
-              rootDir: worktree.root,
-              errors: use_errors,
-            });
-
-            totalCharacters += applied.content.length;
-
-            const targetPath = worktree.root.append(`/${resolvedPath}`);
-
-            await fs.create(targetPath.directory);
-            await targetPath.write(applied.content);
-
-            changedFiles.push({
-              worktreePath: targetPath.path,
-              projectPath: resolvedPath,
-            });
-
-            cli.print(`Modified ${resolvedPath}\n`);
-          } catch (error) {
-            // Warn and continue — don't abort the whole use
-            const message = error instanceof Error ? error.message : String(error);
-            cli.print(`Warning: skipped modification for ${resolvedPath} — ${message}\n`);
-          }
-        }
-      }
+      totalCharacters = await executeSteps({
+        steps: instructions.steps,
+        variables,
+        outputFolder,
+        rootDir: root,
+        worktreeRoot: worktree.root,
+        outputsFolder: typeFolder,
+        isDryRun: false,
+        isOverwrite,
+        changedFiles,
+      });
     } catch (error) {
       await removeWorktree(root, worktree.path);
       throw error;
     }
 
-    // 11. Copy changed files back and clean up
+    // 10. Copy changed files back and clean up
     await copyChangedFiles(root, changedFiles);
     await removeWorktree(root, worktree.path);
 
-    // 11.5 Process packageDependencies
-    if (instructions.packageDependencies || instructions.includes) {
+    // 11. Process packageDependencies
+    if (instructions.packageDependencies || instructions.steps.some(s => s.type === "include")) {
       try {
         const collectedDeps = await collectDependencies({ outputName: name, outputsFolder: typeFolder });
 

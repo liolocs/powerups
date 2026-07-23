@@ -4,8 +4,9 @@ import { validateOutputTree } from "#utils/validate-output";
 
 /**
  * Full output validation: schema conformance, template file existence,
- * and suboutput tree integrity. Returns a list of issue strings
- * (empty = valid). Never throws on a validation failure.
+ * variable ordering, step name uniqueness, and suboutput tree integrity.
+ * Returns a list of issue strings (empty = valid). Never throws on a
+ * validation failure.
  */
 export async function checkOutput(args: {
   rootOutputDir: FileRef;
@@ -23,9 +24,7 @@ export async function checkOutput(args: {
   try {
     instructions = instructionsSchema.parse(await outputPath.json());
   } catch (error_) {
-    // pema ParseError.message is already humanized with the field path.
     issues.push(error_ instanceof Error ? error_.message : String(error_));
-    // Schema is broken -> template refs and includes are unreliable, stop here.
     return issues;
   }
 
@@ -43,14 +42,11 @@ export async function checkOutput(args: {
 
   // b) Optional variable used in an output path
   const pathVariables = new Set<string>();
-  for (const file of [...instructions.output.create, ...instructions.output.modify]) {
-    for (const [, token] of file.outputPath.matchAll(/\{\{(\w+)\}\}/g)) {
-      pathVariables.add(token);
-    }
-  }
-  for (const file of instructions.output.delete ?? []) {
-    for (const [, token] of file.outputPath.matchAll(/\{\{(\w+)\}\}/g)) {
-      pathVariables.add(token);
+  for (const step of instructions.steps) {
+    if (step.type === "create" || step.type === "modify" || step.type === "delete") {
+      for (const [, token] of step.outputPath.matchAll(/\{\{(\w+)\}\}/g)) {
+        pathVariables.add(token);
+      }
     }
   }
   for (const pathVar of pathVariables) {
@@ -64,17 +60,76 @@ export async function checkOutput(args: {
     }
   }
 
-  for (const file of instructions.output.create) {
-    const templatePath = currentOutputDir.append(`/${file.template}`);
-    if (!(await fs.exists(templatePath))) {
-      issues.push(`missing template file: ${file.template}`);
+  // c) Template file existence for create, modify, and read (template mode)
+  for (const step of instructions.steps) {
+    if (step.type === "create" || step.type === "modify") {
+      const templatePath = currentOutputDir.append(`/${step.template}`);
+      if (!(await fs.exists(templatePath))) {
+        issues.push(`missing template file: ${step.template}`);
+      }
+    }
+    if (step.type === "read" && step.template) {
+      const templatePath = currentOutputDir.append(`/${step.template}`);
+      if (!(await fs.exists(templatePath))) {
+        issues.push(`missing template file: ${step.template}`);
+      }
     }
   }
 
-  for (const file of instructions.output.modify) {
-    const templatePath = currentOutputDir.append(`/${file.template}`);
-    if (!(await fs.exists(templatePath))) {
-      issues.push(`missing template file: ${file.template}`);
+  // d) Step name uniqueness (exclude include steps — same child can be included
+  //    multiple times with different variables)
+  const seenNames = new Set<string>();
+  for (const step of instructions.steps) {
+    if (step.type === "include") continue;
+    if (seenNames.has(step.name)) {
+      issues.push(`duplicate step name: ${step.name}`);
+    }
+    seenNames.add(step.name);
+  }
+
+  // e) Variable ordering validation
+  const available = new Set<string>([
+    ...required.map(r => r.toLowerCase()),
+    ...optional.map(o => o.toLowerCase()),
+  ]);
+
+  for (const step of instructions.steps) {
+    const tokens = new Map<string, string>();
+
+    if (step.type === "create" || step.type === "modify" || step.type === "delete") {
+      for (const [, token] of step.outputPath.matchAll(/\{\{(\w+)\}\}/g)) {
+        tokens.set(token.toLowerCase(), token);
+      }
+    } else if (step.type === "read") {
+      for (const [, token] of step.path.matchAll(/\{\{(\w+)\}\}/g)) {
+        tokens.set(token.toLowerCase(), token);
+      }
+    } else if (step.type === "include") {
+      for (const value of Object.values(step.variables)) {
+        for (const [, token] of value.matchAll(/\{\{(\w+)\}\}/g)) {
+          tokens.set(token.toLowerCase(), token);
+        }
+      }
+    }
+
+    for (const [lower, original] of tokens) {
+      if (!available.has(lower)) {
+        issues.push(`step "${step.name}" uses {{${original}}} before it is available`);
+      }
+    }
+
+    if (step.type === "read") {
+      available.add(step.as.toLowerCase());
+    }
+  }
+
+  // f) Read `as` collision with declared variables
+  for (const step of instructions.steps) {
+    if (step.type === "read") {
+      const allDeclared = [...required, ...optional];
+      if (allDeclared.some(v => v.toLowerCase() === step.as.toLowerCase())) {
+        issues.push(`read step "${step.name}" produces variable "${step.as}" which shadows a declared variable`);
+      }
     }
   }
 

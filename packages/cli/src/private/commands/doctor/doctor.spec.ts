@@ -158,12 +158,19 @@ test.case("doctor reports invalid .json modify template", async assert => {
       { flag: "--type", value: "multi-use" },
       { flag: "--name", value: "bad-modify" },
       { flag: "--description", value: "test description" },
-      { flag: "--output", value: JSON.stringify({
-        create: [],
-        modify: [{ name: "wire", template: "wire.json", outputPath: "src/index.ts" }],
-      }) },
     ],
     context: { root: testRoot },
+  });
+
+  // Overwrite instructions.json with a modify step
+  await multiUseFolder.append("/bad-modify/instructions.json").writeJSON({
+    name: "bad-modify",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    steps: [
+      { type: "modify", name: "wire", template: "wire.json", outputPath: "src/index.ts" },
+    ],
   });
 
   // Write invalid JSON modify template
@@ -291,16 +298,20 @@ test.group("doctor errors", () => {
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "bad-powerups" },
       { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [{ name: "f", template: "missing.njk", outputPath: "out.ts" }],
-          modify: [],
-        }) },
       ],
       context: { root: testRoot },
     });
 
-    // Remove the template file
-    await multiUseFolder.append("/bad-powerups/missing.njk").remove();
+    // Overwrite instructions.json with a step referencing a missing template
+    await multiUseFolder.append("/bad-powerups/instructions.json").writeJSON({
+      name: "bad-powerups",
+      description: "test description",
+      variables: { required: [] },
+      intent: [],
+      steps: [
+        { type: "create", name: "f", template: "missing.njk", outputPath: "out.ts" },
+      ],
+    });
 
     const { output, error } = await captureStdoutOrError(() => doctor.run({
       subcommands: [],

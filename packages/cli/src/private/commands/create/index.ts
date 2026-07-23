@@ -4,7 +4,7 @@ import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@powerups/program";
 import create_errors from "#errors/createErrors";
-import { outputSchema, packageDependencyGroupArraySchema, type Instructions } from "#schemas/instruction";
+import { packageDependencyGroupArraySchema, type Instructions } from "#schemas/instruction";
 import { packageJsonSchema } from "#schemas/package";
 import { addPackageToConfig } from "#utils/config";
 import {
@@ -68,12 +68,6 @@ const create = new Command({
       long: "optional-variables",
       short: "ov",
       description: "Comma-separated optional variable names",
-    },
-    {
-      name: "output",
-      long: "output",
-      short: "o",
-      description: "JSON output specification",
     },
     {
       name: "packageDeps",
@@ -143,16 +137,6 @@ const create = new Command({
       ? flags.optionalVariables.split(",").map(s => s.trim()).filter(Boolean)
       : [];
 
-    let output: Instructions["output"] = { create: [], modify: [], delete: [] };
-
-    if (is.defined(flags.output) === true) {
-      try {
-        output = outputSchema.parse(JSON.parse(flags.output));
-      } catch {
-        throw create_errors.invalid_output_json();
-      }
-    }
-
     let packageDependencies: Instructions["packageDependencies"] = undefined;
 
     if (is.defined(flags.packageDeps) === true) {
@@ -174,35 +158,10 @@ const create = new Command({
       },
       intent,
       packageDependencies,
-      output,
+      steps: [] as never,
     };
 
     await outputPath.writeJSON(instructions as never);
-
-    // Scaffold empty files for both create and modify entries
-    for (const file of output.create) {
-      if (is.defined(file.template) === true) {
-        const templatePath = outputFolder.append(`/${file.template}`);
-
-        const hasTemplate = await fs.exists(templatePath);
-        if (!hasTemplate) {
-          await fs.create(templatePath.directory);
-          await templatePath.write("");
-        }
-      }
-    }
-
-    for (const file of output.modify) {
-      if (is.defined(file.template) === true) {
-        const templatePath = outputFolder.append(`/${file.template}`);
-
-        const hasTemplate = await fs.exists(templatePath);
-        if (!hasTemplate) {
-          await fs.create(templatePath.directory);
-          await templatePath.write("");
-        }
-      }
-    }
 
     const packageJsonPath = packageDir.append(`/${PACKAGE_FILE}`);
     const pkgJson = packageJsonSchema.parse(await packageJsonPath.json());
@@ -216,7 +175,7 @@ const create = new Command({
       ],
     )) {
       powerupsMap = pkgJsonPowerups.active[
-        typeFolderName as keyof typeof pkgJsonPowerups.active
+      typeFolderName as keyof typeof pkgJsonPowerups.active
       ] as Record<string, string>;
     }
 

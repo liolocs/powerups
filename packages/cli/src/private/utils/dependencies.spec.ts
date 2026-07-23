@@ -380,7 +380,7 @@ test.group("collectDependencies", () => {
       variables: { required: [] },
       intent: [],
       packageDependencies: [{ dependencies: ["parent-dep@^1.0.0"] }],
-      output: { create: [], modify: [] },
+      steps: [],
     });
 
     const deps = await collectDependencies({ outputName: "parent", outputsFolder: mainFolder.append("/active/multi-use") });
@@ -405,8 +405,7 @@ test.group("collectDependencies", () => {
       variables: { required: [] },
       intent: [],
       packageDependencies: [{ dependencies: ["parent-dep@^1.0.0"] }],
-      output: { create: [], modify: [] },
-      includes: [{ name: "child", variables: {} }],
+      steps: [{ type: "include",  name: "child", variables: { type: "include", } }],
     });
     await childFolder.append("/instructions.json").writeJSON({
       name: "child",
@@ -414,7 +413,7 @@ test.group("collectDependencies", () => {
       variables: { required: [] },
       intent: [],
       packageDependencies: [{ dependencies: ["child-dep@^2.0.0"] }],
-      output: { create: [], modify: [] },
+      steps: [],
     });
 
     const deps = await collectDependencies({ outputName: "parent", outputsFolder: templateFolder });
@@ -435,7 +434,7 @@ test.group("collectDependencies", () => {
       description: "test description",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     });
 
     const deps = await collectDependencies({ outputName: "nodeps", outputsFolder: mainFolder.append("/active/multi-use") });

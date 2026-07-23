@@ -23,19 +23,15 @@
     "generate",
     "combined"
   ],
-  "output": {
-    "create": [
-      {
-        "name": "parent-command.ts",
-        "template": "parent-command.ts.ts",
-        "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
-      }
-    ],
-    "modify": [],
-    "delete": []
-  },
-  "includes": [
+  "steps": [
     {
+      "type": "create",
+      "name": "parent-command.ts",
+      "template": "parent-command.ts.ts",
+      "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
+    },
+    {
+      "type": "include",
       "name": "cli-command",
       "variables": {
         "commandName": "{{commandName}}",
@@ -43,11 +39,13 @@
         "flags": "[]",
         "errorCases": "{{errorCases}}"
       },
-      "exclude": {
-        "create": ["command.ts", "spec.ts"]
-      }
+      "excludeSteps": [
+        "command.ts",
+        "spec.ts"
+      ]
     },
     {
+      "type": "include",
       "name": "cli-subcommand",
       "variables": {
         "parentCommand": "{{commandName}}",
@@ -56,9 +54,9 @@
         "flags": "{{subcommandFlags}}",
         "errorCases": "{{subcommandErrorCases}}"
       },
-      "exclude": {
-        "modify": ["modify-index"]
-      }
+      "excludeSteps": [
+        "modify-index"
+      ]
     }
   ]
 }

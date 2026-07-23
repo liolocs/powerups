@@ -1,186 +1,272 @@
 import test from "@rcompat/test";
-import { instructionsSchema } from "#schemas/instruction";
+import { instructionsSchema, stepSchema, stepsSchema } from "#schemas/instruction";
 
-test.case("should parse instructions with includes", async assert => {
+test.case("should parse instructions with create steps", async assert => {
   const result = instructionsSchema.parse({
-    name: "shadcn-all-components",
+    name: "simple",
     description: "test description",
-    variables: { required: ["theme"] },
-    intent: ["shadcn"],
-    output: { create: [], modify: [] },
-    includes: [
-      {
-        name: "shadcn-button-component",
-        variables: { componentName: "Button", theme: "{{theme}}" },
-        outputPathOverride: { create: { component: "src/ui/{{componentName}}.tsx" } },
-      },
+    variables: { required: ["componentName"] },
+    intent: [],
+    steps: [
+      { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "src/{{componentName}}.ts" },
     ],
   });
 
-  assert(result.includes).defined();
-  assert(result.includes!.length).equals(1);
-  assert(result.includes![0].name).equals("shadcn-button-component");
-  assert(result.includes![0].variables.componentName).equals("Button");
-  assert(result.includes![0].variables.theme).equals("{{theme}}");
-  assert(result.includes![0].outputPathOverride).defined();
-  assert(result.includes![0].outputPathOverride!.create!.component).equals("src/ui/{{componentName}}.tsx");
+  assert(result.steps.length).equals(1);
+  assert(result.steps[0].type).equals("create");
+  assert(result.steps[0].name).equals("comp");
+  assert((result.steps[0] as any).template).equals("comp.ts.ts");
+  assert((result.steps[0] as any).outputPath).equals("src/{{componentName}}.ts");
 });
 
-test.case("should parse instructions without includes (backward compat)", async assert => {
+test.case("should parse instructions with modify steps", async assert => {
   const result = instructionsSchema.parse({
-    name: "simple-output",
-    description: "test description",
-    variables: { required: ["ComponentName"] },
-    intent: [],
-    output: { create: [], modify: [] },
-  });
-
-  assert(result.name).equals("simple-output");
-  assert(result.includes).undefined();
-});
-
-test.case("should parse includes without optional outputPathOverride", async assert => {
-  const result = instructionsSchema.parse({
-    name: "parent",
-    description: "test description",
-    variables: { required: ["theme"] },
-    intent: [],
-    output: { create: [], modify: [] },
-    includes: [
-      {
-        name: "child",
-        variables: { componentName: "Button" },
-      },
-    ],
-  });
-
-  assert(result.includes![0].outputPathOverride).undefined();
-});
-
-test.case("should parse includes with both create and modify outputPathOverride", async assert => {
-  const result = instructionsSchema.parse({
-    name: "parent",
-    description: "test description",
-    variables: { required: ["theme"] },
-    intent: [],
-    output: { create: [], modify: [] },
-    includes: [
-      {
-        name: "child",
-        variables: { componentName: "Button" },
-        outputPathOverride: {
-          create: { comp: "src/ui/{{componentName}}.tsx" },
-          modify: { wire: "src/index.ts" },
-        },
-      },
-    ],
-  });
-
-  assert(result.includes![0].outputPathOverride!.create!.comp).equals("src/ui/{{componentName}}.tsx");
-  assert(result.includes![0].outputPathOverride!.modify!.wire).equals("src/index.ts");
-});
-
-test.case("should parse output with both create and modify entries", async assert => {
-  const result = instructionsSchema.parse({
-    name: "api",
+    name: "modify-test",
     description: "test description",
     variables: { required: ["name"] },
-    intent: ["create a new backend api"],
-    output: {
-      create: [
-        { name: "controller", template: "controller.ts", outputPath: "src/controllers/{{name}}.ts" },
-      ],
-      modify: [
-        { name: "wire", template: "wire.json", outputPath: "src/controllers/index.ts" },
-      ],
-    },
+    intent: [],
+    steps: [
+      { type: "modify", name: "wire", template: "wire.json", outputPath: "src/index.ts" },
+    ],
   });
 
-  assert(result.output.create.length).equals(1);
-  assert(result.output.modify.length).equals(1);
-  assert(result.output.create[0].name).equals("controller");
-  assert(result.output.modify[0].name).equals("wire");
+  assert(result.steps[0].type).equals("modify");
+  assert((result.steps[0] as any).template).equals("wire.json");
 });
 
-test.case("should parse output with a delete array", async assert => {
+test.case("should parse instructions with delete steps", async assert => {
   const result = instructionsSchema.parse({
     name: "cleanup",
     description: "test description",
     variables: { required: [] },
     intent: [],
-    output: {
-      create: [],
-      modify: [],
-      delete: [
-        { name: "legacy-config", outputPath: "src/legacy/config.ts" },
-        { name: "old-types", outputPath: "src/old/types.d.ts" },
-      ],
-    },
+    steps: [
+      { type: "delete", name: "old-config", outputPath: "src/legacy/config.ts" },
+      { type: "delete", name: "old-types", outputPath: "src/old/types.d.ts" },
+    ],
   });
 
-  assert(result.output.delete).defined();
-  assert(result.output.delete!.length).equals(2);
-  assert(result.output.delete![0].name).equals("legacy-config");
-  assert(result.output.delete![0].outputPath).equals("src/legacy/config.ts");
-  assert(result.output.delete![1].name).equals("old-types");
+  assert(result.steps.length).equals(2);
+  assert(result.steps[0].type).equals("delete");
+  assert(result.steps[0].name).equals("old-config");
+  assert((result.steps[0] as any).outputPath).equals("src/legacy/config.ts");
 });
 
-test.case("should parse output without delete (backward compat)", async assert => {
+test.case("should parse instructions with read step (jsonPath mode)", async assert => {
   const result = instructionsSchema.parse({
-    name: "simple",
+    name: "read-test",
+    description: "test description",
+    variables: { required: ["componentName"] },
+    intent: [],
+    steps: [
+      { type: "read", name: "read-pkg", path: "package.json", as: "packageName", jsonPath: "name" },
+      { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "packages/{{packageName}}/src/{{componentName}}.ts" },
+    ],
+  });
+
+  assert(result.steps[0].type).equals("read");
+  assert((result.steps[0] as any).path).equals("package.json");
+  assert((result.steps[0] as any).as).equals("packageName");
+  assert((result.steps[0] as any).jsonPath).equals("name");
+  assert((result.steps[0] as any).template).undefined();
+});
+
+test.case("should parse instructions with read step (template mode)", async assert => {
+  const result = instructionsSchema.parse({
+    name: "read-template-test",
     description: "test description",
     variables: { required: [] },
     intent: [],
-    output: { create: [], modify: [] },
+    steps: [
+      { type: "read", name: "read-version", path: "README.md", as: "version", template: "extract-version.ts.ts" },
+    ],
   });
 
-  assert(result.output.delete).undefined();
+  assert((result.steps[0] as any).template).equals("extract-version.ts.ts");
+  assert((result.steps[0] as any).jsonPath).undefined();
 });
 
-test.case("should parse packageDependencies with target (monorepo)", async assert => {
+test.case("should parse instructions with read step (raw mode)", async assert => {
+  const result = instructionsSchema.parse({
+    name: "read-raw-test",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    steps: [
+      { type: "read", name: "read-license", path: "LICENSE", as: "licenseText" },
+    ],
+  });
+
+  assert((result.steps[0] as any).jsonPath).undefined();
+  assert((result.steps[0] as any).template).undefined();
+});
+
+test.case("should parse instructions with include step", async assert => {
+  const result = instructionsSchema.parse({
+    name: "parent",
+    description: "test description",
+    variables: { required: ["theme"] },
+    intent: [],
+    steps: [
+      { type: "include", name: "child", variables: { componentName: "Button", theme: "{{theme}}" } },
+    ],
+  });
+
+  assert(result.steps[0].type).equals("include");
+  assert(result.steps[0].name).equals("child");
+  assert((result.steps[0] as any).variables.componentName).equals("Button");
+  assert((result.steps[0] as any).variables.theme).equals("{{theme}}");
+  assert((result.steps[0] as any).stepOverride).undefined();
+  assert((result.steps[0] as any).excludeSteps).undefined();
+});
+
+test.case("should parse include step with stepOverride", async assert => {
+  const result = instructionsSchema.parse({
+    name: "parent",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    steps: [
+      {
+        type: "include",
+        name: "child",
+        variables: { componentName: "Button" },
+        stepOverride: {
+          comp: { type: "create", template: "button.ts.ts", outputPath: "src/ui/{{componentName}}.tsx" },
+        },
+      },
+    ],
+  });
+
+  const incStep0 = result.steps[0] as any;
+  assert(incStep0.stepOverride).defined();
+  assert(incStep0.stepOverride!.comp.type).equals("create");
+  assert(incStep0.stepOverride!.comp.template).equals("button.ts.ts");
+  assert(incStep0.stepOverride!.comp.outputPath).equals("src/ui/{{componentName}}.tsx");
+});
+
+test.case("should parse include step with excludeSteps", async assert => {
+  const result = instructionsSchema.parse({
+    name: "parent",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    steps: [
+      {
+        type: "include",
+        name: "child",
+        variables: { componentName: "Button" },
+        excludeSteps: ["old-config", "legacy-types"],
+      },
+    ],
+  });
+
+  const incStep1 = result.steps[0] as any;
+  assert(incStep1.excludeSteps!.length).equals(2);
+  assert(incStep1.excludeSteps![0]).equals("old-config");
+});
+
+test.case("should parse instructions with mixed step types in order", async assert => {
+  const result = instructionsSchema.parse({
+    name: "full",
+    description: "test description",
+    variables: { required: ["name"] },
+    intent: [],
+    steps: [
+      { type: "read", name: "read-pkg", path: "package.json", as: "pkgName", jsonPath: "name" },
+      { type: "create", name: "c", template: "c.njk", outputPath: "src/{{name}}.ts" },
+      { type: "modify", name: "m", template: "m.json", outputPath: "src/index.ts" },
+      { type: "delete", name: "d", outputPath: "src/old.ts" },
+      { type: "include", name: "child", variables: { val: "{{name}}" } },
+    ],
+  });
+
+  assert(result.steps.length).equals(5);
+  assert(result.steps[0].type).equals("read");
+  assert(result.steps[1].type).equals("create");
+  assert(result.steps[2].type).equals("modify");
+  assert(result.steps[3].type).equals("delete");
+  assert(result.steps[4].type).equals("include");
+});
+
+test.case("should parse instructions with empty steps array", async assert => {
+  const result = instructionsSchema.parse({
+    name: "empty",
+    description: "test description",
+    variables: { required: [] },
+    intent: [],
+    steps: [],
+  });
+
+  assert(result.steps.length).equals(0);
+});
+
+test.case("should parse instructions with packageDependencies", async assert => {
   const result = instructionsSchema.parse({
     name: "add-tailwind",
     description: "test description",
     variables: { required: [] },
     intent: ["tailwind"],
     packageDependencies: [
-      {
-        target: "packages/web",
-        dependencies: ["tailwindcss@^4.0.0"],
-        devDependencies: ["@types/tailwindcss@^3.0.0"],
-      },
+      { target: "packages/web", dependencies: ["tailwindcss@^4.0.0"] },
     ],
-    output: { create: [], modify: [] },
+    steps: [],
   });
 
   assert(result.packageDependencies).defined();
   assert(result.packageDependencies!.length).equals(1);
   assert(result.packageDependencies![0].target).equals("packages/web");
-  assert(result.packageDependencies![0].dependencies!.length).equals(1);
-  assert(result.packageDependencies![0].dependencies![0]).equals("tailwindcss@^4.0.0");
-  assert(result.packageDependencies![0].devDependencies!.length).equals(1);
-  assert(result.packageDependencies![0].devDependencies![0]).equals("@types/tailwindcss@^3.0.0");
-  assert(result.packageDependencies![0].peerDependencies).undefined();
 });
 
-test.case("should parse packageDependencies without target (normal repo)", async assert => {
+test.case("should parse instructions with required and optional variables", async assert => {
   const result = instructionsSchema.parse({
-    name: "add-dep",
+    name: "cli-command",
     description: "test description",
-    variables: { required: [] },
+    variables: { required: ["name", "description"], optional: ["sub", "subDescription"] },
     intent: [],
-    packageDependencies: [
-      {
-        dependencies: ["some-pkg@^1.0.0"],
-      },
-    ],
-    output: { create: [], modify: [] },
+    steps: [],
   });
 
-  assert(result.packageDependencies).defined();
-  assert(result.packageDependencies!.length).equals(1);
-  assert(result.packageDependencies![0].target).undefined();
-  assert(result.packageDependencies![0].dependencies![0]).equals("some-pkg@^1.0.0");
+  assert(result.variables.required).equals(["name", "description"]);
+  assert(result.variables.optional).equals(["sub", "subDescription"]);
+});
+
+test.case("should parse instructions with required only (optional omitted)", async assert => {
+  const result = instructionsSchema.parse({
+    name: "simple",
+    description: "test description",
+    variables: { required: ["name"] },
+    intent: [],
+    steps: [],
+  });
+
+  assert(result.variables.required).equals(["name"]);
+  assert(result.variables.optional).undefined();
+});
+
+test.case("should parse instructions with empty required and some optional", async assert => {
+  const result = instructionsSchema.parse({
+    name: "opt-only",
+    description: "test description",
+    variables: { required: [], optional: ["sub"] },
+    intent: [],
+    steps: [],
+  });
+
+  assert(result.variables.required).equals([]);
+  assert(result.variables.optional).equals(["sub"]);
+});
+
+test.case("should parse description field", async assert => {
+  const result = instructionsSchema.parse({
+    name: "with-description",
+    description: "A template that does something useful.",
+    variables: { required: [] },
+    intent: [],
+    steps: [],
+  });
+
+  assert(result.description).equals("A template that does something useful.");
 });
 
 test.case("should parse multiple packageDependencies groups", async assert => {
@@ -194,7 +280,7 @@ test.case("should parse multiple packageDependencies groups", async assert => {
       { target: "packages/api", dependencies: ["express@^4.0.0"] },
       { dependencies: ["shared-dep@^1.0.0"] },
     ],
-    output: { create: [], modify: [] },
+    steps: [],
   });
 
   assert(result.packageDependencies!.length).equals(3);
@@ -203,126 +289,69 @@ test.case("should parse multiple packageDependencies groups", async assert => {
   assert(result.packageDependencies![2].target).undefined();
 });
 
-test.case("should parse instructions without packageDependencies (backward compat)", async assert => {
+test.case("should parse instructions without packageDependencies", async assert => {
   const result = instructionsSchema.parse({
     name: "no-deps",
     description: "test description",
     variables: { required: [] },
     intent: [],
-    output: { create: [], modify: [] },
+    steps: [],
   });
 
   assert(result.packageDependencies).undefined();
 });
 
-test.case("should parse includes with outputPathOverride.delete", async assert => {
+test.case("should parse include step with both stepOverride and excludeSteps", async assert => {
   const result = instructionsSchema.parse({
     name: "parent",
     description: "test description",
     variables: { required: [] },
     intent: [],
-    output: { create: [], modify: [] },
-    includes: [
+    steps: [
       {
+        type: "include",
         name: "child",
-        variables: {},
-        outputPathOverride: {
-          delete: { "legacy-file": "src/legacy/file.ts" },
+        variables: { componentName: "Button" },
+        stepOverride: {
+          comp: { type: "create", template: "button.ts.ts", outputPath: "src/ui/{{componentName}}.tsx" },
         },
+        excludeSteps: ["old-config"],
       },
     ],
   });
 
-  assert(result.includes![0].outputPathOverride!.delete!.legacyFile).undefined();
-  assert(result.includes![0].outputPathOverride!.delete!["legacy-file"]).equals("src/legacy/file.ts");
+  const includeStep = result.steps[0] as any;
+  assert(includeStep.type).equals("include");
+  assert(includeStep.stepOverride).defined();
+  assert(includeStep.stepOverride!.comp.outputPath).equals("src/ui/{{componentName}}.tsx");
+  assert(includeStep.excludeSteps!.length).equals(1);
+  assert(includeStep.excludeSteps![0]).equals("old-config");
 });
 
-test.case("should parse output with create, modify, and delete together", async assert => {
-  const result = instructionsSchema.parse({
-    name: "full",
-    description: "test description",
-    variables: { required: ["name"] },
-    intent: [],
-    output: {
-      create: [{ name: "c", template: "c.njk", outputPath: "src/{{name}}.ts" }],
-      modify: [{ name: "m", template: "m.json", outputPath: "src/index.ts" }],
-      delete: [{ name: "d", outputPath: "src/old.ts" }],
-    },
-  });
+test.case("stepSchema should parse a create step", async assert => {
+  const result = stepSchema.parse({ type: "create", name: "c", template: "c.njk", outputPath: "src/x.ts" });
+  assert(result.type).equals("create");
+  assert(result.name).equals("c");
+});
 
-  assert(result.output.create.length).equals(1);
-  assert(result.output.modify.length).equals(1);
-  assert(result.output.delete!.length).equals(1);
+test.case("stepSchema should parse a read step", async assert => {
+  const result = stepSchema.parse({ type: "read", name: "r", path: "package.json", as: "pkgName", jsonPath: "name" }) as { type: string; as: string };
+  assert(result.type).equals("read");
+  assert(result.as).equals("pkgName");
+});
+
+test.case("stepsSchema should parse an array of steps", async assert => {
+  const result = stepsSchema.parse([
+    { type: "create", name: "a", template: "a.njk", outputPath: "src/a.ts" },
+    { type: "delete", name: "b", outputPath: "src/b.ts" },
+  ]);
+  assert(result.length).equals(2);
+  assert(result[0].type).equals("create");
+  assert(result[1].type).equals("delete");
 });
 
 test.group("instruction schema rejections", () => {
-  test.case("should reject an includes entry missing name", async assert => {
-  let threw = false;
-  try {
-    instructionsSchema.parse({
-      name: "parent",
-      description: "test description",
-      variables: { required: [] },
-      intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ variables: {} }],
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).true();
-});
-
-  test.case("should reject an includes entry missing variables", async assert => {
-  let threw = false;
-  try {
-    instructionsSchema.parse({
-      name: "parent",
-      description: "test description",
-      variables: { required: [] },
-      intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "child" }],
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).true();
-});
-
-  test.case("should reject output missing create array", async assert => {
-  let threw = false;
-  try {
-    instructionsSchema.parse({
-      name: "bad",
-      description: "test description",
-      variables: { required: [] },
-      intent: [],
-      output: { modify: [] },
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).true();
-});
-
-  test.case("should reject output missing modify array", async assert => {
-  let threw = false;
-  try {
-    instructionsSchema.parse({
-      name: "bad",
-      description: "test description",
-      variables: { required: [] },
-      intent: [],
-      output: { create: [] },
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).true();
-  });
-
-  test.case("should reject a delete entry missing name", async assert => {
+  test.case("should reject instructions missing steps", async assert => {
     let threw = false;
     try {
       instructionsSchema.parse({
@@ -330,7 +359,6 @@ test.group("instruction schema rejections", () => {
         description: "test description",
         variables: { required: [] },
         intent: [],
-        output: { create: [], modify: [], delete: [{ outputPath: "src/x.ts" }] },
       });
     } catch {
       threw = true;
@@ -338,7 +366,7 @@ test.group("instruction schema rejections", () => {
     assert(threw).true();
   });
 
-  test.case("should reject a delete entry missing outputPath", async assert => {
+  test.case("should reject a create step missing name", async assert => {
     let threw = false;
     try {
       instructionsSchema.parse({
@@ -346,187 +374,225 @@ test.group("instruction schema rejections", () => {
         description: "test description",
         variables: { required: [] },
         intent: [],
-        output: { create: [], modify: [], delete: [{ name: "x" }] },
+        steps: [{ type: "create", template: "c.ts", outputPath: "src/x.ts" }],
       });
     } catch {
       threw = true;
     }
     assert(threw).true();
   });
+
+  test.case("should reject a read step missing as", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        steps: [{ type: "read", name: "r", path: "package.json" }],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
+  });
+
+  test.case("should reject an include step missing variables", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        steps: [{ type: "include", name: "child" }],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
+  });
+
+  test.case("should reject instructions missing description", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "no-description",
+        variables: { required: [] },
+        intent: [],
+        steps: [],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
+  });
+
+  test.case("should reject instructions with non-string description", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad-description",
+        description: 123,
+        variables: { required: [] },
+        intent: [],
+        steps: [],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
+  });
+
+  test.case("should reject old output format", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        output: { create: [], modify: [] },
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
+  });
+
+  // Note: pema default mode strips unknown keys silently, so passing
+  // `includes` alongside `steps` does not cause a rejection. The old
+  // `output` format IS rejected because `steps` is required and missing.
 
   test.case("should reject packageDependencies with non-string dependency", async assert => {
-  let threw = false;
-  try {
-    instructionsSchema.parse({
-      name: "bad",
-      description: "test description",
-      variables: { required: [] },
-      intent: [],
-      packageDependencies: [
-        { dependencies: [123] },
-      ],
-      output: { create: [], modify: [] },
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).true();
-});
-});
-test.case("should parse instructions with required and optional variables", async assert => {
-  const result = instructionsSchema.parse({
-    name: "cli-command",
-    description: "test description",
-    variables: { required: ["name", "description"], optional: ["sub", "subDescription"] },
-    intent: [],
-    output: { create: [], modify: [] },
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        packageDependencies: [
+          { dependencies: [123] },
+        ],
+        steps: [],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
   });
 
-  assert(result.variables.required).equals(["name", "description"]);
-  assert(result.variables.optional).equals(["sub", "subDescription"]);
-});
-
-test.case("should parse instructions with required only (optional omitted)", async assert => {
-  const result = instructionsSchema.parse({
-    name: "simple",
-    description: "test description",
-    variables: { required: ["name"] },
-    intent: [],
-    output: { create: [], modify: [] },
+  test.case("should reject old array format for variables", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: ["name"],
+        intent: [],
+        steps: [],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
   });
 
-  assert(result.variables.required).equals(["name"]);
-  assert(result.variables.optional).undefined();
-});
-
-test.case("should parse instructions with empty required and some optional", async assert => {
-  const result = instructionsSchema.parse({
-    name: "opt-only",
-    description: "test description",
-    variables: { required: [], optional: ["sub"] },
-    intent: [],
-    output: { create: [], modify: [] },
+  test.case("should reject a delete step missing outputPath", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        steps: [{ type: "delete", name: "x" }],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
   });
 
-  assert(result.variables.required).equals([]);
-  assert(result.variables.optional).equals(["sub"]);
-});
-
-test.case("should reject old array format for variables", async assert => {
-  let threw = false;
-  try {
-    instructionsSchema.parse({
-      name: "bad",
-      variables: ["name"],
-      intent: [],
-      output: { create: [], modify: [] },
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).true();
-});
-
-test.case("should parse description field", async assert => {
-  const result = instructionsSchema.parse({
-    name: "with-description",
-    description: "A template that does something useful.",
-    variables: { required: [] },
-    intent: [],
-    output: { create: [], modify: [] },
+  test.case("should reject a create step missing template", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        steps: [{ type: "create", name: "c", outputPath: "src/x.ts" }],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
   });
 
-  assert(result.description).equals("A template that does something useful.");
-});
-
-test.case("should reject instructions missing description", async assert => {
-  let threw = false;
-  try {
-    instructionsSchema.parse({
-      name: "no-description",
-      variables: { required: [] },
-      intent: [],
-      output: { create: [], modify: [] },
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).true();
-});
-
-test.case("should reject instructions with non-string description", async assert => {
-  let threw = false;
-  try {
-    instructionsSchema.parse({
-      name: "bad-description",
-      description: 123,
-      variables: { required: [] },
-      intent: [],
-      output: { create: [], modify: [] },
-    });
-  } catch {
-    threw = true;
-  }
-  assert(threw).true();
-});
-
-test.case("should parse includes with exclude", async assert => {
-  const result = instructionsSchema.parse({
-    name: "parent",
-    description: "test description",
-    variables: { required: ["theme"] },
-    intent: [],
-    output: { create: [], modify: [] },
-    includes: [
-      {
-        name: "child",
-        variables: { componentName: "Button" },
-        exclude: { create: ["baz"] },
-      },
-    ],
+  test.case("should reject a modify step missing outputPath", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        steps: [{ type: "modify", name: "m", template: "m.json" }],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
   });
 
-  assert(result.includes![0].exclude).defined();
-  assert(result.includes![0].exclude!.create![0]).equals("baz");
-  assert(result.includes![0].exclude!.modify).undefined();
-  assert(result.includes![0].exclude!.delete).undefined();
-});
-
-test.case("should parse includes with exclude for all kinds", async assert => {
-  const result = instructionsSchema.parse({
-    name: "parent",
-    description: "test description",
-    variables: { required: ["theme"] },
-    intent: [],
-    output: { create: [], modify: [] },
-    includes: [
-      {
-        name: "child",
-        variables: { componentName: "Button" },
-        exclude: { create: ["a"], modify: ["b"], delete: ["c"] },
-      },
-    ],
+  test.case("should reject a read step missing path", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        steps: [{ type: "read", name: "r", as: "val" }],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
   });
 
-  assert(result.includes![0].exclude!.create![0]).equals("a");
-  assert(result.includes![0].exclude!.modify![0]).equals("b");
-  assert(result.includes![0].exclude!.delete![0]).equals("c");
-});
-
-test.case("should parse includes without exclude (backward compat)", async assert => {
-  const result = instructionsSchema.parse({
-    name: "parent",
-    description: "test description",
-    variables: { required: ["theme"] },
-    intent: [],
-    output: { create: [], modify: [] },
-    includes: [
-      {
-        name: "child",
-        variables: { componentName: "Button" },
-      },
-    ],
+  test.case("should reject an include step missing name", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        steps: [{ type: "include", variables: {} }],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
   });
 
-  assert(result.includes![0].exclude).undefined();
+  test.case("should reject an unknown step type", async assert => {
+    let threw = false;
+    try {
+      instructionsSchema.parse({
+        name: "bad",
+        description: "test description",
+        variables: { required: [] },
+        intent: [],
+        steps: [{ type: "unknown", name: "x" }],
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw).true();
+  });
 });

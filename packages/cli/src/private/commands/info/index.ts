@@ -28,8 +28,16 @@ interface IncludeSummary {
   bindings: { key: string; value: string; isReference: boolean }[];
 }
 
+interface ReadSummary {
+  name: string;
+  path: string;
+  as: string;
+  mode: string;
+}
+
 interface CollectedInfo {
   files: CollectedFile[];
+  reads: ReadSummary[];
   dependencies: NonNullable<Instructions["packageDependencies"]>;
   includes: IncludeSummary[];
 }
@@ -38,21 +46,13 @@ async function collectInfo(args: {
   outputName: string;
   outputsFolder: FileRef;
   pathStack: string[];
-  createOverrides?: Record<string, string>;
-  modifyOverrides?: Record<string, string>;
-  deleteOverrides?: Record<string, string>;
-  createExcludes?: Set<string>;
-  modifyExcludes?: Set<string>;
-  deleteExcludes?: Set<string>;
+  stepOverrides?: Record<string, string>;
+  excludeSteps?: Set<string>;
   fromInclude?: string | null;
 }): Promise<CollectedInfo> {
   const { outputName, outputsFolder, pathStack } = args;
-  const createOverrides = args.createOverrides ?? {};
-  const modifyOverrides = args.modifyOverrides ?? {};
-  const deleteOverrides = args.deleteOverrides ?? {};
-  const createExcludes = args.createExcludes ?? new Set<string>();
-  const modifyExcludes = args.modifyExcludes ?? new Set<string>();
-  const deleteExcludes = args.deleteExcludes ?? new Set<string>();
+  const stepOverrides = args.stepOverrides ?? {};
+  const excludeSteps = args.excludeSteps ?? new Set<string>();
   const fromInclude = args.fromInclude ?? null;
 
   const outputFolder = outputsFolder.append(`/${outputName}`);
@@ -60,71 +60,59 @@ async function collectInfo(args: {
   const instructions = instructionsSchema.parse(await outputPath.json());
 
   const files: CollectedFile[] = [];
+  const reads: ReadSummary[] = [];
   const dependencies: NonNullable<Instructions["packageDependencies"]> = [];
   const includes: IncludeSummary[] = [];
 
-  // Own create files
-  for (const file of instructions.output.create) {
-    if (createExcludes.has(file.name)) continue;
+  for (const step of instructions.steps) {
+    if (excludeSteps.has(step.name)) continue;
 
-    let fileOutputPath = file.outputPath;
-    if (is.defined(createOverrides[file.name])) {
-      fileOutputPath = createOverrides[file.name];
-    }
-    files.push({
-      kind: "create",
-      template: file.template,
-      outputPath: fileOutputPath,
-      fromInclude,
-    });
-  }
-
-  // Own modify files
-  for (const file of instructions.output.modify) {
-    if (modifyExcludes.has(file.name)) continue;
-
-    let fileOutputPath = file.outputPath;
-    if (is.defined(modifyOverrides[file.name])) {
-      fileOutputPath = modifyOverrides[file.name];
-    }
-    files.push({
-      kind: "modify",
-      template: file.template,
-      outputPath: fileOutputPath,
-      fromInclude,
-    });
-  }
-
-  // Own delete files
-  for (const file of instructions.output.delete ?? []) {
-    if (deleteExcludes.has(file.name)) continue;
-
-    let fileOutputPath = file.outputPath;
-    if (is.defined(deleteOverrides[file.name])) {
-      fileOutputPath = deleteOverrides[file.name];
-    }
-    files.push({
-      kind: "delete",
-      outputPath: fileOutputPath,
-      fromInclude,
-    });
-  }
-
-  // Own packageDependencies
-  if (is.defined(instructions.packageDependencies)) {
-    dependencies.push(...instructions.packageDependencies);
-  }
-
-  // Includes
-  if (is.defined(instructions.includes)) {
-    for (const ref of instructions.includes) {
-      // Cycle guard
-      if (pathStack.includes(ref.name)) {
+    if (step.type === "create") {
+      let fileOutputPath = step.outputPath;
+      if (is.defined(stepOverrides[step.name])) {
+        fileOutputPath = stepOverrides[step.name];
+      }
+      files.push({
+        kind: "create",
+        template: step.template,
+        outputPath: fileOutputPath,
+        fromInclude,
+      });
+    } else if (step.type === "modify") {
+      let fileOutputPath = step.outputPath;
+      if (is.defined(stepOverrides[step.name])) {
+        fileOutputPath = stepOverrides[step.name];
+      }
+      files.push({
+        kind: "modify",
+        template: step.template,
+        outputPath: fileOutputPath,
+        fromInclude,
+      });
+    } else if (step.type === "delete") {
+      let fileOutputPath = step.outputPath;
+      if (is.defined(stepOverrides[step.name])) {
+        fileOutputPath = stepOverrides[step.name];
+      }
+      files.push({
+        kind: "delete",
+        outputPath: fileOutputPath,
+        fromInclude,
+      });
+    } else if (step.type === "read") {
+      const mode = step.template ? "template" : step.jsonPath ? "jsonPath" : "raw";
+      reads.push({
+        name: step.name,
+        path: step.path,
+        as: step.as,
+        mode,
+      });
+    } else if (step.type === "include") {
+      if (pathStack.includes(step.name)) {
         continue;
       }
 
-      // Build include summary
-      const suboutputDir = outputsFolder.append(`/${ref.name}`);
+      const suboutputDir = outputsFolder.append(`/${step.name}`);
       const subOutputPath = suboutputDir.append("/instructions.json");
       let subDescription = "";
       try {
@@ -134,47 +122,52 @@ async function collectInfo(args: {
         // If we can't read it, just use empty description
       }
 
-      const bindings = Object.entries(ref.variables).map(([key, value]) => ({
+      const bindings = Object.entries(step.variables).map(([key, value]) => ({
         key,
         value,
         isReference: /\{\{(\w+)\}\}/.test(value),
       }));
 
       includes.push({
-        name: ref.name,
+        name: step.name,
         description: subDescription,
         bindings,
       });
 
-      // Recurse into child
-      const childCreateOverrides = ref.outputPathOverride?.create ?? {};
-      const childModifyOverrides = ref.outputPathOverride?.modify ?? {};
-      const childDeleteOverrides = ref.outputPathOverride?.delete ?? {};
+      // Build child step overrides (extract outputPath from override values)
+      const childStepOverrides: Record<string, string> = {};
+      if (step.stepOverride) {
+        for (const [name, override] of Object.entries(step.stepOverride)) {
+          if ("outputPath" in override) {
+            childStepOverrides[name] = override.outputPath;
+          }
+        }
+      }
 
-      const childCreateExcludes = new Set(ref.exclude?.create ?? []);
-      const childModifyExcludes = new Set(ref.exclude?.modify ?? []);
-      const childDeleteExcludes = new Set(ref.exclude?.delete ?? []);
+      const childExcludeSteps = new Set(step.excludeSteps ?? []);
 
       const childInfo = await collectInfo({
-        outputName: ref.name,
+        outputName: step.name,
         outputsFolder,
-        pathStack: [...pathStack, ref.name],
-        createOverrides: childCreateOverrides,
-        modifyOverrides: childModifyOverrides,
-        deleteOverrides: childDeleteOverrides,
-        createExcludes: childCreateExcludes,
-        modifyExcludes: childModifyExcludes,
-        deleteExcludes: childDeleteExcludes,
-        fromInclude: ref.name,
+        pathStack: [...pathStack, step.name],
+        stepOverrides: childStepOverrides,
+        excludeSteps: childExcludeSteps,
+        fromInclude: step.name,
       });
 
       files.push(...childInfo.files);
+      reads.push(...childInfo.reads);
       dependencies.push(...childInfo.dependencies);
       includes.push(...childInfo.includes);
     }
   }
 
-  return { files, dependencies, includes };
+  // Own packageDependencies
+  if (is.defined(instructions.packageDependencies)) {
+    dependencies.push(...instructions.packageDependencies);
+  }
+
+  return { files, reads, dependencies, includes };
 }
 
 const info = new Command({
@@ -217,6 +210,8 @@ const info = new Command({
       outputName: name,
       outputsFolder: typeFolder,
       pathStack: [name],
+      stepOverrides: {},
+      excludeSteps: new Set<string>(),
     });
 
     const lines: string[] = [];
@@ -307,6 +302,20 @@ const info = new Command({
 
         lines.push("");
       }
+    }
+
+    if (collected.reads.length > 0) {
+      lines.push("## Reads");
+      lines.push("");
+
+      for (const read of collected.reads) {
+        const modePart = read.mode === "jsonPath" ? ` (jsonPath: ${read.as})`
+          : read.mode === "template" ? ` (template, as: ${read.as})`
+          : ` (raw, as: ${read.as})`;
+        lines.push(`- \`${read.path}\`${modePart}`);
+      }
+
+      lines.push("");
     }
 
     if (collected.dependencies.length > 0) {

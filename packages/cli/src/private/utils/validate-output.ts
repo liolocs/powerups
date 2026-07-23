@@ -1,11 +1,11 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
-import is from "@rcompat/is";
 
 /**
- * Validate the suboutput tree of a output. Walks all includes recursively,
- * checking: existence, circular references, variable mapping completeness,
- * parentVar reference validity, and override file name validity.
+ * Validate the suboutput tree of a powerup. Walks all include steps
+ * recursively, checking: existence, circular references, variable mapping
+ * completeness, parentVar reference validity, stepOverride name validity,
+ * and excludeSteps name validity.
  *
  * Returns a list of issue strings (empty = valid). Does not throw.
  */
@@ -32,21 +32,28 @@ export async function validateOutputTree(args: {
     return [`instructions.json parse failed: ${currentOutputDir.name}`];
   }
 
-  if (is.defined(instructions.includes) === false) {
-    return issues;
-  }
+  // Collect all available parent variables (declared + read-produced by any read step)
+  const allParentVariables = [
+    ...instructions.variables.required,
+    ...(instructions.variables.optional ?? []),
+    ...instructions.steps
+      .filter(s => s.type === "read")
+      .map(s => (s as { as: string }).as),
+  ];
 
-  for (const ref of instructions.includes) {
+  for (const step of instructions.steps) {
+    if (step.type !== "include") continue;
+
     // a. Existence
-    const suboutputDir = rootOutputDir.append(`/${ref.name}`);
+    const suboutputDir = rootOutputDir.append(`/${step.name}`);
     if (!(await fs.exists(suboutputDir))) {
-      issues.push(`suboutput not found: ${ref.name}`);
+      issues.push(`suboutput not found: ${step.name}`);
       continue;
     }
 
     // b. Cycle
-    if (pathStack.includes(ref.name)) {
-      const chain = [...pathStack, ref.name];
+    if (pathStack.includes(step.name)) {
+      const chain = [...pathStack, step.name];
       issues.push(`circular reference: ${chain.join(" → ")}`);
       continue;
     }
@@ -57,7 +64,7 @@ export async function validateOutputTree(args: {
     try {
       subInstructions = instructionsSchema.parse(await subOutputPath.json());
     } catch {
-      issues.push(`instructions.json parse failed: ${ref.name}`);
+      issues.push(`instructions.json parse failed: ${step.name}`);
       continue;
     }
 
@@ -67,121 +74,55 @@ export async function validateOutputTree(args: {
       ...(subInstructions.variables.optional ?? []),
     ];
     for (const declared of subAllVariables) {
-      const mapped = Object.keys(ref.variables).find(
+      const mapped = Object.keys(step.variables).find(
         k => k.toLowerCase() === declared.toLowerCase(),
       );
 
-      if (is.falsy(mapped)) {
-        issues.push(`unmapped variable: ${declared} in suboutput: ${ref.name}`);
+      if (!mapped) {
+        issues.push(`unmapped variable: ${declared} in suboutput: ${step.name}`);
       }
     }
 
-    // {{parentVar}} tokens must refer to parent's declared variables
-    for (const value of Object.values(ref.variables)) {
+    // {{parentVar}} tokens must refer to parent's available variables (declared + read-produced)
+    for (const value of Object.values(step.variables)) {
       const tokens = value.match(/\{\{(\w+)\}\}/g) ?? [];
       for (const token of tokens) {
         const varName = token.slice(2, -2);
-        const allParentVariables = [
-          ...instructions.variables.required,
-          ...(instructions.variables.optional ?? []),
-        ];
         const declared = allParentVariables.find(
           v => v.toLowerCase() === varName.toLowerCase(),
         );
 
-        if (is.falsy(declared)) {
-          issues.push(`invalid reference: {{${varName}}} in suboutput: ${ref.name}`);
+        if (!declared) {
+          issues.push(`invalid reference: {{${varName}}} in suboutput: ${step.name}`);
         }
       }
     }
 
-    // f. Override file names must match a file name in suboutput's output.create or output.modify
-    if (is.defined(ref.outputPathOverride)) {
-      if (is.defined(ref.outputPathOverride.create)) {
-        for (const fileName of Object.keys(ref.outputPathOverride.create)) {
-          const found = subInstructions.output.create.find(
-            f => f.name === fileName,
-          );
-          if (is.falsy(found)) {
-            issues.push(`override file not found: ${fileName} in suboutput: ${ref.name}`);
-          }
-        }
-      }
-      if (is.defined(ref.outputPathOverride.modify)) {
-        for (const fileName of Object.keys(ref.outputPathOverride.modify)) {
-          const found = subInstructions.output.modify.find(
-            f => f.name === fileName,
-          );
-          if (is.falsy(found)) {
-            issues.push(`override file not found: ${fileName} in suboutput: ${ref.name}`);
-          }
-        }
-      }
-      if (is.defined(ref.outputPathOverride.delete)) {
-        for (const fileName of Object.keys(ref.outputPathOverride.delete)) {
-          const found = subInstructions.output.delete?.find(
-            f => f.name === fileName,
-          );
-          if (is.falsy(found)) {
-            issues.push(`override file not found: ${fileName} in suboutput: ${ref.name}`);
-          }
-        }
+    // d. stepOverride keys must match step names in child's steps
+    const childStepNames = new Set(subInstructions.steps.map(s => s.name));
+    for (const overrideKey of Object.keys(step.stepOverride ?? {})) {
+      if (!childStepNames.has(overrideKey)) {
+        issues.push(`stepOverride target not found: ${overrideKey} in suboutput: ${step.name}`);
       }
     }
 
-    // g. Exclude file names must match a file name in suboutput's output
-    if (is.defined(ref.exclude)) {
-      if (is.defined(ref.exclude.create)) {
-        for (const fileName of ref.exclude.create) {
-          const found = subInstructions.output.create.find(
-            f => f.name === fileName,
-          );
-          if (is.falsy(found)) {
-            issues.push(`exclude file not found: ${fileName} in suboutput: ${ref.name}`);
-          }
-        }
-      }
-      if (is.defined(ref.exclude.modify)) {
-        for (const fileName of ref.exclude.modify) {
-          const found = subInstructions.output.modify.find(
-            f => f.name === fileName,
-          );
-          if (is.falsy(found)) {
-            issues.push(`exclude file not found: ${fileName} in suboutput: ${ref.name}`);
-          }
-        }
-      }
-      if (is.defined(ref.exclude.delete)) {
-        for (const fileName of ref.exclude.delete) {
-          const found = subInstructions.output.delete?.find(
-            f => f.name === fileName,
-          );
-          if (is.falsy(found)) {
-            issues.push(`exclude file not found: ${fileName} in suboutput: ${ref.name}`);
-          }
-        }
+    // e. excludeSteps names must match step names in child's steps
+    for (const excluded of step.excludeSteps ?? []) {
+      if (!childStepNames.has(excluded)) {
+        issues.push(`excludeSteps target not found: ${excluded} in suboutput: ${step.name}`);
       }
     }
 
-    // h. Exclude/override conflict: same file name in both exclude and outputPathOverride
-    const createOverrideNames = Object.keys(ref.outputPathOverride?.create ?? {});
-    const modifyOverrideNames = Object.keys(ref.outputPathOverride?.modify ?? {});
-    const deleteOverrideNames = Object.keys(ref.outputPathOverride?.delete ?? {});
-    const createExcludeNames = ref.exclude?.create ?? [];
-    const modifyExcludeNames = ref.exclude?.modify ?? [];
-    const deleteExcludeNames = ref.exclude?.delete ?? [];
-
-    for (const name of createOverrideNames.filter(n => createExcludeNames.includes(n))) {
-      issues.push(`conflict: "${name}" in both exclude and outputPathOverride.create for suboutput: ${ref.name}`);
-    }
-    for (const name of modifyOverrideNames.filter(n => modifyExcludeNames.includes(n))) {
-      issues.push(`conflict: "${name}" in both exclude and outputPathOverride.modify for suboutput: ${ref.name}`);
-    }
-    for (const name of deleteOverrideNames.filter(n => deleteExcludeNames.includes(n))) {
-      issues.push(`conflict: "${name}" in both exclude and outputPathOverride.delete for suboutput: ${ref.name}`);
+    // f. Conflict: same step name in both excludeSteps and stepOverride
+    const overrideNames = new Set(Object.keys(step.stepOverride ?? {}));
+    const excludeNames = new Set(step.excludeSteps ?? []);
+    for (const name of overrideNames) {
+      if (excludeNames.has(name)) {
+        issues.push(`conflict: "${name}" in both excludeSteps and stepOverride for suboutput: ${step.name}`);
+      }
     }
 
-    // i. Recurse
+    // g. Recurse
     const childIssues = await validateOutputTree({
       rootOutputDir,
       currentOutputDir: suboutputDir,

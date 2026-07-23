@@ -45,7 +45,7 @@ async function createPackageWithPower(
     description: `${CAPITALIZED_SINGLULAR_CLI_NAME} for ${intent.join(" ")}`,
     variables: { required: [] },
     intent,
-    output: { create: [], modify: [] },
+    steps: [],
   });
 
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({

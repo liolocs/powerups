@@ -52,6 +52,39 @@ async function gitCommit(dir: FileRef, message: string): Promise<void> {
   }
 }
 
+/**
+ * Create a powerup with the given steps and optional packageDependencies.
+ * Uses createCmd.run to scaffold the folder, then overwrites instructions.json
+ * with the provided steps format.
+ */
+async function createPowerup(
+  name: string,
+  steps: unknown[],
+  opts?: { required?: string[]; optional?: string[]; packageDependencies?: unknown },
+) {
+  const required = opts?.required ?? [];
+  const optional = opts?.optional;
+  const packageDependencies = opts?.packageDependencies;
+  await createCmd.run({
+    subcommands: [],
+    flags: [
+      { flag: "--pack", value: "test-pkg" },
+      { flag: "--type", value: "multi-use" },
+      { flag: "--name", value: name },
+      { flag: "--description", value: "test description" },
+    ],
+    context: { root: testRoot },
+  });
+  await multiUseFolder.append(`/${name}/instructions.json`).writeJSON({
+    name,
+    description: "test description",
+    variables: { required, ...(optional ? { optional } : {}) },
+    intent: [],
+    ...(packageDependencies ? { packageDependencies } : {}),
+    steps,
+  } as never);
+}
+
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
@@ -81,25 +114,9 @@ test.case("apply writes rendered .njk template files to outputPath",
   async assert => {
     await reset();
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "ui-component" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "ComponentName" },
-        { flag: "--output", value: JSON.stringify({
-          create: [{
-            name: "button.svelte",
-            template: "button.njk",
-            outputPath: ".test-output/{{ComponentName}}.svelte",
-          }],
-          modify: [],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("ui-component", [
+      { type: "create", name: "button.svelte", template: "button.njk", outputPath: ".test-output/{{ComponentName}}.svelte" },
+    ], { required: ["ComponentName"] });
 
     const tmplPath = multiUseFolder.append("/ui-component/button.njk");
     await tmplPath.write("<button>{{componentName}}</button>");
@@ -121,25 +138,9 @@ test.case("apply writes rendered .ts template files to outputPath",
   async assert => {
     await reset();
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "ts-output" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "ComponentName" },
-        { flag: "--output", value: JSON.stringify({
-          create: [{
-            name: "component.ts",
-            template: "component.ts",
-            outputPath: ".test-output/{{ComponentName}}.ts",
-          }],
-          modify: [],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("ts-output", [
+      { type: "create", name: "component.ts", template: "component.ts", outputPath: ".test-output/{{ComponentName}}.ts" },
+    ], { required: ["ComponentName"] });
 
     const tmplPath = multiUseFolder.append("/ts-output/component.ts");
     await tmplPath.write(
@@ -169,25 +170,9 @@ test.case("apply with --overwrite overwrites existing destination files", async 
   await testRoot.append("/.test-output/Existing.ts").write("old content");
   await gitCommit(testRoot, "add existing file");
 
-  await createCmd.run({
-    subcommands: [],
-    flags: [
-      { flag: "--pack", value: "test-pkg" },
-      { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "overwrite-test" },
-      { flag: "--description", value: "test description" },
-      { flag: "--variables", value: "ComponentName" },
-      { flag: "--output", value: JSON.stringify({
-        create: [{
-          name: "f",
-          template: "f.njk",
-          outputPath: ".test-output/{{ComponentName}}.ts",
-        }],
-        modify: [],
-      }) },
-    ],
-    context: { root: testRoot },
-  });
+  await createPowerup("overwrite-test", [
+    { type: "create", name: "f", template: "f.njk", outputPath: ".test-output/{{ComponentName}}.ts" },
+  ], { required: ["ComponentName"] });
   await multiUseFolder.append("/overwrite-test/f.njk").write("new content {{componentName}}");
 
   await use.run({
@@ -253,8 +238,8 @@ test.group("apply errors", () => {
 
     await createCmd.run({
       subcommands: [],
-            flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "real" },
-      { flag: "--description", value: "test description" },],
+      flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "real" },
+        { flag: "--description", value: "test description" }],
       context: { root: testRoot },
     });
 
@@ -277,25 +262,9 @@ test.group("apply errors", () => {
     async assert => {
       await reset();
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "needs-vars" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "ComponentName,theme" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "button.svelte",
-              template: "button.njk",
-              outputPath: ".test-output/{{ComponentName}}.svelte",
-            }],
-            modify: [],
-          }) },
-        ],
-        context: { root: testRoot },
-      });
+      await createPowerup("needs-vars", [
+        { type: "create", name: "button.svelte", template: "button.njk", outputPath: ".test-output/{{ComponentName}}.svelte" },
+      ], { required: ["ComponentName", "theme"] });
 
       const tmplPath = multiUseFolder.append("/needs-vars/button.njk");
       await tmplPath.write("<button>{{componentName}} {{theme}}</button>");
@@ -323,25 +292,9 @@ test.group("apply errors", () => {
     async assert => {
       await reset();
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "missing-tmpl" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "ComponentName" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "button.svelte",
-              template: "button.njk",
-              outputPath: ".test-output/{{ComponentName}}.svelte",
-            }],
-            modify: [],
-          }) },
-        ],
-        context: { root: testRoot },
-      });
+      await createPowerup("missing-tmpl", [
+        { type: "create", name: "button.svelte", template: "button.njk", outputPath: ".test-output/{{ComponentName}}.svelte" },
+      ], { required: ["ComponentName"] });
 
       // Remove the template file
       const tmplPath = multiUseFolder.append("/missing-tmpl/button.njk");
@@ -368,24 +321,9 @@ test.group("apply errors", () => {
   test.case("should warn and skip when the modify target file doesn't exist", async assert => {
     await reset();
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "no-target" },
-      { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [{
-            name: "wire",
-            template: "wire.json",
-            outputPath: ".test-output/nonexistent.ts",
-          }],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("no-target", [
+      { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/nonexistent.ts" },
+    ]);
 
     await multiUseFolder.append("/no-target/wire.json")
       .write('[{"where":"top","content":"hello"}]');
@@ -409,24 +347,9 @@ test.group("apply errors", () => {
     await testRoot.append("/.test-output/index.ts").write("export const x = 1;");
     await gitCommit(testRoot, "add target file");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "anchor-missing" },
-      { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [{
-            name: "wire",
-            template: "wire.json",
-            outputPath: ".test-output/index.ts",
-          }],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("anchor-missing", [
+      { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/index.ts" },
+    ]);
     await gitCommit(testRoot, "add template");
 
     await multiUseFolder.append("/anchor-missing/wire.json")
@@ -452,24 +375,9 @@ test.group("apply errors", () => {
     await testRoot.append("/.test-output/index.ts").write("export const x = 1;");
     await gitCommit(testRoot, "add target file");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "anchor-ambiguous" },
-      { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [{
-            name: "wire",
-            template: "wire.json",
-            outputPath: ".test-output/index.ts",
-          }],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("anchor-ambiguous", [
+      { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/index.ts" },
+    ]);
     await gitCommit(testRoot, "add template");
 
     // Target file contains the anchor string twice
@@ -500,25 +408,9 @@ test.group("apply errors", () => {
     await testRoot.append("/.test-output/Existing.ts").write("old content");
     await gitCommit(testRoot, "add existing file");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "no-overwrite-test" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "ComponentName" },
-        { flag: "--output", value: JSON.stringify({
-          create: [{
-            name: "f",
-            template: "f.njk",
-            outputPath: ".test-output/{{ComponentName}}.ts",
-          }],
-          modify: [],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("no-overwrite-test", [
+      { type: "create", name: "f", template: "f.njk", outputPath: ".test-output/{{ComponentName}}.ts" },
+    ], { required: ["ComponentName"] });
     await multiUseFolder.append("/no-overwrite-test/f.njk").write("new content");
 
     let threw = false;
@@ -568,22 +460,22 @@ test.group("apply errors", () => {
     await createCmd.run({
       subcommands: [],
       flags: [
-      { flag: "--pack", value: "test-pkg" },
+        { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
         { flag: "--name", value: "no-git" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "ComponentName" },
-        { flag: "--output", value: JSON.stringify({
-          create: [{
-            name: "f",
-            template: "f.njk",
-            outputPath: ".test-output/{{ComponentName}}.ts",
-          }],
-          modify: [],
-        }) },
+        { flag: "--description", value: "test description" },
       ],
       context: { root: noGitRoot },
     });
+    await noGitTemplateFolder.append("/no-git/instructions.json").writeJSON({
+      name: "no-git",
+      description: "test description",
+      variables: { required: ["ComponentName"] },
+      intent: [],
+      steps: [
+        { type: "create", name: "f", template: "f.njk", outputPath: ".test-output/{{ComponentName}}.ts" },
+      ],
+    } as never);
     await noGitTemplateFolder.append("/no-git/f.njk").write("hello {{componentName}}");
 
     let threw;
@@ -608,25 +500,9 @@ test.group("apply dry-run", () => {
     async assert => {
       await reset();
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "dry-run-test" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "ComponentName" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "button.svelte",
-              template: "button.njk",
-              outputPath: ".test-output/{{ComponentName}}.svelte",
-            }],
-            modify: [],
-          }) },
-        ],
-        context: { root: testRoot },
-      });
+      await createPowerup("dry-run-test", [
+        { type: "create", name: "button.svelte", template: "button.njk", outputPath: ".test-output/{{ComponentName}}.svelte" },
+      ], { required: ["ComponentName"] });
 
       const tmplPath = multiUseFolder.append("/dry-run-test/button.njk");
       await tmplPath.write("<button>{{componentName}}</button>");
@@ -656,24 +532,9 @@ test.group("apply dry-run", () => {
     await fs.create(testRoot.append("/.test-output"));
     await testRoot.append("/.test-output/index.ts").write("line1\n");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "dry-modify" },
-      { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [{
-            name: "wire",
-            template: "wire.json",
-            outputPath: ".test-output/index.ts",
-          }],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("dry-modify", [
+      { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/index.ts" },
+    ]);
 
     await multiUseFolder.append("/dry-modify/wire.json")
       .write('[{"where":"top","content":"// header"}]');
@@ -700,76 +561,42 @@ test.group("apply composite output", () => {
       await reset();
 
       // Create child template (button component)
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "shadcn-button" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "componentName,theme" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "component",
-              template: "component.njk",
-              outputPath: ".test-output/{{componentName}}.tsx",
-            }],
-            modify: [],
-          }) },
+      await createPowerup("shadcn-button", [
+        { type: "create", name: "component", template: "component.njk", outputPath: ".test-output/{{componentName}}.tsx" },
+      ]);
+      // Override with required variables
+      await multiUseFolder.append("/shadcn-button/instructions.json").writeJSON({
+        name: "shadcn-button",
+        description: "test description",
+        variables: { required: ["componentName", "theme"] },
+        intent: [],
+        steps: [
+          { type: "create", name: "component", template: "component.njk", outputPath: ".test-output/{{componentName}}.tsx" },
         ],
-        context: { root: testRoot },
-      });
+      } as never);
       await multiUseFolder.append("/shadcn-button/component.njk")
         .write("export const {{componentName}} = '{{theme}}';");
 
       // Create parent template (all components) with includes
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "shadcn-all" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "theme" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "barrel",
-              template: "barrel.njk",
-              outputPath: ".test-output/index.ts",
-            }],
-            modify: [],
-          }) },
-        ],
-        context: { root: testRoot },
-      });
-      await multiUseFolder.append("/shadcn-all/barrel.njk")
-        .write("export { Button, Input } from './';");
-
-      // Add includes to parent
+      await createPowerup("shadcn-all", [
+        { type: "create", name: "barrel", template: "barrel.njk", outputPath: ".test-output/index.ts" },
+        { type: "include", name: "shadcn-button", variables: { componentName: "Button", theme: "{{theme}}" } },
+        { type: "include", name: "shadcn-button", variables: { componentName: "Input", theme: "{{theme}}" } },
+      ]);
+      // Override with required variables
       await multiUseFolder.append("/shadcn-all/instructions.json").writeJSON({
         name: "shadcn-all",
-      description: "test description",
+        description: "test description",
         variables: { required: ["theme"] },
         intent: [],
-        output: {
-          create: [{
-            name: "barrel",
-            template: "barrel.njk",
-            outputPath: ".test-output/index.ts",
-          }],
-          modify: [],
-        },
-        includes: [
-          {
-            name: "shadcn-button",
-            variables: { componentName: "Button", theme: "{{theme}}" },
-          },
-          {
-            name: "shadcn-button",
-            variables: { componentName: "Input", theme: "{{theme}}" },
-          },
+        steps: [
+          { type: "create", name: "barrel", template: "barrel.njk", outputPath: ".test-output/index.ts" },
+          { type: "include", name: "shadcn-button", variables: { componentName: "Button", theme: "{{theme}}" } },
+          { type: "include", name: "shadcn-button", variables: { componentName: "Input", theme: "{{theme}}" } },
         ],
-      });
+      } as never);
+      await multiUseFolder.append("/shadcn-all/barrel.njk")
+        .write("export { Button, Input } from './';");
 
       await use.run({
         subcommands: ["shadcn-all"],
@@ -801,61 +628,27 @@ test.group("apply composite output", () => {
     async assert => {
       await reset();
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "dry-child" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "componentName" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "comp",
-              template: "comp.njk",
-              outputPath: ".test-output/{{componentName}}.ts",
-            }],
-            modify: [],
-          }) },
+      await createPowerup("dry-child", [
+        { type: "create", name: "comp", template: "comp.njk", outputPath: ".test-output/{{componentName}}.ts" },
+      ]);
+      // Override with required variables
+      await multiUseFolder.append("/dry-child/instructions.json").writeJSON({
+        name: "dry-child",
+        description: "test description",
+        variables: { required: ["componentName"] },
+        intent: [],
+        steps: [
+          { type: "create", name: "comp", template: "comp.njk", outputPath: ".test-output/{{componentName}}.ts" },
         ],
-        context: { root: testRoot },
-      });
+      } as never);
       await multiUseFolder.append("/dry-child/comp.njk")
         .write("const {{componentName}} = 1;");
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "dry-parent" },
-      { flag: "--description", value: "test description" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "barrel", template: "barrel.njk", outputPath: ".test-output/index.ts",
-            }],
-            modify: [],
-          }) },
-        ],
-        context: { root: testRoot },
-      });
+      await createPowerup("dry-parent", [
+        { type: "create", name: "barrel", template: "barrel.njk", outputPath: ".test-output/index.ts" },
+        { type: "include", name: "dry-child", variables: { componentName: "Button" } },
+      ]);
       await multiUseFolder.append("/dry-parent/barrel.njk").write("barrel");
-
-      await multiUseFolder.append("/dry-parent/instructions.json").writeJSON({
-        name: "dry-parent",
-      description: "test description",
-        variables: { required: [] },
-        intent: [],
-        output: {
-          create: [{
-            name: "barrel", template: "barrel.njk", outputPath: ".test-output/index.ts",
-          }],
-          modify: [],
-        },
-        includes: [
-          { name: "dry-child", variables: { componentName: "Button" } },
-        ],
-      });
 
       const output = await captureStdout(() => use.run({
         subcommands: ["dry-parent"],
@@ -881,20 +674,9 @@ test.group("apply composite output", () => {
     async assert => {
       await reset();
 
-      await createCmd.run({
-        subcommands: [],
-              flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "bad-parent" },
-      { flag: "--description", value: "test description" },],
-        context: { root: testRoot },
-      });
-      await multiUseFolder.append("/bad-parent/instructions.json").writeJSON({
-        name: "bad-parent",
-      description: "test description",
-        variables: { required: [] },
-        intent: [],
-        output: { create: [], modify: [] },
-        includes: [{ name: "nonexistent", variables: {} }],
-      });
+      await createPowerup("bad-parent", [
+        { type: "include", name: "nonexistent", variables: {} },
+      ]);
 
       let threw = false;
       try {
@@ -918,48 +700,32 @@ test.group("apply composite output", () => {
     async assert => {
       await reset();
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "override-child" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "componentName" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "comp",
-              template: "comp.njk",
-              outputPath: ".test-output/original/{{componentName}}.tsx",
-            }],
-            modify: [],
-          }) },
+      await createPowerup("override-child", [
+        { type: "create", name: "comp", template: "comp.njk", outputPath: ".test-output/original/{{componentName}}.tsx" },
+      ]);
+      // Override with required variables
+      await multiUseFolder.append("/override-child/instructions.json").writeJSON({
+        name: "override-child",
+        description: "test description",
+        variables: { required: ["componentName"] },
+        intent: [],
+        steps: [
+          { type: "create", name: "comp", template: "comp.njk", outputPath: ".test-output/original/{{componentName}}.tsx" },
         ],
-        context: { root: testRoot },
-      });
+      } as never);
       await multiUseFolder.append("/override-child/comp.njk")
         .write("const {{componentName}} = 1;");
 
-      await createCmd.run({
-        subcommands: [],
-              flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "override-parent" },
-      { flag: "--description", value: "test description" },],
-        context: { root: testRoot },
-      });
-      await multiUseFolder.append("/override-parent/instructions.json").writeJSON({
-        name: "override-parent",
-      description: "test description",
-        variables: { required: [] },
-        intent: [],
-        output: { create: [], modify: [] },
-        includes: [
-          {
-            name: "override-child",
-            variables: { componentName: "Button" },
-            outputPathOverride: { create: { comp: ".test-output/overridden/{{componentName}}.tsx" } },
+      await createPowerup("override-parent", [
+        {
+          type: "include",
+          name: "override-child",
+          variables: { componentName: "Button" },
+          stepOverride: {
+            comp: { type: "create", template: "comp.njk", outputPath: ".test-output/overridden/{{componentName}}.tsx" },
           },
-        ],
-      });
+        },
+      ]);
 
       await use.run({
         subcommands: ["override-parent"],
@@ -982,45 +748,26 @@ test.group("apply composite output", () => {
     async assert => {
       await reset();
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "dual-child" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "componentName" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "comp",
-              template: "comp.njk",
-              outputPath: ".test-output/{{componentName}}.tsx",
-            }],
-            modify: [],
-          }) },
+      await createPowerup("dual-child", [
+        { type: "create", name: "comp", template: "comp.njk", outputPath: ".test-output/{{componentName}}.tsx" },
+      ]);
+      // Override with required variables
+      await multiUseFolder.append("/dual-child/instructions.json").writeJSON({
+        name: "dual-child",
+        description: "test description",
+        variables: { required: ["componentName"] },
+        intent: [],
+        steps: [
+          { type: "create", name: "comp", template: "comp.njk", outputPath: ".test-output/{{componentName}}.tsx" },
         ],
-        context: { root: testRoot },
-      });
+      } as never);
       await multiUseFolder.append("/dual-child/comp.njk")
         .write("export const {{componentName}} = 1;");
 
-      await createCmd.run({
-        subcommands: [],
-              flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "dual-parent" },
-      { flag: "--description", value: "test description" },],
-        context: { root: testRoot },
-      });
-      await multiUseFolder.append("/dual-parent/instructions.json").writeJSON({
-        name: "dual-parent",
-      description: "test description",
-        variables: { required: [] },
-        intent: [],
-        output: { create: [], modify: [] },
-        includes: [
-          { name: "dual-child", variables: { componentName: "Primary" } },
-          { name: "dual-child", variables: { componentName: "Secondary" } },
-        ],
-      });
+      await createPowerup("dual-parent", [
+        { type: "include", name: "dual-child", variables: { componentName: "Primary" } },
+        { type: "include", name: "dual-child", variables: { componentName: "Secondary" } },
+      ]);
 
       await use.run({
         subcommands: ["dual-parent"],
@@ -1044,49 +791,34 @@ test.group("apply composite output", () => {
     async assert => {
       await reset();
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "exclude-child" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "componentName" },
-          { flag: "--output", value: JSON.stringify({
-            create: [
-              { name: "comp", template: "comp.njk", outputPath: ".test-output/{{componentName}}.tsx" },
-              { name: "test", template: "test.njk", outputPath: ".test-output/{{componentName}}.spec.ts" },
-            ],
-            modify: [],
-          }) },
+      await createPowerup("exclude-child", [
+        { type: "create", name: "comp", template: "comp.njk", outputPath: ".test-output/{{componentName}}.tsx" },
+        { type: "create", name: "test", template: "test.njk", outputPath: ".test-output/{{componentName}}.spec.ts" },
+      ]);
+      // Override with required variables
+      await multiUseFolder.append("/exclude-child/instructions.json").writeJSON({
+        name: "exclude-child",
+        description: "test description",
+        variables: { required: ["componentName"] },
+        intent: [],
+        steps: [
+          { type: "create", name: "comp", template: "comp.njk", outputPath: ".test-output/{{componentName}}.tsx" },
+          { type: "create", name: "test", template: "test.njk", outputPath: ".test-output/{{componentName}}.spec.ts" },
         ],
-        context: { root: testRoot },
-      });
+      } as never);
       await multiUseFolder.append("/exclude-child/comp.njk")
         .write("const {{componentName}} = 1;");
       await multiUseFolder.append("/exclude-child/test.njk")
         .write("// test for {{componentName}}");
 
-      await createCmd.run({
-        subcommands: [],
-              flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "exclude-parent" },
-      { flag: "--description", value: "test description" },],
-        context: { root: testRoot },
-      });
-      await multiUseFolder.append("/exclude-parent/instructions.json").writeJSON({
-        name: "exclude-parent",
-      description: "test description",
-        variables: { required: [] },
-        intent: [],
-        output: { create: [], modify: [] },
-        includes: [
-          {
-            name: "exclude-child",
-            variables: { componentName: "Button" },
-            exclude: { create: ["test"] },
-          },
-        ],
-      });
+      await createPowerup("exclude-parent", [
+        {
+          type: "include",
+          name: "exclude-child",
+          variables: { componentName: "Button" },
+          excludeSteps: ["test"],
+        },
+      ]);
 
       await use.run({
         subcommands: ["exclude-parent"],
@@ -1115,24 +847,9 @@ test.group("apply modify", () => {
     await testRoot.append("/.test-output/index.ts").write("line1\nline2\nline3\n");
     await gitCommit(testRoot, "add target file");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "modify-test" },
-      { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [{
-            name: "wire",
-            template: "wire.json",
-            outputPath: ".test-output/index.ts",
-          }],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("modify-test", [
+      { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/index.ts" },
+    ]);
 
     // Write the modify template
     await multiUseFolder.append("/modify-test/wire.json")
@@ -1157,25 +874,19 @@ test.group("apply modify", () => {
     await testRoot.append("/.test-output/index.ts").write("export const x = 1;\n");
     await gitCommit(testRoot, "add target file");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "njk-modify" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "name" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [{
-            name: "wire",
-            template: "wire.njk",
-            outputPath: ".test-output/index.ts",
-          }],
-        }) },
+    await createPowerup("njk-modify", [
+      { type: "modify", name: "wire", template: "wire.njk", outputPath: ".test-output/index.ts" },
+    ]);
+    // Override with required variables
+    await multiUseFolder.append("/njk-modify/instructions.json").writeJSON({
+      name: "njk-modify",
+      description: "test description",
+      variables: { required: ["name"] },
+      intent: [],
+      steps: [
+        { type: "modify", name: "wire", template: "wire.njk", outputPath: ".test-output/index.ts" },
       ],
-      context: { root: testRoot },
-    });
+    } as never);
 
     await multiUseFolder.append("/njk-modify/wire.njk")
       .write('[{"where":"top","content":"import { {{name}} } from \\"./{{name}}\\";\\n"}]');
@@ -1200,25 +911,9 @@ test.group("apply metrics", () => {
     async assert => {
       await reset();
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "metrics-test" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "ComponentName" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "button.svelte",
-              template: "button.njk",
-              outputPath: ".test-output/{{ComponentName}}.svelte",
-            }],
-            modify: [],
-          }) },
-        ],
-        context: { root: testRoot },
-      });
+      await createPowerup("metrics-test", [
+        { type: "create", name: "button.svelte", template: "button.njk", outputPath: ".test-output/{{ComponentName}}.svelte" },
+      ], { required: ["ComponentName"] });
 
       const tmplPath = multiUseFolder.append("/metrics-test/button.njk");
       await tmplPath.write("<button>{{componentName}}</button>");
@@ -1241,25 +936,9 @@ test.group("apply metrics", () => {
   test.case("should not log metrics on dry-run", async assert => {
     await reset();
 
-      await createCmd.run({
-        subcommands: [],
-        flags: [
-      { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "dry-metrics-test" },
-      { flag: "--description", value: "test description" },
-          { flag: "--variables", value: "ComponentName" },
-          { flag: "--output", value: JSON.stringify({
-            create: [{
-              name: "button.svelte",
-              template: "button.njk",
-              outputPath: ".test-output/{{ComponentName}}.svelte",
-            }],
-            modify: [],
-          }) },
-        ],
-        context: { root: testRoot },
-      });
+    await createPowerup("dry-metrics-test", [
+      { type: "create", name: "button.svelte", template: "button.njk", outputPath: ".test-output/{{ComponentName}}.svelte" },
+    ], { required: ["ComponentName"] });
 
       const tmplPath = multiUseFolder.append("/dry-metrics-test/button.njk");
       await tmplPath.write("<button>{{componentName}}</button>");
@@ -1290,24 +969,7 @@ test.group("apply packageDependencies", () => {
     }));
     await testRoot.append("/pnpm-lock.yaml").write("");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "dep-feature" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [],
-        }) },
-        { flag: "--package-deps", value: JSON.stringify([
-          { dependencies: ["fake-pkg@^1.0.0"] },
-        ]) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("dep-feature", [], { packageDependencies: [{ dependencies: ["fake-pkg@^1.0.0"] }] });
 
     const output = await captureStdout(async () => {
       await use.run({
@@ -1326,21 +988,7 @@ test.group("apply packageDependencies", () => {
   test.case("dry-run should print nothing when no packageDependencies", async assert => {
     await reset();
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "no-dep-feature" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("no-dep-feature", []);
 
     const output = await captureStdout(async () => {
       await use.run({
@@ -1363,24 +1011,7 @@ test.group("apply packageDependencies", () => {
       version: "1.0.0",
     }));
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "real-dep" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [],
-        }) },
-        { flag: "--package-deps", value: JSON.stringify([
-          { dependencies: ["fake-pkg@^1.0.0"] },
-        ]) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("real-dep", [], { packageDependencies: [{ dependencies: ["fake-pkg@^1.0.0"] }] });
 
     await use.run({
       subcommands: ["real-dep"],
@@ -1402,24 +1033,7 @@ test.group("apply packageDependencies", () => {
       version: "1.0.0",
     }));
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "no-lock-dep" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [],
-        }) },
-        { flag: "--package-deps", value: JSON.stringify([
-          { dependencies: ["fake-pkg@^1.0.0"] },
-        ]) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("no-lock-dep", [], { packageDependencies: [{ dependencies: ["fake-pkg@^1.0.0"] }] });
 
     const output = await captureStdout(async () => {
       await use.run({
@@ -1444,25 +1058,9 @@ test.group("apply rollback", () => {
     await fs.create(testRoot.append("/.test-output"));
     await testRoot.append("/.test-output/Existing.ts").write("old content");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "rollback-test" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "ComponentName" },
-        { flag: "--output", value: JSON.stringify({
-          create: [{
-            name: "first",
-            template: "first.njk",
-            outputPath: ".test-output/NewFile.ts",
-          }],
-          modify: [],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("rollback-test", [
+      { type: "create", name: "first", template: "first.njk", outputPath: ".test-output/NewFile.ts" },
+    ], { required: ["ComponentName"] });
     // Don't write the template — this will cause template_not_found error
     await multiUseFolder.append("/rollback-test/first.njk").remove();
 
@@ -1495,21 +1093,9 @@ test.group("apply delete", () => {
     await testRoot.append("/.test-output/legacy.ts").write("export const legacy = true;");
     await gitCommit(testRoot, "add legacy file");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "delete-test" },
-      { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [],
-          delete: [{ name: "legacy", outputPath: ".test-output/legacy.ts" }],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("delete-test", [
+      { type: "delete", name: "legacy", outputPath: ".test-output/legacy.ts" },
+    ]);
 
     await use.run({
       subcommands: ["delete-test"],
@@ -1535,30 +1121,23 @@ test.group("apply delete", () => {
 
     await gitCommit(testRoot, "add target files");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "mixed-ops" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "ComponentName" },
-        { flag: "--output", value: JSON.stringify({
-          create: [{
-            name: "new-file",
-            template: "new.njk",
-            outputPath: ".test-output/{{ComponentName}}.ts",
-          }],
-          modify: [{
-            name: "wire",
-            template: "wire.json",
-            outputPath: ".test-output/index.ts",
-          }],
-          delete: [{ name: "old", outputPath: ".test-output/old.ts" }],
-        }) },
+    await createPowerup("mixed-ops", [
+      { type: "create", name: "new-file", template: "new.njk", outputPath: ".test-output/{{ComponentName}}.ts" },
+      { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/index.ts" },
+      { type: "delete", name: "old", outputPath: ".test-output/old.ts" },
+    ]);
+    // Override with required variables
+    await multiUseFolder.append("/mixed-ops/instructions.json").writeJSON({
+      name: "mixed-ops",
+      description: "test description",
+      variables: { required: ["ComponentName"] },
+      intent: [],
+      steps: [
+        { type: "create", name: "new-file", template: "new.njk", outputPath: ".test-output/{{ComponentName}}.ts" },
+        { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/index.ts" },
+        { type: "delete", name: "old", outputPath: ".test-output/old.ts" },
       ],
-      context: { root: testRoot },
-    });
+    } as never);
 
     await multiUseFolder.append("/mixed-ops/new.njk").write("export const {{componentName}} = 1;");
     await multiUseFolder.append("/mixed-ops/wire.json")
@@ -1585,21 +1164,9 @@ test.group("apply delete", () => {
   test.case("should print a warning and skip when delete target does not exist", async assert => {
     await reset();
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "delete-missing" },
-      { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [],
-          delete: [{ name: "nonexistent", outputPath: ".test-output/never-existed.ts" }],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("delete-missing", [
+      { type: "delete", name: "nonexistent", outputPath: ".test-output/never-existed.ts" },
+    ]);
 
     const output = await captureStdout(() => use.run({
       subcommands: ["delete-missing"],
@@ -1624,49 +1191,20 @@ test.group("apply delete", () => {
     await gitCommit(testRoot, "add target files");
 
     // Create child with a modify that will fail at apply time (bad anchor)
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "failing-child" },
-      { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [{
-            name: "wire",
-            template: "wire.json",
-            outputPath: ".test-output/target.ts",
-          }],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("failing-child", [
+      { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/target.ts" },
+    ]);
     await multiUseFolder.append("/failing-child/wire.json")
       .write('[{"where":"NONEXISTENT_ANCHOR","content":"hello"}]');
 
     // Create parent with a delete entry and the failing suboutput.
-    // The delete runs before the suboutput tasks, so the delete succeeds
+    // The delete runs before the include step, so the delete succeeds
     // in the worktree, then the suboutput modify fails — but now it warns
     // and continues instead of aborting, so the delete is still applied.
-    await createCmd.run({
-      subcommands: [],
-            flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "atomic-delete-parent" },
-      { flag: "--description", value: "test description" },],
-      context: { root: testRoot },
-    });
-    await multiUseFolder.append("/atomic-delete-parent/instructions.json").writeJSON({
-      name: "atomic-delete-parent",
-      description: "test description",
-      variables: { required: [] },
-      intent: [],
-      output: {
-        create: [],
-        modify: [],
-        delete: [{ name: "del", outputPath: ".test-output/to-delete.ts" }],
-      },
-      includes: [{ name: "failing-child", variables: {} }],
-    });
+    await createPowerup("atomic-delete-parent", [
+      { type: "delete", name: "del", outputPath: ".test-output/to-delete.ts" },
+      { type: "include", name: "failing-child", variables: {} },
+    ]);
 
     const output = await captureStdout(() => use.run({
       subcommands: ["atomic-delete-parent"],
@@ -1694,21 +1232,9 @@ test.group("apply delete dry-run", () => {
     await testRoot.append("/.test-output/legacy.ts").write("export const legacy = true;");
     await gitCommit(testRoot, "add legacy file");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "dry-delete" },
-      { flag: "--description", value: "test description" },
-        { flag: "--output", value: JSON.stringify({
-          create: [],
-          modify: [],
-          delete: [{ name: "legacy", outputPath: ".test-output/legacy.ts" }],
-        }) },
-      ],
-      context: { root: testRoot },
-    });
+    await createPowerup("dry-delete", [
+      { type: "delete", name: "legacy", outputPath: ".test-output/legacy.ts" },
+    ]);
 
     const output = await captureStdout(() => use.run({
       subcommands: ["dry-delete"],
@@ -1733,30 +1259,23 @@ test.group("apply delete dry-run", () => {
     await testRoot.append("/.test-output/old.ts").write("old");
     await gitCommit(testRoot, "add target files");
 
-    await createCmd.run({
-      subcommands: [],
-      flags: [
-      { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "dry-mixed" },
-      { flag: "--description", value: "test description" },
-        { flag: "--variables", value: "ComponentName" },
-        { flag: "--output", value: JSON.stringify({
-          create: [{
-            name: "new",
-            template: "new.njk",
-            outputPath: ".test-output/{{ComponentName}}.ts",
-          }],
-          modify: [{
-            name: "wire",
-            template: "wire.json",
-            outputPath: ".test-output/index.ts",
-          }],
-          delete: [{ name: "old", outputPath: ".test-output/old.ts" }],
-        }) },
+    await createPowerup("dry-mixed", [
+      { type: "create", name: "new", template: "new.njk", outputPath: ".test-output/{{ComponentName}}.ts" },
+      { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/index.ts" },
+      { type: "delete", name: "old", outputPath: ".test-output/old.ts" },
+    ]);
+    // Override with required variables
+    await multiUseFolder.append("/dry-mixed/instructions.json").writeJSON({
+      name: "dry-mixed",
+      description: "test description",
+      variables: { required: ["ComponentName"] },
+      intent: [],
+      steps: [
+        { type: "create", name: "new", template: "new.njk", outputPath: ".test-output/{{ComponentName}}.ts" },
+        { type: "modify", name: "wire", template: "wire.json", outputPath: ".test-output/index.ts" },
+        { type: "delete", name: "old", outputPath: ".test-output/old.ts" },
       ],
-      context: { root: testRoot },
-    });
+    } as never);
 
     await multiUseFolder.append("/dry-mixed/new.njk").write("const {{componentName}} = 1;");
     await multiUseFolder.append("/dry-mixed/wire.json")

@@ -87,39 +87,38 @@ export async function collectSubPowerUps({
 
   const instructions = await deps.readInstructions(powerupsFolder);
 
-  if (is.defined(instructions.includes)) {
-    for (const ref of instructions.includes) {
-      if (collected.has(ref.name)) continue;
+  for (const step of instructions.steps) {
+    if (step.type !== "include") continue;
+    if (collected.has(step.name)) continue;
 
-      try {
-        const resolved = await deps.resolve({ root, name: ref.name });
-        collected.set(ref.name, {
-          folder: resolved.folder,
-          type: resolved.type,
-          parent: powerupsName,
-        });
+    try {
+    const resolved = await deps.resolve({ root, name: step.name });
+    collected.set(step.name, {
+      folder: resolved.folder,
+      type: resolved.type,
+      parent: powerupsName,
+    });
 
-        // Recurse and merge sub-results
-        const subCollected = await collectSubPowerUps({
-          root,
-          powerupsName: ref.name,
-          powerupsFolder: resolved.folder,
-          pathStack: newPathStack,
-          deps,
-        });
-        for (const [key, value] of subCollected) {
-          if (!collected.has(key)) collected.set(key, value);
-        }
-      } catch (e) {
+    // Recurse and merge sub-results
+    const subCollected = await collectSubPowerUps({
+      root,
+      powerupsName: step.name,
+      powerupsFolder: resolved.folder,
+      pathStack: newPathStack,
+      deps,
+    });
+    for (const [key, value] of subCollected) {
+      if (!collected.has(key)) collected.set(key, value);
+    }
+  } catch (e) {
         // Only mask not_found errors as subpower_unresolvable.
         // Re-throw other errors (ambiguous, circular_include) as-is.
         if (e instanceof CodeError && (e as CodeError).code === PowerErrorCode.not_found) {
-          throw pack_errors.subpower_unresolvable(ref.name, powerupsName);
+          throw pack_errors.subpower_unresolvable(step.name, powerupsName);
         }
         throw e;
       }
     }
-  }
 
   return collected;
 }

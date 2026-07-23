@@ -15,8 +15,8 @@ test.case("should parse instructions with create steps", async assert => {
   assert(result.steps.length).equals(1);
   assert(result.steps[0].type).equals("create");
   assert(result.steps[0].name).equals("comp");
-  assert(result.steps[0].template).equals("comp.ts.ts");
-  assert(result.steps[0].outputPath).equals("src/{{componentName}}.ts");
+  assert((result.steps[0] as any).template).equals("comp.ts.ts");
+  assert((result.steps[0] as any).outputPath).equals("src/{{componentName}}.ts");
 });
 
 test.case("should parse instructions with modify steps", async assert => {
@@ -31,7 +31,7 @@ test.case("should parse instructions with modify steps", async assert => {
   });
 
   assert(result.steps[0].type).equals("modify");
-  assert(result.steps[0].template).equals("wire.json");
+  assert((result.steps[0] as any).template).equals("wire.json");
 });
 
 test.case("should parse instructions with delete steps", async assert => {
@@ -49,7 +49,7 @@ test.case("should parse instructions with delete steps", async assert => {
   assert(result.steps.length).equals(2);
   assert(result.steps[0].type).equals("delete");
   assert(result.steps[0].name).equals("old-config");
-  assert(result.steps[0].outputPath).equals("src/legacy/config.ts");
+  assert((result.steps[0] as any).outputPath).equals("src/legacy/config.ts");
 });
 
 test.case("should parse instructions with read step (jsonPath mode)", async assert => {
@@ -65,10 +65,10 @@ test.case("should parse instructions with read step (jsonPath mode)", async asse
   });
 
   assert(result.steps[0].type).equals("read");
-  assert(result.steps[0].path).equals("package.json");
-  assert(result.steps[0].as).equals("packageName");
-  assert(result.steps[0].jsonPath).equals("name");
-  assert(result.steps[0].template).undefined();
+  assert((result.steps[0] as any).path).equals("package.json");
+  assert((result.steps[0] as any).as).equals("packageName");
+  assert((result.steps[0] as any).jsonPath).equals("name");
+  assert((result.steps[0] as any).template).undefined();
 });
 
 test.case("should parse instructions with read step (template mode)", async assert => {
@@ -82,8 +82,8 @@ test.case("should parse instructions with read step (template mode)", async asse
     ],
   });
 
-  assert(result.steps[0].template).equals("extract-version.ts.ts");
-  assert(result.steps[0].jsonPath).undefined();
+  assert((result.steps[0] as any).template).equals("extract-version.ts.ts");
+  assert((result.steps[0] as any).jsonPath).undefined();
 });
 
 test.case("should parse instructions with read step (raw mode)", async assert => {
@@ -97,8 +97,8 @@ test.case("should parse instructions with read step (raw mode)", async assert =>
     ],
   });
 
-  assert(result.steps[0].jsonPath).undefined();
-  assert(result.steps[0].template).undefined();
+  assert((result.steps[0] as any).jsonPath).undefined();
+  assert((result.steps[0] as any).template).undefined();
 });
 
 test.case("should parse instructions with include step", async assert => {
@@ -114,10 +114,10 @@ test.case("should parse instructions with include step", async assert => {
 
   assert(result.steps[0].type).equals("include");
   assert(result.steps[0].name).equals("child");
-  assert(result.steps[0].variables.componentName).equals("Button");
-  assert(result.steps[0].variables.theme).equals("{{theme}}");
-  assert(result.steps[0].stepOverride).undefined();
-  assert(result.steps[0].excludeSteps).undefined();
+  assert((result.steps[0] as any).variables.componentName).equals("Button");
+  assert((result.steps[0] as any).variables.theme).equals("{{theme}}");
+  assert((result.steps[0] as any).stepOverride).undefined();
+  assert((result.steps[0] as any).excludeSteps).undefined();
 });
 
 test.case("should parse include step with stepOverride", async assert => {
@@ -138,7 +138,7 @@ test.case("should parse include step with stepOverride", async assert => {
     ],
   });
 
-  const incStep0 = result.steps[0] as { type: string; stepOverride?: Record<string, { type: string; template: string; outputPath: string }> };
+  const incStep0 = result.steps[0] as any;
   assert(incStep0.stepOverride).defined();
   assert(incStep0.stepOverride!.comp.type).equals("create");
   assert(incStep0.stepOverride!.comp.template).equals("button.ts.ts");
@@ -161,7 +161,7 @@ test.case("should parse include step with excludeSteps", async assert => {
     ],
   });
 
-  const incStep1 = result.steps[0] as { type: string; excludeSteps?: string[] };
+  const incStep1 = result.steps[0] as any;
   assert(incStep1.excludeSteps!.length).equals(2);
   assert(incStep1.excludeSteps![0]).equals("old-config");
 });
@@ -320,7 +320,7 @@ test.case("should parse include step with both stepOverride and excludeSteps", a
     ],
   });
 
-  const includeStep = result.steps[0] as { type: string; stepOverride?: Record<string, { type: string; outputPath: string }>; excludeSteps?: string[] };
+  const includeStep = result.steps[0] as any;
   assert(includeStep.type).equals("include");
   assert(includeStep.stepOverride).defined();
   assert(includeStep.stepOverride!.comp.outputPath).equals("src/ui/{{componentName}}.tsx");

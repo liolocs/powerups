@@ -8,25 +8,22 @@ import {
   copyChangedFiles,
   type ChangedFile,
 } from "#utils/worktree";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
+import io from "@rcompat/io";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
-
-const execAsync = promisify(exec);
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 
 async function gitInit(dir: FileRef): Promise<void> {
-  await execAsync("git init", { cwd: dir.path });
-  await execAsync("git config user.email test@test.com", { cwd: dir.path });
-  await execAsync("git config user.name test", { cwd: dir.path });
+  await io.run("git init", { cwd: dir.path });
+  await io.run("git config user.email test@test.com", { cwd: dir.path });
+  await io.run("git config user.name test", { cwd: dir.path });
   // Need at least one commit for worktree to work
   await dir.append("/README.md").write("init");
-  await execAsync("git add -A", { cwd: dir.path });
-  await execAsync("git commit -m init", { cwd: dir.path });
+  await io.run("git add -A", { cwd: dir.path });
+  await io.run("git commit -m init", { cwd: dir.path });
 }
 
 test.case("should pass when in a git repo (verifyGitRepo)", async assert => {

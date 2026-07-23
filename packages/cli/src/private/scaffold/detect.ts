@@ -35,11 +35,7 @@ export async function detectHarnesses(
   const found = new Set<Harness>();
 
   for (const harness of VALID_HARNESSES) {
-    const fingerprint = HARNESS_FINGERPRINTS[harness];
-    // When homeDir is overridden, rebase the fingerprint relative to the new home
-    const checkPath = options?.homeDir
-      ? path.join(baseDir, path.relative(homedir(), fingerprint))
-      : fingerprint;
+    const checkPath = path.join(baseDir, HARNESS_FINGERPRINTS[harness]);
     if (await fs.exists(fs.ref(checkPath))) {
       found.add(harness);
     }

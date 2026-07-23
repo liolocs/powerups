@@ -8,8 +8,7 @@ import captureStdout, {
 } from "#test-utils/capture-stdout";
 import { CodeError } from "@rcompat/error";
 import { DoctorErrorCode } from "#errors/doctorErrors";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
+import io from "@rcompat/io";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
@@ -25,8 +24,6 @@ import {
   CONFIG_FILE,
 } from "#constants";
 
-const execAsync = promisify(exec);
-
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
@@ -34,18 +31,18 @@ const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
 const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
 
 async function gitInit(dir: FileRef): Promise<void> {
-  await execAsync("git init", { cwd: dir.path });
-  await execAsync("git config user.email test@test.com", { cwd: dir.path });
-  await execAsync("git config user.name test", { cwd: dir.path });
+  await io.run("git init", { cwd: dir.path });
+  await io.run("git config user.email test@test.com", { cwd: dir.path });
+  await io.run("git config user.name test", { cwd: dir.path });
   await dir.append("/README.md").write("init");
-  await execAsync("git add -A", { cwd: dir.path });
-  await execAsync("git commit -m init", { cwd: dir.path });
+  await io.run("git add -A", { cwd: dir.path });
+  await io.run("git commit -m init", { cwd: dir.path });
 }
 
 async function gitCommit(dir: FileRef, message: string): Promise<void> {
-  await execAsync("git add -A", { cwd: dir.path });
+  await io.run("git add -A", { cwd: dir.path });
   try {
-    await execAsync(`git commit -m "${message}"`, { cwd: dir.path });
+    await io.run(`git commit -m "${message}"`, { cwd: dir.path });
   } catch {
     // Nothing to commit — that's fine
   }

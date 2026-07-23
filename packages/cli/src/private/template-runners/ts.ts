@@ -1,6 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
+import io from "@rcompat/io";
 import runnerErrors from "#errors/runnerErrors";
 import type { TemplateContext } from "#template-runners/index";
 
@@ -56,10 +57,6 @@ async function childProcessImport(
   variables: Record<string, string>,
 ): Promise<string> {
   const os = await import("node:os");
-  const { execFile } = await import("node:child_process");
-  const { promisify } = await import("node:util");
-
-  const execFileAsync = promisify(execFile);
 
   // Write temp runner .mjs
   const tmpFile = fs.ref(
@@ -79,9 +76,8 @@ async function childProcessImport(
   await tmpFile.write(runnerContent);
 
   try {
-    const { stdout } = await execFileAsync(
-      runtime.bin,
-      ["--experimental-strip-types", tmpFile.path],
+    const stdout = await io.run(
+      `${runtime.bin} --experimental-strip-types "${tmpFile.path}"`,
       {
         env: {
           ...process.env,
@@ -92,13 +88,10 @@ async function childProcessImport(
     );
     return stdout;
   } catch (error_: unknown) {
-    const stderr = (error_ as { stderr?: string }).stderr ?? "";
-    const message = error_ instanceof Error
-      ? `${error_.message}${stderr ? `: ${stderr}` : ""}`
-      : String(error_);
+    const stderr = typeof error_ === "string" ? error_ : String(error_);
     throw runnerErrors.template_execution_error(
       templatePath.name,
-      message,
+      stderr,
     );
   } finally {
     await tmpFile.remove();

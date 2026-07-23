@@ -1,14 +1,33 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
+import { CLI_CMD } from "#constants";
 
 const t = error.template;
-
 const errorLabel = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
-// no_harness_config removed — update no longer reads harness from config.
-// detectHarnesses throws init_errors.no_harness_detected when nothing is found.
+const update_errors = error.coded({
+  no_mode: () => {
+    const errorText =
+      `Specify what to update:\n\n` +
+      `\t${CLI_CMD} update --all         # scaffold + all packages\n` +
+      `\t${CLI_CMD} update --harness     # scaffold only\n` +
+      `\t${CLI_CMD} update --packages    # packages only\n` +
+      `\t${CLI_CMD} update <source>      # one package`;
+    return t`${errorLabel}${errorText}`;
+  },
 
-const update_errors = error.coded({});
+  conflicting_flags: (flags: string) => {
+    return t`${errorLabel}Cannot combine ${flags}. See "${CLI_CMD} update --help".`;
+  },
+
+  package_not_found: (source: string) => {
+    return t`${errorLabel}Package "${source}" is not installed (not found in local or global stores).`;
+  },
+
+  global_not_initialized: () => {
+    return t`${errorLabel}powerups is not initialized. Run "${CLI_CMD} init" first.`;
+  },
+});
 
 export type UpdateErrorCode = keyof typeof update_errors;
 

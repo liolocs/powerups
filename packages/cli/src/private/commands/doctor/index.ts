@@ -2,8 +2,7 @@ import { Command } from "@powerups/program";
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
+import io from "@rcompat/io";
 import path from "node:path";
 import { checkOutput } from "#utils/check-output";
 import { readConfig, getPackageSource } from "#utils/config";
@@ -24,8 +23,6 @@ import {
   SINGULAR_NAME,
 } from "#constants";
 
-const execAsync = promisify(exec);
-
 interface DoctorIssue {
   level: "WARN" | "ERROR";
   type: string;
@@ -45,10 +42,10 @@ const doctor = new Command({
     // 1. Git repo state
     let gitOk = true;
     try {
-      await execAsync("git rev-parse --git-dir", { cwd: root.path });
+      await io.run("git rev-parse --git-dir", { cwd: root.path });
       // Check working tree clean
       try {
-        const { stdout } = await execAsync("git status --porcelain", {
+        const stdout = await io.run("git status --porcelain", {
           cwd: root.path,
         });
         if (stdout.trim().length > 0) {

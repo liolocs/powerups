@@ -1,15 +1,11 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import io from "@rcompat/io";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
 import {
   NPM_STORE,
   NPM_EXTENSIONS_NAME,
   PACKAGE_FILE,
 } from "#constants";
-
-const execAsync = promisify(exec);
 
 /**
  * Ensure the npm store exists with a valid package.json.
@@ -80,9 +76,9 @@ export async function installGitPackage(
     // Already cloned — pull to update
     try {
       cli.print(`Updating ${gitUrl}...\n`);
-      await execAsync("git pull", { cwd: targetDir.path });
+      await io.run("git pull", { cwd: targetDir.path });
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
+      const message = typeof e === "string" ? e : String(e);
       throw new Error(`git pull failed: ${message}`, { cause: e });
     }
   } else {
@@ -90,9 +86,9 @@ export async function installGitPackage(
     try {
       cli.print(`Cloning ${gitUrl}...\n`);
       await fs.create(targetDir.directory);
-      await execAsync(`git clone --depth 1 "${gitUrl}" "${targetDir.path}"`);
+      await io.run(`git clone --depth 1 "${gitUrl}" "${targetDir.path}"`);
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
+      const message = typeof e === "string" ? e : String(e);
       throw new Error(`git clone failed: ${message}`, { cause: e });
     }
   }

@@ -1,11 +1,8 @@
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import fs, { type FileRef } from "@rcompat/fs";
 import path from "node:path";
-
-const execAsync = promisify(exec);
+import io from "@rcompat/io";
 
 export interface ChangedFile {
   worktreePath: string; // absolute path in worktree
@@ -23,7 +20,7 @@ export interface Worktree {
  */
 export async function verifyGitRepo(projectRoot: FileRef): Promise<void> {
   try {
-    await execAsync("git rev-parse --git-dir", { cwd: projectRoot.path });
+    await io.run("git rev-parse --git-dir", { cwd: projectRoot.path });
   } catch {
     throw new Error("Git repository required. Run \"git init\" first.");
   }
@@ -36,11 +33,11 @@ export async function verifyGitRepo(projectRoot: FileRef): Promise<void> {
 export async function createWorktree(projectRoot: FileRef): Promise<Worktree> {
   const worktreePath = path.join(tmpdir(), `powerups-worktree-${randomBytes(6).toString("hex")}`);
   try {
-    await execAsync(`git worktree add "${worktreePath}" --detach`, {
+    await io.run(`git worktree add "${worktreePath}" --detach`, {
       cwd: projectRoot.path,
     });
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
+    const message = typeof e === "string" ? e : String(e);
     throw new Error(`Failed to create git worktree: ${message}`, { cause: e });
   }
   return { path: worktreePath, root: fs.ref(worktreePath) };
@@ -54,7 +51,7 @@ export async function removeWorktree(
   worktreePath: string,
 ): Promise<void> {
   try {
-    await execAsync(`git worktree remove --force "${worktreePath}"`, {
+    await io.run(`git worktree remove --force "${worktreePath}"`, {
       cwd: projectRoot.path,
     });
   } catch {

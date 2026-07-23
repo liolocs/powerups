@@ -1,7 +1,5 @@
 import p from "pema";
 
-// ── Step schemas (discriminated union on `type`) ─────────────────────
-
 const createStepSchema = p({
   type: p.literal("create"),
   name: p.string,
@@ -80,16 +78,12 @@ export const stepSchema = p.union(
 
 export const stepsSchema = p.array(stepSchema);
 
-// ── Package dependencies (unchanged) ─────────────────────────────────
-
 const packageDependencyGroupSchema = p({
   target: p.string.optional(),
   dependencies: p.array(p.string).optional(),
   devDependencies: p.array(p.string).optional(),
   peerDependencies: p.array(p.string).optional(),
 });
-
-// ── Top-level instructions ─────────────────────────────────────────
 
 export const instructionsSchema = p({
   name: p.string,

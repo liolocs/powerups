@@ -31,11 +31,29 @@ const readStepSchema = p({
   template: p.string.optional(),
 });
 
-// Step override value schemas (step minus `name`) — derived via p.omit
-const createStepOverrideSchema = p.omit(createStepSchema, "name");
-const modifyStepOverrideSchema = p.omit(modifyStepSchema, "name");
-const deleteStepOverrideSchema = p.omit(deleteStepSchema, "name");
-const readStepOverrideSchema = p.omit(readStepSchema, "name");
+// Step override value schemas (step minus `name`) — manually defined
+// to avoid pema OmitType cross-module export issues
+const createStepOverrideSchema = p({
+  type: p.literal("create"),
+  template: p.string,
+  outputPath: p.string,
+});
+const modifyStepOverrideSchema = p({
+  type: p.literal("modify"),
+  template: p.string,
+  outputPath: p.string,
+});
+const deleteStepOverrideSchema = p({
+  type: p.literal("delete"),
+  outputPath: p.string,
+});
+const readStepOverrideSchema = p({
+  type: p.literal("read"),
+  path: p.string,
+  as: p.string,
+  jsonPath: p.string.optional(),
+  template: p.string.optional(),
+});
 
 const stepOverrideValueSchema = p.union(
   createStepOverrideSchema,

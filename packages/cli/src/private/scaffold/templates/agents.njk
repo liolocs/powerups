@@ -97,29 +97,31 @@ export default ({ componentName, theme }: Record<string, string>) =>
 
 ### Instructions schema (`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/instructions.json`)
 
+Fields marked `?` are optional; omit them entirely when unused.
+
 ```json
 {
   "name": "string",
   "description": "string",
   "variables": {
     "required": ["string"],
-    "optional": ["string"]
+    "optional": ["string"]?
   },
   "intent": ["string"],
-  "packageDependencies": [
+  "packageDependencies"?: [
     {
-      "target": "packages/web",
-      "dependencies": ["package@version"],
-      "devDependencies": ["package@version"],
-      "peerDependencies": ["package@version"]
+      "target"?: "packages/web",
+      "dependencies"?: ["package@version"],
+      "devDependencies"?: ["package@version"],
+      "peerDependencies"?: ["package@version"]
     }
   ],
   "steps": [
     { "type": "create", "name": "string", "template": "string", "outputPath": "string" },
     { "type": "modify", "name": "string", "template": "string", "outputPath": "string" },
     { "type": "delete", "name": "string", "outputPath": "string" },
-    { "type": "read", "name": "string", "path": "string", "as": "string", "jsonPath": "string" },
-    { "type": "include", "name": "subtemplate-name", "variables": {}, "stepOverride": {}, "excludeSteps": [] }
+    { "type": "read", "name": "string", "path": "string", "as": "string", "jsonPath"?: "string", "template"?: "string" },
+    { "type": "include", "name": "subtemplate-name", "variables": {}, "stepOverride"?: {}, "excludeSteps"?: [] }
   ]
 }
 ```
@@ -137,12 +139,29 @@ The `steps` array is an ordered list of actions executed in sequence. Five step 
 - `template` — a `.ts` template that receives file content as `__content` alongside current variables
 - neither — store the entire file content as-is
 
+Examples:
+
+```json
+{ "type": "read", "name": "read-pkg-name", "path": "package.json", "as": "pkgName", "jsonPath": "name" }
+```
+Stores `package.json`'s `"name"` field into the `pkgName` variable.
+
+```json
+{ "type": "read", "name": "read-routes", "path": "src/routes.ts", "as": "routesBlock", "template": "extract-routes.ts" }
+```
+Where `extract-routes.ts` is:
+```ts
+export default ({ __content }: Record<string, string>) =>
+  __content.match(/router\.(get|post)\([^)]*\)/g)?.join("\n") ?? "";
+```
+Runs the `.ts` function over the file's content and stores the returned string into `routesBlock`.
+
 Read steps read from the project root (working directory), not the git worktree.
 Variables produced by read steps are available to all subsequent steps in the same scope.
 In dry-run mode, read steps set the variable to its own `as` value as a placeholder.
 
 `include` steps have two optional fields:
-- `stepOverride` — map of child step name to full step definition (replaces the child step entirely)
+- `stepOverride` — map of child step name to step definition without `name` (replaces the child step entirely)
 - `excludeSteps` — array of child step names to skip
 
 Template files referenced by `create`, `modify`, and `read` (template mode) entries live anywhere
@@ -154,7 +173,7 @@ by any `template` field are reported as orphaned by `{{ CLI_CMD }} doctor`.
 
 ### Required vs Optional Variables
 
-The `variables` field has two arrays:
+The `variables` field is always present, even when a {{ SINGULAR_NAME }} has no variables (`{ "required": [] }`). It has two arrays:
 
 - **`required`** — variables the user must provide at use time. If any are
   missing, the CLI reports all missing required variables in a single error

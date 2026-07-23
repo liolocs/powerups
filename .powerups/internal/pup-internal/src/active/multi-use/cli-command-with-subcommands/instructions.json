@@ -27,7 +27,7 @@
     {
       "type": "create",
       "name": "parent-command.ts",
-      "template": "parent-command.ts.ts",
+      "template": "template/parent-command.ts.ts",
       "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
     },
     {

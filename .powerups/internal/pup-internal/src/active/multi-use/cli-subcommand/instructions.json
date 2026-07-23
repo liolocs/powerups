@@ -22,25 +22,25 @@
     {
       "type": "create",
       "name": "subcommand.ts",
-      "template": "subcommand.ts.ts",
+      "template": "template/subcommand.ts.ts",
       "outputPath": "packages/cli/src/private/commands/{{parentCommand}}/{{subcommandName}}.ts"
     },
     {
       "type": "create",
       "name": "subcommand-spec.ts",
-      "template": "subcommand-spec.ts.ts",
+      "template": "template/subcommand-spec.ts.ts",
       "outputPath": "packages/cli/src/private/commands/{{parentCommand}}/{{subcommandName}}.spec.ts"
     },
     {
       "type": "modify",
       "name": "modify-index",
-      "template": "modify-index.ts.ts",
+      "template": "template/modify-index.ts.ts",
       "outputPath": "packages/cli/src/private/commands/{{parentCommand}}/index.ts"
     },
     {
       "type": "modify",
       "name": "modify-errors",
-      "template": "modify-errors.ts.ts",
+      "template": "template/modify-errors.ts.ts",
       "outputPath": "packages/cli/src/private/errors/{{parentCommand}}Errors.ts"
     }
   ]

@@ -65,7 +65,6 @@ async function createPackage(
 
 async function createConfig(packages: PackageEntry[]) {
   await testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({
-    harness: "claude",
     packages,
   });
 }
@@ -281,6 +280,27 @@ test.group("add", () => {
       package: "my-pkg",
       powerups: { include: ["nonexistent"] },
     });
+    await testRoot.remove();
+  });
+
+  test.case("throws project_not_initialized when no .powerups folder", async assert => {
+    await reset();
+    // Remove the .powerups folder to simulate project not initialized
+    await testRoot.append(`/${MAIN_FOLDER}`).remove();
+
+    let threw;
+    try {
+      await add.run({
+        subcommands: ["my-pkg"],
+        flags: [],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(AddErrorCode.project_not_initialized);
+
     await testRoot.remove();
   });
 });

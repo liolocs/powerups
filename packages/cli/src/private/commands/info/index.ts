@@ -1,4 +1,4 @@
-import fs, { type FileRef } from "@rcompat/fs";
+import { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
@@ -10,7 +10,6 @@ import { resolvePowerUp } from "#utils/resolve-powerup";
 import {
   CAPITALIZED_SINGLULAR_CLI_NAME,
   CLI_CMD,
-  MAIN_FOLDER,
   SINGULAR_NAME,
   type PowerUpType,
 } from "#constants";
@@ -190,16 +189,15 @@ const info = new Command({
     }
 
     const root: FileRef = props.context?.root ?? await runtime.projectRoot();
-    const mainFolder = root.append(`/${MAIN_FOLDER}`);
-    if (!(await fs.exists(mainFolder))) {
-      throw info_errors.main_folder_not_found();
-    }
 
-    // Resolve powerup via resolvePowerUp (searches both folders)
+    // Resolve powerup via resolvePowerUp with global fallback (works anywhere)
     const typeFlag = is.defined(props.flags.type)
       ? (props.flags.type as PowerUpType)
       : undefined;
-    const resolved = await resolvePowerUp(root, name, typeFlag);
+    const resolved = await resolvePowerUp(root, name, typeFlag, {
+      fallbackToGlobal: true,
+      homeDir: props.context?.homeDir,
+    });
     const outputFolder = resolved.folder;
     const typeFolder = resolved.folder.up(1);
 

@@ -95,7 +95,7 @@ test.group("writeConfig", () => {
     const config = await readConfig(testRoot);
     assert(config?.packages).equals([]);
     // Verify no harness field in written config
-    const raw = await configPath.json();
+    const raw = await configPath.json() as Record<string, unknown>;
     assert(raw.harness).undefined();
 
     await testRoot.remove();

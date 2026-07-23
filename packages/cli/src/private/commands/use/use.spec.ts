@@ -104,7 +104,6 @@ async function reset() {
   });
   // Create config with test-pkg listed
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
-    harness: "claude",
     packages: ["test-pkg"],
   });
   await gitInit(testRoot);
@@ -451,7 +450,6 @@ test.group("apply errors", () => {
       powerups: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
     });
     await noGitRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({
-      harness: "claude",
       packages: ["test-pkg"],
     });
 

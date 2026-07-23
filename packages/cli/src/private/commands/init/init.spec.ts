@@ -8,29 +8,25 @@ import { InitErrorCode } from "#errors/initErrors";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
-const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
 }
 
-test.case(`init generates a ${MAIN_FOLDER} folder`, async assert => {
+test.case(`init generates a ${MAIN_FOLDER} folder globally`, async assert => {
   await reset();
 
   await init.run({
     subcommands: ["claude"],
     flags: [],
-    context: { root: testRoot },
+    context: { homeDir: testRoot.path },
   });
 
-  const hasMainFolder = await fs.exists(mainFolder);
-  assert(hasMainFolder).equals(true);
+  const globalFolder = testRoot.append(`/${MAIN_FOLDER}`);
+  assert(await fs.exists(globalFolder)).equals(true);
 
   await testRoot.remove();
-
-  const hasMainFolderAgain = await fs.exists(mainFolder);
-  assert(hasMainFolderAgain).equals(false);
 });
 
 test.case("init claude scaffolds claude files only", async assert => {
@@ -39,11 +35,9 @@ test.case("init claude scaffolds claude files only", async assert => {
   await init.run({
     subcommands: ["claude"],
     flags: [],
-    context: { root: testRoot },
+    context: { homeDir: testRoot.path },
   });
 
-  // ${MAIN_FOLDER}} folder created
-  assert(await fs.exists(mainFolder)).equals(true);
   // CLAUDE.md created (instructions for claude)
   assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(true);
   // AGENTS.md NOT created (claude uses CLAUDE.md)
@@ -68,7 +62,7 @@ test.case("init opencode scaffolds opencode files only", async assert => {
   await init.run({
     subcommands: ["opencode"],
     flags: [],
-    context: { root: testRoot },
+    context: { homeDir: testRoot.path },
   });
 
   // AGENTS.md created (instructions for opencode)
@@ -95,7 +89,7 @@ test.case("init pi scaffolds pi files only", async assert => {
   await init.run({
     subcommands: ["pi"],
     flags: [],
-    context: { root: testRoot },
+    context: { homeDir: testRoot.path },
   });
 
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
@@ -119,7 +113,7 @@ test.case("init codex scaffolds codex files", async assert => {
   await init.run({
     subcommands: ["codex"],
     flags: [],
-    context: { root: testRoot },
+    context: { homeDir: testRoot.path },
   });
 
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
@@ -149,7 +143,7 @@ test.group("init errors", () => {
         await init.run({
           subcommands: [],
           flags: [],
-          context: { root: testRoot, skipGlobal: true },
+          context: { homeDir: testRoot.path },
         });
       } catch (e: unknown) {
         assert(e instanceof CodeError).true();
@@ -168,7 +162,7 @@ test.group("init errors", () => {
       await init.run({
         subcommands: ["foo"],
         flags: [],
-        context: { root: testRoot },
+        context: { homeDir: testRoot.path },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
@@ -179,84 +173,61 @@ test.group("init errors", () => {
     await testRoot.remove();
   });
 
-  test.case("should fail with multiple_harnesses_detected when several harnesses found locally", async assert => {
-    await reset();
-    await fs.create(testRoot.append("/.claude"));
-    await fs.create(testRoot.append("/.pi"));
-
-    let threw;
-    try {
-      await init.run({
-        subcommands: [],
-        flags: [],
-        context: { root: testRoot, skipGlobal: true },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
-
-    await testRoot.remove();
-  });
-
-  test.case("should fail with dry_folder_exists when already initialized", async assert => {
+  test.case("should fail with global_already_initialized when already initialized", async assert => {
     await reset();
 
-    // First run succeeds and creates ${MAIN_FOLDER}}
+    // First run succeeds and creates ~/.powerups
     await init.run({
       subcommands: ["claude"],
       flags: [],
-      context: { root: testRoot },
+      context: { homeDir: testRoot.path },
     });
 
-    // Second run should fail because ${MAIN_FOLDER}} already exists
+    // Second run should fail because ~/.powerups already exists
     let threw;
     try {
       await init.run({
         subcommands: ["claude"],
         flags: [],
-        context: { root: testRoot },
+        context: { homeDir: testRoot.path },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(InitErrorCode.dry_folder_exists);
+    assert(threw).equals(InitErrorCode.global_already_initialized);
 
     await testRoot.remove();
   });
 });
 
-test.group("init detection", () => {
-  test.case("should detect claude from CLAUDE.md", async assert => {
+test.group("init detection (global fingerprints)", () => {
+  test.case("should detect claude from .claude/ dir", async assert => {
     await reset();
-    await testRoot.append("/CLAUDE.md").write("# Existing project");
+    await fs.create(testRoot.append("/.claude"));
 
     await init.run({
       subcommands: [],
       flags: [],
-      context: { root: testRoot, skipGlobal: true },
+      context: { homeDir: testRoot.path },
     });
 
     // Should detect claude and write commands
     assert(await fs.exists(testRoot.append("/.claude/skills"))).equals(true);
-    // CLAUDE.md should have the ${CLI_NAME} section appended
-    const content = await testRoot.append("/CLAUDE.md").text();
-    assert(content.includes("# Existing project")).equals(true);
-    assert(content.includes(`<!-- BEGIN ${CLI_NAME} -->`)).equals(true);
+    // CLAUDE.md should have the powerups section appended
+    assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(true);
 
     await testRoot.remove();
   });
 
-  test.case("should detect opencode from .opencode/ dir", async assert => {
+  test.case("should detect opencode from .config/opencode/ dir", async assert => {
     await reset();
-    await fs.create(testRoot.append("/.opencode"));
+    await fs.create(testRoot.append("/.config/opencode"));
 
     await init.run({
       subcommands: [],
       flags: [],
-      context: { root: testRoot, skipGlobal: true },
+      context: { homeDir: testRoot.path },
     });
 
     assert(await fs.exists(testRoot.append("/.opencode/skills"))).equals(true);
@@ -266,14 +237,14 @@ test.group("init detection", () => {
     await testRoot.remove();
   });
 
-  test.case("should detect pi from .pi/ dir", async assert => {
+  test.case("should detect pi from .pi/agent dir", async assert => {
     await reset();
-    await fs.create(testRoot.append("/.pi"));
+    await fs.create(testRoot.append("/.pi/agent"));
 
     await init.run({
       subcommands: [],
       flags: [],
-      context: { root: testRoot, skipGlobal: true },
+      context: { homeDir: testRoot.path },
     });
 
     assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
@@ -282,16 +253,38 @@ test.group("init detection", () => {
     await testRoot.remove();
   });
 
-  test.case("should resolve multiple detection ambiguity with harness arg", async assert => {
+  test.case("should detect multiple harnesses and scaffold to all", async assert => {
+    await reset();
+    // Create global fingerprints for both claude and pi
+    await fs.create(testRoot.append("/.claude"));
+    await fs.create(testRoot.append("/.pi/agent"));
+
+    await init.run({
+      subcommands: [],
+      flags: [],
+      context: { homeDir: testRoot.path },
+    });
+
+    // Both should get scaffolded
+    assert(await fs.exists(testRoot.append("/.claude/skills"))).equals(true);
+    assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
+    // CLAUDE.md for claude, AGENTS.md for pi
+    assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(true);
+    assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
+
+    await testRoot.remove();
+  });
+
+  test.case("should resolve multiple detection with harness arg (single only)", async assert => {
     await reset();
     await fs.create(testRoot.append("/.claude"));
-    await fs.create(testRoot.append("/.pi"));
+    await fs.create(testRoot.append("/.pi/agent"));
 
-    // Should succeed with harness=pi despite multiple detected
+    // Should scaffold only to pi despite multiple detected
     await init.run({
       subcommands: ["pi"],
       flags: [],
-      context: { root: testRoot },
+      context: { homeDir: testRoot.path },
     });
 
     assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
@@ -302,59 +295,7 @@ test.group("init detection", () => {
 });
 
 test.group("init rollback", () => {
-  // ── Rollback tests ───────────────────────────────────────────────
-  //
-  // init must clean up any files/directories it created when scaffold
-  // throws, so that re-running init works cleanly instead of failing with
-  // "project already initialized".
-  // ─────────────────────────────────────────────────────────────────
-
-  test.case(`should remove ${MAIN_FOLDER}} on detection error (multiple harnesses)`, async assert => {
-    await reset();
-    await fs.create(testRoot.append("/.claude"));
-    await fs.create(testRoot.append("/.pi"));
-
-    let threw;
-    try {
-      await init.run({
-        subcommands: [],
-        flags: [],
-        context: { root: testRoot, skipGlobal: true },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
-
-    // ${MAIN_FOLDER}} must NOT be left behind
-    assert(await fs.exists(mainFolder)).equals(false);
-
-    await testRoot.remove();
-  });
-
-  test.case(`should remove ${MAIN_FOLDER}} on invalid harness error`, async assert => {
-    await reset();
-
-    let threw;
-    try {
-      await init.run({
-        subcommands: ["bogus"],
-        flags: [],
-        context: { root: testRoot },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(InitErrorCode.invalid_harness);
-
-    assert(await fs.exists(mainFolder)).equals(false);
-
-    await testRoot.remove();
-  });
-
-  test.case(`should remove ${MAIN_FOLDER}} on no-harness-detected error`, async assert => {
+  test.case(`should remove ${MAIN_FOLDER} on detection error (no harness detected)`, async assert => {
     await reset();
 
     let threw;
@@ -362,7 +303,7 @@ test.group("init rollback", () => {
       await init.run({
         subcommands: [],
         flags: [],
-        context: { root: testRoot, skipGlobal: true },
+        context: { homeDir: testRoot.path },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
@@ -370,78 +311,85 @@ test.group("init rollback", () => {
     }
     assert(threw).equals(InitErrorCode.no_harness_detected);
 
-    assert(await fs.exists(mainFolder)).equals(false);
+    // ~/.powerups must NOT be left behind
+    assert(await fs.exists(testRoot.append(`/${MAIN_FOLDER}`))).equals(false);
+
+    await testRoot.remove();
+  });
+
+  test.case(`should remove ${MAIN_FOLDER} on invalid harness error`, async assert => {
+    await reset();
+
+    let threw;
+    try {
+      await init.run({
+        subcommands: ["bogus"],
+        flags: [],
+        context: { homeDir: testRoot.path },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(InitErrorCode.invalid_harness);
+
+    assert(await fs.exists(testRoot.append(`/${MAIN_FOLDER}`))).equals(false);
 
     await testRoot.remove();
   });
 
   test.case("should be re-runnable immediately after detection error", async assert => {
-    // This is the exact scenario from the bug report:
-    //   $ ${CLI_NAME} init                              → multiple harnesses error
-    //   $ ${CLI_NAME} init pi               → should work, not "already initialized"
     await reset();
-    await fs.create(testRoot.append("/.claude"));
-    await fs.create(testRoot.append("/.pi"));
-
-    // First run fails (multiple harnesses, no harness arg)
+    // No harness fingerprints → no harness detected error
     let firstThrew = false;
     try {
       await init.run({
         subcommands: [],
         flags: [],
-        context: { root: testRoot, skipGlobal: true },
+        context: { homeDir: testRoot.path },
       });
     } catch {
       firstThrew = true;
     }
     assert(firstThrew).equals(true);
 
-    // ${MAIN_FOLDER}} was cleaned up — second run with harness arg succeeds
+    // ~/.powerups was cleaned up — second run with harness arg succeeds
     await init.run({
       subcommands: ["pi"],
       flags: [],
-      context: { root: testRoot },
+      context: { homeDir: testRoot.path },
     });
 
-    assert(await fs.exists(mainFolder)).equals(true);
+    assert(await fs.exists(testRoot.append(`/${MAIN_FOLDER}`))).equals(true);
     assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
 
     await testRoot.remove();
   });
 
   test.case("should restore modified instruction file on error", async assert => {
-    // Pre-existing CLAUDE.md with user content — init detects multiple
-    // harnesses *after* scaffold has already appended to CLAUDE.md.
-    // We simulate this by setting up a scenario where the instruction
-    // file is written but then a later step (command file write) fails.
-    //
-    // Since detection happens first and throws before any files are
-    // written, we instead verify the restore path by directly testing
-    // that a pre-existing instruction file is untouched after a
-    // detection failure.
+    // Pre-existing AGENTS.md with user content — init detects no harness
+    // (no fingerprints in test dir) and throws before any writes.
     await reset();
     const original = "# My Project\n\nOriginal content.\n";
     await testRoot.append("/AGENTS.md").write(original);
-    await fs.create(testRoot.append("/.claude"));
-    await fs.create(testRoot.append("/.pi"));
 
     let threw;
     try {
       await init.run({
         subcommands: [],
         flags: [],
-        context: { root: testRoot, skipGlobal: true },
+        context: { homeDir: testRoot.path },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(InitErrorCode.multiple_harnesses_detected);
+    assert(threw).equals(InitErrorCode.no_harness_detected);
 
     // AGENTS.md should be unchanged (detection threw before any writes)
     const content = await testRoot.append("/AGENTS.md").text();
     assert(content).equals(original);
-    assert(await fs.exists(mainFolder)).equals(false);
+    assert(await fs.exists(testRoot.append(`/${MAIN_FOLDER}`))).equals(false);
 
     await testRoot.remove();
   });
@@ -454,17 +402,17 @@ test.case("init is idempotent — instruction section not duplicated", async ass
   await init.run({
     subcommands: ["claude"],
     flags: [],
-    context: { root: testRoot },
+    context: { homeDir: testRoot.path },
   });
 
-  // Remove ${MAIN_FOLDER}} so second init can proceed
+  // Remove ~/.powerups so second init can proceed
   await testRoot.append(`/${MAIN_FOLDER}`).remove();
 
   // Second run
   await init.run({
     subcommands: ["claude"],
     flags: [],
-    context: { root: testRoot },
+    context: { homeDir: testRoot.path },
   });
 
   const content = await testRoot.append("/CLAUDE.md").text();
@@ -481,7 +429,7 @@ test.case("init appends to existing AGENTS.md", async assert => {
   await init.run({
     subcommands: ["codex"],
     flags: [],
-    context: { root: testRoot },
+    context: { homeDir: testRoot.path },
   });
 
   const content = await testRoot.append("/AGENTS.md").text();
@@ -497,7 +445,7 @@ test.case("init writes skill files with constants substituted", async assert => 
   await init.run({
     subcommands: ["claude"],
     flags: [],
-    context: { root: testRoot },
+    context: { homeDir: testRoot.path },
   });
 
   const cmdPath = `.claude/skills/${CLI_NAME}-implement.md`;
@@ -515,7 +463,7 @@ test.case(`init writes ${CLI_NAME}-implement skill file for each harness`, async
     await init.run({
       subcommands: [harness],
       flags: [],
-      context: { root: testRoot },
+      context: { homeDir: testRoot.path },
     });
 
     const skillDirs: Record<string, string> = {
@@ -544,7 +492,7 @@ test.case("init injects frontmatter into skill files for every harness", async a
     await init.run({
       subcommands: [harness],
       flags: [],
-      context: { root: testRoot },
+      context: { homeDir: testRoot.path },
     });
 
     const skillDirs: Record<string, string> = {
@@ -565,39 +513,21 @@ test.case("init injects frontmatter into skill files for every harness", async a
 });
 
 test.group("init config", () => {
-  test.case("init writes config.json with the chosen harness", async assert => {
+  test.case("init writes global config.json with packages only (no harness)", async assert => {
     await reset();
 
     await init.run({
       subcommands: ["pi"],
       flags: [],
-      context: { root: testRoot },
+      context: { homeDir: testRoot.path },
     });
 
     const configPath = testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`);
     assert(await fs.exists(configPath)).equals(true);
 
     const config = JSON.parse(await configPath.text());
-    assert(config.harness).equals("pi");
-
-    await testRoot.remove();
-  });
-
-  test.case("init writes config.json with the detected harness", async assert => {
-    await reset();
-    await testRoot.append("/CLAUDE.md").write("# Existing project");
-
-    await init.run({
-      subcommands: [],
-      flags: [],
-      context: { root: testRoot, skipGlobal: true },
-    });
-
-    const configPath = testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`);
-    assert(await fs.exists(configPath)).equals(true);
-
-    const config = JSON.parse(await configPath.text());
-    assert(config.harness).equals("claude");
+    assert(config.harness).equals(undefined);
+    assert(config.packages).equals([]);
 
     await testRoot.remove();
   });
@@ -609,12 +539,13 @@ test.group("init config", () => {
       await init.run({
         subcommands: [harness],
         flags: [],
-        context: { root: testRoot },
+        context: { homeDir: testRoot.path },
       });
 
       const configPath = testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`);
       const config = JSON.parse(await configPath.text());
-      assert(config.harness).equals(harness);
+      assert(config.harness).equals(undefined);
+      assert(config.packages).equals([]);
 
       await testRoot.remove();
     }

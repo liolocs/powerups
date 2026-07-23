@@ -44,7 +44,6 @@ async function reset() {
   });
   // Create config with test-pkg listed
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
-    harness: "claude",
     packages: ["test-pkg"],
   });
 }
@@ -493,23 +492,4 @@ test.group("info errors", () => {
     await testRoot.remove();
   });
 
-  test.case(`should fail with main_folder_not_found without ${MAIN_FOLDER}} folder`, async assert => {
-    await testRoot.remove();
-    await fs.create(testRoot);
-
-    let threw;
-    try {
-      await info.run({
-        subcommands: ["some-template"],
-        flags: [],
-        context: { root: testRoot },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(InfoErrorCode.main_folder_not_found);
-
-    await testRoot.remove();
-  });
 });

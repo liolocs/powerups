@@ -76,7 +76,6 @@ async function writePackage(
 
 async function createConfig(packages: any[]) {
   await testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({
-    harness: "claude",
     packages,
   });
 }
@@ -251,6 +250,31 @@ test.group("list", () => {
 
     assert(output).includes("pup add https://github.com/foo/bar");
     assert(output).includes("pup add https://github.com/foo/bar#c-power");
+    await testRoot.remove();
+  });
+
+  test.case("filters out globally-registered packages", async assert => {
+    await reset();
+    await writePackage(testRoot, `${INTERNAL_FOLDER}/global-pkg`, "global-pkg",
+      { multiUse: ["g-power"] });
+    // Create local config (empty)
+    await createConfig([]);
+    // Create a separate homeDir with global config that registers the package
+    const globalHome = testRoot.append("/global-home");
+    await fs.create(globalHome.append(`/${MAIN_FOLDER}`));
+    await globalHome.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({
+      packages: ["global-pkg"],
+    });
+
+    const output = await captureStdout(() => list.run({
+      subcommands: [],
+      flags: [],
+      context: { root: testRoot, homeDir: globalHome.path },
+    }));
+
+    // The globally-registered package must not appear as unregistered.
+    assert(output.includes("internal:  global-pkg")).false();
+
     await testRoot.remove();
   });
 });

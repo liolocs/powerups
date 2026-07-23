@@ -332,6 +332,7 @@ test.group("pack move (success)", () => {
 
       // Verify package was added to global config
       const globalConfig = await readGlobalConfig();
+      if (!globalConfig) throw new Error("global config should exist");
       assert(globalConfig.packages.includes(pkgName)).true();
     } finally {
       await restoreGlobalState([pkgName]);
@@ -400,6 +401,7 @@ test.group("pack move (success)", () => {
 
       // Both packages should be in global config
       const globalConfig = await readGlobalConfig();
+      if (!globalConfig) throw new Error("global config should exist");
       assert(globalConfig.packages.includes(pkgName)).true();
 
       // Verify the local package directory was removed
@@ -442,6 +444,7 @@ test.group("pack move (success)", () => {
 
       // Verify it was added to global config
       const globalConfig = await readGlobalConfig();
+      if (!globalConfig) throw new Error("global config should exist");
       assert(globalConfig.packages.includes(pkgName)).true();
     } finally {
       await restoreGlobalState([pkgName]);

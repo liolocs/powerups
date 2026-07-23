@@ -1,10 +1,10 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
-import runtime from "@rcompat/runtime";
+import { homedir } from "node:os";
 import { Command } from "@powerups/program";
 import init_errors from "#errors/initErrors";
 import { scaffold, type RollbackInfo } from "#scaffold/index";
-import { writeConfig } from "#utils/config";
+import { writeGlobalConfig } from "#utils/config";
 import { MAIN_FOLDER, CLI_NAME } from "#constants";
 
 /**
@@ -47,48 +47,46 @@ async function rollbackChanges({
 const init = new Command({
   name: "init",
 
-  description: `Initialize ${CLI_NAME} for the current project`,
+  description: `Initialize ${CLI_NAME} globally`,
 
   flags: [],
 
   subcommands: [],
 
   action: async ({ context, subcommands }: any) => {
-    const root: FileRef = context?.root ?? await runtime.projectRoot();
-    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+    const homeDirStr = context?.homeDir ?? homedir();
+    const homeDir = fs.ref(homeDirStr);
+    const globalRoot = homeDir.append(`/${MAIN_FOLDER}`);
 
-    if (await fs.exists(mainFolder)) {
-      throw init_errors.dry_folder_exists();
+    if (await fs.exists(globalRoot)) {
+      throw init_errors.global_already_initialized();
     }
 
     const rollback: RollbackInfo = { remove: [], restore: [] };
 
     try {
-      await fs.create(mainFolder);
+      await fs.create(globalRoot);
       rollback.remove.push(MAIN_FOLDER);
 
-      // Run scaffold with optional harness positional argument
+      // Scaffold to home directory with all detected harnesses
       const harnessArg = subcommands?.[0] as string | undefined;
-      const result = await scaffold(root, harnessArg, {
-        skipGlobal: context?.skipGlobal,
-        rollback,
-      });
+      const result = await scaffold(homeDir, harnessArg, { rollback });
 
-      // Persist the resolved harness so `powerups update` can reuse it
-      await writeConfig(root, { harness: result.harness, packages: [] });
+      // Write global config (no harness field)
+      await writeGlobalConfig({ packages: [] }, homeDirStr);
 
       const green = cli.fg.green;
       const dim = cli.fg.dim;
 
-      cli.print(`${green("✓")} Initialized ${CLI_NAME} for project\n`);
-      cli.print(`  ${dim("harness:")} ${result.harness}\n`);
+      cli.print(`${green("✓")} Initialized ${CLI_NAME} globally\n`);
+      cli.print(`  ${dim("harnesses:")} ${result.harnesses.join(", ")}\n`);
 
       for (const file of result.filesWritten) {
         cli.print(`  ${dim("wrote:")} ${file}\n`);
       }
     } catch (error) {
       // Revert any filesystem changes so re-running init works cleanly.
-      await rollbackChanges({ root, rollback });
+      await rollbackChanges({ root: homeDir, rollback });
       throw error;
     }
   },

@@ -4,6 +4,7 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@powerups/program";
 import {
   readConfig,
+  readGlobalConfig,
   getPackageSource,
 } from "#utils/config";
 import { reconstructGitSource } from "#utils/parse-specifier";
@@ -40,10 +41,14 @@ const list = new Command({
   action: async (props) => {
     const root: FileRef = props?.context?.root ?? await runtime.projectRoot();
 
-    // 1. Read project config for registered sources
+    // 1. Read project config and global config for registered sources
     const config = await readConfig(root);
+    const globalConfig = await readGlobalConfig(props?.context?.homeDir);
     const registeredSources = new Set<string>();
     for (const entry of config?.packages ?? []) {
+      registeredSources.add(getPackageSource(entry));
+    }
+    for (const entry of globalConfig?.packages ?? []) {
       registeredSources.add(getPackageSource(entry));
     }
 
@@ -120,11 +125,11 @@ const list = new Command({
 
     // 4. Print results
     if (unregistered.length === 0) {
-      cli.print("All installed packages are already added to this project.\n");
+      cli.print("All installed packages are already registered.\n");
       return;
     }
 
-    cli.print("Available packages not yet added to this project:\n\n");
+    cli.print("Available packages not yet registered:\n\n");
 
     // Group by location
     const byLocation = { local: [], global: [] } as Record<string, InstalledPackage[]>;

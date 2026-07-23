@@ -10,6 +10,7 @@ import { resolvePackage } from "#utils/resolve-powerup";
 import { packageJsonSchema } from "#schemas/package";
 import {
   CLI_NAME,
+  MAIN_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -49,21 +50,27 @@ const add = new Command({
       flags.exclude as string | undefined,
     );
 
-    // 3. Verify package exists in local or global store
+    // 3. Require project init before adding packages
     const root: FileRef = context?.root ?? await runtime.projectRoot();
+    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+    if (!(await fs.exists(mainFolder))) {
+      throw add_errors.project_not_initialized();
+    }
+
+    // 4. Verify package exists in local or global store
     const pkgLoc = await resolvePackage(root, source);
     if (pkgLoc === null) {
       throw add_errors.package_not_installed(source);
     }
 
-    // 4. Validate it's a powerups package
+    // 5. Validate it's a powerups package
     const pkgJsonPath = pkgLoc.packageDir.append(`/${PACKAGE_FILE}`);
     const pkgJson = packageJsonSchema.parse(await pkgJsonPath.json());
     if (!pkgJson.keywords.includes(KEYWORD_PACKAGE)) {
       throw add_errors.not_a_powerups_package(source);
     }
 
-    // 5. Soft validate powerup names if include/exclude specified
+    // 6. Soft validate powerup names if include/exclude specified
     if (filter.include || filter.exclude) {
       const active = pkgJson[CLI_NAME].active;
       const allPowerups = new Set<string>();
@@ -88,13 +95,13 @@ const add = new Command({
       }
     }
 
-    // 6. Build config entry
+    // 7. Build config entry
     const entry = buildConfigEntry(source, filter);
 
-    // 7. Register in project config
+    // 8. Register in project config
     await addPackageToConfig(root, entry);
 
-    // 8. Print success
+    // 9. Print success
     const green = cli.fg.green;
     const dim = cli.fg.dim;
     cli.print(`${green("✓")} Added ${source} to project config\n`);

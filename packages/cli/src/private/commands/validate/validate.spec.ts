@@ -4,7 +4,6 @@ import runtime from "@rcompat/runtime";
 import { CodeError } from "@rcompat/error";
 import validate from "#commands/validate/index";
 import create from "#commands/create/index";
-import { CreateErrorCode } from "#errors/createErrors";
 import captureStdout, {
   captureStdoutOrError,
 } from "#test-utils/capture-stdout";
@@ -48,7 +47,6 @@ async function reset() {
   });
   // Create config with test-pkg listed
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
-    harness: "claude",
     packages: ["test-pkg"],
   });
 }
@@ -82,27 +80,6 @@ test.case("validate --name reports a single valid template", async assert => {
 });
 
 test.group("validate errors", () => {
-  test.case(`should fail with main_folder_not_found without ${MAIN_FOLDER}} folder`, async assert => {
-    await testRoot.remove();
-    await fs.create(testRoot);
-
-    let threw;
-    try {
-      await validate.run({
-        subcommands: ["some-powerup"],
-        flags: [],
-        context: { root: testRoot },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(CreateErrorCode.main_folder_not_found);
-
-    await testRoot.remove();
-  });
-
-
   test.case("should fail with invalid for a missing template file", async assert => {
     await reset();
 

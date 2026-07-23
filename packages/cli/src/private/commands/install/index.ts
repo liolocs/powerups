@@ -2,6 +2,8 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
+import { homedir } from "node:os";
+import path from "node:path";
 import { Command } from "@powerups/program";
 import install_errors from "#errors/installErrors";
 import { addPackageToConfig, addPackageToGlobalConfig } from "#utils/config";
@@ -11,7 +13,6 @@ import { installNpmPackage, installGitPackage } from "#utils/install-package";
 import { packageJsonSchema } from "#schemas/package";
 import {
   MAIN_FOLDER,
-  GLOBAL_ROOT,
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
 } from "#constants";
@@ -33,10 +34,10 @@ const install = new Command({
       description: "Comma-delimited powerup names to exclude",
     },
     {
-      name: "global",
-      long: "global",
-      short: "g",
-      description: "Install to global store instead of local",
+      name: "local",
+      long: "local",
+      short: "l",
+      description: "Install to local project store instead of global",
     },
   ],
   subcommands: [],
@@ -63,21 +64,34 @@ const install = new Command({
       throw install_errors.internal_not_installable(source);
     }
 
-    // 5. Determine store root (--global is a boolean flag, check rawFlags)
+    // 5. Determine store root (default: global, --local for local)
     const root: FileRef = context?.root ?? await runtime.projectRoot();
-    const isGlobal = (rawFlags ?? []).some(
-      f => f.flag === "--global" || f.flag === "-g",
+    const isLocal = (rawFlags ?? []).some(
+      f => f.flag === "--local" || f.flag === "-l",
     );
-    const storeRoot = isGlobal ? fs.ref(GLOBAL_ROOT) : root.append(`/${MAIN_FOLDER}`);
+    const homeDirStr = context?.homeDir ?? homedir();
+    const globalRoot = fs.ref(path.join(homeDirStr, MAIN_FOLDER));
+    const storeRoot = isLocal ? root.append(`/${MAIN_FOLDER}`) : globalRoot;
 
-    // 6. Fetch the package
+    // 6. Guards: local requires project init, global requires global init
+    if (isLocal) {
+      if (!(await fs.exists(root.append(`/${MAIN_FOLDER}`)))) {
+        throw install_errors.local_not_initialized();
+      }
+    } else {
+      if (!(await fs.exists(globalRoot))) {
+        throw install_errors.global_not_initialized();
+      }
+    }
+
+    // 7. Fetch the package
     if (spec.type === "npm") {
       await installNpmPackage(storeRoot, spec.name);
     } else {
       await installGitPackage(storeRoot, source, spec.storePath);
     }
 
-    // 7. Validate the installed package has powerups property
+    // 8. Validate the installed package has powerups property
     const packageDir = storeRoot.append(`/${spec.storePath}`);
     const pkgJsonPath = packageDir.append(`/${PACKAGE_FILE}`);
     if (!(await fs.exists(pkgJsonPath))) {
@@ -90,21 +104,21 @@ const install = new Command({
       throw install_errors.not_a_powerups_package(source);
     }
 
-    // 8. Build config entry
+    // 9. Build config entry
     const entry = buildConfigEntry(source, filter);
 
-    // 9. Register in config
-    if (isGlobal) {
-      await addPackageToGlobalConfig(entry);
+    // 10. Register in config (local → project config, global → global config)
+    if (isLocal) {
+      await addPackageToConfig(root, entry);
+    } else {
+      await addPackageToGlobalConfig(entry, homeDirStr);
     }
-    // Always add to project config
-    await addPackageToConfig(root, entry);
 
-    // 10. Print success
+    // 11. Print success
     const green = cli.fg.green;
     const dim = cli.fg.dim;
     cli.print(`${green("✓")} Installed ${source}\n`);
-    cli.print(`  ${dim("location:")} ${isGlobal ? "global" : "local"}\n`);
+    cli.print(`  ${dim("location:")} ${isLocal ? "local" : "global"}\n`);
     cli.print(`  ${dim("store:")} ${spec.type}\n`);
     if (filter.include || filter.exclude) {
       const active = filter.include ?? "all";

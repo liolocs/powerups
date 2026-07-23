@@ -296,8 +296,8 @@ file belongs in an `includes` entry, not a copied template.
 | Create a global package | `{{ CLI_CMD }} pack create <package-name> -g` |
 | Move package to global | `{{ CLI_CMD }} pack move <package-name> global` |
 | Move & remove from config | `{{ CLI_CMD }} pack move <package-name> global -d` |
-| Create a multi-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -p='...'` |
-| Create a single-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=single-use -n=<name> -i="..." -v="..." -ov="..." -p='...'` |
+| Create a multi-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=multi-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
+| Create a single-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=single-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
 | Validate a {{ SINGULAR_NAME }} | `{{ CLI_CMD }} validate <name>` |
 | Initialize {{ CLI_NAME }} | `{{ CLI_CMD }} init` |
 | Health check all | `{{ CLI_CMD }} doctor` |

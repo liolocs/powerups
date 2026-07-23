@@ -2,7 +2,7 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import packMove from "#commands/pack/move";
-import { readGlobalConfig, writeGlobalConfig } from "#utils/config";
+import { readGlobalConfig } from "#utils/config";
 import { verifyMoveSuccess } from "#utils/move/verify";
 import { CodeError } from "@rcompat/error";
 import { PackErrorCode } from "#errors/packErrors";

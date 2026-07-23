@@ -1,12 +1,12 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
-import { readConfig } from "#utils/config";
+import { readConfig, normalizePackageEntry, type PackageEntry } from "#utils/config";
+import { parseSpecifier } from "#utils/parse-specifier";
 import { packageJsonSchema, type PowerUpProperty } from "#schemas/package";
 import power_errors from "#errors/powerErrors";
 import {
   MAIN_FOLDER,
-  INTERNAL_FOLDER,
-  GLOBAL_INTERNAL_PATH,
+  GLOBAL_ROOT,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -29,23 +29,27 @@ interface PackageLocation {
 }
 
 /**
- * Resolve a package by name, checking local first then global.
+ * Resolve a package by its source specifier, checking local first then global.
+ * The source may be `npm:<package>`, a git URL, or a bare internal name.
  * Returns null if the package doesn't exist in either location.
+ *
+ * The returned `packageName` is taken from the resolved package.json `name`
+ * field, not the source specifier.
  */
 export async function resolvePackage(
   projectRoot: FileRef,
-  packageName: string,
+  source: string,
 ): Promise<PackageLocation | null> {
+  const spec = parseSpecifier(source);
+
   // Check local first
-  const localDir = projectRoot.append(
-    `/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`,
-  );
+  const localDir = projectRoot.append(`/${MAIN_FOLDER}/${spec.storePath}`);
   if (await fs.exists(localDir)) {
     const pkgJsonPath = localDir.append(`/${PACKAGE_FILE}`);
     if (await fs.exists(pkgJsonPath)) {
       const pkgJson = packageJsonSchema.parse(await pkgJsonPath.json());
       return {
-        packageName,
+        packageName: pkgJson.name,
         packageDir: localDir,
         powerups: pkgJson[CLI_NAME],
         location: "local",
@@ -54,13 +58,13 @@ export async function resolvePackage(
   }
 
   // Check global
-  const globalDir = fs.ref(`${GLOBAL_INTERNAL_PATH}/${packageName}`);
+  const globalDir = fs.ref(`${GLOBAL_ROOT}/${spec.storePath}`);
   if (await fs.exists(globalDir)) {
     const pkgJsonPath = globalDir.append(`/${PACKAGE_FILE}`);
     if (await fs.exists(pkgJsonPath)) {
       const pkgJson = packageJsonSchema.parse(await pkgJsonPath.json());
       return {
-        packageName,
+        packageName: pkgJson.name,
         packageDir: globalDir,
         powerups: pkgJson[CLI_NAME],
         location: "global",
@@ -77,6 +81,7 @@ export async function resolvePackage(
  * - Reads the project config's packages array
  * - For each package, resolves its location (local first, then global)
  * - Searches the package's powers property for the requested powerup name
+ * - Applies per-entry `powerups.include` / `powerups.exclude` filters
  * - Local packages are prioritized over global on name collision
  * - Throws not_found if the powerup doesn't exist in any config-listed package
  * - Throws ambiguous if the same powerup name is found in multiple local packages
@@ -94,11 +99,13 @@ export async function resolvePowerUp(
 
   const matches: ResolvedPowerUp[] = [];
 
-  for (const packageName of config.packages) {
-    const pkgLoc = await resolvePackage(root, packageName);
+  for (const entry of config.packages) {
+    const normalized = normalizePackageEntry(entry);
+    const pkgLoc = await resolvePackage(root, normalized.package);
     if (pkgLoc === null) continue;
 
     const active = pkgLoc[CLI_NAME].active;
+    const filter = normalized.powerups;
 
     // Determine which types to search
     const typesToSearch: PowerUpType[] = is.truthy(type)
@@ -113,8 +120,18 @@ export async function resolvePowerUp(
       const powersMap = active[typeFolder as keyof typeof active];
 
       if (is.defined(powersMap)) {
-        // Look for exact powerup name match (not parent:child entries)
+        // Look for exact powerup name match
         if (is.defined(powersMap[name])) {
+          // Apply include filter
+          if (is.defined(filter?.include) && !filter!.include!.includes(name)) {
+            continue;
+          }
+
+          // Apply exclude filter
+          if (is.defined(filter?.exclude) && filter!.exclude!.includes(name)) {
+            continue;
+          }
+
           const instructionPath = powersMap[name];
           const powerupsFolder = pkgLoc.packageDir.append(
             `/${instructionPath}`,

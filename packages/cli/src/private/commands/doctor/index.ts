@@ -6,7 +6,8 @@ import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import path from "node:path";
 import { checkOutput } from "#utils/check-output";
-import { readConfig } from "#utils/config";
+import { readConfig, getPackageSource } from "#utils/config";
+import { parseSpecifier } from "#utils/parse-specifier";
 import { modificationArraySchema } from "#schemas/modification";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
 import doctorErrors from "#errors/doctorErrors";
@@ -19,7 +20,7 @@ import {
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
-  GLOBAL_INTERNAL_PATH,
+  GLOBAL_ROOT,
   SINGULAR_NAME,
 } from "#constants";
 
@@ -225,15 +226,17 @@ const doctor = new Command({
     // 3.5 Config packages validation — verify each config-listed package resolves
     const config = await readConfig(root);
     if (config !== null) {
-      for (const packageName of config.packages) {
-        const localDir = root.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`);
-        const globalDir = fs.ref(`${GLOBAL_INTERNAL_PATH}/${packageName}`);
+      for (const entry of config.packages) {
+        const source = getPackageSource(entry);
+        const spec = parseSpecifier(source);
+        const localDir = root.append(`/${MAIN_FOLDER}/${spec.storePath}`);
+        const globalDir = fs.ref(`${GLOBAL_ROOT}/${spec.storePath}`);
         if (!(await fs.exists(localDir)) && !(await fs.exists(globalDir))) {
           issues.push({
             level: "WARN",
             type: "config",
-            name: packageName,
-            message: `Package "${packageName}" listed in config but not found on disk (local or global)`,
+            name: source,
+            message: `Package "${source}" listed in config but not found on disk (local or global)`,
           });
         }
       }

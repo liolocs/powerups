@@ -2,6 +2,7 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { resolvePowerUp } from "#utils/resolve-powerup";
+import { type PackageEntry } from "#utils/config";
 import { CodeError } from "@rcompat/error";
 import { PowerErrorCode } from "#errors/powerErrors";
 import {
@@ -70,7 +71,7 @@ async function createPackage(
 
 async function createConfig(
   projectRoot: FileRef,
-  packages: string[],
+  packages: PackageEntry[],
   harness = "claude",
 ): Promise<void> {
   const configDir = projectRoot.append(`/${MAIN_FOLDER}`);
@@ -199,4 +200,93 @@ test.case("throws not_found when config has no packages", async assert => {
   assert(threw).equals(PowerErrorCode.not_found);
 
   await testRoot.remove();
+});
+test.group("resolvePowerUp with powerups filters", () => {
+  test.case("include filter allows only listed powerups", async assert => {
+    await reset();
+    await createPackage(testRoot, "my-pkg", [
+      { name: "a", type: "multi-use" },
+      { name: "b", type: "multi-use" },
+      { name: "c", type: "multi-use" },
+    ]);
+    const entry: PackageEntry = { package: "my-pkg", powerups: { include: ["a"] } };
+    await createConfig(testRoot, [entry]);
+
+    const result = await resolvePowerUp(testRoot, "a");
+    assert(result.packageName).equals("my-pkg");
+
+    let threw;
+    try {
+      await resolvePowerUp(testRoot, "b");
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(PowerErrorCode.not_found);
+
+    await testRoot.remove();
+  });
+
+  test.case("exclude filter blocks listed powerups", async assert => {
+    await reset();
+    await createPackage(testRoot, "my-pkg", [
+      { name: "a", type: "multi-use" },
+      { name: "b", type: "multi-use" },
+      { name: "c", type: "multi-use" },
+    ]);
+    const entry: PackageEntry = { package: "my-pkg", powerups: { exclude: ["b"] } };
+    await createConfig(testRoot, [entry]);
+
+    assert((await resolvePowerUp(testRoot, "a")).packageName).equals("my-pkg");
+    assert((await resolvePowerUp(testRoot, "c")).packageName).equals("my-pkg");
+
+    let threw;
+    try {
+      await resolvePowerUp(testRoot, "b");
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(PowerErrorCode.not_found);
+
+    await testRoot.remove();
+  });
+
+  test.case("include and exclude combined", async assert => {
+    await reset();
+    await createPackage(testRoot, "my-pkg", [
+      { name: "a", type: "multi-use" },
+      { name: "b", type: "multi-use" },
+    ]);
+    const entry: PackageEntry = {
+      package: "my-pkg",
+      powerups: { include: ["a", "b"], exclude: ["b"] },
+    };
+    await createConfig(testRoot, [entry]);
+
+    assert((await resolvePowerUp(testRoot, "a")).packageName).equals("my-pkg");
+
+    let threw;
+    try {
+      await resolvePowerUp(testRoot, "b");
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(PowerErrorCode.not_found);
+
+    await testRoot.remove();
+  });
+
+  test.case("object entry without powerups behaves like a plain string", async assert => {
+    await reset();
+    await createPackage(testRoot, "my-pkg", [{ name: "a", type: "multi-use" }]);
+    const entry: PackageEntry = { package: "my-pkg" };
+    await createConfig(testRoot, [entry]);
+
+    const result = await resolvePowerUp(testRoot, "a");
+    assert(result.packageName).equals("my-pkg");
+
+    await testRoot.remove();
+  });
 });

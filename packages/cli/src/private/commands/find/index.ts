@@ -7,7 +7,7 @@ import init_errors from "#errors/initErrors";
 import find_errors from "#errors/findErrors";
 import tokenize from "#utils/tokenize";
 import scoreIntent from "#utils/score-intent";
-import { readConfig } from "#utils/config";
+import { readConfig, normalizePackageEntry } from "#utils/config";
 import { resolvePackage } from "#utils/resolve-powerup";
 import { instructionsSchema } from "#schemas/instruction";
 import {
@@ -76,11 +76,13 @@ const find = new Command({
 
     const results: SearchResult[] = [];
 
-    for (const packageName of packages) {
-      const pkgLoc = await resolvePackage(root, packageName);
+    for (const entry of packages) {
+      const normalized = normalizePackageEntry(entry);
+      const pkgLoc = await resolvePackage(root, normalized.package);
       if (pkgLoc === null) continue;
 
       const active = pkgLoc[CLI_NAME].active as Record<string, Record<string, string>>;
+      const filter = normalized.powerups;
 
       for (const type of types) {
         const typeFolder = type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
@@ -91,6 +93,16 @@ const find = new Command({
         for (const [powerKey, instructionPath] of Object.entries(powersMap)) {
           // Skip parent:child entries — only search top-level powerups
           if (powerKey.includes(":")) continue;
+
+          // Apply include filter
+          if (is.defined(filter?.include) && !filter!.include!.includes(powerKey)) {
+            continue;
+          }
+
+          // Apply exclude filter
+          if (is.defined(filter?.exclude) && filter!.exclude!.includes(powerKey)) {
+            continue;
+          }
 
           const fullPath = pkgLoc.packageDir.append(`/${instructionPath}`);
 
@@ -107,7 +119,7 @@ const find = new Command({
             score,
             fileCount: output.steps.filter(s => s.type === "create" || s.type === "modify").length,
             type,
-            packageName,
+            packageName: pkgLoc.packageName,
             location: pkgLoc.location,
           });
         }

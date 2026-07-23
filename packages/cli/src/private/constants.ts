@@ -57,3 +57,18 @@ export const GLOBAL_CONFIG_PATH = path.join(GLOBAL_ROOT, CONFIG_FILE);
 
 /** Path to the global internal packages folder (~/.<MAIN_FOLDER>/internal/). */
 export const GLOBAL_INTERNAL_PATH = path.join(GLOBAL_ROOT, INTERNAL_FOLDER);
+
+/** Subfolder for npm-installed packages. */
+export const NPM_STORE = "npm";
+
+/** Subfolder for git-cloned packages. */
+export const GIT_STORE = "git";
+
+/** Fixed name for the managed npm store package.json. */
+export const NPM_EXTENSIONS_NAME = "powerups-extensions";
+
+/** Path to the global npm store (~/.<MAIN_FOLDER>/npm/). */
+export const GLOBAL_NPM_PATH = path.join(GLOBAL_ROOT, NPM_STORE);
+
+/** Path to the global git store (~/.<MAIN_FOLDER>/git/). */
+export const GLOBAL_GIT_PATH = path.join(GLOBAL_ROOT, GIT_STORE);

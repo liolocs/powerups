@@ -265,10 +265,10 @@ export async function collectDependencies({
     ...(instructions.packageDependencies ?? []),
   ];
 
-  if (is.defined(instructions.includes) && is.truthy(instructions.includes)) {
-    for (const ref of instructions.includes) {
+  for (const step of instructions.steps) {
+    if (step.type === "include") {
       const childDeps = await collectDependencies({
-        outputName: ref.name,
+        outputName: step.name,
         outputsFolder,
       });
 

@@ -157,11 +157,13 @@ const doctor = new Command({
               );
               const referencedFiles = new Set<string>();
               referencedFiles.add("instructions.json");
-              for (const f of instructions.output.create) {
-                referencedFiles.add(f.template);
-              }
-              for (const f of instructions.output.modify) {
-                referencedFiles.add(f.template);
+              for (const step of instructions.steps) {
+                if (step.type === "create" || step.type === "modify") {
+                  referencedFiles.add(step.template);
+                }
+                if (step.type === "read" && step.template) {
+                  referencedFiles.add(step.template);
+                }
               }
 
               const allFiles = await outputFile.directory.files({
@@ -190,9 +192,10 @@ const doctor = new Command({
               const instructions: Instructions = instructionsSchema.parse(
                 await outputFile.json(),
               );
-              for (const modifyEntry of instructions.output.modify) {
+              for (const step of instructions.steps) {
+                if (step.type !== "modify") continue;
                 const modTemplatePath = outputFile.directory.append(
-                  `/${modifyEntry.template}`,
+                  `/${step.template}`,
                 );
                 if (!(await fs.exists(modTemplatePath))) continue;
                 const ext = modTemplatePath.extension;

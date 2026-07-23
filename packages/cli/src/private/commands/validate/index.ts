@@ -82,12 +82,12 @@ const validate = new Command({
 
     let subPowerCount = 0;
 
-    if (is.defined(instructions.includes)) {
-      for (const include of instructions.includes) {
-        const subPowerFolder = typeFolder.append(`/${include.name}`);
+    for (const step of instructions.steps) {
+      if (step.type === "include") {
+        const subPowerFolder = typeFolder.append(`/${step.name}`);
 
         if (!(await fs.exists(subPowerFolder))) {
-          throw validate_errors.invalid(include.name, `sub-${SINGULAR_NAME} folder not found`);
+          throw validate_errors.invalid(step.name, `sub-${SINGULAR_NAME} folder not found`);
         }
 
         const subIssues = await checkOutput({
@@ -96,7 +96,7 @@ const validate = new Command({
         });
 
         if (subIssues.length > 0) {
-          throw validate_errors.invalid(include.name, subIssues.join("; "));
+          throw validate_errors.invalid(step.name, subIssues.join("; "));
         }
 
         subPowerCount++;

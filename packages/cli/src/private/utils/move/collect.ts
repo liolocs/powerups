@@ -87,13 +87,13 @@ export async function collectSubPowerUps({
 
   const instructions = await deps.readInstructions(powerupsFolder);
 
-  if (is.defined(instructions.includes)) {
-    for (const ref of instructions.includes) {
-      if (collected.has(ref.name)) continue;
+  for (const step of instructions.steps) {
+    if (step.type !== "include") continue;
+    if (collected.has(step.name)) continue;
 
       try {
-        const resolved = await deps.resolve({ root, name: ref.name });
-        collected.set(ref.name, {
+        const resolved = await deps.resolve({ root, name: step.name });
+        collected.set(step.name, {
           folder: resolved.folder,
           type: resolved.type,
           parent: powerupsName,

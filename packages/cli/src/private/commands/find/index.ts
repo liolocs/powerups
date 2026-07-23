@@ -105,7 +105,7 @@ const find = new Command({
             name: output.name,
             description: output.description,
             score,
-            fileCount: output.output.create.length + output.output.modify.length,
+            fileCount: output.steps.filter(s => s.type === "create" || s.type === "modify").length,
             type,
             packageName,
             location: pkgLoc.location,

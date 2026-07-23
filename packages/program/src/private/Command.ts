@@ -17,9 +17,9 @@ type FlagRecord<T extends readonly Flag[]> = {
 };
 
 type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never
-  ? (props?: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; skipGlobal?: boolean } }) =>
+  ? (props?: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; homeDir?: string } }) =>
       any | Promise<any>
-  : (props: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; skipGlobal?: boolean } }) =>
+  : (props: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; homeDir?: string } }) =>
       any | Promise<any>;
 
 export default class Command<T extends readonly Flag[]> {
@@ -56,7 +56,7 @@ export default class Command<T extends readonly Flag[]> {
   async run(args?: {
     subcommands: string[];
     flags: { flag: string; value: string }[];
-    context?: { root?: any; skipGlobal?: boolean };
+    context?: { root?: any; homeDir?: string };
   }): Promise<void> {
     // Delegate to a matching subcommand first, so that `<cmd> <sub> --help`
     // reaches the subcommand's own help rather than this command's.
@@ -69,23 +69,18 @@ export default class Command<T extends readonly Flag[]> {
         return sub!.run({ subcommands: tail, flags: flags });
       }
 
-      // No matching subcommand found
       if (this.subcommands.size > 0) {
-        // Has subcommands but the first positional arg doesn't match any
         throw command_errors.invalid_subcommand(head, this.name);
       }
 
-      // No subcommands at all — fall through to action with positional args
     }
 
-    // --help shows this command's help (only when not delegating to a sub)
     if (args?.flags.some(f => f.flag === "--help" || f.flag === "-h")
       === true) {
       cli.print(`${this.buildHelp()}\n`);
       return;
     }
 
-    // No subcommand — check if one is required
     if (this.subcommands.size > 0 && this.requiresSubcommand === true) {
       throw command_errors.missing_required_subcommand(
         this.name,
@@ -96,7 +91,6 @@ export default class Command<T extends readonly Flag[]> {
       );
     }
 
-    // No args at all — run bare action
     if (!is.defined(args)) {
       // @ts-expect-error — flags are optional
       return this.action({ flags: {}, subcommands: [], rawFlags: [], context: args?.context });

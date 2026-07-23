@@ -1,1 +1,0 @@
-All changes implemented and tests pass. Here's the acceptance report:

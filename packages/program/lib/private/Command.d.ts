@@ -18,7 +18,7 @@ type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never ? (prop
     }[];
     context?: {
         root?: any;
-        skipGlobal?: boolean;
+        homeDir?: string;
     };
 }) => any | Promise<any> : (props: {
     flags: FlagRecord<T>;
@@ -29,7 +29,7 @@ type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never ? (prop
     }[];
     context?: {
         root?: any;
-        skipGlobal?: boolean;
+        homeDir?: string;
     };
 }) => any | Promise<any>;
 export default class Command<T extends readonly Flag[]> {
@@ -55,7 +55,7 @@ export default class Command<T extends readonly Flag[]> {
         }[];
         context?: {
             root?: any;
-            skipGlobal?: boolean;
+            homeDir?: string;
         };
     }): Promise<void>;
     buildHelp(): string;

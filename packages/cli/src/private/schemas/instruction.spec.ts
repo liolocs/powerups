@@ -138,10 +138,11 @@ test.case("should parse include step with stepOverride", async assert => {
     ],
   });
 
-  assert(result.steps[0].stepOverride).defined();
-  assert(result.steps[0].stepOverride!.comp.type).equals("create");
-  assert(result.steps[0].stepOverride!.comp.template).equals("button.ts.ts");
-  assert(result.steps[0].stepOverride!.comp.outputPath).equals("src/ui/{{componentName}}.tsx");
+  const incStep0 = result.steps[0] as { type: string; stepOverride?: Record<string, { type: string; template: string; outputPath: string }> };
+  assert(incStep0.stepOverride).defined();
+  assert(incStep0.stepOverride!.comp.type).equals("create");
+  assert(incStep0.stepOverride!.comp.template).equals("button.ts.ts");
+  assert(incStep0.stepOverride!.comp.outputPath).equals("src/ui/{{componentName}}.tsx");
 });
 
 test.case("should parse include step with excludeSteps", async assert => {
@@ -160,8 +161,9 @@ test.case("should parse include step with excludeSteps", async assert => {
     ],
   });
 
-  assert(result.steps[0].excludeSteps!.length).equals(2);
-  assert(result.steps[0].excludeSteps![0]).equals("old-config");
+  const incStep1 = result.steps[0] as { type: string; excludeSteps?: string[] };
+  assert(incStep1.excludeSteps!.length).equals(2);
+  assert(incStep1.excludeSteps![0]).equals("old-config");
 });
 
 test.case("should parse instructions with mixed step types in order", async assert => {
@@ -318,14 +320,12 @@ test.case("should parse include step with both stepOverride and excludeSteps", a
     ],
   });
 
-  const includeStep = result.steps[0];
+  const includeStep = result.steps[0] as { type: string; stepOverride?: Record<string, { type: string; outputPath: string }>; excludeSteps?: string[] };
   assert(includeStep.type).equals("include");
-  if (includeStep.type === "include") {
-    assert(includeStep.stepOverride).defined();
-    assert(includeStep.stepOverride!.comp.outputPath).equals("src/ui/{{componentName}}.tsx");
-    assert(includeStep.excludeSteps!.length).equals(1);
-    assert(includeStep.excludeSteps![0]).equals("old-config");
-  }
+  assert(includeStep.stepOverride).defined();
+  assert(includeStep.stepOverride!.comp.outputPath).equals("src/ui/{{componentName}}.tsx");
+  assert(includeStep.excludeSteps!.length).equals(1);
+  assert(includeStep.excludeSteps![0]).equals("old-config");
 });
 
 test.case("stepSchema should parse a create step", async assert => {
@@ -335,11 +335,9 @@ test.case("stepSchema should parse a create step", async assert => {
 });
 
 test.case("stepSchema should parse a read step", async assert => {
-  const result = stepSchema.parse({ type: "read", name: "r", path: "package.json", as: "pkgName", jsonPath: "name" });
+  const result = stepSchema.parse({ type: "read", name: "r", path: "package.json", as: "pkgName", jsonPath: "name" }) as { type: string; as: string };
   assert(result.type).equals("read");
-  if (result.type === "read") {
-    assert(result.as).equals("pkgName");
-  }
+  assert(result.as).equals("pkgName");
 });
 
 test.case("stepsSchema should parse an array of steps", async assert => {

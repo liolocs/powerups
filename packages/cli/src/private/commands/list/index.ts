@@ -18,6 +18,7 @@ import {
   PACKAGE_FILE,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
+  CLI_CMD,
 } from "#constants";
 
 interface InstalledPackage {
@@ -134,6 +135,7 @@ const list = new Command({
     for (const [location, packages] of Object.entries(byLocation)) {
       if (packages.length === 0) continue;
       cli.print(`${location}:\n`);
+      const dim = cli.fg.dim;
       for (const pkg of packages) {
         cli.print(`  ${pkg.storeType}:  ${pkg.source}\n`);
         const parts: string[] = [];
@@ -147,6 +149,17 @@ const list = new Command({
           cli.print(`    powerups: ${parts.join("; ")}\n`);
         } else {
           cli.print(`    powerups: (none)\n`);
+        }
+
+        // Hints showing how to add the entire package or a particular powerup.
+        const allPowerups = [...pkg.powerups.multiUse, ...pkg.powerups.singleUse];
+        cli.print(`    ${dim("add all:")}   ${CLI_CMD} add ${pkg.source}\n`);
+        if (allPowerups.length > 0) {
+          const pad = `    ${" ".repeat("add all:   ".length)}`;
+          allPowerups.forEach((name, i) => {
+            const prefix = i === 0 ? `    ${dim("add one:")}   ` : pad;
+            cli.print(`${prefix}${CLI_CMD} add ${pkg.source}#${name}\n`);
+          });
         }
       }
       cli.print("\n");

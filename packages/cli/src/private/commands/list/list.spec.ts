@@ -216,4 +216,41 @@ test.group("list", () => {
     assert(output).includes("scoped-power");
     await testRoot.remove();
   });
+
+  test.case("shows add command hints for entire package and each powerup", async assert => {
+    await reset();
+    await writePackage(testRoot, `${INTERNAL_FOLDER}/my-pkg`, "my-pkg",
+      { multiUse: ["a-power"], singleUse: ["b-power"] });
+    await createConfig([]);
+
+    const output = await captureStdout(() => list.run({
+      subcommands: [],
+      flags: [],
+      context: { root: testRoot },
+    }));
+
+    // Hint to add the entire package (all powerups).
+    assert(output).includes("pup add my-pkg");
+    // Hint to add a particular powerup via the # fragment.
+    assert(output).includes("pup add my-pkg#a-power");
+    assert(output).includes("pup add my-pkg#b-power");
+    await testRoot.remove();
+  });
+
+  test.case("shows add hint with reconstructed git source", async assert => {
+    await reset();
+    await writePackage(testRoot, `${GIT_STORE}/github.com/foo/bar`, "bar",
+      { multiUse: ["c-power"] });
+    await createConfig([]);
+
+    const output = await captureStdout(() => list.run({
+      subcommands: [],
+      flags: [],
+      context: { root: testRoot },
+    }));
+
+    assert(output).includes("pup add https://github.com/foo/bar");
+    assert(output).includes("pup add https://github.com/foo/bar#c-power");
+    await testRoot.remove();
+  });
 });

@@ -75,7 +75,7 @@ async function createPackageOnDisk({
       description: "test",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
+      steps: [],
     });
     powerupsProperty[typeFolder][power.name] =
       `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${power.name}/instructions.json`;
@@ -198,8 +198,7 @@ test.group("pack move (errors)", () => {
       description: "circular",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "power-b", variables: {} }],
+      steps: [{ type: "include", name: "power-b", variables: {} }],
     });
 
     const powerBDir = internalFolder.append(
@@ -210,8 +209,7 @@ test.group("pack move (errors)", () => {
       description: "circular",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "power-a", variables: {} }],
+      steps: [{ type: "include", name: "power-a", variables: {} }],
     });
 
     let threw;
@@ -246,8 +244,7 @@ test.group("pack move (errors)", () => {
       description: "has bad include",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "nonexistent-power", variables: {} }],
+      steps: [{ type: "include", name: "nonexistent-power", variables: {} }],
     });
 
     let threw;
@@ -366,8 +363,7 @@ test.group("pack move (success)", () => {
       description: "has sub include",
       variables: { required: [] },
       intent: [],
-      output: { create: [], modify: [] },
-      includes: [{ name: "sub-power", variables: {} }],
+      steps: [{ type: "include", name: "sub-power", variables: {} }],
     });
 
     await saveGlobalState();

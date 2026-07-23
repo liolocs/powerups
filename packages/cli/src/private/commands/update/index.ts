@@ -102,7 +102,7 @@ const update = new Command({
       }
 
       const harnessFlag =
-        flags.harness !== undefined ? (flags.harness as string) : undefined;
+        flags.harness ? (flags.harness as string) : undefined;
       const scaffoldResult = await scaffold(homeDir, harnessFlag);
 
       const green = cli.fg.green;

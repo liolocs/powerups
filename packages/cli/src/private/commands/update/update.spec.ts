@@ -96,7 +96,7 @@ test.case("update --harness regenerates skill files globally", async assert => {
   // Run update --harness — should regenerate the file from the scaffold
   await update.run({
     subcommands: [],
-    flags: [{ flag: "--harness" }],
+    flags: [{ flag: "--harness", value: "" }],
     context: { homeDir: testRoot.path },
   });
 
@@ -120,7 +120,7 @@ test.case("update --harness regenerates instruction section in-place", async ass
   // Run update --harness
   await update.run({
     subcommands: [],
-    flags: [{ flag: "--harness" }],
+    flags: [{ flag: "--harness", value: "" }],
     context: { homeDir: testRoot.path },
   });
 
@@ -156,7 +156,7 @@ test.case("update --harness fails when not initialized globally", async assert =
   try {
     await update.run({
       subcommands: [],
-      flags: [{ flag: "--harness" }],
+      flags: [{ flag: "--harness", value: "" }],
       context: { homeDir: testRoot.path },
     });
   } catch (e: unknown) {
@@ -204,7 +204,7 @@ test.case("update --harness scaffolds to all detected harnesses", async assert =
   // Now update --harness — should scaffold to all detected
   await update.run({
     subcommands: [],
-    flags: [{ flag: "--harness" }],
+    flags: [{ flag: "--harness", value: "" }],
     context: { homeDir: testRoot.path },
   });
 
@@ -223,7 +223,7 @@ test.case("update --all --harness fails with conflicting_flags", async assert =>
   try {
     await update.run({
       subcommands: [],
-      flags: [{ flag: "--all" }, { flag: "--harness" }],
+      flags: [{ flag: "--all", value: "" }, { flag: "--harness", value: "" }],
       context: { homeDir: testRoot.path },
     });
   } catch (e: unknown) {
@@ -243,7 +243,7 @@ test.case("update --packages --harness fails with conflicting_flags", async asse
   try {
     await update.run({
       subcommands: [],
-      flags: [{ flag: "--packages" }, { flag: "--harness" }],
+      flags: [{ flag: "--packages", value: "" }, { flag: "--harness", value: "" }],
       context: { homeDir: testRoot.path },
     });
   } catch (e: unknown) {
@@ -332,7 +332,7 @@ test.case("update --packages updates git packages", async assert => {
   // Run update --packages
   await update.run({
     subcommands: [],
-    flags: [{ flag: "--packages" }],
+    flags: [{ flag: "--packages", value: "" }],
     context: { homeDir: testRoot.path },
   });
 
@@ -387,7 +387,7 @@ test.case("update --packages continues on failure", async assert => {
   try {
     await update.run({
       subcommands: [],
-      flags: [{ flag: "--packages" }],
+      flags: [{ flag: "--packages", value: "" }],
       context: { homeDir: testRoot.path },
     });
   } catch (e: unknown) {

@@ -95,11 +95,12 @@ export default ({ componentName, theme }: Record<string, string>) =>
   it does not import or execute it, so use the {{ SINGULAR_NAME }} once to confirm the
   default export works.
 
-### Output schema (`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/instructions.json`)
+### Instructions schema (`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/instructions.json`)
 
 ```json
 {
   "name": "string",
+  "description": "string",
   "variables": {
     "required": ["string"],
     "optional": ["string"]
@@ -113,42 +114,38 @@ export default ({ componentName, theme }: Record<string, string>) =>
       "peerDependencies": ["package@version"]
     }
   ],
-  "output": {
-    "create": [
-      { "name": "string", "template": "string", "outputPath": "string" }
-    ],
-    "modify": [
-      { "name": "string", "template": "string", "outputPath": "string" }
-    ],
-    "delete": [
-      { "name": "string", "outputPath": "string" }
-    ]
-  },
-  "includes": [
-    {
-      "name": "subtemplate-name",
-      "variables": { "subVar": "{{ '{{parentVar}}' }}", "other": "literal" },
-      "outputPathOverride": {
-        "create": { "originalName": "overridden/path" },
-        "delete": { "oldFile": "overridden/path" }
-      },
-      "exclude": {
-        "create": ["unwantedFile"],
-        "delete": ["legacyFile"]
-      }
-    }
+  "steps": [
+    { "type": "create", "name": "string", "template": "string", "outputPath": "string" },
+    { "type": "modify", "name": "string", "template": "string", "outputPath": "string" },
+    { "type": "delete", "name": "string", "outputPath": "string" },
+    { "type": "read", "name": "string", "path": "string", "as": "string", "jsonPath": "string" },
+    { "type": "include", "name": "subtemplate-name", "variables": {}, "stepOverride": {}, "excludeSteps": [] }
   ]
 }
 ```
 
-`includes` is optional — see [Subtemplates](#subtemplates) below.
-Both `create` and `modify` arrays are required (can be empty `[]`).
-The `delete` array is optional — omit it entirely for backward compatibility.
-Delete entries have no `template` field (nothing to render); at use time
-the file at `outputPath` is removed from the project. If the target file
-doesn't exist, a warning is printed and the entry is skipped (no error).
+The `steps` array is an ordered list of actions executed in sequence. Five step types are available:
 
-Template files referenced by `create` and `modify` entries live anywhere
+- **`create`** — render a template and write to `outputPath`
+- **`modify`** — render a modify template and apply anchor-based patches to an existing file
+- **`delete`** — remove the file at `outputPath`
+- **`read`** — read a file from the project, extract a value, store it as a variable for subsequent steps
+- **`include`** — execute another {{ SINGULAR_NAME }}'s steps inline, with variable mapping and optional overrides
+
+`read` steps support three extraction modes (precedence: `template` > `jsonPath` > raw):
+- `jsonPath` — dot-notation path into a JSON file (e.g. `"name"`, `"dependencies.express"`)
+- `template` — a `.ts` template that receives file content as `__content` alongside current variables
+- neither — store the entire file content as-is
+
+Read steps read from the project root (working directory), not the git worktree.
+Variables produced by read steps are available to all subsequent steps in the same scope.
+In dry-run mode, read steps set the variable to its own `as` value as a placeholder.
+
+`include` steps have two optional fields:
+- `stepOverride` — map of child step name to full step definition (replaces the child step entirely)
+- `excludeSteps` — array of child step names to skip
+
+Template files referenced by `create`, `modify`, and `read` (template mode) entries live anywhere
 inside the {{ SINGULAR_NAME }}'s folder (the directory containing `instructions.json`).
 The `template` field holds the full relative path from that folder — e.g.
 `button.svelte.tmpl`, `templates/button.ts`, or `src/sub/deep.njk`. The CLI
@@ -225,11 +222,11 @@ Modify template files can be:
 
 ### Subtemplates
 
-A subtemplate is a regular {{ SINGULAR_NAME }} that another {{ SINGULAR_NAME }} includes via the
-`includes` field. When a {{ SINGULAR_NAME }} runs, it renders its own files, then resolves
-each included subtemplate — mapping the subtemplate's declared variables to
+A subtemplate is a regular {{ SINGULAR_NAME }} that another {{ SINGULAR_NAME }} includes via a
+`include` step. When a {{ SINGULAR_NAME }} runs, it executes its steps in order — when it
+reaches an `include` step, it maps the subtemplate's declared variables to
 values from the parent (using `{{ '{{parentVar}}' }}` tokens or literals),
-optionally overriding output paths, and rendering the subtemplate's templates.
+optionally overriding or excluding child steps, and executes the subtemplate's steps inline.
 Subtemplates are just {{ CLI_NAME }} — they live in their own folder under
 `{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/`, have their own
 `instructions.json` and templates, and can be used standalone or included
@@ -249,24 +246,19 @@ needs a types file with the same structure.
   `instructions.json`:
 
 ```json
-"includes": [
-  {
-    "name": "types",
-    "variables": { "entityName": "{{ '{{modelName}}' }}" },
-    "outputPathOverride": { "create": { "types": "src/types/{{ '{{entityName}}' }}.ts" } }
-  }
+"steps": [
+  { "type": "include", "name": "types", "variables": { "entityName": "{{ '{{modelName}}' }}" }, "stepOverride": { "types": { "type": "create", "template": "types.njk", "outputPath": "src/types/{{ '{{entityName}}' }}.ts" } } }
 ]
 ```
 
 - The `variables` map says: "pass the parent's `modelName` as the subtemplate's
-  `entityName`." The `outputPathOverride` map says: "write the subtemplate's
-  `types` file to this path instead of its default."
+  `entityName`." The `stepOverride` map says: "replace the subtemplate's
+  `types` step with this step definition (different outputPath)."
 - Validate: `{{ CLI_CMD }} validate api-route`
 
-`exclude` — optionally skip specific files from an included subtemplate entirely.
-Each kind (`create`, `modify`, `delete`) is an array of file names to skip. A file
-in both `exclude` and `outputPathOverride` for the same kind is a validation error
-— you can't both redirect and skip the same file.
+`excludeSteps` — optionally skip specific steps from an included subtemplate entirely.
+It's an array of step names to skip. A step name in both `excludeSteps` and
+`stepOverride` is a validation error — you can't both replace and skip the same step.
 
 #### When to extract subtemplates
 
@@ -304,8 +296,8 @@ file belongs in an `includes` entry, not a copied template.
 | Create a global package | `{{ CLI_CMD }} pack create <package-name> -g` |
 | Move package to global | `{{ CLI_CMD }} pack move <package-name> global` |
 | Move & remove from config | `{{ CLI_CMD }} pack move <package-name> global -d` |
-| Create a multi-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
-| Create a single-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=single-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Create a multi-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -p='...'` |
+| Create a single-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=single-use -n=<name> -i="..." -v="..." -ov="..." -p='...'` |
 | Validate a {{ SINGULAR_NAME }} | `{{ CLI_CMD }} validate <name>` |
 | Initialize {{ CLI_NAME }} | `{{ CLI_CMD }} init` |
 | Health check all | `{{ CLI_CMD }} doctor` |

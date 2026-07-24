@@ -8,30 +8,49 @@ export const VALID_HARNESSES = ["claude", "opencode", "pi", "codex"] as const;
 export type Harness = (typeof VALID_HARNESSES)[number];
 
 /**
- * Detect all active harnesses from global fingerprints.
+ * Detect active harnesses from fingerprints under `baseDir`.
  *
  * Flow:
- *   1. If harnessFlag is provided, validate and return [single].
- *   2. Scan global fingerprints (~/.claude/, ~/.pi/agent/, ~/.opencode/, ~/.codex/).
- *      - Return all detected harnesses (multiple is OK).
- *   3. Nothing found → throw no_harness_detected.
+ *   1. If a non-empty `harnessFlag` is provided, split on commas, trim,
+ *      validate and dedupe, returning the resulting array. Any invalid
+ *      token throws `invalid_harness`.
+ *   2. Scan fingerprints under `baseDir` (`<baseDir>/.claude`, `<baseDir>/.pi/agent`,
+ *      `<baseDir>/.opencode`, `<baseDir>/.codex`). Return all detected harnesses.
+ *   3. Nothing found -> throw `no_harness_detected`.
  *
- * Pass `options.homeDir` to override the home directory (for testing).
+ * Pass `options.baseDir` to override the scanned directory (defaults to home).
  */
 export async function detectHarnesses(
   harnessFlag: string | undefined,
-  options?: { homeDir?: string },
+  options?: { baseDir?: string },
 ): Promise<Harness[]> {
-  // 1. --harness override
-  if (harnessFlag !== undefined) {
-    if (!VALID_HARNESSES.includes(harnessFlag as Harness)) {
-      throw init_errors.invalid_harness(harnessFlag);
+  // 1. --harness override (comma-separated)
+  if (harnessFlag !== undefined && harnessFlag !== "") {
+    const tokens = harnessFlag
+      .split(",")
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    const result: Harness[] = [];
+
+    for (const token of tokens) {
+      if (!VALID_HARNESSES.includes(token as Harness)) {
+        throw init_errors.invalid_harness(token);
+      }
+      if (!result.includes(token as Harness)) {
+        result.push(token as Harness);
+      }
     }
-    return [harnessFlag as Harness];
+
+    if (result.length === 0) {
+      throw init_errors.no_harness_detected();
+    }
+
+    return result;
   }
 
-  // 2. Global detection
-  const baseDir = options?.homeDir ?? homedir();
+  // 2. Detection from baseDir fingerprints
+  const baseDir = options?.baseDir ?? homedir();
   const found = new Set<Harness>();
 
   for (const harness of VALID_HARNESSES) {

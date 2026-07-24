@@ -32,13 +32,52 @@ test.case("invalid --harness throws invalid_harness", async assert => {
   assert(threw).equals(InitErrorCode.invalid_harness);
 });
 
+test.group("comma-separated --harness", () => {
+  test.case("parses two harnesses", async assert => {
+    const result = await detectHarnesses("claude,pi");
+    assert(result).equals(["claude", "pi"]);
+  });
+
+  test.case("trims whitespace around tokens", async assert => {
+    const result = await detectHarnesses(" claude , pi ");
+    assert(result).equals(["claude", "pi"]);
+  });
+
+  test.case("dedupes repeated harnesses", async assert => {
+    const result = await detectHarnesses("claude,claude");
+    assert(result).equals(["claude"]);
+  });
+
+  test.case("throws invalid_harness naming the bad token", async assert => {
+    let threw;
+    try {
+      await detectHarnesses("claude,bogus");
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(InitErrorCode.invalid_harness);
+  });
+
+  test.case("empty string falls through to auto-detect", async assert => {
+    await testRoot.remove();
+    await fs.create(testRoot);
+    await fs.create(testRoot.append("/.claude"));
+
+    const result = await detectHarnesses("", { baseDir: testRoot.path });
+    assert(result).equals(["claude"]);
+
+    await testRoot.remove();
+  });
+});
+
 test.case("returns all detected harnesses when multiple found", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(testRoot.append("/.claude"));
   await fs.create(testRoot.append("/.pi/agent"));
 
-  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  const result = await detectHarnesses(undefined, { baseDir: testRoot.path });
   assert(result.length).equals(2);
   assert(result.includes("claude")).true();
   assert(result.includes("pi")).true();
@@ -46,12 +85,12 @@ test.case("returns all detected harnesses when multiple found", async assert => 
   await testRoot.remove();
 });
 
-test.case("detects single harness from global fingerprints", async assert => {
+test.case("detects single harness from fingerprints", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(testRoot.append("/.claude"));
 
-  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  const result = await detectHarnesses(undefined, { baseDir: testRoot.path });
   assert(result).equals(["claude"]);
 
   await testRoot.remove();
@@ -62,7 +101,7 @@ test.case("detects opencode", async assert => {
   await fs.create(testRoot);
   await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.opencode}`));
 
-  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  const result = await detectHarnesses(undefined, { baseDir: testRoot.path });
   assert(result).equals(["opencode"]);
 
   await testRoot.remove();
@@ -73,7 +112,7 @@ test.case("detects codex from .codex fingerprint", async assert => {
   await fs.create(testRoot);
   await fs.create(testRoot.append("/.codex"));
 
-  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  const result = await detectHarnesses(undefined, { baseDir: testRoot.path });
   assert(result).equals(["codex"]);
 
   await testRoot.remove();
@@ -87,7 +126,7 @@ test.case("detects all four harnesses when all fingerprints present", async asse
   await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.opencode}`));
   await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.codex}`));
 
-  const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
+  const result = await detectHarnesses(undefined, { baseDir: testRoot.path });
   assert(result.length).equals(4);
   assert(result.includes("claude")).true();
   assert(result.includes("pi")).true();
@@ -104,7 +143,7 @@ test.group("detect errors", () => {
 
     let threw;
     try {
-      await detectHarnesses(undefined, { homeDir: testRoot.path });
+      await detectHarnesses(undefined, { baseDir: testRoot.path });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;

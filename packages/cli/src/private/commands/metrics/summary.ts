@@ -14,6 +14,47 @@ interface OutputAggregate {
   characters: number;
 }
 
+interface ColumnSpec {
+  header: string;
+  align: "left" | "right";
+}
+
+const NO_METRICS_MESSAGE = "No metrics recorded yet. Run an output to start collecting metrics.\n";
+
+/**
+ * Print a formatted table with headers, data rows, separators, and a total row.
+ * Column widths are computed from the widest cell across headers, data, and total.
+ * Each column is padded according to its alignment spec.
+ */
+function printTable(columns: ColumnSpec[], dataRows: string[][], totalRow: string[]): void {
+  const headers = columns.map(c => c.header);
+
+  const colWidths = headers.map((h, i) =>
+    Math.max(
+      h.length,
+      ...dataRows.map(r => r[i].length),
+      totalRow[i].length,
+    ),
+  );
+
+  const formatRow = (cells: string[]): string =>
+    cells.map((cell, i) =>
+      columns[i].align === "left"
+        ? cell.padEnd(colWidths[i])
+        : cell.padStart(colWidths[i]),
+    ).join("   ");
+
+  const separator = colWidths.map(w => "─".repeat(w)).join("   ");
+
+  cli.print(formatRow(headers) + "\n");
+  cli.print(separator + "\n");
+  for (const row of dataRows) {
+    cli.print(formatRow(row) + "\n");
+  }
+  cli.print(separator + "\n");
+  cli.print(formatRow(totalRow) + "\n");
+}
+
 const summary = new Command({
   name: "summary",
   description: "Show aggregated metrics for all output runs",
@@ -35,7 +76,7 @@ const summary = new Command({
       const entries: ProjectMetricsEntry[] = await readAllMetrics({ globalRoot });
 
       if (entries.length === 0) {
-        cli.print("No metrics recorded yet. Run a output to start collecting metrics.\n");
+        cli.print(NO_METRICS_MESSAGE);
         return;
       }
 
@@ -60,10 +101,14 @@ const summary = new Command({
       const totalCharacters = rows.reduce((sum, r) => sum + r.characters, 0);
       const totalEstTokens = Math.round(totalCharacters / 4);
 
-      // Column definitions
-      const headers = ["Project", "Output", "Runs", "Characters", "Est. Tokens powerups"];
+      const columns: ColumnSpec[] = [
+        { header: "Project", align: "left" },
+        { header: "Output", align: "left" },
+        { header: "Runs", align: "right" },
+        { header: "Characters", align: "right" },
+        { header: "Est. Tokens powerups", align: "right" },
+      ];
 
-      // Build string rows for width calculation
       const dataRows = rows.map(r => [
         r.project,
         r.output,
@@ -79,32 +124,12 @@ const summary = new Command({
         `~${totalEstTokens.toLocaleString()}`,
       ];
 
-      // Compute column widths
-      const colWidths = headers.map((h, i) =>
-        Math.max(
-          h.length,
-          ...dataRows.map(r => r[i].length),
-          totalRow[i].length,
-        ),
-      );
-
-      // Row formatter: project and output left-aligned, numbers right-aligned
-      const formatRow = (project: string, output: string, runs: string, chars: string, tokens: string) =>
-        `${project.padEnd(colWidths[0])}   ${output.padEnd(colWidths[1])}   ${runs.padStart(colWidths[2])}   ${chars.padStart(colWidths[3])}   ${tokens.padStart(colWidths[4])}`;
-
-      // Print table
-      cli.print(formatRow(headers[0], headers[1], headers[2], headers[3], headers[4]) + "\n");
-      cli.print(colWidths.map(w => "─".repeat(w)).join("   ") + "\n");
-      for (const row of dataRows) {
-        cli.print(formatRow(row[0], row[1], row[2], row[3], row[4]) + "\n");
-      }
-      cli.print(colWidths.map(w => "─".repeat(w)).join("   ") + "\n");
-      cli.print(formatRow(totalRow[0], totalRow[1], totalRow[2], totalRow[3], totalRow[4]) + "\n");
+      printTable(columns, dataRows, totalRow);
     } else {
       const entries: MetricsEntry[] = await readMetrics({ cwd: root.path, globalRoot });
 
       if (entries.length === 0) {
-        cli.print("No metrics recorded yet. Run a output to start collecting metrics.\n");
+        cli.print(NO_METRICS_MESSAGE);
         return;
       }
 
@@ -133,10 +158,13 @@ const summary = new Command({
       const totalCharacters = rows.reduce((sum, r) => sum + r.characters, 0);
       const totalEstTokens = Math.round(totalCharacters / 4);
 
-      // Column definitions
-      const headers = ["Output", "Runs", "Characters", "Est. Tokens powerups"];
+      const columns: ColumnSpec[] = [
+        { header: "Output", align: "left" },
+        { header: "Runs", align: "right" },
+        { header: "Characters", align: "right" },
+        { header: "Est. Tokens powerups", align: "right" },
+      ];
 
-      // Build string rows for width calculation
       const dataRows = rows.map(r => [
         r.output,
         r.runs.toLocaleString(),
@@ -150,27 +178,7 @@ const summary = new Command({
         `~${totalEstTokens.toLocaleString()}`,
       ];
 
-      // Compute column widths
-      const colWidths = headers.map((h, i) =>
-        Math.max(
-          h.length,
-          ...dataRows.map(r => r[i].length),
-          totalRow[i].length,
-        ),
-      );
-
-      // Row formatter: output left-aligned, numbers right-aligned
-      const formatRow = (output: string, runs: string, chars: string, tokens: string) =>
-        `${output.padEnd(colWidths[0])}   ${runs.padStart(colWidths[1])}   ${chars.padStart(colWidths[2])}   ${tokens.padStart(colWidths[3])}`;
-
-      // Print table
-      cli.print(formatRow(headers[0], headers[1], headers[2], headers[3]) + "\n");
-      cli.print(colWidths.map(w => "─".repeat(w)).join("   ") + "\n");
-      for (const row of dataRows) {
-        cli.print(formatRow(row[0], row[1], row[2], row[3]) + "\n");
-      }
-      cli.print(colWidths.map(w => "─".repeat(w)).join("   ") + "\n");
-      cli.print(formatRow(totalRow[0], totalRow[1], totalRow[2], totalRow[3]) + "\n");
+      printTable(columns, dataRows, totalRow);
     }
   },
 });

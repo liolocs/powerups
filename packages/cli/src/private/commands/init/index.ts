@@ -20,8 +20,6 @@ const init = new Command({
     const homeDirStr = context?.homeDir ?? homedir();
     const homeDir = fs.ref(homeDirStr);
     const globalRoot = homeDir.append(`/${MAIN_FOLDER}`);
-    console.log("homeDir", homeDirStr);
-    console.log("globalRoot", globalRoot);
 
     if (await fs.exists(globalRoot)) {
       throw init_errors.global_already_initialized();

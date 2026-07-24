@@ -25,9 +25,6 @@ const init_errors = error.coded({
   invalid_harness: (value: string) => {
     return t`${errorLabel} Invalid harness: ${cli.fg.yellow(value)}\n\n  Valid values: claude, opencode, pi, codex`;
   },
-  agents_section_render_failed: (detail: string) => {
-    return t`${errorLabel} Failed to render instruction section: ${detail}`;
-  },
 });
 
 export type InitErrorCode = keyof typeof init_errors;

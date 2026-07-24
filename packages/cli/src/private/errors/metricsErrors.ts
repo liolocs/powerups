@@ -1,17 +1,4 @@
-import error from "@rcompat/error";
-import cli from "@rcompat/cli";
-import { CLI_NAME, MAIN_FOLDER } from "#constants";
-
-const t = error.template;
-
-const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
-
-const metrics_errors = error.coded({
-  main_folder_not_found: () => {
-    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_NAME} init" first.`;
-    return t`${errorBGText}${errorText}`;
-  },
-});
+const metrics_errors = {} as Record<string, never>;
 
 export type MetricsErrorCode = keyof typeof metrics_errors;
 

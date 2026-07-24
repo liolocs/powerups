@@ -14,7 +14,7 @@ export type Harness = (typeof VALID_HARNESSES)[number];
  *   1. If a non-empty `harnessFlag` is provided, split on commas, trim,
  *      validate and dedupe, returning the resulting array. Any invalid
  *      token throws `invalid_harness`.
- *   2. Scan fingerprints under `baseDir` (`<baseDir>/.claude`, `<baseDir>/.pi/agent`,
+ *   2. Scan fingerprints under `baseDir` (`<baseDir>/.claude`, `<baseDir>/.pi`,
  *      `<baseDir>/.opencode`, `<baseDir>/.codex`). Return all detected harnesses.
  *   3. Nothing found -> throw `no_harness_detected`.
  *

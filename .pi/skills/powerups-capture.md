@@ -41,12 +41,12 @@ go in the same package.
    to understand it. If it's similar enough, suggest reusing or extending the
    existing powerup rather than creating a new one. If the new
    work partially overlaps existing powerups (same template files with minor
-   variations), plan to use the `includes` mechanism to reference the existing
+   variations), plan to use `include` steps to reference the existing
    powerups as subtemplates — only create new template files for the parts
    that are genuinely new. Do NOT duplicate template content that already
    exists in another powerup. Run `pup info <name>` on each
    overlapping powerup to understand its variables and file mapping, then
-   determine how to compose the new powerup via `includes`.
+   determine how to compose the new powerup via `include` steps.
 
 4. Assess whether this is a single-use or multi-use powerup:
    - A single-use powerup is a one-time addition to the project (e.g., add a dependency,
@@ -66,10 +66,22 @@ go in the same package.
    - Intent keywords (comma-separated)
    - Variables — the parts that change between uses. Both multi-use and
      single-use powers can have variables; for some single-use powers, variables may be empty.
-   - File mapping: which files are "create" entries (new files generated),
-     which are "modify" entries (changes to existing files), and which are
-     "delete" entries (files to remove). For each create/modify: the template
-     filename and the outputPath. For delete: just the outputPath.
+   - Steps: the ordered `steps` array the captured powerup will
+     declare. Each step is one of:
+       - `create` — render a template and write to `outputPath` (new file)
+       - `modify` — render a modify template and apply patches to an existing
+         file (changes to an existing file)
+       - `delete` — remove the file at `outputPath`
+       - `read` — read a project file and store a value as a variable for
+         subsequent steps (use when the captured work depends on a value pulled
+         from the project, e.g. a package name or config key)
+       - `include` — run another powerup's steps inline (use when the
+         captured work overlaps an existing powerup; see the main instruction
+         file for subtemplate mechanics)
+     For each create/modify step: the step `name`, the template filename, and
+     the `outputPath`. For delete: the step `name` and `outputPath`. For read:
+     the `name`, `path`, `as`, and optional `jsonPath`/`template`. For include:
+     the `name`, `variables` map, and optional `stepOverride`/`excludeSteps`.
    - Package dependencies: if the captured work involves adding npm
      dependencies, record them in the `packageDependencies` field of
      `instructions.json` — do NOT include `package.json` as a modify entry.
@@ -81,20 +93,26 @@ go in the same package.
    Present this to the user and get approval before proceeding.
 
 6. Scaffold the folder structure by running:
-   `pup create --pack=<package> --type=multi-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
-   (or `pup create --pack=<package> --type=single-use -n=<name> -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -o='<files-json>'`
-   for single-use powers). Use `-ov` only if there are optional variables; omit it
-   otherwise. This creates the instructions.json and empty template files inside
-   the specified package.
+   `pup create --pack=<package> --type=multi-use -n=<name> -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
+   (or `pup create --pack=<package> --type=single-use -n=<name> -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
+   for single-use powers). Use `-ov` only if there are optional variables and
+   `-p` only if there are package dependencies; omit them otherwise.
+   This creates the powerup's folder and an `instructions.json`
+   with an empty `steps: []` array inside the specified package. It does NOT
+   create any template files — you add those in the next steps.
 
-7. Copy the original files into the powerup's folder, overwriting
-   the empty stubs. Use `cp` for each file — this brings the full content onto
+7. Copy the original files into the powerup's folder to serve as
+   the templates. Use `cp` for each file — this brings the full content onto
    disk without writing it as agent output. Do NOT write file contents from
-   scratch — always copy first. The `create` command already scaffolded empty
-   stub files at the paths specified by the `template` field; copy the originals
-   over them.
+   scratch — always copy first. Place each copied file at the path you will
+   reference in the corresponding step's `template` field (the path is
+   relative to the powerup's folder, the directory containing
+   `instructions.json`).
 
-8. Edit the copied files in place to parameterize them:
+8. Edit `instructions.json` to fill in the `steps` array with the steps you
+   identified in step 5 (create/modify/delete/read/include), pointing each
+   step's `template` at the file you copied in step 7. Then parameterize the
+   copied template files in place:
    - For .ts templates: wrap the content in a default-export function and
      replace concrete values with `${var}`. Keep it a pure function of
      `vars` — no imports, no filesystem access. Example:
@@ -132,7 +150,7 @@ go in the same package.
 11. Self-review: Confirm the dry-run output matches the original work.
     Confirm all variables are declared. Confirm no placeholders remain.
     Confirm no template content is duplicated from existing powerups —
-    overlapping files should use `includes` instead of copied templates.
+    overlapping files should use `include` steps instead of copied templates.
 
 12. Report back to the user: what was captured, where it lives, and how to
     reuse it:
@@ -175,7 +193,7 @@ go in the same package.
      (one-time addition)?
    - Intent keywords
    - Variables (the parts that would change between uses)
-   - Files it would generate (create), modify (modify), delete (delete)
+   - Steps it would declare (create / modify / delete / read / include)
 
    Get user approval on which candidates to capture before proceeding.
 

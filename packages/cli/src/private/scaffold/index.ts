@@ -43,7 +43,7 @@ const HARNESS_CONFIG: Record<Harness, {
   },
   pi: {
     instructionFile: "AGENTS.md",
-    skillDir: ".pi/agent/skills",
+    skillDir: ".pi/skills",
   },
   codex: {
     instructionFile: "AGENTS.md",

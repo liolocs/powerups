@@ -74,8 +74,8 @@ test.group("comma-separated --harness", () => {
 test.case("returns all detected harnesses when multiple found", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
-  await fs.create(testRoot.append("/.claude"));
-  await fs.create(testRoot.append("/.pi/agent"));
+  await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.claude}`));
+  await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.pi}`));
 
   const result = await detectHarnesses(undefined, { baseDir: testRoot.path });
   assert(result.length).equals(2);

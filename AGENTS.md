@@ -205,60 +205,76 @@ export default ({ componentName, theme }: Record<string, string>) =>
   it does not import or execute it, so use the powerup once to confirm the
   default export works.
 
-### Output schema (`.powerups/internal/<package>/src/active/multi-use/<name>/instructions.json`)
+### Instructions schema (`.powerups/internal/<package>/src/active/multi-use/<name>/instructions.json`)
+
+Fields marked `?` are optional; omit them entirely when unused.
 
 ```json
 {
   "name": "string",
+  "description": "string",
   "variables": {
     "required": ["string"],
-    "optional": ["string"]
+    "optional": ["string"]?
   },
   "intent": ["string"],
-  "packageDependencies": [
+  "packageDependencies"?: [
     {
-      "target": "packages/web",
-      "dependencies": ["package@version"],
-      "devDependencies": ["package@version"],
-      "peerDependencies": ["package@version"]
+      "target"?: "packages/web",
+      "dependencies"?: ["package@version"],
+      "devDependencies"?: ["package@version"],
+      "peerDependencies"?: ["package@version"]
     }
   ],
-  "output": {
-    "create": [
-      { "name": "string", "template": "string", "outputPath": "string" }
-    ],
-    "modify": [
-      { "name": "string", "template": "string", "outputPath": "string" }
-    ],
-    "delete": [
-      { "name": "string", "outputPath": "string" }
-    ]
-  },
-  "includes": [
-    {
-      "name": "subtemplate-name",
-      "variables": { "subVar": "{{parentVar}}", "other": "literal" },
-      "outputPathOverride": {
-        "create": { "originalName": "overridden/path" },
-        "delete": { "oldFile": "overridden/path" }
-      },
-      "exclude": {
-        "create": ["unwantedFile"],
-        "delete": ["legacyFile"]
-      }
-    }
+  "steps": [
+    { "type": "create", "name": "string", "template": "string", "outputPath": "string" },
+    { "type": "modify", "name": "string", "template": "string", "outputPath": "string" },
+    { "type": "delete", "name": "string", "outputPath": "string" },
+    { "type": "read", "name": "string", "path": "string", "as": "string", "jsonPath"?: "string", "template"?: "string" },
+    { "type": "include", "name": "subtemplate-name", "variables": {}, "stepOverride"?: {}, "excludeSteps"?: [] }
   ]
 }
 ```
 
-`includes` is optional — see [Subtemplates](#subtemplates) below.
-Both `create` and `modify` arrays are required (can be empty `[]`).
-The `delete` array is optional — omit it entirely for backward compatibility.
-Delete entries have no `template` field (nothing to render); at use time
-the file at `outputPath` is removed from the project. If the target file
-doesn't exist, a warning is printed and the entry is skipped (no error).
+The `steps` array is an ordered list of actions executed in sequence. Five step types are available:
 
-Template files referenced by `create` and `modify` entries live anywhere
+- **`create`** — render a template and write to `outputPath`
+- **`modify`** — render a modify template and apply anchor-based patches to an existing file
+- **`delete`** — remove the file at `outputPath`
+- **`read`** — read a file from the project, extract a value, store it as a variable for subsequent steps
+- **`include`** — execute another powerup's steps inline, with variable mapping and optional overrides
+
+`read` steps support three extraction modes (precedence: `template` > `jsonPath` > raw):
+- `jsonPath` — dot-notation path into a JSON file (e.g. `"name"`, `"dependencies.express"`)
+- `template` — a `.ts` template that receives file content as `__content` alongside current variables
+- neither — store the entire file content as-is
+
+Examples:
+
+```json
+{ "type": "read", "name": "read-pkg-name", "path": "package.json", "as": "pkgName", "jsonPath": "name" }
+```
+Stores `package.json`'s `"name"` field into the `pkgName` variable.
+
+```json
+{ "type": "read", "name": "read-routes", "path": "src/routes.ts", "as": "routesBlock", "template": "extract-routes.ts" }
+```
+Where `extract-routes.ts` is:
+```ts
+export default ({ __content }: Record<string, string>) =>
+  __content.match(/router\.(get|post)\([^)]*\)/g)?.join("\n") ?? "";
+```
+Runs the `.ts` function over the file's content and stores the returned string into `routesBlock`.
+
+Read steps read from the project root (working directory), not the git worktree.
+Variables produced by read steps are available to all subsequent steps in the same scope.
+In dry-run mode, read steps set the variable to its own `as` value as a placeholder.
+
+`include` steps have two optional fields:
+- `stepOverride` — map of child step name to step definition without `name` (replaces the child step entirely)
+- `excludeSteps` — array of child step names to skip
+
+Template files referenced by `create`, `modify`, and `read` (template mode) entries live anywhere
 inside the powerup's folder (the directory containing `instructions.json`).
 The `template` field holds the full relative path from that folder — e.g.
 `button.svelte.tmpl`, `templates/button.ts`, or `src/sub/deep.njk`. The CLI
@@ -267,7 +283,7 @@ by any `template` field are reported as orphaned by `pup doctor`.
 
 ### Required vs Optional Variables
 
-The `variables` field has two arrays:
+The `variables` field is always present, even when a powerup has no variables (`{ "required": [] }`). It has two arrays:
 
 - **`required`** — variables the user must provide at use time. If any are
   missing, the CLI reports all missing required variables in a single error
@@ -335,11 +351,11 @@ Modify template files can be:
 
 ### Subtemplates
 
-A subtemplate is a regular powerup that another powerup includes via the
-`includes` field. When a powerup runs, it renders its own files, then resolves
-each included subtemplate — mapping the subtemplate's declared variables to
+A subtemplate is a regular powerup that another powerup includes via a
+`include` step. When a powerup runs, it executes its steps in order — when it
+reaches an `include` step, it maps the subtemplate's declared variables to
 values from the parent (using `{{parentVar}}` tokens or literals),
-optionally overriding output paths, and rendering the subtemplate's templates.
+optionally overriding or excluding child steps, and executes the subtemplate's steps inline.
 Subtemplates are just powerups — they live in their own folder under
 `.powerups/internal/<package>/src/active/multi-use/`, have their own
 `instructions.json` and templates, and can be used standalone or included
@@ -359,24 +375,19 @@ needs a types file with the same structure.
   `instructions.json`:
 
 ```json
-"includes": [
-  {
-    "name": "types",
-    "variables": { "entityName": "{{modelName}}" },
-    "outputPathOverride": { "create": { "types": "src/types/{{entityName}}.ts" } }
-  }
+"steps": [
+  { "type": "include", "name": "types", "variables": { "entityName": "{{modelName}}" }, "stepOverride": { "types": { "type": "create", "template": "types.njk", "outputPath": "src/types/{{entityName}}.ts" } } }
 ]
 ```
 
 - The `variables` map says: "pass the parent's `modelName` as the subtemplate's
-  `entityName`." The `outputPathOverride` map says: "write the subtemplate's
-  `types` file to this path instead of its default."
+  `entityName`." The `stepOverride` map says: "replace the subtemplate's
+  `types` step with this step definition (different outputPath)."
 - Validate: `pup validate api-route`
 
-`exclude` — optionally skip specific files from an included subtemplate entirely.
-Each kind (`create`, `modify`, `delete`) is an array of file names to skip. A file
-in both `exclude` and `outputPathOverride` for the same kind is a validation error
-— you can't both redirect and skip the same file.
+`excludeSteps` — optionally skip specific steps from an included subtemplate entirely.
+It's an array of step names to skip. A step name in both `excludeSteps` and
+`stepOverride` is a validation error — you can't both replace and skip the same step.
 
 #### When to extract subtemplates
 
@@ -414,8 +425,8 @@ file belongs in an `includes` entry, not a copied template.
 | Create a global package | `pup pack create <package-name> -g` |
 | Move package to global | `pup pack move <package-name> global` |
 | Move & remove from config | `pup pack move <package-name> global -d` |
-| Create a multi-use powerup | `pup create --pack=<pkg> --type=multi-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
-| Create a single-use powerup | `pup create --pack=<pkg> --type=single-use -n=<name> -i="..." -v="..." -ov="..." -o='...' -p='...'` |
+| Create a multi-use powerup | `pup create --pack=<pkg> --type=multi-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
+| Create a single-use powerup | `pup create --pack=<pkg> --type=single-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
 | Validate a powerup | `pup validate <name>` |
 | Initialize powerups | `pup init` |
 | Health check all | `pup doctor` |

@@ -67,11 +67,11 @@ const SKILLS_TO_SCAFFOLD = [
 ];
 
 export async function scaffold(
-  homeDir: FileRef,
+  root: FileRef,
   harnessFlag: string | undefined,
   options?: { rollback?: RollbackInfo },
 ): Promise<ScaffoldResult> {
-  const harnesses = await detectHarnesses(harnessFlag, { homeDir: homeDir.path });
+  const harnesses = await detectHarnesses(harnessFlag, { baseDir: root.path });
   const filesWritten: string[] = [];
   const rollback = options?.rollback;
 
@@ -113,7 +113,7 @@ export async function scaffold(
     // Back up the existing instruction file before modifying it, so the caller
     // can restore it on rollback. Done *after* rendering so that a render
     // failure does not create a spurious backup entry.
-    const instructionRef = homeDir.append(`/${config.instructionFile}`);
+    const instructionRef = root.append(`/${config.instructionFile}`);
     const hasExistingInstructionFile = await fs.exists(instructionRef);
 
     if (is.defined(rollback) && hasExistingInstructionFile) {
@@ -124,7 +124,7 @@ export async function scaffold(
     }
 
     const hasCreatedNewAgentsOrClaudeMD = await writeToAgentsOrClaudeMD(
-      homeDir,
+      root,
       config.instructionFile,
       agentsRendered,
       CLI_NAME,
@@ -139,7 +139,7 @@ export async function scaffold(
     for (const skill of renderedSkills) {
       const outputPath = `${config.skillDir}/${skill.name}.md`;
 
-      await writeSkillFile(homeDir, outputPath, skill.content);
+      await writeSkillFile(root, outputPath, skill.content);
 
       if (is.defined(rollback)) {
         rollback.remove.push(outputPath);

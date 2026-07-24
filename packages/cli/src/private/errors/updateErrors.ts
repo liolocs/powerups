@@ -23,10 +23,6 @@ const update_errors = error.coded({
   package_not_found: (source: string) => {
     return t`${errorLabel}Package "${source}" is not installed (not found in local or global stores).`;
   },
-
-  global_not_initialized: () => {
-    return t`${errorLabel}powerups is not initialized. Run "${CLI_CMD} init" first.`;
-  },
 });
 
 export type UpdateErrorCode = keyof typeof update_errors;

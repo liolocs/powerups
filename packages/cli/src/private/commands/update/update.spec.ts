@@ -4,31 +4,40 @@ import fs from "@rcompat/fs";
 import io from "@rcompat/io";
 import runtime from "@rcompat/runtime";
 import update from "#commands/update/index";
-import init from "#commands/init/index";
+import projectInit from "#commands/project/init";
 import { CodeError } from "@rcompat/error";
 import { InitErrorCode } from "#errors/initErrors";
 import { UpdateErrorCode } from "#errors/updateErrors";
+import { ProjectErrorCode } from "#errors/projectErrors";
 import { writeGlobalConfig } from "#utils/config";
 import { MAIN_FOLDER, CLI_NAME, HARNESS_FINGERPRINTS, SKILLS_DIRS } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
+const homeRoot = root.append("/tmp/update-home");
 
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
+  await homeRoot.remove();
+  await fs.create(homeRoot);
 }
 
-/** Run init globally to set up ~/.powerups, then return. */
+/**
+ * Initialize a project with the given harness so `.powerups` + skill files
+ * exist in the project root (testRoot), ready for update to re-scaffold.
+ * Also bootstraps a separate global home dir (homeRoot).
+ */
 async function setup(harness: string) {
-  await init.run({
-    subcommands: [harness],
-    flags: [],
-    context: { homeDir: testRoot.path },
+  await reset();
+  await projectInit.run({
+    subcommands: [],
+    flags: [{ flag: "--harness", value: harness }],
+    context: { root: testRoot, homeDir: homeRoot.path },
   });
   // Some harness fingerprints are not created by scaffold (they come from
-  // the harness installation itself). Create them so detectHarnesses can
-  // find the harness when update runs without --harness.
+  // the harness installation itself). Create them under the project root so
+  // detectHarnesses finds the harness when update runs without --harness.
   const extraFingerprints: Record<string, string> = {
     pi: HARNESS_FINGERPRINTS.pi,
     opencode: HARNESS_FINGERPRINTS.opencode,
@@ -65,6 +74,8 @@ async function createRemoteRepo(
   await io.run(`git commit -m "${message}"`, { cwd: dir.path });
 }
 
+const ctx = () => ({ root: testRoot, homeDir: homeRoot.path });
+
 test.case("update with no flags fails", async assert => {
   await reset();
   await setup("claude");
@@ -74,7 +85,7 @@ test.case("update with no flags fails", async assert => {
     await update.run({
       subcommands: [],
       flags: [],
-      context: { homeDir: testRoot.path },
+      context: ctx(),
     });
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
@@ -83,23 +94,23 @@ test.case("update with no flags fails", async assert => {
   assert(threw).equals(UpdateErrorCode.no_mode);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
-test.case("update --harness regenerates skill files globally", async assert => {
+test.case("update --harness regenerates skill files", async assert => {
   await reset();
   await setup("pi");
 
-  // Corrupt a skill file
+  // Corrupt a skill file in the project root
   const skillPath = `${SKILLS_DIRS.pi}/${CLI_NAME}-implement.md`;
   const skillRef = testRoot.append(`/${skillPath}`);
-  console.log(skillRef.path);
   await skillRef.write("CORRUPTED");
 
   // Run update --harness — should regenerate the file from the scaffold
   await update.run({
     subcommands: [],
     flags: [{ flag: "--harness", value: "" }],
-    context: { homeDir: testRoot.path },
+    context: ctx(),
   });
 
   const content = await skillRef.text();
@@ -108,13 +119,14 @@ test.case("update --harness regenerates skill files globally", async assert => {
   assert(content.includes(`name: ${CLI_NAME}-implement`)).equals(true);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update --harness regenerates instruction section in-place", async assert => {
   await reset();
   await setup("claude");
 
-  // The CLAUDE.md should have the BEGIN/END section
+  // The CLAUDE.md (in the project root) should have the BEGIN/END section
   const agentsRef = testRoot.append("/CLAUDE.md");
   const before = await agentsRef.text();
   assert(before.includes(`<!-- BEGIN ${CLI_NAME} -->`)).equals(true);
@@ -123,7 +135,7 @@ test.case("update --harness regenerates instruction section in-place", async ass
   await update.run({
     subcommands: [],
     flags: [{ flag: "--harness", value: "" }],
-    context: { homeDir: testRoot.path },
+    context: ctx(),
   });
 
   // Section should still be there exactly once (not duplicated)
@@ -132,6 +144,7 @@ test.case("update --harness regenerates instruction section in-place", async ass
   assert(count).equals(1);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update --harness=claude scaffolds to specified harness only", async assert => {
@@ -142,16 +155,34 @@ test.case("update --harness=claude scaffolds to specified harness only", async a
   await update.run({
     subcommands: [],
     flags: [{ flag: "--harness", value: "claude" }],
-    context: { homeDir: testRoot.path },
+    context: ctx(),
   });
 
-  // Claude files should now exist
+  // Claude files should now exist in the project root
   assert(await fs.exists(testRoot.append(`/.claude/skills`))).equals(true);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
-test.case("update --harness fails when not initialized globally", async assert => {
+test.case("update --harness claude,pi regenerates both", async assert => {
+  await reset();
+  await setup("claude");
+
+  await update.run({
+    subcommands: [],
+    flags: [{ flag: "--harness", value: "claude,pi" }],
+    context: ctx(),
+  });
+
+  assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.claude}`))).true();
+  assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.pi}`))).true();
+
+  await testRoot.remove();
+  await homeRoot.remove();
+});
+
+test.case("update --harness fails when project not initialized", async assert => {
   await reset();
 
   let threw;
@@ -159,15 +190,16 @@ test.case("update --harness fails when not initialized globally", async assert =
     await update.run({
       subcommands: [],
       flags: [{ flag: "--harness", value: "" }],
-      context: { homeDir: testRoot.path },
+      context: ctx(),
     });
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
     threw = (e as CodeError).code;
   }
-  assert(threw).equals(UpdateErrorCode.global_not_initialized);
+  assert(threw).equals(ProjectErrorCode.project_not_initialized);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update --harness fails with invalid harness", async assert => {
@@ -179,7 +211,7 @@ test.case("update --harness fails with invalid harness", async assert => {
     await update.run({
       subcommands: [],
       flags: [{ flag: "--harness", value: "bogus" }],
-      context: { homeDir: testRoot.path },
+      context: ctx(),
     });
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
@@ -188,33 +220,35 @@ test.case("update --harness fails with invalid harness", async assert => {
   assert(threw).equals(InitErrorCode.invalid_harness);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update --harness scaffolds to all detected harnesses", async assert => {
   await reset();
-  // Create global fingerprints for both claude and pi
+  // Create project-root fingerprints for both claude and pi
   await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.claude}`));
   await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.pi}`));
 
   // First init with claude only
-  await init.run({
-    subcommands: ["claude"],
-    flags: [],
-    context: { homeDir: testRoot.path },
+  await projectInit.run({
+    subcommands: [],
+    flags: [{ flag: "--harness", value: "claude" }],
+    context: ctx(),
   });
 
   // Now update --harness — should scaffold to all detected
   await update.run({
     subcommands: [],
     flags: [{ flag: "--harness", value: "" }],
-    context: { homeDir: testRoot.path },
+    context: ctx(),
   });
 
-  // Both should get scaffolded
+  // Both should get scaffolded in the project root
   assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.claude}`))).equals(true);
   assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.pi}`))).equals(true);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update --all --harness fails with conflicting_flags", async assert => {
@@ -226,7 +260,7 @@ test.case("update --all --harness fails with conflicting_flags", async assert =>
     await update.run({
       subcommands: [],
       flags: [{ flag: "--all", value: "" }, { flag: "--harness", value: "" }],
-      context: { homeDir: testRoot.path },
+      context: ctx(),
     });
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
@@ -235,6 +269,7 @@ test.case("update --all --harness fails with conflicting_flags", async assert =>
   assert(threw).equals(UpdateErrorCode.conflicting_flags);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update --packages --harness fails with conflicting_flags", async assert => {
@@ -246,7 +281,7 @@ test.case("update --packages --harness fails with conflicting_flags", async asse
     await update.run({
       subcommands: [],
       flags: [{ flag: "--packages", value: "" }, { flag: "--harness", value: "" }],
-      context: { homeDir: testRoot.path },
+      context: ctx(),
     });
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
@@ -255,6 +290,7 @@ test.case("update --packages --harness fails with conflicting_flags", async asse
   assert(threw).equals(UpdateErrorCode.conflicting_flags);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update --package + positional fails with conflicting_flags", async assert => {
@@ -266,7 +302,7 @@ test.case("update --package + positional fails with conflicting_flags", async as
     await update.run({
       subcommands: ["npm:@foo/bar"],
       flags: [{ flag: "--package", value: "npm:@baz/qux" }],
-      context: { homeDir: testRoot.path },
+      context: ctx(),
     });
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
@@ -275,6 +311,7 @@ test.case("update --package + positional fails with conflicting_flags", async as
   assert(threw).equals(UpdateErrorCode.conflicting_flags);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update <source> not installed fails with package_not_found", async assert => {
@@ -286,7 +323,7 @@ test.case("update <source> not installed fails with package_not_found", async as
     await update.run({
       subcommands: ["https://github.com/nonexistent/pkg"],
       flags: [],
-      context: { homeDir: testRoot.path },
+      context: ctx(),
     });
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
@@ -295,18 +332,19 @@ test.case("update <source> not installed fails with package_not_found", async as
   assert(threw).equals(UpdateErrorCode.package_not_found);
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update --packages updates git packages", async assert => {
   await reset();
   await setup("claude");
 
-  // Create a "remote" git repo with v1.0.0
+  // Create a "remote" git repo with v1.0.0 (scratch under the project root)
   const remoteDir = testRoot.append("/remote-repo");
   await createRemoteRepo(remoteDir, "1.0.0", "init");
 
-  // Clone into the global git store
-  const gitStore = testRoot.append(
+  // Clone into the global git store (under homeRoot)
+  const gitStore = homeRoot.append(
     `/${MAIN_FOLDER}/git/localhost/test/remote-repo`,
   );
   await fs.create(gitStore.directory);
@@ -315,7 +353,7 @@ test.case("update --packages updates git packages", async assert => {
   // Register in global config
   await writeGlobalConfig(
     { packages: ["https://localhost/test/remote-repo"] },
-    testRoot.path,
+    homeRoot.path,
   );
 
   // Add a new commit to the remote with v2.0.0
@@ -335,7 +373,7 @@ test.case("update --packages updates git packages", async assert => {
   await update.run({
     subcommands: [],
     flags: [{ flag: "--packages", value: "" }],
-    context: { homeDir: testRoot.path },
+    context: ctx(),
   });
 
   // Verify the clone was updated
@@ -343,6 +381,7 @@ test.case("update --packages updates git packages", async assert => {
   assert(pkg.version).equals("2.0.0");
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update --packages continues on failure", async assert => {
@@ -353,7 +392,7 @@ test.case("update --packages continues on failure", async assert => {
   const remoteDir = testRoot.append("/remote-repo-valid");
   await createRemoteRepo(remoteDir, "1.0.0", "init");
 
-  const validGitStore = testRoot.append(
+  const validGitStore = homeRoot.append(
     `/${MAIN_FOLDER}/git/localhost/test/remote-repo-valid`,
   );
   await fs.create(validGitStore.directory);
@@ -368,7 +407,7 @@ test.case("update --packages continues on failure", async assert => {
         "https://localhost/test/broken-repo",
       ],
     },
-    testRoot.path,
+    homeRoot.path,
   );
 
   // Add a new commit to the valid remote
@@ -390,7 +429,7 @@ test.case("update --packages continues on failure", async assert => {
     await update.run({
       subcommands: [],
       flags: [{ flag: "--packages", value: "" }],
-      context: { homeDir: testRoot.path },
+      context: ctx(),
     });
   } catch (e: unknown) {
     threw = e;
@@ -406,6 +445,7 @@ test.case("update --packages continues on failure", async assert => {
   assert(pkg.version).equals("2.0.0");
 
   await testRoot.remove();
+  await homeRoot.remove();
 });
 
 test.case("update <source> updates one git package", async assert => {
@@ -416,8 +456,8 @@ test.case("update <source> updates one git package", async assert => {
   const remoteDir = testRoot.append("/remote-repo");
   await createRemoteRepo(remoteDir, "1.0.0", "init");
 
-  // Clone into the global git store
-  const gitStore = testRoot.append(
+  // Clone into the global git store (under homeRoot)
+  const gitStore = homeRoot.append(
     `/${MAIN_FOLDER}/git/localhost/test/remote-repo`,
   );
   await fs.create(gitStore.directory);
@@ -440,7 +480,7 @@ test.case("update <source> updates one git package", async assert => {
   await update.run({
     subcommands: ["https://localhost/test/remote-repo"],
     flags: [],
-    context: { homeDir: testRoot.path },
+    context: ctx(),
   });
 
   // Verify the clone was updated
@@ -448,4 +488,5 @@ test.case("update <source> updates one git package", async assert => {
   assert(pkg.version).equals("2.0.0");
 
   await testRoot.remove();
+  await homeRoot.remove();
 });

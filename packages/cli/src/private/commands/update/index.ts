@@ -6,6 +6,7 @@ import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
 import { Command } from "@powerups/program";
 import update_errors from "#errors/updateErrors";
+import project_errors from "#errors/projectErrors";
 import { scaffold } from "#scaffold/index";
 import { readConfig, readGlobalConfig, getPackageSource } from "#utils/config";
 import { parseSpecifier } from "#utils/parse-specifier";
@@ -34,7 +35,7 @@ const update = new Command({
       long: "harness",
       short: "H",
       description:
-        "Scaffold only. Value overrides detected harness (claude | opencode | pi | codex)",
+        "Scaffold only. Value(s) override detected harness, comma-separated (claude,opencode,pi,codex)",
     },
     {
       name: "packages",
@@ -53,8 +54,6 @@ const update = new Command({
 
   action: async ({ subcommands, rawFlags, flags, context }) => {
     const homeDirStr = context?.homeDir ?? homedir();
-    const homeDir = fs.ref(homeDirStr);
-    const globalRoot = fs.ref(path.join(homeDirStr, MAIN_FOLDER));
     const root: FileRef = context?.root ?? await runtime.projectRoot();
 
     const hasAll = (rawFlags ?? []).some(
@@ -97,18 +96,18 @@ const update = new Command({
       : positionalSource;
 
     if (doScaffold) {
-      if (!(await fs.exists(globalRoot))) {
-        throw update_errors.global_not_initialized();
+      if (!(await fs.exists(root.append(`/${MAIN_FOLDER}`)))) {
+        throw project_errors.project_not_initialized();
       }
 
       const harnessFlag =
         is.truthy(flags.harness) ? (flags.harness as string) : undefined;
-      const scaffoldResult = await scaffold(homeDir, harnessFlag);
+      const scaffoldResult = await scaffold(root, harnessFlag);
 
       const green = cli.fg.green;
       const dim = cli.fg.dim;
 
-      cli.print(`${green("✓")} Updated ${CLI_NAME} globally\n`);
+      cli.print(`${green("✓")} Updated ${CLI_NAME} harnesses for project\n`);
       cli.print(`  ${dim("harnesses:")} ${scaffoldResult.harnesses.join(", ")}\n`);
 
       for (const file of scaffoldResult.filesWritten) {

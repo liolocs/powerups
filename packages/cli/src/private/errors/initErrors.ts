@@ -1,24 +1,15 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_NAME, CLI_CMD } from "#constants";
+import { CLI_CMD } from "#constants";
 
 const t = error.template;
 
 const errorLabel = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
-const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
-const printInit = CLI_CMD + " init";
-const specifyHarness = `Harness options: \n\t${printInit} claude\n\t${printInit} opencode\n\t${printInit} pi\n\t${printInit} codex`;
+const printInit = CLI_CMD + " project init";
+const specifyHarness = `Harness options: \n\t${printInit} --harness claude\n\t${printInit} --harness opencode\n\t${printInit} --harness pi\n\t${printInit} --harness codex`;
 
 const init_errors = error.coded({
-  global_already_initialized: () => {
-    return t`${errorLabel} ${CLI_NAME} is already initialized globally.`;
-  },
-  global_not_initialized: () => {
-    const errorText =
-      `${CLI_NAME} is not initialized. Run "${CLI_CMD} init" first.`;
-    return t`${errorBGText}${errorText}`;
-  },
   no_harness_detected: () => {
     return t`${errorLabel} No AI coding harness detected.\n\n  ${specifyHarness}`;
   },

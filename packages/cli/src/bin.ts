@@ -10,9 +10,8 @@ const program = new CLI({
   version: "0.0.1",
   commands: commands,
   examples: [
-    `$ ${CLI_CMD} init`,
-    `$ ${CLI_CMD} init claude`,
     `$ ${CLI_CMD} project init`,
+    `$ ${CLI_CMD} project init --harness claude`,
     `$ ${CLI_CMD} install npm:my-package`,
     `$ ${CLI_CMD} install npm:my-package -l`,
     `$ ${CLI_CMD} update`,

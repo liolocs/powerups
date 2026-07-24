@@ -68,9 +68,9 @@ const summary = new Command({
   ],
   subcommands: [],
   action: async (props) => {
-    const root = props?.context?.root ?? await runtime.projectRoot();
-    const globalRoot = props?.context?.globalRoot;
-    const isAll = is.defined(props?.flags?.all);
+    const root = props.context?.root ?? await runtime.projectRoot();
+    const globalRoot = props.context?.globalRoot;
+    const isAll = is.defined(props.flags.all);
 
     if (isAll) {
       const entries: ProjectMetricsEntry[] = await readAllMetrics({ globalRoot });

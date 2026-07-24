@@ -13,11 +13,8 @@ test.case("encodeProjectPath replaces colons (Windows drive letters)", assert =>
   assert(encodeProjectPath("C:\\Users\\lioloc\\dev\\myapp")).equals("--C--Users-lioloc-dev-myapp--");
 });
 
-test.case("encodeProjectPath resolves relative paths", assert => {
-  const encoded = encodeProjectPath(".");
-  // path.resolve(".") returns process.cwd() — just check it starts and ends with --
-  assert(encoded.startsWith("--")).true();
-  assert(encoded.endsWith("--")).true();
+test.case("encodeProjectPath wraps any input including bare relative names", assert => {
+  assert(encodeProjectPath(".")).equals("--.--");
 });
 
 test.case("encodeProjectPath wraps with -- prefix and suffix", assert => {

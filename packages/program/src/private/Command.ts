@@ -17,9 +17,9 @@ type FlagRecord<T extends readonly Flag[]> = {
 };
 
 type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never
-  ? (props?: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; homeDir?: string } }) =>
+  ? (props?: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; homeDir?: string; globalRoot?: string } }) =>
       any | Promise<any>
-  : (props: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; homeDir?: string } }) =>
+  : (props: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; homeDir?: string; globalRoot?: string } }) =>
       any | Promise<any>;
 
 export default class Command<T extends readonly Flag[]> {
@@ -56,7 +56,7 @@ export default class Command<T extends readonly Flag[]> {
   async run(args?: {
     subcommands: string[];
     flags: { flag: string; value: string }[];
-    context?: { root?: any; homeDir?: string };
+    context?: { root?: any; homeDir?: string; globalRoot?: string };
   }): Promise<void> {
     // Delegate to a matching subcommand first, so that `<cmd> <sub> --help`
     // reaches the subcommand's own help rather than this command's.

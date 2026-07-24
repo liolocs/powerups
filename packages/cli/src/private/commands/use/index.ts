@@ -205,7 +205,10 @@ const use = new Command({
 
     // 12. Log metrics (best-effort)
     try {
-      await logRun({ output: name, characters: totalCharacters }, root);
+      await logRun(
+        { output: name, characters: totalCharacters },
+        { cwd: root.path, globalRoot: context?.globalRoot },
+      );
     } catch {
       // Metrics are secondary — never crash a successful run
     }

@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { readMetrics } from "#utils/metrics";
+import { randomUUID } from "node:crypto";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
@@ -25,6 +26,8 @@ import {
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
+const tempGlobalRoot = path.join(tmpdir(), `powerups-test-${randomUUID()}`);
+const tempGlobalRootRef = fs.ref(tempGlobalRoot);
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
 const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
 const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
@@ -70,7 +73,7 @@ async function createPowerup(
       { flag: "--name", value: name },
       { flag: "--description", value: "test description" },
     ],
-    context: { root: testRoot },
+    context: { root: testRoot, globalRoot: tempGlobalRoot },
   });
   await multiUseFolder.append(`/${name}/instructions.json`).writeJSON({
     name,
@@ -86,6 +89,8 @@ async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(mainFolder);
+  await tempGlobalRootRef.remove();
+  await tempGlobalRootRef.create();
   await fs.create(internalFolder);
   // Create test package
   const pkgDir = internalFolder.append("/test-pkg");
@@ -120,7 +125,7 @@ test.case("apply writes rendered .njk template files to outputPath",
     await use.run({
       subcommands: ["ui-component"],
       flags: [{ flag: "--component-name", value: "Button" }],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     });
 
     const outPath = testRoot.append("/.test-output/Button.svelte");
@@ -148,7 +153,7 @@ test.case("apply writes rendered .ts template files to outputPath",
     await use.run({
       subcommands: ["ts-output"],
       flags: [{ flag: "--component-name", value: "Button" }],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     });
 
     const outPath = testRoot.append("/.test-output/Button.ts");
@@ -177,7 +182,7 @@ test.case("apply with --overwrite overwrites existing destination files", async 
       { flag: "--component-name", value: "Existing" },
       { flag: "--overwrite", value: "true" },
     ],
-    context: { root: testRoot },
+    context: { root: testRoot, globalRoot: tempGlobalRoot },
   });
 
   const outPath = testRoot.append("/.test-output/Existing.ts");
@@ -197,7 +202,7 @@ test.group("apply errors", () => {
       await use.run({
         subcommands: ["anything"],
         flags: [],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
@@ -217,7 +222,7 @@ test.group("apply errors", () => {
         await use.run({
           subcommands: [],
           flags: [],
-          context: { root: testRoot },
+          context: { root: testRoot, globalRoot: tempGlobalRoot },
         });
       } catch (e) {
         threw = true;
@@ -236,14 +241,14 @@ test.group("apply errors", () => {
       subcommands: [],
       flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "real" },
         { flag: "--description", value: "test description" }],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     });
 
     try {
       await use.run({
         subcommands: ["nonexistent"],
         flags: [],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
     } catch (e) {
       assert(e instanceof CodeError).true();
@@ -270,7 +275,7 @@ test.group("apply errors", () => {
         await use.run({
           subcommands: ["needs-vars"],
           flags: [{ flag: "--component-name", value: "Button" }],
-          context: { root: testRoot },
+          context: { root: testRoot, globalRoot: tempGlobalRoot },
           // Missing --theme
         });
       } catch (e) {
@@ -301,7 +306,7 @@ test.group("apply errors", () => {
         await use.run({
           subcommands: ["missing-tmpl"],
           flags: [{ flag: "--component-name", value: "Button" }],
-          context: { root: testRoot },
+          context: { root: testRoot, globalRoot: tempGlobalRoot },
         });
       } catch (e) {
         threw = true;
@@ -327,7 +332,7 @@ test.group("apply errors", () => {
     const output = await captureStdout(() => use.run({
       subcommands: ["no-target"],
       flags: [],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     }));
 
     assert(output).includes("Warning: skipped modification");
@@ -355,7 +360,7 @@ test.group("apply errors", () => {
     const output = await captureStdout(() => use.run({
       subcommands: ["anchor-missing"],
       flags: [],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     }));
 
     assert(output).includes("Warning: skipped modification");
@@ -387,7 +392,7 @@ test.group("apply errors", () => {
     const output = await captureStdout(() => use.run({
       subcommands: ["anchor-ambiguous"],
       flags: [],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     }));
 
     assert(output).includes("Warning: skipped modification");
@@ -414,7 +419,7 @@ test.group("apply errors", () => {
       await use.run({
         subcommands: ["no-overwrite-test"],
         flags: [{ flag: "--component-name", value: "Existing" }],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
     } catch (e) {
       threw = true;
@@ -460,7 +465,7 @@ test.group("apply errors", () => {
         { flag: "--name", value: "no-git" },
         { flag: "--description", value: "test description" },
       ],
-      context: { root: noGitRoot },
+      context: { root: noGitRoot, globalRoot: tempGlobalRoot },
     });
     await noGitTemplateFolder.append("/no-git/instructions.json").writeJSON({
       name: "no-git",
@@ -478,7 +483,7 @@ test.group("apply errors", () => {
       await use.run({
         subcommands: ["no-git"],
         flags: [{ flag: "--component-name", value: "Button" }],
-        context: { root: noGitRoot },
+        context: { root: noGitRoot, globalRoot: tempGlobalRoot },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
@@ -508,7 +513,7 @@ test.group("apply dry-run", () => {
           { flag: "--dry-run", value: "true" },
           { flag: "--component-name", value: "Button" },
         ],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       }));
 
       assert(output).includes("=== .test-output/Button.svelte ===");
@@ -537,7 +542,7 @@ test.group("apply dry-run", () => {
     const output = await captureStdout(() => use.run({
       subcommands: ["dry-modify"],
       flags: [{ flag: "--dry-run", value: "true" }],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     }));
 
     assert(output).includes("=== .test-output/index.ts (modify) ===");
@@ -596,7 +601,7 @@ test.group("apply composite output", () => {
       await use.run({
         subcommands: ["shadcn-all"],
         flags: [{ flag: "--theme", value: "dark" }],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
 
       // Parent's barrel file
@@ -648,7 +653,7 @@ test.group("apply composite output", () => {
       const output = await captureStdout(() => use.run({
         subcommands: ["dry-parent"],
         flags: [{ flag: "--dry-run", value: "true" }],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       }));
 
       // Parent output
@@ -678,7 +683,7 @@ test.group("apply composite output", () => {
         await use.run({
           subcommands: ["bad-parent"],
           flags: [],
-          context: { root: testRoot },
+          context: { root: testRoot, globalRoot: tempGlobalRoot },
         });
       } catch (e) {
         threw = true;
@@ -725,7 +730,7 @@ test.group("apply composite output", () => {
       await use.run({
         subcommands: ["override-parent"],
         flags: [],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
 
       // File written to overridden path, not original
@@ -767,7 +772,7 @@ test.group("apply composite output", () => {
       await use.run({
         subcommands: ["dual-parent"],
         flags: [],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
 
       const primaryPath = testRoot.append("/.test-output/Primary.tsx");
@@ -818,7 +823,7 @@ test.group("apply composite output", () => {
       await use.run({
         subcommands: ["exclude-parent"],
         flags: [],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
 
       // The non-excluded file should exist
@@ -853,7 +858,7 @@ test.group("apply modify", () => {
     await use.run({
       subcommands: ["modify-test"],
       flags: [],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     });
 
     const outPath = testRoot.append("/.test-output/index.ts");
@@ -889,7 +894,7 @@ test.group("apply modify", () => {
     await use.run({
       subcommands: ["njk-modify"],
       flags: [{ flag: "--type", value: "multi-use" }, { flag: "--name", value: "User" }],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     });
 
     const outPath = testRoot.append("/.test-output/index.ts");
@@ -916,10 +921,10 @@ test.group("apply metrics", () => {
       await use.run({
         subcommands: ["metrics-test"],
         flags: [{ flag: "--component-name", value: "Button" }],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
 
-      const entries = await readMetrics(testRoot);
+      const entries = await readMetrics({ cwd: testRoot.path, globalRoot: tempGlobalRoot });
 
       assert(entries.length).equals(1);
       assert(entries[0].output).equals("metrics-test");
@@ -944,10 +949,10 @@ test.group("apply metrics", () => {
           { flag: "--dry-run", value: "true" },
           { flag: "--component-name", value: "Button" },
         ],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
 
-      const entries = await readMetrics(testRoot);
+      const entries = await readMetrics({ cwd: testRoot.path, globalRoot: tempGlobalRoot });
 
       assert(entries.length).equals(0);
 
@@ -970,7 +975,7 @@ test.group("apply packageDependencies", () => {
       await use.run({
         subcommands: ["dep-feature"],
         flags: [{ flag: "--dry-run", value: "true" }],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
     });
 
@@ -989,7 +994,7 @@ test.group("apply packageDependencies", () => {
       await use.run({
         subcommands: ["no-dep-feature"],
         flags: [{ flag: "--dry-run", value: "true" }],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
     });
 
@@ -1011,7 +1016,7 @@ test.group("apply packageDependencies", () => {
     await use.run({
       subcommands: ["real-dep"],
       flags: [],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     });
 
     const pkg = JSON.parse(await testRoot.append("/package.json").text());
@@ -1034,7 +1039,7 @@ test.group("apply packageDependencies", () => {
       await use.run({
         subcommands: ["no-lock-dep"],
         flags: [],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
     });
 
@@ -1064,7 +1069,7 @@ test.group("apply rollback", () => {
       await use.run({
         subcommands: ["rollback-test"],
         flags: [{ flag: "--component-name", value: "Test" }],
-        context: { root: testRoot },
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
@@ -1095,7 +1100,7 @@ test.group("apply delete", () => {
     await use.run({
       subcommands: ["delete-test"],
       flags: [],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     });
 
     const legacyPath = testRoot.append("/.test-output/legacy.ts");
@@ -1142,7 +1147,7 @@ test.group("apply delete", () => {
     await use.run({
       subcommands: ["mixed-ops"],
       flags: [{ flag: "--component-name", value: "Widget" }],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     });
 
     // Create happened
@@ -1166,7 +1171,7 @@ test.group("apply delete", () => {
     const output = await captureStdout(() => use.run({
       subcommands: ["delete-missing"],
       flags: [],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     }));
 
     assert(output).includes("Warning: file not found, skipping: .test-output/never-existed.ts");
@@ -1204,7 +1209,7 @@ test.group("apply delete", () => {
     const output = await captureStdout(() => use.run({
       subcommands: ["atomic-delete-parent"],
       flags: [],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     }));
 
     // The modify failure should produce a warning
@@ -1234,7 +1239,7 @@ test.group("apply delete dry-run", () => {
     const output = await captureStdout(() => use.run({
       subcommands: ["dry-delete"],
       flags: [{ flag: "--dry-run", value: "true" }],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     }));
 
     assert(output).includes("=== .test-output/legacy.ts (delete) ===");
@@ -1282,7 +1287,7 @@ test.group("apply delete dry-run", () => {
         { flag: "--dry-run", value: "true" },
         { flag: "--component-name", value: "Widget" },
       ],
-      context: { root: testRoot },
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
     }));
 
     assert(output).includes("=== .test-output/Widget.ts ===");

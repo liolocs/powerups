@@ -43,7 +43,7 @@ const HARNESS_CONFIG: Record<Harness, {
   },
   pi: {
     instructionFile: "AGENTS.md",
-    skillDir: ".pi/skills",
+    skillDir: ".pi/agent/skills",
   },
   codex: {
     instructionFile: "AGENTS.md",
@@ -135,8 +135,6 @@ export async function scaffold(
     }
 
     filesWritten.push(config.instructionFile);
-
-    // --- Skill files ---
 
     for (const skill of renderedSkills) {
       const outputPath = `${config.skillDir}/${skill.name}.md`;

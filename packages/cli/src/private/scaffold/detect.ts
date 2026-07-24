@@ -12,7 +12,7 @@ export type Harness = (typeof VALID_HARNESSES)[number];
  *
  * Flow:
  *   1. If harnessFlag is provided, validate and return [single].
- *   2. Scan global fingerprints (~/.claude/, ~/.pi/agent/, ~/.config/opencode/, ~/.codex/).
+ *   2. Scan global fingerprints (~/.claude/, ~/.pi/agent/, ~/.opencode/, ~/.codex/).
  *      - Return all detected harnesses (multiple is OK).
  *   3. Nothing found → throw no_harness_detected.
  *

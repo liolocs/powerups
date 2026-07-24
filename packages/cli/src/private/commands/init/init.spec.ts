@@ -2,7 +2,7 @@ import test from "@rcompat/test";
 import init from "#commands/init/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { MAIN_FOLDER, CLI_NAME, CONFIG_FILE } from "#constants";
+import { MAIN_FOLDER, CLI_NAME, CONFIG_FILE, HARNESS_FINGERPRINTS, SKILLS_DIRS } from "#constants";
 import { CodeError } from "@rcompat/error";
 import { InitErrorCode } from "#errors/initErrors";
 
@@ -94,11 +94,11 @@ test.case("init pi scaffolds pi files only", async assert => {
 
   assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
   assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(false);
-  const cmdPath = `.pi/skills/${CLI_NAME}-implement.md`;
+  const cmdPath = `${HARNESS_FINGERPRINTS.pi}/skills/${CLI_NAME}-implement.md`;
   assert(await fs.exists(testRoot.append(`/${cmdPath}`))).equals(true);
-  const brainstormPath = `.pi/skills/${CLI_NAME}-brainstorm.md`;
+  const brainstormPath = `${HARNESS_FINGERPRINTS.pi}/skills/${CLI_NAME}-brainstorm.md`;
   assert(await fs.exists(testRoot.append(`/${brainstormPath}`))).equals(true);
-  const capturePath = `.pi/skills/${CLI_NAME}-capture.md`;
+  const capturePath = `${HARNESS_FINGERPRINTS.pi}/skills/${CLI_NAME}-capture.md`;
   assert(await fs.exists(testRoot.append(`/${capturePath}`))).equals(true);
   // No other harness dirs
   assert(await fs.exists(testRoot.append("/.claude"))).equals(false);
@@ -220,9 +220,9 @@ test.group("init detection (global fingerprints)", () => {
     await testRoot.remove();
   });
 
-  test.case("should detect opencode from .config/opencode/ dir", async assert => {
+  test.case("should detect opencode", async assert => {
     await reset();
-    await fs.create(testRoot.append("/.config/opencode"));
+    await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.opencode}`));
 
     await init.run({
       subcommands: [],
@@ -237,9 +237,9 @@ test.group("init detection (global fingerprints)", () => {
     await testRoot.remove();
   });
 
-  test.case("should detect pi from .pi/agent dir", async assert => {
+  test.case("should detect pi", async assert => {
     await reset();
-    await fs.create(testRoot.append("/.pi/agent"));
+    await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.pi}`));
 
     await init.run({
       subcommands: [],
@@ -247,7 +247,7 @@ test.group("init detection (global fingerprints)", () => {
       context: { homeDir: testRoot.path },
     });
 
-    assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
+    assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.pi}`))).equals(true);
     assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
 
     await testRoot.remove();
@@ -256,8 +256,8 @@ test.group("init detection (global fingerprints)", () => {
   test.case("should detect multiple harnesses and scaffold to all", async assert => {
     await reset();
     // Create global fingerprints for both claude and pi
-    await fs.create(testRoot.append("/.claude"));
-    await fs.create(testRoot.append("/.pi/agent"));
+    await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.claude}`));
+    await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.pi}`));
 
     await init.run({
       subcommands: [],
@@ -266,8 +266,8 @@ test.group("init detection (global fingerprints)", () => {
     });
 
     // Both should get scaffolded
-    assert(await fs.exists(testRoot.append("/.claude/skills"))).equals(true);
-    assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
+    assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.claude}`))).equals(true);
+    assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.pi}`))).equals(true);
     // CLAUDE.md for claude, AGENTS.md for pi
     assert(await fs.exists(testRoot.append("/CLAUDE.md"))).equals(true);
     assert(await fs.exists(testRoot.append("/AGENTS.md"))).equals(true);
@@ -277,8 +277,8 @@ test.group("init detection (global fingerprints)", () => {
 
   test.case("should resolve multiple detection with harness arg (single only)", async assert => {
     await reset();
-    await fs.create(testRoot.append("/.claude"));
-    await fs.create(testRoot.append("/.pi/agent"));
+    await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.claude}`));
+    await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.pi}`));
 
     // Should scaffold only to pi despite multiple detected
     await init.run({
@@ -287,8 +287,8 @@ test.group("init detection (global fingerprints)", () => {
       context: { homeDir: testRoot.path },
     });
 
-    assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
-    assert(await fs.exists(testRoot.append("/.claude/skills"))).equals(false);
+    assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.pi}`))).equals(true);
+    assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.claude}`))).equals(false);
 
     await testRoot.remove();
   });
@@ -361,7 +361,7 @@ test.group("init rollback", () => {
     });
 
     assert(await fs.exists(testRoot.append(`/${MAIN_FOLDER}`))).equals(true);
-    assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
+    assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.pi}`))).equals(true);
 
     await testRoot.remove();
   });
@@ -466,20 +466,21 @@ test.case(`init writes ${CLI_NAME}-implement skill file for each harness`, async
       context: { homeDir: testRoot.path },
     });
 
-    const skillDirs: Record<string, string> = {
-      claude: ".claude/skills",
-      opencode: ".opencode/skills",
-      pi: ".pi/skills",
-      codex: ".codex/skills",
-    };
+    const outputPath = `${SKILLS_DIRS[harness]}/${CLI_NAME}-implement.md`;
 
-    const outputPath = `${skillDirs[harness]}/${CLI_NAME}-implement.md`;
-    assert(await fs.exists(testRoot.append(`/${outputPath}`))).equals(true);
+    try {
+      console.log({ outputPath: JSON.stringify(outputPath, null, 2) });
+      const pathExists = await fs.exists(testRoot.append(`/${outputPath}`));
+      assert(pathExists).equals(true);
 
-    const content = await testRoot.append(`/${outputPath}`).text();
-    assert(content.includes(CLI_NAME)).equals(true);
-    assert(content.includes("{{CLI_NAME}}")).equals(false);
-    assert(content.includes("$ARGUMENTS")).equals(false);
+      const content = await testRoot.append(`/${outputPath}`).text();
+      assert(content.includes(CLI_NAME)).equals(true);
+      assert(content.includes("{{CLI_NAME}}")).equals(false);
+      assert(content.includes("$ARGUMENTS")).equals(false);
+    } catch (e) {
+      console.error(e);
+      assert(e).fail();
+    }
 
     await testRoot.remove();
   }
@@ -495,15 +496,9 @@ test.case("init injects frontmatter into skill files for every harness", async a
       context: { homeDir: testRoot.path },
     });
 
-    const skillDirs: Record<string, string> = {
-      claude: ".claude/skills",
-      opencode: ".opencode/skills",
-      pi: ".pi/skills",
-      codex: ".codex/skills",
-    };
-
-    const cmdPath = `${skillDirs[harness]}/${CLI_NAME}-implement.md`;
+    const cmdPath = `${SKILLS_DIRS[harness]}/${CLI_NAME}-implement.md`;
     const content = await testRoot.append(`/${cmdPath}`).text();
+
     assert(content.startsWith("---\n")).equals(true);
     assert(content.includes("description:")).equals(true);
     assert(content.includes(`name: ${CLI_NAME}-implement`)).equals(true);

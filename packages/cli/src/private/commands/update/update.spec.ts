@@ -9,7 +9,7 @@ import { CodeError } from "@rcompat/error";
 import { InitErrorCode } from "#errors/initErrors";
 import { UpdateErrorCode } from "#errors/updateErrors";
 import { writeGlobalConfig } from "#utils/config";
-import { MAIN_FOLDER, CLI_NAME } from "#constants";
+import { MAIN_FOLDER, CLI_NAME, HARNESS_FINGERPRINTS, SKILLS_DIRS } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -30,8 +30,8 @@ async function setup(harness: string) {
   // the harness installation itself). Create them so detectHarnesses can
   // find the harness when update runs without --harness.
   const extraFingerprints: Record<string, string> = {
-    pi: ".pi/agent",
-    opencode: ".config/opencode",
+    pi: HARNESS_FINGERPRINTS.pi,
+    opencode: HARNESS_FINGERPRINTS.opencode,
   };
   const fingerprint = extraFingerprints[harness];
   if (is.truthy(fingerprint)) {
@@ -90,8 +90,9 @@ test.case("update --harness regenerates skill files globally", async assert => {
   await setup("pi");
 
   // Corrupt a skill file
-  const skillPath = `.pi/skills/${CLI_NAME}-implement.md`;
+  const skillPath = `${SKILLS_DIRS.pi}/${CLI_NAME}-implement.md`;
   const skillRef = testRoot.append(`/${skillPath}`);
+  console.log(skillRef.path);
   await skillRef.write("CORRUPTED");
 
   // Run update --harness — should regenerate the file from the scaffold
@@ -192,8 +193,8 @@ test.case("update --harness fails with invalid harness", async assert => {
 test.case("update --harness scaffolds to all detected harnesses", async assert => {
   await reset();
   // Create global fingerprints for both claude and pi
-  await fs.create(testRoot.append("/.claude"));
-  await fs.create(testRoot.append("/.pi/agent"));
+  await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.claude}`));
+  await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.pi}`));
 
   // First init with claude only
   await init.run({
@@ -210,8 +211,8 @@ test.case("update --harness scaffolds to all detected harnesses", async assert =
   });
 
   // Both should get scaffolded
-  assert(await fs.exists(testRoot.append("/.claude/skills"))).equals(true);
-  assert(await fs.exists(testRoot.append("/.pi/skills"))).equals(true);
+  assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.claude}`))).equals(true);
+  assert(await fs.exists(testRoot.append(`/${SKILLS_DIRS.pi}`))).equals(true);
 
   await testRoot.remove();
 });

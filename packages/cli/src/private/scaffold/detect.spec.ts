@@ -4,6 +4,7 @@ import runtime from "@rcompat/runtime";
 import { detectHarnesses, VALID_HARNESSES } from "#scaffold/detect";
 import { CodeError } from "@rcompat/error";
 import { InitErrorCode } from "#errors/initErrors";
+import { HARNESS_FINGERPRINTS } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -56,10 +57,10 @@ test.case("detects single harness from global fingerprints", async assert => {
   await testRoot.remove();
 });
 
-test.case("detects opencode from .config/opencode fingerprint", async assert => {
+test.case("detects opencode", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
-  await fs.create(testRoot.append("/.config/opencode"));
+  await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.opencode}`));
 
   const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
   assert(result).equals(["opencode"]);
@@ -81,10 +82,10 @@ test.case("detects codex from .codex fingerprint", async assert => {
 test.case("detects all four harnesses when all fingerprints present", async assert => {
   await testRoot.remove();
   await fs.create(testRoot);
-  await fs.create(testRoot.append("/.claude"));
-  await fs.create(testRoot.append("/.pi/agent"));
-  await fs.create(testRoot.append("/.config/opencode"));
-  await fs.create(testRoot.append("/.codex"));
+  await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.claude}`));
+  await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.pi}`));
+  await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.opencode}`));
+  await fs.create(testRoot.append(`/${HARNESS_FINGERPRINTS.codex}`));
 
   const result = await detectHarnesses(undefined, { homeDir: testRoot.path });
   assert(result.length).equals(4);

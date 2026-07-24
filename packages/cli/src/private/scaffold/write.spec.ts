@@ -2,7 +2,7 @@ import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { writeSkillFile } from "#scaffold/write";
-import { CLI_NAME } from "#constants";
+import { CLI_NAME, HARNESS_FINGERPRINTS } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -26,9 +26,9 @@ test.case("should create parent directories", async assert => {
   await fs.create(testRoot);
 
   const rendered = "test content";
-  await writeSkillFile(testRoot, ".pi/skills/" + CLI_NAME + "-implement.md", rendered);
+  await writeSkillFile(testRoot, `${HARNESS_FINGERPRINTS.pi}/skills/` + CLI_NAME + "-implement.md", rendered);
 
-  assert(await fs.exists(testRoot.append("/.pi/skills/" + CLI_NAME + "-implement.md"))).equals(true);
+  assert(await fs.exists(testRoot.append(`/${HARNESS_FINGERPRINTS.pi}/skills/` + CLI_NAME + "-implement.md"))).equals(true);
 
   await testRoot.remove();
 });

@@ -74,9 +74,16 @@ export const GLOBAL_NPM_PATH = path.join(GLOBAL_ROOT, NPM_STORE);
 export const GLOBAL_GIT_PATH = path.join(GLOBAL_ROOT, GIT_STORE);
 
 /** Global harness fingerprint paths for detection (relative to homeDir). */
-export const HARNESS_FINGERPRINTS: Record<string, string> = {
+export const HARNESS_FINGERPRINTS = {
   claude: ".claude",
   pi: ".pi/agent",
-  opencode: ".config/opencode",
+  opencode: ".opencode",
   codex: ".codex",
+};
+
+export const SKILLS_DIRS = {
+  claude: ".claude/skills",
+  pi: ".pi/agent/skills",
+  opencode: ".opencode/skills",
+  codex: ".codex/skills",
 };

@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import path from "node:path";
 import p from "pema";
-import { MAIN_FOLDER, CONFIG_FILE, PACKAGES_KEY, GLOBAL_CONFIG_PATH } from "#constants";
+import { MAIN_FOLDER, CONFIG_FILE, PACKAGES_KEY, GLOBAL_CONFIG_PATH, GLOBAL_ROOT } from "#constants";
 
 /**
  * A config `packages` entry.
@@ -129,6 +129,27 @@ export async function writeGlobalConfig(
     : fs.ref(GLOBAL_CONFIG_PATH);
   await fs.create(configPath.directory);
   await configPath.write(JSON.stringify(config, null, 2) + "\n");
+}
+
+/**
+ * Ensure the global powerups store (`~/.powerups/`) and its config exist.
+ * Creates the folder + `config.json` (`{ packages: [] }`) when missing;
+ * no-op (does not overwrite) when already present.
+ *
+ * Returns `true` if it created the store, `false` if it already existed.
+ * Accepts an optional `homeDir` for testability.
+ */
+export async function ensureGlobalInit(homeDir?: string): Promise<boolean> {
+  const globalRoot = homeDir
+    ? fs.ref(path.join(homeDir, MAIN_FOLDER))
+    : fs.ref(GLOBAL_ROOT);
+
+  if (await fs.exists(globalRoot)) {
+    return false;
+  }
+
+  await writeGlobalConfig({ packages: [] }, homeDir);
+  return true;
 }
 
 /**

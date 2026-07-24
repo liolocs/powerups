@@ -9,6 +9,7 @@ import {
   getPackageSource,
   addPackageToConfig,
   removePackageFromConfig,
+  ensureGlobalInit,
   type PackageEntry,
 } from "#utils/config";
 import { MAIN_FOLDER, CONFIG_FILE } from "#constants";
@@ -250,6 +251,36 @@ test.group("removePackageFromConfig", () => {
     await removePackageFromConfig(testRoot, "npm:pkg");
     const config = await readConfig(testRoot);
     assert(config?.packages).equals(["other"]);
+
+    await testRoot.remove();
+  });
+});
+
+test.group("ensureGlobalInit", () => {
+  test.case("creates global store + config when missing, returns true", async assert => {
+    await reset();
+
+    const created = await ensureGlobalInit(testRoot.path);
+
+    assert(created).true();
+    assert(await fs.exists(testRoot.append(`/${MAIN_FOLDER}`))).true();
+    const config = await readGlobalConfig(testRoot.path);
+    assert(config?.packages).equals([]);
+
+    await testRoot.remove();
+  });
+
+  test.case("no-ops and returns false when already present", async assert => {
+    await reset();
+    await writeConfig(testRoot, { packages: [] });
+    const globalDir = testRoot.append(`/${MAIN_FOLDER}`);
+    await globalDir.append(`/${CONFIG_FILE}`).writeJSON({ packages: ["existing"] });
+
+    const created = await ensureGlobalInit(testRoot.path);
+
+    assert(created).false();
+    const config = await readGlobalConfig(testRoot.path);
+    assert(config?.packages).equals(["existing"]);
 
     await testRoot.remove();
   });

@@ -9,8 +9,8 @@ const update_errors = error.coded({
   no_mode: () => {
     const errorText =
       `Specify what to update:\n\n` +
-      `\t${CLI_CMD} update --all         # scaffold + all packages\n` +
-      `\t${CLI_CMD} update --harness     # scaffold only\n` +
+      `\t${CLI_CMD} update --all         # ai harnesses + all packages\n` +
+      `\t${CLI_CMD} update --harness     # ai harnesses only\n` +
       `\t${CLI_CMD} update --packages    # packages only\n` +
       `\t${CLI_CMD} update <source>      # one package`;
     return t`${errorLabel}${errorText}`;

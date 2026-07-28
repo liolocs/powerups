@@ -229,10 +229,10 @@ test.group("list", () => {
     }));
 
     // Hint to add the entire package (all powerups).
-    assert(output).includes("pup add my-pkg");
+    assert(output).includes("pwrp add my-pkg");
     // Hint to add a particular powerup via the # fragment.
-    assert(output).includes("pup add my-pkg#a-power");
-    assert(output).includes("pup add my-pkg#b-power");
+    assert(output).includes("pwrp add my-pkg#a-power");
+    assert(output).includes("pwrp add my-pkg#b-power");
     await testRoot.remove();
   });
 
@@ -248,8 +248,8 @@ test.group("list", () => {
       context: { root: testRoot },
     }));
 
-    assert(output).includes("pup add https://github.com/foo/bar");
-    assert(output).includes("pup add https://github.com/foo/bar#c-power");
+    assert(output).includes("pwrp add https://github.com/foo/bar");
+    assert(output).includes("pwrp add https://github.com/foo/bar#c-power");
     await testRoot.remove();
   });
 

@@ -1,6 +1,6 @@
 {
   "harness": "pi",
   "packages": [
-    "pup-internal"
+    "pwrp-internal"
   ]
 }

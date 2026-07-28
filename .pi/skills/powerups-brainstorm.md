@@ -8,7 +8,7 @@ Brainstorm a plan using powerups.
 
 1. Explore the project context:
    - Check recent commits, existing files, and docs.
-   - Run `pup find -q="<what the user wants to plan>"` to see if
+   - Run `pwrp find -q="<what the user wants to plan>"` to see if
      any powerups already relate to this area.
    - If the find returns "No matching powerups found", check whether
      `.powerups/internal/` exists and contains any
@@ -24,8 +24,8 @@ Brainstorm a plan using powerups.
 Do NOT propose a plan, suggest any implementation approach, write any code,
 or run any create/use command until you have:
 1. Identified the key intents (topics, domains, capabilities) this plan touches
-2. Run `pup find -q="<intent>"` for every identified intent
-3. Run `pup info <name>` for every match found
+2. Run `pwrp find -q="<intent>"` for every identified intent
+3. Run `pwrp info <name>` for every match found
 4. Recorded the results (matches found or "no matching") for each search
 
 If you skip the find step, you risk duplicating existing work and planning
@@ -33,9 +33,9 @@ the wrong approach. Find is not optional.
 </HARD-GATE>
 
 3. Identify the key intents (topics, domains, capabilities) this plan touches.
-   For each intent, run `pup find -q="<intent>"` to find existing
+   For each intent, run `pwrp find -q="<intent>"` to find existing
    powerups that may be reusable. For every match, run
-   `pup info <name>` to understand what variables
+   `pwrp info <name>` to understand what variables
    and files are available. Record all results.
 
 4. From the find results, determine:
@@ -49,7 +49,7 @@ the wrong approach. Find is not optional.
      a small glue file," plan it as a parent with `include` steps for A and B,
      adding only the unique glue files as its own templates. This avoids
      duplicating template content across powerups. Run
-     `pup info <name>` on each candidate to see its exact
+     `pwrp info <name>` on each candidate to see its exact
      variables and file mapping, then determine how to map the parent's
      variables into the included subtemplates.
 

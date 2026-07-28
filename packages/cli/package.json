@@ -52,6 +52,6 @@
     "conventional-changelog-conventionalcommits": "^10.2.1"
   },
   "bin": {
-    "pup": "./lib/bin.js"
+    "pwrp": "./lib/bin.js"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "pwrp",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "lioloc@pm.me",
   "description": "CLI for powerups.dev",
   "license": "MIT",
@@ -16,7 +16,8 @@
     "prepublishOnly": "npm run build",
     "test": "npx proby",
     "b:link": "bun run scripts/link.ts",
-    "release": "commit-and-tag-version --preset conventionalcommits"
+    "release": "commit-and-tag-version --preset conventionalcommits",
+    "release:dry-run": "commit-and-tag-version --preset conventionalcommits --dry-run"
   },
   "type": "module",
   "files": [

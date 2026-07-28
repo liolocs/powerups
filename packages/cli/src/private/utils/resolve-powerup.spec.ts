@@ -82,24 +82,24 @@ async function createConfig(
 
 test.case(`resolves a ${SINGULAR_NAME} from a local package`, async assert => {
   await reset();
-  await createPackage(testRoot, "my-pkg", [{ name: "my-power", type: "multi-use" }]);
+  await createPackage(testRoot, "my-pkg", [{ name: "my-powerup", type: "multi-use" }]);
   await createConfig(testRoot, ["my-pkg"]);
 
-  const result = await resolvePowerUp(testRoot, "my-power");
+  const result = await resolvePowerUp(testRoot, "my-powerup");
   assert(result.type).equals("multi-use");
   assert(result.packageName).equals("my-pkg");
   assert(result.location).equals("local");
-  assert(result.folder.name).equals("my-power");
+  assert(result.folder.name).equals("my-powerup");
 
   await testRoot.remove();
 });
 
 test.case(`resolves a single-use ${SINGULAR_NAME}`, async assert => {
   await reset();
-  await createPackage(testRoot, "my-pkg", [{ name: "my-power", type: "single-use" }]);
+  await createPackage(testRoot, "my-pkg", [{ name: "my-powerup", type: "single-use" }]);
   await createConfig(testRoot, ["my-pkg"]);
 
-  const result = await resolvePowerUp(testRoot, "my-power");
+  const result = await resolvePowerUp(testRoot, "my-powerup");
   assert(result.type).equals("single-use");
   assert(result.packageName).equals("my-pkg");
 
@@ -108,7 +108,7 @@ test.case(`resolves a single-use ${SINGULAR_NAME}`, async assert => {
 
 test.case(`throws not_found when ${SINGULAR_NAME} is not in any config-listed package`, async assert => {
   await reset();
-  await createPackage(testRoot, "my-pkg", [{ name: "my-power", type: "multi-use" }]);
+  await createPackage(testRoot, "my-pkg", [{ name: "my-powerup", type: "multi-use" }]);
   await createConfig(testRoot, ["my-pkg"]);
 
   let threw;
@@ -185,12 +185,12 @@ test.case(`disambiguates by type when same ${SINGULAR_NAME} in both types in sam
 
 test.case("throws not_found when config has no packages", async assert => {
   await reset();
-  await createPackage(testRoot, "my-pkg", [{ name: "my-power", type: "multi-use" }]);
+  await createPackage(testRoot, "my-pkg", [{ name: "my-powerup", type: "multi-use" }]);
   await createConfig(testRoot, []);
 
   let threw;
   try {
-    await resolvePowerUp(testRoot, "my-power");
+    await resolvePowerUp(testRoot, "my-powerup");
   } catch (e: unknown) {
     assert(e instanceof CodeError).true();
     threw = (e as CodeError).code;

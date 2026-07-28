@@ -273,13 +273,13 @@ test.group("pack move (success)", () => {
     await reset();
     await createPackageOnDisk({
       packageName: pkgName,
-      powerups: [{ name: "my-power", type: "multi-use" }],
+      powerups: [{ name: "my-powerup", type: "multi-use" }],
     });
     await createConfig([pkgName]);
 
     // Add a template with nested files to verify recursive copy
     const powerDir = internalFolder.append(
-      `/${pkgName}/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/my-power`,
+      `/${pkgName}/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/my-powerup`,
     );
     await addTemplate(powerDir);
 
@@ -297,7 +297,7 @@ test.group("pack move (success)", () => {
 
       // Verify powerup folder was copied
       const globalPower = globalPkg.append(
-        `/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/my-power`,
+        `/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/my-powerup`,
       );
       assert(await fs.exists(globalPower)).true();
 
@@ -305,7 +305,7 @@ test.group("pack move (success)", () => {
       const instr = await globalPower
         .append("/instructions.json")
         .json() as Record<string, unknown>;
-      assert(instr.name).equals("my-power");
+      assert(instr.name).equals("my-powerup");
 
       // Verify flat file was copied
       const flat = await globalPower

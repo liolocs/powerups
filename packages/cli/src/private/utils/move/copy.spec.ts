@@ -23,11 +23,11 @@ async function reset() {
  * and files that include both flat files AND nested sub-folders.
  */
 async function buildSourceTree(srcActive: FileRef): Promise<void> {
-  // multi-use/my-power/
-  const powerDir = srcActive.append(`/${MULTI_USE_FOLDER}/my-power`);
+  // multi-use/my-powerup/
+  const powerDir = srcActive.append(`/${MULTI_USE_FOLDER}/my-powerup`);
   await fs.create(powerDir);
   await powerDir.append("/instructions.json").writeJSON({
-    name: "my-power",
+    name: "my-powerup",
     description: "test",
     variables: { required: [] },
     intent: [],
@@ -66,7 +66,7 @@ test.group("copyActiveStructure", () => {
 
     // The core bug: powerup folders are directories, files() returned [].
     // After fix (dirs()), the power dir should exist at destination.
-    assert(await fs.exists(destActive.append(`/${MULTI_USE_FOLDER}/my-power`))).true();
+    assert(await fs.exists(destActive.append(`/${MULTI_USE_FOLDER}/my-powerup`))).true();
     assert(await fs.exists(destActive.append(`/${SINGLE_USE_FOLDER}/other-power`))).true();
   });
 
@@ -81,9 +81,9 @@ test.group("copyActiveStructure", () => {
     await copyActiveStructure({ srcActiveDir: srcActive, destSrcActiveDir: destActive });
 
     const instr = await destActive
-      .append(`/${MULTI_USE_FOLDER}/my-power/instructions.json`)
+      .append(`/${MULTI_USE_FOLDER}/my-powerup/instructions.json`)
       .json() as Record<string, unknown>;
-    assert(instr.name).equals("my-power");
+    assert(instr.name).equals("my-powerup");
   });
 
   test.case("copies flat files", async assert => {
@@ -97,7 +97,7 @@ test.group("copyActiveStructure", () => {
     await copyActiveStructure({ srcActiveDir: srcActive, destSrcActiveDir: destActive });
 
     const flat = await destActive
-      .append(`/${MULTI_USE_FOLDER}/my-power/flat.txt`)
+      .append(`/${MULTI_USE_FOLDER}/my-powerup/flat.txt`)
       .text();
     assert(flat.trim()).equals("flat content");
   });
@@ -116,7 +116,7 @@ test.group("copyActiveStructure", () => {
     // nested directories entirely. After fix (copy()), the deep file
     // should exist.
     const deep = await destActive
-      .append(`/${MULTI_USE_FOLDER}/my-power/nested/sub/deep.txt`)
+      .append(`/${MULTI_USE_FOLDER}/my-powerup/nested/sub/deep.txt`)
       .text();
     assert(deep.trim()).equals("deep content");
   });
@@ -166,7 +166,7 @@ test.group("copySubPowerUps", () => {
       ["my-sub", {
         folder: subSrc,
         type: "multi-use",
-        parent: "my-power",
+        parent: "my-powerup",
       }],
     ]);
 
@@ -198,7 +198,7 @@ test.group("copySubPowerUps", () => {
       ["existing-sub", {
         folder: subSrc,
         type: "multi-use",
-        parent: "my-power",
+        parent: "my-powerup",
       }],
     ]);
 

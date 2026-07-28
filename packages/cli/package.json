@@ -1,6 +1,6 @@
 {
   "name": "@powerups/cli",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "author": "lioloc@pm.me",
   "description": "CLI for powerups.dev",
   "license": "MIT",
@@ -12,7 +12,8 @@
     "lint:fix": "eslint . --fix",
     "prepublishOnly": "npm run build",
     "test": "npx proby",
-    "b:link": "bun run scripts/link.ts"
+    "b:link": "bun run scripts/link.ts",
+    "changelog": "pnpm conventional-changelog -p conventionalcommits"
   },
   "type": "module",
   "files": [

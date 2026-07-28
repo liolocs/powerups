@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. See [commit
 ### Bug Fixes
 
 * bundle program into cli package ([fb0133b](https://github.com/liolocs/powerups/commit/fb0133b4021d43c519a3e806f6a4becfcdcf858d))
+
 ## 0.0.0 (2026-07-28)
 
 ### Features

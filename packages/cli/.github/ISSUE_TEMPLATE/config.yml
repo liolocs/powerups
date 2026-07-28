@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Discussions / Questions
+    url: https://github.com/liolocs/powerups/discussions
+    about: For questions and open-ended discussion that isn't an issue

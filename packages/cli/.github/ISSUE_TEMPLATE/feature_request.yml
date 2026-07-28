@@ -1,0 +1,61 @@
+name: Feature request
+description: Suggest a new feature for this project
+labels: ['status: needs-triage', 'enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please search the
+        [issue tracker](https://github.com/liolocs/powerups/issues) first to
+        make sure it hasn't already been requested. A thumbs-up on an existing
+        issue is appreciated.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What's hard or impossible to do with `pwrp` today?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: The solution you'd like
+      description: What would you like `pwrp` to do instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: command
+    attributes:
+      label: Which command?
+      description: The `pwrp` command this relates to, if any.
+      options:
+        - add
+        - create
+        - doctor
+        - find
+        - info
+        - install
+        - list
+        - metrics
+        - pack
+        - project
+        - update
+        - use
+        - validate
+        - New command / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you've tried or other approaches you've considered. Optional.
+    validations:
+      required: false
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Extra context, examples, or links. Optional.
+    validations:
+      required: false

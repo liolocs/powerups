@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powerups/program";
+import { Command } from "@pwrp/program";
 import add_errors from "#errors/addErrors";
 import { addPackageToConfig } from "#utils/config";
 import { parseFragment, mergeFilters, buildConfigEntry } from "#utils/parse-powerup-fragment";

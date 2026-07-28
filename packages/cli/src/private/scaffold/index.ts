@@ -1,5 +1,6 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
+import path from "node:path";
 import { runTemplate } from "#template-runners/index";
 import { detectHarnesses, type Harness } from "#scaffold/detect";
 import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
@@ -17,7 +18,9 @@ import {
   SINGULAR_NAME,
 } from "#constants";
 
-const SCAFFOLD_DIR = import.meta.dirname;
+const SCAFFOLD_DIR = is.truthy(process.env.BUNDLED)
+  ? path.join(import.meta.dirname, "private/scaffold")
+  : import.meta.dirname;
 
 export interface ScaffoldResult {
   harnesses: Harness[];

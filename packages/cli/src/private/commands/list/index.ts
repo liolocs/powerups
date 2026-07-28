@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powerups/program";
+import { Command } from "@pwrp/program";
 import {
   readConfig,
   readGlobalConfig,

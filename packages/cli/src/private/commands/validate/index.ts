@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powerups/program";
+import { Command } from "@pwrp/program";
 import validate_errors from "#errors/validateErrors";
 import { checkOutput } from "#utils/check-output";
 import { resolvePowerUp } from "#utils/resolve-powerup";

@@ -4,7 +4,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
-import { Command } from "@powerups/program";
+import { Command } from "@pwrp/program";
 import update_errors from "#errors/updateErrors";
 import project_errors from "#errors/projectErrors";
 import { scaffold } from "#scaffold/index";

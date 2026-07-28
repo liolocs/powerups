@@ -52,7 +52,7 @@ export default function(variables: Record<string, string>): string {
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@powerups/program";
+import { Command } from "@pwrp/program";
 import ${varName}_errors from "#errors/${commandName}Errors";
 
 const ${varName} = new Command({

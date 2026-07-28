@@ -4,7 +4,7 @@ import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { homedir } from "node:os";
 import path from "node:path";
-import { Command } from "@powerups/program";
+import { Command } from "@pwrp/program";
 import install_errors from "#errors/installErrors";
 import { addPackageToConfig, addPackageToGlobalConfig } from "#utils/config";
 import { parseSpecifier } from "#utils/parse-specifier";

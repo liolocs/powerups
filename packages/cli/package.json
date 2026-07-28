@@ -34,6 +34,7 @@
     }
   },
   "dependencies": {
+    "@powerups/program": "workspace:^",
     "@rcompat/cli": "^0.25.0",
     "@rcompat/error": "^0.9.0",
     "@rcompat/fs": "^0.35.1",
@@ -42,12 +43,13 @@
     "@rcompat/runtime": "^0.17.0",
     "@rcompat/string": "^0.22.0",
     "@rcompat/type": "^0.18.0",
-    "@powerups/program": "workspace:^",
     "nunjucks": "^3.2.4",
     "pema": "^0.8.2"
   },
   "devDependencies": {
-    "@types/nunjucks": "^3.2.6"
+    "@types/nunjucks": "^3.2.6",
+    "conventional-changelog": "^8.1.0",
+    "conventional-changelog-conventionalcommits": "^10.2.1"
   },
   "bin": {
     "pup": "./lib/bin.js"

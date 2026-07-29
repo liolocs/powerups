@@ -13,7 +13,9 @@
     "build:apps": "pnpm -r --filter='./apps/**' build",
     "knip": "knip",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "release:cli": "pnpm -r --filter='./packages/cli' release",
+    "publish:cli": "pnpm --filter @liolocs/powerups-cli publish --access public"
   },
   "devDependencies": {
     "@rcompat/string": "^0.22.0",

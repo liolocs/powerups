@@ -10,8 +10,6 @@ import {
   CLI_CMD,
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -32,7 +30,7 @@ async function reset() {
   await fs.create(internalFolder);
   // Create test package
   const pkgDir = internalFolder.append("/test-pkg");
-  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
@@ -128,7 +126,7 @@ test.case("info prints create, modify, and delete files", async assert => {
     context: { root: testRoot },
   });
 
-  const muFolder1 = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  const muFolder1 = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${MULTI_USE_FOLDER}`);
   await muFolder1.append("/full-output/instructions.json").writeJSON({
     name: "full-output",
     description: "A template with all file types",
@@ -210,7 +208,7 @@ test.case("info prints includes with variable bindings for composite templates",
   });
 
   // Overwrite child instructions.json with a create step
-  const muFolder2 = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  const muFolder2 = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${MULTI_USE_FOLDER}`);
   await muFolder2.append("/child-component/instructions.json").writeJSON({
     name: "child-component",
     description: "A child component template",
@@ -235,7 +233,7 @@ test.case("info prints includes with variable bindings for composite templates",
   });
 
   // Overwrite parent instructions.json to add includes
-  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${MULTI_USE_FOLDER}`);
   const parentInstructionsPath = multiUseFolder.append("/parent-composite/instructions.json");
   await parentInstructionsPath.writeJSON({
     name: "parent-composite",
@@ -302,7 +300,7 @@ test.case("info applies outputPathOverride from includes in file listing", async
     context: { root: testRoot },
   });
 
-  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${MULTI_USE_FOLDER}`);
 
   // Overwrite child instructions.json with a create step
   await multiUseFolder.append("/override-child/instructions.json").writeJSON({
@@ -407,7 +405,7 @@ test.case("info hides excluded files from includes in file listing", async asser
     context: { root: testRoot },
   });
 
-  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  const multiUseFolder = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg/${MULTI_USE_FOLDER}`);
 
   // Overwrite child instructions.json with two create steps
   await multiUseFolder.append("/exclude-child/instructions.json").writeJSON({

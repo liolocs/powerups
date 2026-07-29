@@ -10,8 +10,6 @@ import captureStdout, {
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -24,7 +22,7 @@ const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
 const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
-const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${MULTI_USE_FOLDER}`);
 
 const createCmd = create;
 
@@ -35,7 +33,7 @@ async function reset() {
   await fs.create(internalFolder);
   // Create test package
   const pkgDir = internalFolder.append("/test-pkg");
-  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({

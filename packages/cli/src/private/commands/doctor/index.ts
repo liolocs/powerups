@@ -14,8 +14,6 @@ import {
   CLI_NAME,
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -119,7 +117,7 @@ const doctor = new Command({
           continue;
         }
 
-        const activeFolder = packageDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+        const activeFolder = packageDir;
         for (const [type, folder] of [
           ["multi-use", MULTI_USE_FOLDER],
           ["single-use", SINGLE_USE_FOLDER],

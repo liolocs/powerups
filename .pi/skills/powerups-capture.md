@@ -58,8 +58,8 @@ go in the same package.
    Present your assessment to the user and get confirmation on the type
    (single-use or multi-use) before proceeding. If the user later needs to
    switch types, the folder can simply be moved between
-   .powerups/internal/<package>/src/active/multi-use/ and
-   .powerups/internal/<package>/src/active/single-use/.
+   .powerups/internal/<package>/multi-use/ and
+   .powerups/internal/<package>/single-use/.
 
 5. Identify the capture structure:
    - Name (short, kebab-case)

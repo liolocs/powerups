@@ -3,8 +3,8 @@
 
 This project uses the `{{ CLI_NAME }}` CLI to keep AI-generated content maintainable.
 
-{{ CAPITALIZED_CLI_NAME }} live inside packages at `{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/` (multi-use) or
-`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ SINGLE_USE_FOLDER }}/<name>/` (single-use).
+{{ CAPITALIZED_CLI_NAME }} live inside packages at `{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/<name>/` (multi-use) or
+`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SINGLE_USE_FOLDER }}/<name>/` (single-use).
 
 Always prefer {{ CLI_NAME }} over one-off generation.
 
@@ -95,7 +95,7 @@ export default ({ componentName, theme }: Record<string, string>) =>
   it does not import or execute it, so use the {{ SINGULAR_NAME }} once to confirm the
   default export works.
 
-### Instructions schema (`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/<name>/instructions.json`)
+### Instructions schema (`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/<name>/instructions.json`)
 
 Fields marked `?` are optional; omit them entirely when unused.
 
@@ -247,7 +247,7 @@ reaches an `include` step, it maps the subtemplate's declared variables to
 values from the parent (using `{{ '{{parentVar}}' }}` tokens or literals),
 optionally overriding or excluding child steps, and executes the subtemplate's steps inline.
 Subtemplates are just {{ CLI_NAME }} — they live in their own folder under
-`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SRC_FOLDER }}/{{ ACTIVE_FOLDER }}/{{ MULTI_USE_FOLDER }}/`, have their own
+`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/`, have their own
 `instructions.json` and templates, and can be used standalone or included
 by multiple parents.
 

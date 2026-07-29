@@ -1,4 +1,4 @@
-import { ACTIVE_FOLDER, CLI_NAME, PACKAGE_FILE, SRC_FOLDER } from "#constants";
+import { CLI_NAME, PACKAGE_FILE } from "#constants";
 import { packageJsonSchema } from "#schemas/package";
 import {
   addPackageToGlobalConfig,
@@ -50,11 +50,9 @@ const packMove = new Command({
     });
 
     await fs.create(globalPackageDir);
-    const srcActiveDir = localPackageDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
-    const destSrcActiveDir = globalPackageDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
-    await copyActiveStructure({ srcActiveDir, destSrcActiveDir });
+    await copyActiveStructure({ srcDir: localPackageDir, destDir: globalPackageDir });
 
-    await copySubPowerUps({ collected, destSrcActiveDir });
+    await copySubPowerUps({ collected, destDir: globalPackageDir });
 
     const activeRecord =
       localPkgJson[CLI_NAME].active as Record<string, Record<string, string>>;
@@ -64,7 +62,7 @@ const packMove = new Command({
       .append(`/${PACKAGE_FILE}`)
       .writeJSON(globalPkgJson as never);
 
-    await verifyMoveSuccess({ packageName, globalPackageDir, destSrcActiveDir });
+    await verifyMoveSuccess({ packageName, globalPackageDir });
 
     await localPackageDir.remove({ recursive: true });
 

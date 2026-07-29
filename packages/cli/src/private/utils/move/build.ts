@@ -2,8 +2,6 @@ import { type PowerUpProperty, type PackageJson } from "#schemas/package";
 import {
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   CLI_NAME,
 } from "#constants";
 import type { CollectedSubPowerUp } from "#utils/move/collect";
@@ -39,7 +37,7 @@ export function buildUpdatedPowerups({
       : SINGLE_USE_FOLDER;
     const childKey = `${info.parent}:${subName}`;
     updatedRecord[typeFolder][childKey] =
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${subName}/instructions.json`;
+      `./${typeFolder}/${subName}/instructions.json`;
   }
 
   return updatedPowerups;

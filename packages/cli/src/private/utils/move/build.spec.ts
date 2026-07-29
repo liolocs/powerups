@@ -48,7 +48,7 @@ test.group("buildUpdatedPowerups", () => {
 
   test.case("adds parent:child entries for collected sub-powerups", async assert => {
     const activeRecord: Record<string, Record<string, string>> = {
-      [MULTI_USE_FOLDER]: { "power-a": "./src/active/multi-use/power-a/instructions.json" },
+      [MULTI_USE_FOLDER]: { "power-a": "./multi-use/power-a/instructions.json" },
       [SINGLE_USE_FOLDER]: {},
     };
 
@@ -61,10 +61,10 @@ test.group("buildUpdatedPowerups", () => {
     const active = result.active as Record<string, Record<string, string>>;
 
     assert(active[MULTI_USE_FOLDER]["power-a:sub-1"]).equals(
-      "./src/active/multi-use/sub-1/instructions.json",
+      "./multi-use/sub-1/instructions.json",
     );
     assert(active[SINGLE_USE_FOLDER]["power-a:sub-2"]).equals(
-      "./src/active/single-use/sub-2/instructions.json",
+      "./single-use/sub-2/instructions.json",
     );
   });
 

@@ -7,8 +7,6 @@ import {
   CLI_NAME,
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
 } from "#constants";
@@ -24,8 +22,6 @@ async function renderAgents(): Promise<string> {
       CLI_NAME,
       MAIN_FOLDER,
       INTERNAL_FOLDER,
-      SRC_FOLDER,
-      ACTIVE_FOLDER,
       MULTI_USE_FOLDER,
       SINGLE_USE_FOLDER,
     },

@@ -15,8 +15,6 @@ import path from "node:path";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -28,7 +26,7 @@ const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
 const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
-const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${MULTI_USE_FOLDER}`);
 
 async function gitInit(dir: FileRef): Promise<void> {
   await io.run("git init", { cwd: dir.path });
@@ -55,7 +53,7 @@ async function reset() {
   await fs.create(internalFolder);
   // Create test package
   const pkgDir = internalFolder.append("/test-pkg");
-  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
@@ -75,7 +73,7 @@ async function reset() {
 test.case("doctor reports clean state with no powerups", async assert => {
   await reset();
   // Create single-use folder too so there are no warnings
-  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
+  await fs.create(internalFolder.append("/test-pkg/single-use"));
   await gitCommit(testRoot, "add folders");
 
   const output = await captureStdout(() => doctor.run({
@@ -93,7 +91,7 @@ test.case("doctor reports clean state with no powerups", async assert => {
 
 test.case("doctor validates powerups with no issues", async assert => {
   await reset();
-  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
+  await fs.create(internalFolder.append("/test-pkg/single-use"));
 
   await create.run({
     subcommands: [],
@@ -119,7 +117,7 @@ test.case("doctor validates powerups with no issues", async assert => {
 
 test.case("doctor reports orphaned file in a powerups folder", async assert => {
   await reset();
-  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
+  await fs.create(internalFolder.append("/test-pkg/single-use"));
 
   await create.run({
     subcommands: [],
@@ -145,7 +143,7 @@ test.case("doctor reports orphaned file in a powerups folder", async assert => {
 
 test.case("doctor reports invalid .json modify template", async assert => {
   await reset();
-  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
+  await fs.create(internalFolder.append("/test-pkg/single-use"));
 
   await create.run({
     subcommands: [],
@@ -185,7 +183,7 @@ test.case("doctor reports invalid .json modify template", async assert => {
 
 test.case("doctor warns when git working tree is dirty", async assert => {
   await reset();
-  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
+  await fs.create(internalFolder.append("/test-pkg/single-use"));
   await gitCommit(testRoot, "clean state");
 
   // Make a dirty change
@@ -208,8 +206,8 @@ test.case("doctor errors when not a git repo", async assert => {
   const noGitRoot = fs.ref(path.join(tmpdir(), `powerups-test-nogit-${randomBytes(4).toString("hex")}`));
   await fs.create(noGitRoot);
   await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
-  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${ACTIVE_FOLDER}`));
-  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`));
+  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
+  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${MULTI_USE_FOLDER}`));
 
   const { output } = await captureStdoutOrError(() => doctor.run({
     subcommands: [],
@@ -225,7 +223,7 @@ test.case("doctor errors when not a git repo", async assert => {
 
 test.case("doctor checks both types in one pass", async assert => {
   await reset();
-  await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
+  await fs.create(internalFolder.append("/test-pkg/single-use"));
 
   // Create a multi-use powerups
   await create.run({
@@ -285,7 +283,7 @@ test.group("doctor errors", () => {
 
   test.case("should fail with validation_failed when a template file is missing", async assert => {
     await reset();
-    await fs.create(internalFolder.append("/test-pkg/src/active/single-use"));
+    await fs.create(internalFolder.append("/test-pkg/single-use"));
 
     await create.run({
       subcommands: [],

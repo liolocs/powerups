@@ -4,12 +4,12 @@ import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import { executeSteps, navigateJsonPath } from "#utils/execute-steps";
 import type { Step } from "#schemas/instruction";
-import { MAIN_FOLDER, ACTIVE_FOLDER, MULTI_USE_FOLDER } from "#constants";
+import { MAIN_FOLDER, MULTI_USE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
-const multiUseFolder: FileRef = mainFolder.append(`/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+const multiUseFolder: FileRef = mainFolder.append(`/${MULTI_USE_FOLDER}`);
 
 async function reset() {
   await testRoot.remove();

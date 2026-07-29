@@ -15,8 +15,6 @@ import { randomUUID } from "node:crypto";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -30,7 +28,7 @@ const tempGlobalRoot = path.join(tmpdir(), `powerups-test-${randomUUID()}`);
 const tempGlobalRootRef = fs.ref(tempGlobalRoot);
 const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
 const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
-const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${MULTI_USE_FOLDER}`);
 
 const createCmd = create;
 
@@ -94,7 +92,7 @@ async function reset() {
   await fs.create(internalFolder);
   // Create test package
   const pkgDir = internalFolder.append("/test-pkg");
-  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
@@ -441,7 +439,7 @@ test.group("apply errors", () => {
     await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
     // Create test-pkg package in noGitRoot
     const noGitPkgDir = noGitRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/test-pkg`);
-    const noGitSrcActive = noGitPkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+    const noGitSrcActive = noGitPkgDir;
     await fs.create(noGitSrcActive.append(`/${MULTI_USE_FOLDER}`));
     await fs.create(noGitSrcActive.append(`/${SINGLE_USE_FOLDER}`));
     await noGitPkgDir.append(`/${PACKAGE_FILE}`).writeJSON({

@@ -8,9 +8,9 @@
   "powerups": {
     "active": {
       "multi-use": {
-        "cli-command": "./src/active/multi-use/cli-command/instructions.json",
-        "cli-subcommand": "./src/active/multi-use/cli-subcommand/instructions.json",
-        "cli-command-with-subcommands": "./src/active/multi-use/cli-command-with-subcommands/instructions.json"
+        "cli-command": "./multi-use/cli-command/instructions.json",
+        "cli-subcommand": "./multi-use/cli-subcommand/instructions.json",
+        "cli-command-with-subcommands": "./multi-use/cli-command-with-subcommands/instructions.json"
       },
       "single-use": {}
     }

@@ -69,7 +69,6 @@ const harness = await detectHarness(projectRoot, harnessFlag, options);
     CLI_CMD,
     MAIN_FOLDER,
     INTERNAL_FOLDER,
-    SRC_FOLDER,
   };
   const filesWritten: string[] = [];
   const rollback = options?.rollback;
@@ -88,7 +87,6 @@ const harness = await detectHarness(projectRoot, harnessFlag, options);
     CLI_CMD,
     MAIN_FOLDER,
     INTERNAL_FOLDER,
-    SRC_FOLDER,
   };
   const filesWritten: string[] = [];
   const rollback = options?.rollback;
@@ -113,8 +111,8 @@ The code should be self-documenting. Only add comments when it makes absolute se
 
 This project uses the `powerups` CLI to keep AI-generated content maintainable.
 
-Powerups live inside packages at `.powerups/internal/<package>/src/active/multi-use/<name>/` (multi-use) or
-`.powerups/internal/<package>/src/active/single-use/<name>/` (single-use).
+Powerups live inside packages at `.powerups/internal/<package>/multi-use/<name>/` (multi-use) or
+`.powerups/internal/<package>/single-use/<name>/` (single-use).
 
 Always prefer powerups over one-off generation.
 
@@ -205,7 +203,7 @@ export default ({ componentName, theme }: Record<string, string>) =>
   it does not import or execute it, so use the powerup once to confirm the
   default export works.
 
-### Instructions schema (`.powerups/internal/<package>/src/active/multi-use/<name>/instructions.json`)
+### Instructions schema (`.powerups/internal/<package>/multi-use/<name>/instructions.json`)
 
 Fields marked `?` are optional; omit them entirely when unused.
 
@@ -357,7 +355,7 @@ reaches an `include` step, it maps the subtemplate's declared variables to
 values from the parent (using `{{parentVar}}` tokens or literals),
 optionally overriding or excluding child steps, and executes the subtemplate's steps inline.
 Subtemplates are just powerups — they live in their own folder under
-`.powerups/internal/<package>/src/active/multi-use/`, have their own
+`.powerups/internal/<package>/multi-use/`, have their own
 `instructions.json` and templates, and can be used standalone or included
 by multiple parents.
 

@@ -8,8 +8,6 @@ import captureStdout from "#test-utils/capture-stdout";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   CONFIG_FILE,
@@ -37,7 +35,7 @@ async function createPackageWithPower(
 ) {
   const typeFolder = type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
   const pkgDir = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`);
-  const powerDir = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${powerupsName}`);
+  const powerDir = pkgDir.append(`/${typeFolder}/${powerupsName}`);
 
   await fs.create(powerDir);
   await powerDir.append("/instructions.json").writeJSON({
@@ -56,10 +54,10 @@ async function createPackageWithPower(
     [CLI_NAME]: {
       active: {
         [MULTI_USE_FOLDER]: type === "multi-use"
-          ? { [powerupsName]: `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/${powerupsName}/instructions.json` }
+          ? { [powerupsName]: `./${MULTI_USE_FOLDER}/${powerupsName}/instructions.json` }
           : {},
         [SINGLE_USE_FOLDER]: type === "single-use"
-          ? { [powerupsName]: `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${SINGLE_USE_FOLDER}/${powerupsName}/instructions.json` }
+          ? { [powerupsName]: `./${SINGLE_USE_FOLDER}/${powerupsName}/instructions.json` }
           : {},
       },
     },

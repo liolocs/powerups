@@ -14,8 +14,6 @@ import {
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   CONFIG_FILE,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -37,7 +35,7 @@ async function writePackage(
   powerups: { multiUse?: string[]; singleUse?: string[] } = {},
 ) {
   const pkgDir = projectRoot.append(`/${MAIN_FOLDER}/${storePath}`);
-  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
 
@@ -53,7 +51,7 @@ async function writePackage(
       name: powerName, description: "t", variables: { required: [] }, intent: [], steps: [],
     });
     powerupsProperty[MULTI_USE_FOLDER][powerName] =
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/${powerName}/instructions.json`;
+      `./${MULTI_USE_FOLDER}/${powerName}/instructions.json`;
   }
   for (const powerName of powerups.singleUse ?? []) {
     const dir = srcActive.append(`/${SINGLE_USE_FOLDER}/${powerName}`);
@@ -62,7 +60,7 @@ async function writePackage(
       name: powerName, description: "t", variables: { required: [] }, intent: [], steps: [],
     });
     powerupsProperty[SINGLE_USE_FOLDER][powerName] =
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${SINGLE_USE_FOLDER}/${powerName}/instructions.json`;
+      `./${SINGLE_USE_FOLDER}/${powerName}/instructions.json`;
   }
 
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({

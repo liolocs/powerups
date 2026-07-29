@@ -8,8 +8,6 @@ import { CreateErrorCode } from "#errors/createErrors";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -33,7 +31,7 @@ async function reset() {
 
 async function createTestPackage(name: string) {
   const pkgDir = internalFolder.append(`/${name}`);
-  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
@@ -46,7 +44,7 @@ async function createTestPackage(name: string) {
 }
 
 function pkgMultiUse(pkgName: string) {
-  return internalFolder.append(`/${pkgName}/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`);
+  return internalFolder.append(`/${pkgName}/${MULTI_USE_FOLDER}`);
 }
 
 test.case("create template creates an instructions.json file", async assert => {

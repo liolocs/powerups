@@ -1,11 +1,10 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import pack_errors from "#errors/packErrors";
-import { PACKAGE_FILE, SRC_FOLDER, ACTIVE_FOLDER } from "#constants";
+import { PACKAGE_FILE } from "#constants";
 
 type VerifyMoveSuccessParams = {
   packageName: string;
   globalPackageDir: FileRef;
-  destSrcActiveDir: FileRef;
 };
 
 /**
@@ -18,7 +17,6 @@ type VerifyMoveSuccessParams = {
 export async function verifyMoveSuccess({
   packageName,
   globalPackageDir,
-  destSrcActiveDir,
 }: VerifyMoveSuccessParams): Promise<void> {
   // 1. Global package directory exists
   if (!(await fs.exists(globalPackageDir))) {
@@ -42,14 +40,6 @@ export async function verifyMoveSuccess({
     throw pack_errors.move_verification_failed(
       packageName,
       "global package.json is not valid JSON",
-    );
-  }
-
-  // 3. src/active/ tree exists at the destination
-  if (!(await fs.exists(destSrcActiveDir))) {
-    throw pack_errors.move_verification_failed(
-      packageName,
-      `${SRC_FOLDER}/${ACTIVE_FOLDER} directory is missing at destination`,
     );
   }
 }

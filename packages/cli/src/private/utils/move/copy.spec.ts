@@ -4,8 +4,6 @@ import runtime from "@rcompat/runtime";
 import { copyActiveStructure, copySubPowerUps } from "#utils/move/copy";
 import type { CollectedSubPowerUp } from "#utils/move/collect";
 import {
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
 } from "#constants";
@@ -19,7 +17,7 @@ async function reset() {
 }
 
 /**
- * Build a source src/active tree with powerup folders, instructions.json,
+ * Build a source package content tree with powerup folders, instructions.json,
  * and files that include both flat files AND nested sub-folders.
  */
 async function buildSourceTree(srcActive: FileRef): Promise<void> {
@@ -62,7 +60,7 @@ test.group("copyActiveStructure", () => {
     await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
     await buildSourceTree(srcActive);
 
-    await copyActiveStructure({ srcActiveDir: srcActive, destSrcActiveDir: destActive });
+    await copyActiveStructure({ srcDir: srcActive, destDir: destActive });
 
     // The core bug: powerup folders are directories, files() returned [].
     // After fix (dirs()), the power dir should exist at destination.
@@ -78,7 +76,7 @@ test.group("copyActiveStructure", () => {
     await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
     await buildSourceTree(srcActive);
 
-    await copyActiveStructure({ srcActiveDir: srcActive, destSrcActiveDir: destActive });
+    await copyActiveStructure({ srcDir: srcActive, destDir: destActive });
 
     const instr = await destActive
       .append(`/${MULTI_USE_FOLDER}/my-powerup/instructions.json`)
@@ -94,7 +92,7 @@ test.group("copyActiveStructure", () => {
     await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
     await buildSourceTree(srcActive);
 
-    await copyActiveStructure({ srcActiveDir: srcActive, destSrcActiveDir: destActive });
+    await copyActiveStructure({ srcDir: srcActive, destDir: destActive });
 
     const flat = await destActive
       .append(`/${MULTI_USE_FOLDER}/my-powerup/flat.txt`)
@@ -110,7 +108,7 @@ test.group("copyActiveStructure", () => {
     await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
     await buildSourceTree(srcActive);
 
-    await copyActiveStructure({ srcActiveDir: srcActive, destSrcActiveDir: destActive });
+    await copyActiveStructure({ srcDir: srcActive, destDir: destActive });
 
     // This is the second bug: files() only returned flat files, missing
     // nested directories entirely. After fix (copy()), the deep file
@@ -137,7 +135,7 @@ test.group("copyActiveStructure", () => {
       steps: [],
     });
 
-    await copyActiveStructure({ srcActiveDir: srcActive, destSrcActiveDir: destActive });
+    await copyActiveStructure({ srcDir: srcActive, destDir: destActive });
 
     assert(await fs.exists(destActive.append(`/${MULTI_USE_FOLDER}/solo`))).true();
     // single-use folder simply won't exist — no crash
@@ -170,7 +168,7 @@ test.group("copySubPowerUps", () => {
       }],
     ]);
 
-    await copySubPowerUps({ collected, destSrcActiveDir: destActive });
+    await copySubPowerUps({ collected, destDir: destActive });
 
     assert(await fs.exists(destActive.append(`/${MULTI_USE_FOLDER}/my-sub`))).true();
     const instr = await destActive
@@ -202,7 +200,7 @@ test.group("copySubPowerUps", () => {
       }],
     ]);
 
-    await copySubPowerUps({ collected, destSrcActiveDir: destActive });
+    await copySubPowerUps({ collected, destDir: destActive });
 
     const content = await destActive
       .append(`/${MULTI_USE_FOLDER}/existing-sub/instructions.json`)

@@ -13,8 +13,6 @@ export const CAPITALIZED_CLI_NAME = string.upperfirst(CLI_NAME);
 /** Name of the main cli project folder, created at the project root. */
 export const MAIN_FOLDER = "." + CLI_NAME;
 
-export const ACTIVE_FOLDER = "active";
-
 /** Subfolder for multi-use powerups (recurring patterns). */
 export const MULTI_USE_FOLDER = "multi-use";
 
@@ -36,9 +34,6 @@ export const powerupsFolderMap: Record<PowerUpType, string> = {
 
 /** Subfolder inside .<MAIN_FOLDER>/ (or ~/.<MAIN_FOLDER>/) holding local packages. */
 export const INTERNAL_FOLDER = "internal";
-
-/** Source folder inside a package. */
-export const SRC_FOLDER = "src";
 
 /** Name of the package.json file. */
 export const PACKAGE_FILE = "package.json";

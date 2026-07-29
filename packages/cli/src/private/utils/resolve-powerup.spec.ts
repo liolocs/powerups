@@ -8,8 +8,6 @@ import { PowerErrorCode } from "#errors/powerErrors";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   CONFIG_FILE,
@@ -35,7 +33,7 @@ async function createPackage(
   const pkgDir = projectRoot.append(
     `/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`,
   );
-  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  const srcActive = pkgDir;
 
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
@@ -57,7 +55,7 @@ async function createPackage(
       steps: [],
     });
     powerupsProperty[typeFolder][powerup.name] =
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${powerup.name}/instructions.json`;
+      `./${typeFolder}/${powerup.name}/instructions.json`;
   }
 
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({

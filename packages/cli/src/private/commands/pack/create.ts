@@ -8,8 +8,6 @@ import create_errors from "#errors/createErrors";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -81,9 +79,8 @@ const packCreate = new Command({
     }
 
     // Create folder structure
-    const srcActive = packageDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
-    await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
-    await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
+    await fs.create(packageDir.append(`/${MULTI_USE_FOLDER}`));
+    await fs.create(packageDir.append(`/${SINGLE_USE_FOLDER}`));
 
     // Write package.json
     const packageJson = {

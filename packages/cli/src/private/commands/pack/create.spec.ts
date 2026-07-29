@@ -8,8 +8,6 @@ import captureStdout from "#test-utils/capture-stdout";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -51,7 +49,7 @@ function pkgJson(name: string): FileRef {
  */
 async function createPackageOnDisk(packageName: string) {
   const dir = internalFolder.append(`/${packageName}`);
-  const srcActive = dir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  const srcActive = dir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
   await dir.append(`/${PACKAGE_FILE}`).writeJSON({
@@ -220,13 +218,13 @@ test.group("pack create (local)", () => {
 
     // Package dir
     assert(await fs.exists(pkgDir("my-pkg"))).true();
-    // src/active/multi-use
+    // multi-use
     assert(await fs.exists(
-      pkgDir("my-pkg").append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`),
+      pkgDir("my-pkg").append(`/${MULTI_USE_FOLDER}`),
     )).true();
-    // src/active/single-use
+    // single-use
     assert(await fs.exists(
-      pkgDir("my-pkg").append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}/${SINGLE_USE_FOLDER}`),
+      pkgDir("my-pkg").append(`/${SINGLE_USE_FOLDER}`),
     )).true();
 
     await testRoot.remove();
@@ -328,10 +326,10 @@ test.group("pack create (global)", () => {
       const globalPkg = globalInternal.append(`/${pkgName}`);
       assert(await fs.exists(globalPkg)).true();
       assert(await fs.exists(
-        globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}`),
+        globalPkg.append(`/${MULTI_USE_FOLDER}`),
       )).true();
       assert(await fs.exists(
-        globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}/${SINGLE_USE_FOLDER}`),
+        globalPkg.append(`/${SINGLE_USE_FOLDER}`),
       )).true();
 
       // Verify package.json

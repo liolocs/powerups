@@ -9,8 +9,6 @@ import { PackErrorCode } from "#errors/packErrors";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   PACKAGE_FILE,
@@ -54,7 +52,7 @@ async function createPackageOnDisk({
   powerups?: { name: string; type: "multi-use" | "single-use" }[];
 }) {
   const pkgDir = internalFolder.append(`/${packageName}`);
-  const srcActive = pkgDir.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
+  const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
 
@@ -77,7 +75,7 @@ async function createPackageOnDisk({
       steps: [],
     });
     powerupsProperty[typeFolder][power.name] =
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolder}/${power.name}/instructions.json`;
+      `./${typeFolder}/${power.name}/instructions.json`;
   }
 
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
@@ -190,7 +188,7 @@ test.group("pack move (errors)", () => {
     await createConfig(["circular-pkg"]);
 
     const powerADir = internalFolder.append(
-      `/circular-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/power-a`,
+      `/circular-pkg/${MULTI_USE_FOLDER}/power-a`,
     );
     await powerADir.append("/instructions.json").writeJSON({
       name: "power-a",
@@ -201,7 +199,7 @@ test.group("pack move (errors)", () => {
     });
 
     const powerBDir = internalFolder.append(
-      `/circular-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/power-b`,
+      `/circular-pkg/${MULTI_USE_FOLDER}/power-b`,
     );
     await powerBDir.append("/instructions.json").writeJSON({
       name: "power-b",
@@ -236,7 +234,7 @@ test.group("pack move (errors)", () => {
     await createConfig(["bad-include-pkg"]);
 
     const powerDir = internalFolder.append(
-      `/bad-include-pkg/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/main-power`,
+      `/bad-include-pkg/${MULTI_USE_FOLDER}/main-power`,
     );
     await powerDir.append("/instructions.json").writeJSON({
       name: "main-power",
@@ -279,7 +277,7 @@ test.group("pack move (success)", () => {
 
     // Add a template with nested files to verify recursive copy
     const powerDir = internalFolder.append(
-      `/${pkgName}/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/my-powerup`,
+      `/${pkgName}/${MULTI_USE_FOLDER}/my-powerup`,
     );
     await addTemplate(powerDir);
 
@@ -297,7 +295,7 @@ test.group("pack move (success)", () => {
 
       // Verify powerup folder was copied
       const globalPower = globalPkg.append(
-        `/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/my-powerup`,
+        `/${MULTI_USE_FOLDER}/my-powerup`,
       );
       assert(await fs.exists(globalPower)).true();
 
@@ -356,7 +354,7 @@ test.group("pack move (success)", () => {
 
     // Make main-power include sub-power
     const mainPowerDir = internalFolder.append(
-      `/${pkgName}/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/main-power`,
+      `/${pkgName}/${MULTI_USE_FOLDER}/main-power`,
     );
     await mainPowerDir.append("/instructions.json").writeJSON({
       name: "main-power",
@@ -378,13 +376,13 @@ test.group("pack move (success)", () => {
 
       // Verify main powerup was copied
       const globalMain = globalPkg.append(
-        `/${SRC_FOLDER}/${ACTIVE_FOLDER}/${MULTI_USE_FOLDER}/main-power`,
+        `/${MULTI_USE_FOLDER}/main-power`,
       );
       assert(await fs.exists(globalMain)).true();
 
       // Verify sub-powerup was copied into the destination
       const globalSub = globalPkg.append(
-        `/${SRC_FOLDER}/${ACTIVE_FOLDER}/${SINGLE_USE_FOLDER}/sub-power`,
+        `/${SINGLE_USE_FOLDER}/sub-power`,
       );
       assert(await fs.exists(globalSub)).true();
 
@@ -492,18 +490,16 @@ test.group("pack move (success)", () => {
 // ---------------------------------------------------------------------------
 
 test.group("verifyMoveSuccess", () => {
-  test.case("passes when global dir, package.json, and src/active all exist", async assert => {
+  test.case("passes when global dir and package.json exist", async assert => {
     await reset();
     const pkgName = "verify-ok";
     const globalPkg = globalInternal.append(`/${pkgName}`);
-    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
-    await fs.create(destSrcActive);
+    await fs.create(globalPkg);
     await globalPkg.append(`/${PACKAGE_FILE}`).writeJSON({ name: pkgName });
 
     await verifyMoveSuccess({
       packageName: pkgName,
       globalPackageDir: globalPkg,
-      destSrcActiveDir: destSrcActive,
     });
 
     // If we get here without throwing, the test passes
@@ -516,14 +512,12 @@ test.group("verifyMoveSuccess", () => {
   test.case("throws when global package directory is missing", async assert => {
     const pkgName = "verify-missing-dir";
     const globalPkg = globalInternal.append(`/${pkgName}`);
-    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
 
     let threw;
     try {
       await verifyMoveSuccess({
         packageName: pkgName,
         globalPackageDir: globalPkg,
-        destSrcActiveDir: destSrcActive,
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
@@ -536,8 +530,7 @@ test.group("verifyMoveSuccess", () => {
     await reset();
     const pkgName = "verify-missing-json";
     const globalPkg = globalInternal.append(`/${pkgName}`);
-    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
-    await fs.create(destSrcActive);
+    await fs.create(globalPkg);
     // NOTE: no package.json written
 
     let threw;
@@ -545,7 +538,6 @@ test.group("verifyMoveSuccess", () => {
       await verifyMoveSuccess({
         packageName: pkgName,
         globalPackageDir: globalPkg,
-        destSrcActiveDir: destSrcActive,
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();
@@ -561,8 +553,7 @@ test.group("verifyMoveSuccess", () => {
     await reset();
     const pkgName = "verify-bad-json";
     const globalPkg = globalInternal.append(`/${pkgName}`);
-    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
-    await fs.create(destSrcActive);
+    await fs.create(globalPkg);
     await globalPkg.append(`/${PACKAGE_FILE}`).write("{ this is not valid json ");
 
     let threw;
@@ -570,32 +561,6 @@ test.group("verifyMoveSuccess", () => {
       await verifyMoveSuccess({
         packageName: pkgName,
         globalPackageDir: globalPkg,
-        destSrcActiveDir: destSrcActive,
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(PackErrorCode.move_verification_failed);
-
-    await globalPkg.remove({ recursive: true });
-    await testRoot.remove();
-  });
-
-  test.case("throws when src/active directory is missing", async assert => {
-    await reset();
-    const pkgName = "verify-missing-active";
-    const globalPkg = globalInternal.append(`/${pkgName}`);
-    const destSrcActive = globalPkg.append(`/${SRC_FOLDER}/${ACTIVE_FOLDER}`);
-    await globalPkg.append(`/${PACKAGE_FILE}`).writeJSON({ name: pkgName });
-    // NOTE: src/active not created
-
-    let threw;
-    try {
-      await verifyMoveSuccess({
-        packageName: pkgName,
-        globalPackageDir: globalPkg,
-        destSrcActiveDir: destSrcActive,
       });
     } catch (e: unknown) {
       assert(e instanceof CodeError).true();

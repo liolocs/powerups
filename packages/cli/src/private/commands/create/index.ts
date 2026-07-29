@@ -10,8 +10,6 @@ import { addPackageToConfig } from "#utils/config";
 import {
   MAIN_FOLDER,
   INTERNAL_FOLDER,
-  SRC_FOLDER,
-  ACTIVE_FOLDER,
   powerupsFolderMap,
   PACKAGE_FILE,
   type PowerUpType,
@@ -109,7 +107,7 @@ const create = new Command({
     const name = flags.name!;
     const typeFolderName = powerupsFolderMap[powerupsType];
     const typeFolder = packageDir.append(
-      `/${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolderName}`,
+      `/${typeFolderName}`,
     );
 
     // Ensure type folder exists
@@ -180,7 +178,7 @@ const create = new Command({
     }
 
     powerupsMap[name] =
-      `./${SRC_FOLDER}/${ACTIVE_FOLDER}/${typeFolderName}/${name}/instructions.json`;
+      `./${typeFolderName}/${name}/instructions.json`;
 
     (pkgJson[CLI_NAME].active as Record<string, Record<string, string>>)[typeFolderName] = powerupsMap;
 

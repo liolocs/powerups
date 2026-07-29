@@ -1,5 +1,5 @@
 {
-  "name": "@pwrp/cli",
+  "name": "@liolocs/powerups-cli",
   "version": "0.0.1",
   "author": "lioloc@pm.me",
   "description": "A system for AI to use existing code rather than come up with it from scratch",
@@ -50,12 +50,12 @@
     "pema": "^0.8.2"
   },
   "devDependencies": {
-    "@pwrp/program": "workspace:^",
+    "@liolocs/program": "workspace:^",
     "@types/nunjucks": "^3.2.6",
     "commit-and-tag-version": "^13.1.2",
     "tsup": "^8.5.1"
   },
   "bin": {
-    "pwrp": "./lib/bin.js"
+    "pup": "./lib/bin.js"
   }
 }

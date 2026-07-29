@@ -55,7 +55,7 @@ export default function(variables: Record<string, string>): string {
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import ${parentVar}_errors from "#errors/${parentCommand}Errors";
 
 const ${subVar} = new Command({

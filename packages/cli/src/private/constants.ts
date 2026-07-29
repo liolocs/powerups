@@ -2,7 +2,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 import string from "@rcompat/string";
 
-export const CLI_CMD = "pwrp";
+export const CLI_CMD = "pup";
 
 export const CLI_NAME = "powerups";
 

@@ -2,7 +2,7 @@ import { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import info_errors from "#errors/infoErrors";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
 import { toKebabCase } from "#utils/variables";

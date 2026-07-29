@@ -1,45 +1,45 @@
 # powerups
 
-The monorepo for `pwrp` — a system for AI to use existing code rather than come
+The monorepo for `pup` — a system for AI to use existing code rather than come
 up with it from scratch.
 
-This workspace houses the user-facing `pwrp` CLI and the in-repo CLI framework
+This workspace houses the user-facing `pup` CLI and the in-repo CLI framework
 it's built on.
 
 ## Packages
 
 | Package | Path | Description | Published |
 | ------- | ---- | ----------- | :-------: |
-| [`@pwrp/cli`](./packages/cli) | `packages/cli` | The `pwrp` CLI — the user-facing tool for managing AI powerups | ✅ |
-| [`@pwrp/program`](./packages/program) | `packages/program` | Internal CLI framework (`CLI` / `Command` primitives) that `@pwrp/cli` is built with | ❌ (private) |
+| [`@liolocs/powerups-cli`](./packages/cli) | `packages/cli` | The `pup` CLI — the user-facing tool for managing AI powerups | ✅ |
+| [`@liolocs/program`](./packages/program) | `packages/program` | Internal CLI framework (`CLI` / `Command` primitives) that `@liolocs/powerups-cli` is built with | ❌ (private) |
 
-For installing `pwrp`, the command reference, and usage, see the
-[`@pwrp/cli` README](./packages/cli/README.md).
+For installing `pup`, the command reference, and usage, see the
+[`@liolocs/powerups-cli` README](./packages/cli/README.md).
 
 ## How the packages relate
 
-`@pwrp/program` is a small CLI framework — it provides a `CLI` class and a
+`@liolocs/program` is a small CLI framework — it provides a `CLI` class and a
 `Command` class (built on [`@rcompat/cli`](https://github.com/rcompat/rcompat)).
 
-`@pwrp/cli` is the actual `pwrp` tool. Every command is defined with a `Command`
-imported from `@pwrp/program`:
+`@liolocs/powerups-cli` is the actual `pup` tool. Every command is defined with a `Command`
+imported from `@liolocs/program`:
 
 ```ts
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 ```
 
-`@pwrp/program` is a **devDependency** of `@pwrp/cli`, not a runtime dependency.
-At build time `tsup` bundles `program` into the published `@pwrp/cli` output,
-so the installed `pwrp` binary has no runtime dependency on `@pwrp/program` — and
-`@pwrp/program` is published as `private: true`, i.e. it is never installed on its
+`@liolocs/program` is a **devDependency** of `@liolocs/powerups-cli`, not a runtime dependency.
+At build time `tsup` bundles `program` into the published `@liolocs/powerups-cli` output,
+so the installed `pup` binary has no runtime dependency on `@liolocs/program` — and
+`@liolocs/program` is published as `private: true`, i.e. it is never installed on its
 own. It exists purely as an in-repo framework consumed by the CLI.
 
 ## Monorepo layout
 
 ```
 packages/
-  cli/        # @pwrp/cli — the pwrp CLI (published)
-  program/    # @pwrp/program — internal CLI framework (private)
+  cli/        # @liolocs/powerups-cli — the pup CLI (published)
+  program/    # @liolocs/program — internal CLI framework (private)
 pnpm-workspace.yaml
 package.json
 tsconfig.json
@@ -75,19 +75,19 @@ Build all packages:
 pnpm build:packages
 ```
 
-Link the CLI locally so you can run `pwrp` from your shell during development:
+Link the CLI locally so you can run `pup` from your shell during development:
 
 ```sh
-pnpm local      # builds packages, then links the pwrp bin
+pnpm local      # builds packages, then links the pup bin
 ```
 
-Then see the [`@pwrp/cli` README](./packages/cli/README.md) for usage.
+Then see the [`@liolocs/powerups-cli` README](./packages/cli/README.md) for usage.
 
 ## Scripts
 
 | Script | What it does |
 | ------ | ------------ |
-| `pnpm local` | Build all packages and link the `pwrp` binary locally |
+| `pnpm local` | Build all packages and link the `pup` binary locally |
 | `pnpm build:packages` | Build everything under `packages/**` |
 | `pnpm build:apps` | Build everything under `apps/**` |
 | `pnpm upgrade` | Interactively update dependencies across the workspace |

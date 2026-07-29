@@ -13,21 +13,21 @@ body:
     id: problem
     attributes:
       label: The problem
-      description: What's hard or impossible to do with `pwrp` today?
+      description: What's hard or impossible to do with `pup` today?
     validations:
       required: true
   - type: textarea
     id: solution
     attributes:
       label: The solution you'd like
-      description: What would you like `pwrp` to do instead?
+      description: What would you like `pup` to do instead?
     validations:
       required: true
   - type: dropdown
     id: command
     attributes:
       label: Which command?
-      description: The `pwrp` command this relates to, if any.
+      description: The `pup` command this relates to, if any.
       options:
         - add
         - create

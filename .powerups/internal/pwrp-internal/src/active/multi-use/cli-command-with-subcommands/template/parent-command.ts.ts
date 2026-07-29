@@ -12,7 +12,7 @@ export default function(variables: Record<string, string>): string {
   const varName = toCamelCase(commandName);
   const subVar = varName + toPascalCase(subcommandName);
 
-  return `import { Command } from "@pwrp/program";
+  return `import { Command } from "@liolocs/program";
 import ${subVar} from "#commands/${commandName}/${subcommandName}";
 
 const ${varName} = new Command({

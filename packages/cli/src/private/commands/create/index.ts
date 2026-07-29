@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import create_errors from "#errors/createErrors";
 import { packageDependencyGroupArraySchema, type Instructions } from "#schemas/instruction";
 import { packageJsonSchema } from "#schemas/package";

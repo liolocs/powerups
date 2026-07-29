@@ -131,8 +131,8 @@ for sharing across projects.
 - Local packages (in `.powerups/internal/`) are prioritized over
   global packages (in `~/.powerups/internal/`) when resolving a
   powerup by name.
-- To create a new package: `pwrp pack create <package-name>`
-- To move a local package to global: `pwrp pack move <package-name> global`
+- To create a new package: `pup pack create <package-name>`
+- To move a local package to global: `pup pack move <package-name> global`
 
 ### Multi-use vs Single-use
 
@@ -157,12 +157,12 @@ For ad-hoc work (not part of a plan), use the find → info → use pattern belo
 
 ### Before writing any new feature or file
 
-1. Run `pwrp find -q="<what you're about to do>"`.
+1. Run `pup find -q="<what you're about to do>"`.
 2. If a powerup matches (score > 0), run
-   `pwrp info <name>` to see its required
+   `pup info <name>` to see its required
    variables, generated files, and the exact use command.
 3. Use it:
-   `pwrp use <name> --<variable-name>=<value> ...`
+   `pup use <name> --<variable-name>=<value> ...`
    Preview first with `--dry-run` / `-d`, then use for real.
 4. Only write fresh content if no powerup matches.
 
@@ -181,7 +181,7 @@ dry-run verification.
 ### `.ts` template format (recommended)
 
 A `.ts` template is a TypeScript module that `export default`s a function.
-At run time `pwrp` calls that function with the powerup's declared
+At run time `pup` calls that function with the powerup's declared
 variables (keyed by name, all strings) and writes the returned string to the
 file's `outputPath`.
 
@@ -279,7 +279,7 @@ inside the powerup's folder (the directory containing `instructions.json`).
 The `template` field holds the full relative path from that folder — e.g.
 `button.svelte.tmpl`, `templates/button.ts`, or `src/sub/deep.njk`. The CLI
 resolves the file at that path. Files in the powerup folder not referenced
-by any `template` field are reported as orphaned by `pwrp doctor`.
+by any `template` field are reported as orphaned by `pup doctor`.
 
 ### Required vs Optional Variables
 
@@ -361,7 +361,7 @@ Subtemplates are just powerups — they live in their own folder under
 `instructions.json` and templates, and can be used standalone or included
 by multiple parents.
 
-When a package is moved to global via `pwrp pack move <package> global`,
+When a package is moved to global via `pup pack move <package> global`,
 all inherited sub-powerups are pulled into the package and recorded in the
 package's `package.json` `powerups` property using `parent:child` notation.
 
@@ -371,7 +371,7 @@ package's `package.json` `powerups` property using `parent:child` notation.
 types file, and a test. Later you build a `graphql-resolver` powerup that also
 needs a types file with the same structure.
 - *Extraction:* Create a standalone `types` powerup
-  (`pwrp create --pack=<package> --type=multi-use -n=types ...`). Add it to both parents'
+  (`pup create --pack=<package> --type=multi-use -n=types ...`). Add it to both parents'
   `instructions.json`:
 
 ```json
@@ -383,7 +383,7 @@ needs a types file with the same structure.
 - The `variables` map says: "pass the parent's `modelName` as the subtemplate's
   `entityName`." The `stepOverride` map says: "replace the subtemplate's
   `types` step with this step definition (different outputPath)."
-- Validate: `pwrp validate api-route`
+- Validate: `pup validate api-route`
 
 `excludeSteps` — optionally skip specific steps from an included subtemplate entirely.
 It's an array of step names to skip. A step name in both `excludeSteps` and
@@ -409,7 +409,7 @@ When existing powerups already cover part of a new powerup's output, COMPOSE
 via `includes` instead of duplicating templates. If powerup A already generates
 files that a new powerup B would recreate, B should `include` A and only add
 the genuinely new files as its own templates. Before creating any new
-powerup, run `pwrp find` and `pwrp info` on existing matches — if
+powerup, run `pup find` and `pup info` on existing matches — if
 an existing powerup generates the same file with the same structure, that
 file belongs in an `includes` entry, not a copied template.
 
@@ -417,18 +417,18 @@ file belongs in an `includes` entry, not a copied template.
 
 | Action | Command |
 |--------|---------|
-| Find powerups | `pwrp find -q="..."` |
-| Find multi-use only | `pwrp find -q="..." --type=multi-use` |
-| Get info on a powerup | `pwrp info <name>` |
-| Use a powerup | `pwrp use <name> --<variable>=<value> [-d]` |
-| Create a package | `pwrp pack create <package-name>` |
-| Create a global package | `pwrp pack create <package-name> -g` |
-| Move package to global | `pwrp pack move <package-name> global` |
-| Move & remove from config | `pwrp pack move <package-name> global -d` |
-| Create a multi-use powerup | `pwrp create --pack=<pkg> --type=multi-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
-| Create a single-use powerup | `pwrp create --pack=<pkg> --type=single-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
-| Validate a powerup | `pwrp validate <name>` |
-| Initialize powerups | `pwrp init` |
-| Health check all | `pwrp doctor` |
-| Usage metrics | `pwrp metrics summary` |
+| Find powerups | `pup find -q="..."` |
+| Find multi-use only | `pup find -q="..." --type=multi-use` |
+| Get info on a powerup | `pup info <name>` |
+| Use a powerup | `pup use <name> --<variable>=<value> [-d]` |
+| Create a package | `pup pack create <package-name>` |
+| Create a global package | `pup pack create <package-name> -g` |
+| Move package to global | `pup pack move <package-name> global` |
+| Move & remove from config | `pup pack move <package-name> global -d` |
+| Create a multi-use powerup | `pup create --pack=<pkg> --type=multi-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
+| Create a single-use powerup | `pup create --pack=<pkg> --type=single-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
+| Validate a powerup | `pup validate <name>` |
+| Initialize powerups | `pup init` |
+| Health check all | `pup doctor` |
+| Usage metrics | `pup metrics summary` |
 <!-- END powerups -->

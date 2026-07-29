@@ -1,5 +1,5 @@
 {
-  "name": "@pwrp/monorepo",
+  "name": "@liolocs/monorepo",
   "type": "module",
   "main": "index.js",
   "license": "MIT",

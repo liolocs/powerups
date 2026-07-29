@@ -1,4 +1,4 @@
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import { CLI_NAME } from "#constants";
 import projectInit from "#commands/project/init";
 

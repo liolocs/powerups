@@ -1,4 +1,4 @@
-import { type Command } from "@pwrp/program";
+import { type Command } from "@liolocs/program";
 import add from "./add.js";
 import create from "./create.js";
 import doctor from "./doctor.js";

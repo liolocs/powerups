@@ -1,6 +1,6 @@
-# Contributing to @pwrp/cli
+# Contributing to @liolocs/powerups-cli
 
-Thanks for your interest in contributing to `pwrp` — a system for AI to use
+Thanks for your interest in contributing to `pup` — a system for AI to use
 existing code rather than come up with it from scratch. This document covers
 how to report issues, set up the project locally, and submit changes.
 

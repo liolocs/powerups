@@ -1,4 +1,4 @@
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import summary from "#commands/metrics/summary";
 import { CLI_NAME } from "#constants";
 

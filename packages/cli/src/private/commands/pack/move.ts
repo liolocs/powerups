@@ -13,7 +13,7 @@ import { copyActiveStructure, copySubPowerUps } from "#utils/move/copy";
 import { printMoveResult } from "#utils/move/print";
 import { resolveMovePaths, validateMoveArgs } from "#utils/move/validate";
 import { verifyMoveSuccess } from "#utils/move/verify";
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";

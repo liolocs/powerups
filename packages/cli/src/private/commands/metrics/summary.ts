@@ -1,7 +1,7 @@
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import {
   readMetrics,
   readAllMetrics,

@@ -1,4 +1,4 @@
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";

@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import use_errors from "#errors/useErrors";
 import { instructionsSchema } from "#schemas/instruction";
 import { extractVariables } from "#utils/variables";

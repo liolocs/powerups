@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import { homedir } from "node:os";
 import runtime from "@rcompat/runtime";
-import { Command } from "@pwrp/program";
+import { Command } from "@liolocs/program";
 import project_errors from "#errors/projectErrors";
 import { scaffold, type RollbackInfo } from "#scaffold/index";
 import { writeConfig, ensureGlobalInit } from "#utils/config";

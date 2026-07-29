@@ -38,10 +38,10 @@ test.group("parseSpecifier", () => {
   });
 
   test.case("parses bare internal name", assert => {
-    const spec = parseSpecifier("pwrp-internal");
+    const spec = parseSpecifier("pup-internal");
     assert(spec.type).equals("internal");
-    assert(spec.name).equals("pwrp-internal");
-    assert(spec.storePath).equals("internal/pwrp-internal");
+    assert(spec.name).equals("pup-internal");
+    assert(spec.storePath).equals("internal/pup-internal");
   });
 });
 

@@ -26,7 +26,7 @@ body:
     id: command
     attributes:
       label: Which command?
-      description: The `pwrp` command this relates to, if any.
+      description: The `pup` command this relates to, if any.
       options:
         - add
         - create
@@ -53,7 +53,7 @@ body:
         Wrap commands in a code block.
       value: |
         ```
-        pwrp <command>
+        pup <command>
         ```
     validations:
       required: true
@@ -62,10 +62,10 @@ body:
     attributes:
       label: Environment
       description: |
-        The `pwrp` version, Node version, and OS.
-        If relevant, paste the output of `pwrp doctor`.
+        The `pup` version, Node version, and OS.
+        If relevant, paste the output of `pup doctor`.
       value: |
-        - pwrp version:
+        - pup version:
         - Node version:
         - OS:
     validations:

@@ -73,7 +73,7 @@ importers:
         specifier: ^0.8.2
         version: 0.8.2
     devDependencies:
-      '@pwrp/program':
+      '@liolocs/program':
         specifier: workspace:^
         version: link:../program
       '@types/nunjucks':

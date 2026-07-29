@@ -21,7 +21,7 @@ codebase to find patterns worth capturing. No specific files are pointed at
 
 Before capturing a powerup, a package must exist for the powerup to live in. If no
 package exists yet, create one first:
-`pwrp pack create <package-name> --description="..."`
+`pup pack create <package-name> --description="..."`
 
 If you're unsure which package to use, ask the user. A package is a collection
 of related powers — powers that serve the same domain or feature area should
@@ -36,15 +36,15 @@ go in the same package.
 2. Read the files the user points at. Understand what was created or modified
    and what the work does.
 
-3. Run `pwrp find -q="<intent>"` to check if a similar powerup
-   already exists. If one does, run `pwrp info <name>`
+3. Run `pup find -q="<intent>"` to check if a similar powerup
+   already exists. If one does, run `pup info <name>`
    to understand it. If it's similar enough, suggest reusing or extending the
    existing powerup rather than creating a new one. If the new
    work partially overlaps existing powerups (same template files with minor
    variations), plan to use `include` steps to reference the existing
    powerups as subtemplates — only create new template files for the parts
    that are genuinely new. Do NOT duplicate template content that already
-   exists in another powerup. Run `pwrp info <name>` on each
+   exists in another powerup. Run `pup info <name>` on each
    overlapping powerup to understand its variables and file mapping, then
    determine how to compose the new powerup via `include` steps.
 
@@ -93,8 +93,8 @@ go in the same package.
    Present this to the user and get approval before proceeding.
 
 6. Scaffold the folder structure by running:
-   `pwrp create --pack=<package> --type=multi-use -n=<name> -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
-   (or `pwrp create --pack=<package> --type=single-use -n=<name> -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
+   `pup create --pack=<package> --type=multi-use -n=<name> -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
+   (or `pup create --pack=<package> --type=single-use -n=<name> -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
    for single-use powers). Use `-ov` only if there are optional variables and
    `-p` only if there are package dependencies; omit them otherwise.
    This creates the powerup's folder and an `instructions.json`
@@ -127,9 +127,9 @@ go in the same package.
    Prefer .ts templates (the recommended format). Use .njk only when .ts
    is impractical.
 
-9. Run `pwrp validate <name>` to validate the structure.
+9. Run `pup validate <name>` to validate the structure.
 
-10. Run `pwrp use <name> --<variable-name>=<value> ... -d` to dry-run
+10. Run `pup use <name> --<variable-name>=<value> ... -d` to dry-run
     and verify the captured artifact regenerates faithfully. Compare the
     dry-run output to the original work. If there are discrepancies, fix
     the template and re-verify.
@@ -142,7 +142,7 @@ go in the same package.
     (including file writes), create a git worktree manually and test there
     first:
     `git worktree add /tmp/test-<name> --detach && cd /tmp/test-<name>`
-    Run `pwrp use <name> --<variable-name>=<value> ...` in the
+    Run `pup use <name> --<variable-name>=<value> ...` in the
     worktree, verify the output, then clean up:
     `cd - && git worktree remove --force /tmp/test-<name>`
     Only apply to the real project once the worktree test passes.
@@ -154,7 +154,7 @@ go in the same package.
 
 12. Report back to the user: what was captured, where it lives, and how to
     reuse it:
-    `pwrp use <name> --<variable-name>=<value> ...`.
+    `pup use <name> --<variable-name>=<value> ...`.
 
 13. Terminal state: "Capture complete. Return to the calling skill (if invoked
     from `powerups-implement`) or report to the user (if invoked
@@ -164,7 +164,7 @@ go in the same package.
 
 1. Survey the codebase to understand its structure:
    - Check the project's file tree, key directories, and recent commits.
-   - Run `pwrp find -q="..."` for the main domains you
+   - Run `pup find -q="..."` for the main domains you
      find to see if powers already exist for them.
 
 2. Ask the user which area of the codebase they want to focus on:

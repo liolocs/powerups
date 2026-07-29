@@ -19,9 +19,9 @@ Execute a plan saved by the powerups-brainstorm skill.
 
    <CHECKLIST GATE>
    Before starting each task, confirm:
-   - [ ] Have you run `pwrp find -q="<task intent>"`?
+   - [ ] Have you run `pup find -q="<task intent>"`?
    - [ ] If a match was found, have you run
-         `pwrp info <name>` to understand
+         `pup info <name>` to understand
          its variables and files?
    If any of these haven't been done, do them now. Do not skip this even
    if you searched during brainstorming — the plan may have been written
@@ -29,20 +29,20 @@ Execute a plan saved by the powerups-brainstorm skill.
    </CHECKLIST GATE>
 
    a. If a powerup matches (score > 0):
-      - Run `pwrp info <name>` to see the
+      - Run `pup info <name>` to see the
         required variables, files it generates, dependencies, and the
         exact use command.
       - Present the info to the user so they understand what will be
         generated and what variables are needed.
       - Collect the required variable values from the user (or from the
         plan if the plan specifies them).
-      - Preview: `pwrp use <name> --<variable-name>=<value> ... -d`
+      - Preview: `pup use <name> --<variable-name>=<value> ... -d`
       - On approval, use for real (without `-d`). The `use` command renders
         in a git worktree and copies results back to the project. If you
         need to verify the full output before committing to the project,
         test in an isolated worktree first:
         `git worktree add /tmp/test-<name> --detach && cd /tmp/test-<name>`
-        Run `pwrp use <name> --<variable-name>=<value> ...` there,
+        Run `pup use <name> --<variable-name>=<value> ...` there,
         verify the generated files, then clean up:
         `cd - && git worktree remove --force /tmp/test-<name>`
         Only apply to the real project once the worktree test passes.

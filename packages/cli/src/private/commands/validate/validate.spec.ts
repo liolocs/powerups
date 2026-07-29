@@ -57,11 +57,10 @@ test.case("validate --name reports a single valid template", async assert => {
   await reset();
 
   await createCmd.run({
-    subcommands: [],
+    subcommands: ["ui-component"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "ui-component" },
       { flag: "--description", value: "test description" }],
     context: { root: testRoot },
   });
@@ -82,11 +81,10 @@ test.group("validate errors", () => {
     await reset();
 
     await createCmd.run({
-      subcommands: [],
+      subcommands: ["missing-template"],
       flags: [
       { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "missing-template" },
       { flag: "--description", value: "test description" },
       ],
       context: { root: testRoot },
@@ -130,11 +128,10 @@ test.group("validate errors", () => {
     await reset();
 
     await createCmd.run({
-    subcommands: [],
+    subcommands: ["bad-parent"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "bad-parent" },
       { flag: "--description", value: "test description" }],
       context: { root: testRoot },
     });

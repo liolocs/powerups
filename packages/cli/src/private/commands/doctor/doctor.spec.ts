@@ -94,9 +94,8 @@ test.case("doctor validates powerups with no issues", async assert => {
   await fs.create(internalFolder.append("/test-pkg/single-use"));
 
   await create.run({
-    subcommands: [],
+    subcommands: ["valid-powerups"],
           flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" },
-            { flag: "--name", value: "valid-powerups" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
@@ -120,9 +119,8 @@ test.case("doctor reports orphaned file in a powerups folder", async assert => {
   await fs.create(internalFolder.append("/test-pkg/single-use"));
 
   await create.run({
-    subcommands: [],
+    subcommands: ["with-orphan"],
           flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "with-orphan" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
@@ -146,11 +144,10 @@ test.case("doctor reports invalid .json modify template", async assert => {
   await fs.create(internalFolder.append("/test-pkg/single-use"));
 
   await create.run({
-    subcommands: [],
+    subcommands: ["bad-modify"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "bad-modify" },
       { flag: "--description", value: "test description" },
     ],
     context: { root: testRoot },
@@ -227,18 +224,16 @@ test.case("doctor checks both types in one pass", async assert => {
 
   // Create a multi-use powerups
   await create.run({
-    subcommands: [],
+    subcommands: ["multi"],
           flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "multi" },
       { flag: "--description", value: "test description" },],
     context: { root: testRoot },
   });
 
   // Create a single-use powerups
   await create.run({
-    subcommands: [],
+    subcommands: ["single"],
           flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "single-use" },
-      { flag: "--name", value: "single" },
       { flag: "--description", value: "test description" }],
     context: { root: testRoot },
   });
@@ -286,11 +281,10 @@ test.group("doctor errors", () => {
     await fs.create(internalFolder.append("/test-pkg/single-use"));
 
     await create.run({
-      subcommands: [],
+      subcommands: ["bad-powerups"],
       flags: [
       { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "bad-powerups" },
       { flag: "--description", value: "test description" },
       ],
       context: { root: testRoot },

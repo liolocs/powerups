@@ -423,8 +423,9 @@ file belongs in an `includes` entry, not a copied template.
 | Create a global package | `pup pack create <package-name> -g` |
 | Move package to global | `pup pack move <package-name> global` |
 | Move & remove from config | `pup pack move <package-name> global -d` |
-| Create a multi-use powerup | `pup create --pack=<pkg> --type=multi-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
-| Create a single-use powerup | `pup create --pack=<pkg> --type=single-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
+| Create a multi-use powerup | `pup create <name> --type=multi-use -d="..." -i="..." -v="..." -ov="..." -p='...'` |
+| Create a single-use powerup | `pup create <name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
+| Create from git changes | `pup create <name> --working-dir[=<path>]` |
 | Validate a powerup | `pup validate <name>` |
 | Initialize powerups | `pup init` |
 | Health check all | `pup doctor` |

@@ -93,13 +93,17 @@ go in the same package.
    Present this to the user and get approval before proceeding.
 
 6. Scaffold the folder structure by running:
-   `{{ CLI_CMD }} create --pack=<package> --type=multi-use -n=<name> -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
-   (or `{{ CLI_CMD }} create --pack=<package> --type=single-use -n=<name> -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
+   `{{ CLI_CMD }} create <name> --pack=<package> --type=multi-use -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
+   (or `{{ CLI_CMD }} create <name> --pack=<package> --type=single-use -d="<description>" -i="<intent>" -v="<required-vars>" -ov="<optional-vars>" -p='<package-deps-json>'`
    for single-use powers). Use `-ov` only if there are optional variables and
    `-p` only if there are package dependencies; omit them otherwise.
+   Alternatively, if the work has already been done and the changes are visible
+   in git, use `{{ CLI_CMD }} create <name> --working-dir` to auto-generate
+   the steps and templates from git changes.
    This creates the {{ SINGULAR_NAME }}'s folder and an `instructions.json`
    with an empty `steps: []` array inside the specified package. It does NOT
-   create any template files — you add those in the next steps.
+   create any template files — you add those in the next steps (unless using
+   `--working-dir`, which generates them automatically).
 
 7. Copy the original files into the {{ SINGULAR_NAME }}'s folder to serve as
    the templates. Use `cp` for each file — this brings the full content onto

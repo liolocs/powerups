@@ -50,16 +50,14 @@ test.case("info prints name, description, intent, and usage", async assert => {
   await reset();
 
   await create.run({
-    subcommands: [],
+    subcommands: ["ui-component"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
-      { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "ui-component" },
-      { flag: "--description", value: "A UI component template" },
+      { flag: "--type", value: "multi-use" },{ flag: "--description", value: "A UI component template" },
       { flag: "--intent", value: "ui,component" },
-      { flag: "--variables", value: "ComponentName" },
+      { flag: "--variables", value: "ComponentName" }
     ],
-    context: { root: testRoot },
+    context: { root: testRoot }
   });
 
   const output = await captureStdout(() => info.run({
@@ -82,11 +80,10 @@ test.case("info prints required and optional variables", async assert => {
   await reset();
 
   await create.run({
-    subcommands: [],
+    subcommands: ["api-route"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "api-route" },
       { flag: "--description", value: "An API route template" },
       { flag: "--variables", value: "name,method" },
       { flag: "--optional-variables", value: "middleware" },
@@ -115,11 +112,10 @@ test.case("info prints create, modify, and delete files", async assert => {
   await reset();
 
   await create.run({
-    subcommands: [],
+    subcommands: ["full-output"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "full-output" },
       { flag: "--description", value: "A template with all file types" },
       { flag: "--variables", value: "ComponentName" },
     ],
@@ -160,11 +156,10 @@ test.case("info prints package dependencies", async assert => {
   await reset();
 
   await create.run({
-    subcommands: [],
+    subcommands: ["add-tailwind"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "add-tailwind" },
       { flag: "--description", value: "Adds tailwind to a project" },
       { flag: "--variables", value: "name" },
       { flag: "--package-deps", value: JSON.stringify([
@@ -196,11 +191,10 @@ test.case("info prints includes with variable bindings for composite templates",
 
   // Create child template
   await create.run({
-    subcommands: [],
+    subcommands: ["child-component"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "child-component" },
       { flag: "--description", value: "A child component template" },
       { flag: "--variables", value: "componentName,theme" },
     ],
@@ -221,11 +215,10 @@ test.case("info prints includes with variable bindings for composite templates",
 
   // Create parent template with includes
   await create.run({
-    subcommands: [],
+    subcommands: ["parent-composite"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "parent-composite" },
       { flag: "--description", value: "A composite template" },
       { flag: "--variables", value: "theme" },
     ],
@@ -276,11 +269,10 @@ test.case("info applies outputPathOverride from includes in file listing", async
 
   // Create child template with a create file named "comp"
   await create.run({
-    subcommands: [],
+    subcommands: ["override-child"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "override-child" },
       { flag: "--description", value: "A child with overrideable paths" },
       { flag: "--variables", value: "componentName" },
     ],
@@ -289,11 +281,10 @@ test.case("info applies outputPathOverride from includes in file listing", async
 
   // Create parent template with includes that override the child's outputPath
   await create.run({
-    subcommands: [],
+    subcommands: ["override-parent"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "override-parent" },
       { flag: "--description", value: "A parent with outputPathOverride" },
       { flag: "--variables", value: "theme" },
     ],
@@ -349,11 +340,10 @@ test.case("info omits empty sections when template has no files, deps, or includ
   await reset();
 
   await create.run({
-    subcommands: [],
+    subcommands: ["simple-template"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "simple-template" },
       { flag: "--description", value: "A simple template" },
       { flag: "--variables", value: "name" },
     ],
@@ -381,11 +371,10 @@ test.case("info hides excluded files from includes in file listing", async asser
 
   // Create child template with two create files: comp and test
   await create.run({
-    subcommands: [],
+    subcommands: ["exclude-child"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "exclude-child" },
       { flag: "--description", value: "A child with two files" },
       { flag: "--variables", value: "componentName" },
     ],
@@ -394,11 +383,10 @@ test.case("info hides excluded files from includes in file listing", async asser
 
   // Create parent template that includes the child and excludes "test"
   await create.run({
-    subcommands: [],
+    subcommands: ["exclude-parent"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "exclude-parent" },
       { flag: "--description", value: "A parent that excludes a child file" },
       { flag: "--variables", value: "theme" },
     ],

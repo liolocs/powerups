@@ -64,11 +64,10 @@ async function createPowerup(
   const optional = opts?.optional;
   const packageDependencies = opts?.packageDependencies;
   await createCmd.run({
-    subcommands: [],
+    subcommands: [name],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: name },
       { flag: "--description", value: "test description" },
     ],
     context: { root: testRoot, globalRoot: tempGlobalRoot },
@@ -236,8 +235,8 @@ test.group("apply errors", () => {
     await reset();
 
     await createCmd.run({
-      subcommands: [],
-      flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" }, { flag: "--name", value: "real" },
+      subcommands: ["real"],
+      flags: [{ flag: "--pack", value: "test-pkg" }, { flag: "--type", value: "multi-use" },
         { flag: "--description", value: "test description" }],
       context: { root: testRoot, globalRoot: tempGlobalRoot },
     });
@@ -456,11 +455,10 @@ test.group("apply errors", () => {
     const noGitTemplateFolder = noGitSrcActive.append(`/${MULTI_USE_FOLDER}`);
 
     await createCmd.run({
-      subcommands: [],
+      subcommands: ["no-git"],
       flags: [
         { flag: "--pack", value: "test-pkg" },
         { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "no-git" },
         { flag: "--description", value: "test description" },
       ],
       context: { root: noGitRoot, globalRoot: tempGlobalRoot },

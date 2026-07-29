@@ -13,7 +13,6 @@ import {
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
   CONFIG_FILE,
-  SINGULAR_NAME,
   CLI_NAME,
 } from "#constants";
 
@@ -31,9 +30,8 @@ async function reset() {
 
 async function createTestPackage(name: string) {
   const pkgDir = internalFolder.append(`/${name}`);
-  const srcActive = pkgDir;
-  await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
-  await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
+  await fs.create(pkgDir.append(`/${MULTI_USE_FOLDER}`));
+  await fs.create(pkgDir.append(`/${SINGLE_USE_FOLDER}`));
   await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
     name,
     version: "1.0.0",
@@ -43,44 +41,42 @@ async function createTestPackage(name: string) {
   });
 }
 
+function pkgSingleUse(pkgName: string) {
+  return internalFolder.append(`/${pkgName}/${SINGLE_USE_FOLDER}`);
+}
+
 function pkgMultiUse(pkgName: string) {
   return internalFolder.append(`/${pkgName}/${MULTI_USE_FOLDER}`);
 }
 
-test.case("create template creates an instructions.json file", async assert => {
+test.case("create with positional name creates an instructions.json file", async assert => {
   await reset();
   await createTestPackage("test-pkg");
 
   await create.run({
-    subcommands: [],
+    subcommands: ["test-template"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
-      { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "test-template" },
-      { flag: "--description", value: "test description" },
     ],
     context: { root: testRoot },
   });
 
-  const outputPath = pkgMultiUse("test-pkg").append("/test-template/instructions.json");
+  const outputPath = pkgSingleUse("test-pkg").append("/test-template/instructions.json");
   const hasOutput = await fs.exists(outputPath);
   assert(hasOutput).equals(true);
 
   await testRoot.remove();
 });
 
-test.case("create template creates empty files for create and modify entries", async assert => {
+test.case("create with --type=multi-use creates in multi-use folder", async assert => {
   await reset();
   await createTestPackage("test-pkg");
 
-
-
   await create.run({
-    subcommands: [],
+    subcommands: ["ui-component"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
       { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "ui-component" },
       { flag: "--description", value: "test description" },
       { flag: "--intent", value: "component,ui" },
       { flag: "--variables", value: "ComponentName" },
@@ -88,38 +84,20 @@ test.case("create template creates empty files for create and modify entries", a
     context: { root: testRoot },
   });
 
-  const muFolder = pkgMultiUse("test-pkg");
-  const outputPath = muFolder.append("/ui-component/instructions.json");
-
-  // Overwrite instructions.json with steps
-  await outputPath.writeJSON({
-    name: "ui-component",
-    description: "test description",
-    variables: { required: ["ComponentName"] },
-    intent: ["component", "ui"],
-    steps: [
-      { type: "create", name: "button.svelte", template: "button.svelte.tmpl", outputPath: "src/{{ComponentName}}.svelte" },
-      { type: "modify", name: "wire", template: "wire.json", outputPath: "src/index.ts" },
-    ],
-  });
-
-  assert(await fs.exists(outputPath)).equals(true);
+  const outputPath = pkgMultiUse("test-pkg").append("/ui-component/instructions.json");
+  assert(await fs.exists(outputPath)).true();
 
   const content = instructionsSchema.parse(await outputPath.json());
-
   assert(content.name).equals("ui-component");
   assert(content.intent).equals(["component", "ui"]);
   assert(content.variables.required).equals(["ComponentName"]);
   assert(content.variables.optional).undefined();
-  assert(content.steps[0]?.name).equals("button.svelte");
-  assert(content.steps[0]?.type).equals("create");
-  assert(content.steps[1]?.name).equals("wire");
-  assert(content.steps[1]?.type).equals("modify");
+  assert(content.steps.length).equals(0);
 
   await testRoot.remove();
 });
 
-test.case("create template with -p flag writes packageDependencies to instructions.json", async assert => {
+test.case("create with -p flag writes packageDependencies to instructions.json", async assert => {
   await reset();
   await createTestPackage("test-pkg");
 
@@ -128,18 +106,15 @@ test.case("create template with -p flag writes packageDependencies to instructio
   ]);
 
   await create.run({
-    subcommands: [],
+    subcommands: ["with-deps"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
-      { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "with-deps" },
-      { flag: "--description", value: "test description" },
       { flag: "--package-deps", value: packageDeps },
     ],
     context: { root: testRoot },
   });
 
-  const outputPath = pkgMultiUse("test-pkg").append("/with-deps/instructions.json");
+  const outputPath = pkgSingleUse("test-pkg").append("/with-deps/instructions.json");
   const content = instructionsSchema.parse(await outputPath.json());
   assert(content.packageDependencies).defined();
   assert(content.packageDependencies!.length).equals(1);
@@ -149,22 +124,19 @@ test.case("create template with -p flag writes packageDependencies to instructio
   await testRoot.remove();
 });
 
-test.case("create template without -p flag omits packageDependencies", async assert => {
+test.case("create without -p flag omits packageDependencies", async assert => {
   await reset();
   await createTestPackage("test-pkg");
 
   await create.run({
-    subcommands: [],
+    subcommands: ["no-deps"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
-      { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "no-deps" },
-      { flag: "--description", value: "test description" },
     ],
     context: { root: testRoot },
   });
 
-  const outputPath = pkgMultiUse("test-pkg").append("/no-deps/instructions.json");
+  const outputPath = pkgSingleUse("test-pkg").append("/no-deps/instructions.json");
   const content = instructionsSchema.parse(await outputPath.json());
   assert(content.packageDependencies).undefined();
 
@@ -179,13 +151,8 @@ test.group("create errors", () => {
     let threw;
     try {
       await create.run({
-        subcommands: [],
-        flags: [
-          { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "should-fail" },
-          { flag: "--description", value: "test description" },
-        ],
+        subcommands: ["should-fail"],
+        flags: [],
         context: { root: testRoot },
       });
     } catch (e: unknown) {
@@ -202,12 +169,9 @@ test.group("create errors", () => {
     await createTestPackage("test-pkg");
 
     await create.run({
-      subcommands: [],
+      subcommands: ["dup-template"],
       flags: [
         { flag: "--pack", value: "test-pkg" },
-        { flag: "--type", value: "multi-use" },
-        { flag: "--name", value: "dup-template" },
-        { flag: "--description", value: "test description" },
       ],
       context: { root: testRoot },
     });
@@ -215,12 +179,9 @@ test.group("create errors", () => {
     let threw;
     try {
       await create.run({
-        subcommands: [],
+        subcommands: ["dup-template"],
         flags: [
           { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "dup-template" },
-          { flag: "--description", value: "test description" },
         ],
         context: { root: testRoot },
       });
@@ -233,7 +194,7 @@ test.group("create errors", () => {
     await testRoot.remove();
   });
 
-  test.case("should fail with missing_pack when --pack not provided", async assert => {
+  test.case("should fail with missing_name when no name provided", async assert => {
     await reset();
     await createTestPackage("test-pkg");
 
@@ -242,9 +203,7 @@ test.group("create errors", () => {
       await create.run({
         subcommands: [],
         flags: [
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "test" },
-          { flag: "--description", value: "test" },
+          { flag: "--pack", value: "test-pkg" },
         ],
         context: { root: testRoot },
       });
@@ -252,31 +211,7 @@ test.group("create errors", () => {
       assert(e instanceof CodeError).true();
       threw = (e as CodeError).code;
     }
-    assert(threw).equals(CreateErrorCode.missing_pack);
-
-    await testRoot.remove();
-  });
-
-  test.case("should fail with pack_not_found when package doesn't exist", async assert => {
-    await reset();
-
-    let threw;
-    try {
-      await create.run({
-        subcommands: [],
-        flags: [
-          { flag: "--pack", value: "missing-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "test" },
-          { flag: "--description", value: "test" },
-        ],
-        context: { root: testRoot },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(CreateErrorCode.pack_not_found);
+    assert(threw).equals(CreateErrorCode.missing_name);
 
     await testRoot.remove();
   });
@@ -288,12 +223,9 @@ test.group("create errors", () => {
     let threw;
     try {
       await create.run({
-        subcommands: [],
+        subcommands: ["bad-deps"],
         flags: [
           { flag: "--pack", value: "test-pkg" },
-          { flag: "--type", value: "multi-use" },
-          { flag: "--name", value: "bad-deps" },
-          { flag: "--description", value: "test description" },
           { flag: "--package-deps", value: "{not valid json" },
         ],
         context: { root: testRoot },
@@ -307,7 +239,28 @@ test.group("create errors", () => {
     await testRoot.remove();
   });
 
+  test.case("should fail with missing_type when --type is invalid", async assert => {
+    await reset();
+    await createTestPackage("test-pkg");
 
+    let threw;
+    try {
+      await create.run({
+        subcommands: ["bad-type"],
+        flags: [
+          { flag: "--pack", value: "test-pkg" },
+          { flag: "--type", value: "invalid" },
+        ],
+        context: { root: testRoot },
+      });
+    } catch (e: unknown) {
+      assert(e instanceof CodeError).true();
+      threw = (e as CodeError).code;
+    }
+    assert(threw).equals(CreateErrorCode.missing_type);
+
+    await testRoot.remove();
+  });
 });
 
 test.case("should write optional variables when --optional-variables flag is provided", async assert => {
@@ -315,19 +268,16 @@ test.case("should write optional variables when --optional-variables flag is pro
   await createTestPackage("test-pkg");
 
   await create.run({
-    subcommands: [],
+    subcommands: ["opt-template"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
-      { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "opt-template" },
-      { flag: "--description", value: "test description" },
       { flag: "--variables", value: "name" },
       { flag: "--optional-variables", value: "sub,subDescription" },
     ],
     context: { root: testRoot },
   });
 
-  const outputPath = pkgMultiUse("test-pkg").append("/opt-template/instructions.json");
+  const outputPath = pkgSingleUse("test-pkg").append("/opt-template/instructions.json");
   const content = instructionsSchema.parse(await outputPath.json());
   assert(content.variables.required).equals(["name"]);
   assert(content.variables.optional).equals(["sub", "subDescription"]);
@@ -340,18 +290,15 @@ test.case("should omit optional from JSON when --optional-variables is not provi
   await createTestPackage("test-pkg");
 
   await create.run({
-    subcommands: [],
+    subcommands: ["no-opt"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
-      { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "no-opt" },
-      { flag: "--description", value: "test description" },
       { flag: "--variables", value: "name" },
     ],
     context: { root: testRoot },
   });
 
-  const outputPath = pkgMultiUse("test-pkg").append("/no-opt/instructions.json");
+  const outputPath = pkgSingleUse("test-pkg").append("/no-opt/instructions.json");
   const content = instructionsSchema.parse(await outputPath.json());
   assert(content.variables.required).equals(["name"]);
   assert(content.variables.optional).undefined();
@@ -359,17 +306,14 @@ test.case("should omit optional from JSON when --optional-variables is not provi
   await testRoot.remove();
 });
 
-test.case(`should update package.json ${CLI_NAME} property after creating a ${SINGULAR_NAME}`, async assert => {
+test.case(`should update package.json ${CLI_NAME} property after creating a powerup`, async assert => {
   await reset();
   await createTestPackage("test-pkg");
 
   await create.run({
-    subcommands: [],
+    subcommands: ["test-powerup"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
-      { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "test-powerup" },
-      { flag: "--description", value: "test" },
     ],
     context: { root: testRoot },
   });
@@ -378,23 +322,20 @@ test.case(`should update package.json ${CLI_NAME} property after creating a ${SI
     .append(`/test-pkg/${PACKAGE_FILE}`)
     .json() as Record<string, unknown>;
   const powerups = (pkgJson.powerups as Record<string, Record<string, Record<string, string>>>).active;
-  assert(powerups[MULTI_USE_FOLDER]["test-powerup"]).defined();
+  assert(powerups[SINGLE_USE_FOLDER]["test-powerup"]).defined();
 
   await testRoot.remove();
 });
 
-test.case(`should add package to project config after creating a ${SINGULAR_NAME}`, async assert => {
+test.case(`should add package to project config after creating a powerup`, async assert => {
   await reset();
   await createTestPackage("test-pkg");
   await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({ packages: [] });
 
   await create.run({
-    subcommands: [],
+    subcommands: ["test-powerup"],
     flags: [
       { flag: "--pack", value: "test-pkg" },
-      { flag: "--type", value: "multi-use" },
-      { flag: "--name", value: "test-powerup" },
-      { flag: "--description", value: "test" },
     ],
     context: { root: testRoot },
   });

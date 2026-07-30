@@ -23,7 +23,6 @@ export const appliedEntrySchema = p({
   appliedAt: p.string,
   variables: p.record(p.string, p.string),
   files: p.array(appliedFileSchema),
-  dependsOn: p.array(p.string).optional(),
 });
 
 export const appliedManifestSchema = p({

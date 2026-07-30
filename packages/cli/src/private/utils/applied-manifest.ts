@@ -18,7 +18,6 @@ export interface RecordApplicationArgs {
   location: "local" | "global";
   variables: Record<string, string>;
   changedFiles: AppliedFile[];
-  dependsOn?: string[];
   /** When true, replace any existing entry for this powerup regardless of variables. */
   singleUse?: boolean;
 }
@@ -79,7 +78,7 @@ export async function recordApplication(
   args: RecordApplicationArgs,
 ): Promise<AppliedManifest> {
   const manifest = await readAppliedManifest(args.root);
-  const { root, singleUse, dependsOn, ...rest } = args;
+  const { root, singleUse, ...rest } = args;
 
   const deletedPaths = args.changedFiles
     .filter(file => file.action === "delete")
@@ -99,7 +98,6 @@ export async function recordApplication(
     appliedAt: new Date().toISOString(),
     variables: rest.variables,
     files: rest.changedFiles,
-    ...(dependsOn !== undefined ? { dependsOn } : {}),
   };
 
   const samePowerup = (candidate: AppliedEntry) =>

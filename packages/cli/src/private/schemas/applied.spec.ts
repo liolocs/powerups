@@ -54,10 +54,12 @@ test.case("schema rejects a missing version field", assert => {
   }
 });
 
-test.case("schema accepts optional dependsOn", assert => {
+test.case("schema rejects an unknown dependsOn field", assert => {
+  // dependsOn was removed in favor of `use` steps; the field is no longer part
+  // of the entry. pema strips unknown keys, so dependsOn is silently dropped.
   const entry = appliedEntrySchema.parse({
     ...validEntry,
     dependsOn: ["@powerups/base-init@^1.0.0"],
-  });
-  assert(entry.dependsOn!.length).equals(1);
+  } as Record<string, unknown>);
+  assert((entry as Record<string, unknown>).dependsOn === undefined).true();
 });

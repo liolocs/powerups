@@ -25,6 +25,9 @@ export const CONFIG_FILE = "config.json";
 /** Name of the metrics log file, storing one JSON entry per output run. */
 export const METRICS_FILE = "metrics.jsonl";
 
+/** Name of the applied-state manifest, recording every powerup applied to the project. */
+export const APPLIED_FILE = "applied.json";
+
 export type PowerUpType = "multi-use" | "single-use";
 
 export const powerupsFolderMap: Record<PowerUpType, string> = {

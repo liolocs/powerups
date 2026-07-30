@@ -20,6 +20,7 @@ import {
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
   CONFIG_FILE,
+  APPLIED_FILE,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -314,3 +315,38 @@ test.group("doctor errors", () => {
     await testRoot.remove();
   });
 });
+
+test.case("doctor warns when manifest references a missing file",
+  async assert => {
+    await reset();
+
+    await mainFolder.append(`/${APPLIED_FILE}`).writeJSON({
+      version: 1,
+      applied: [{
+        powerup: "@powerups/widget", name: "widget", version: "1.0.0",
+        location: "global", appliedAt: "2026-07-30T00:00:00Z",
+        variables: {},
+        files: [{ path: "src/ghost.ts", action: "create" }],
+      }],
+    });
+
+    const output = await captureStdout(() =>
+      doctor.run({ subcommands: [], flags: [], context: { root: testRoot } }));
+    assert(output).includes("src/ghost.ts");
+    assert(output).includes("WARN");
+
+    await testRoot.remove();
+  });
+
+test.case("doctor errors on a corrupt manifest", async assert => {
+    await reset();
+
+    await mainFolder.append(`/${APPLIED_FILE}`).write("{ broken");
+
+    const { output, error } = await captureStdoutOrError(() =>
+      doctor.run({ subcommands: [], flags: [], context: { root: testRoot } }));
+    assert(output.toLowerCase()).includes("manifest");
+    assert(error instanceof CodeError).true();
+
+    await testRoot.remove();
+  });

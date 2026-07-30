@@ -10,6 +10,8 @@ import { parseSpecifier } from "#utils/parse-specifier";
 import { modificationArraySchema } from "#schemas/modification";
 import { instructionsSchema, type Instructions } from "#schemas/instruction";
 import doctorErrors from "#errors/doctorErrors";
+import { readAppliedManifest } from "#utils/applied-manifest";
+import { AppliedErrorCode } from "#errors/appliedErrors";
 import {
   CLI_NAME,
   MAIN_FOLDER,
@@ -19,6 +21,7 @@ import {
   PACKAGE_FILE,
   GLOBAL_ROOT,
   SINGULAR_NAME,
+  APPLIED_FILE,
 } from "#constants";
 
 interface DoctorIssue {
@@ -233,6 +236,38 @@ const doctor = new Command({
             name: source,
             message: `Package "${source}" listed in config but not found on disk (local or global)`,
           });
+        }
+      }
+    }
+
+    // 3.6 Applied manifest health
+    const manifestRef = mainFolder.append(`/${APPLIED_FILE}`);
+    if (await fs.exists(manifestRef)) {
+      try {
+        const manifest = await readAppliedManifest(root);
+        for (const entry of manifest.applied) {
+          for (const file of entry.files) {
+            if (file.action === "delete") continue;
+            if (!(await fs.exists(root.append(`/${file.path}`)))) {
+              issues.push({
+                level: "WARN",
+                type: "manifest",
+                name: entry.powerup,
+                message: `File recorded for ${entry.powerup} no longer exists: ${file.path}`,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        if ((error as { code?: string }).code === AppliedErrorCode.corrupt_manifest) {
+          issues.push({
+            level: "ERROR",
+            type: "manifest",
+            name: APPLIED_FILE,
+            message: "Applied manifest is corrupt or invalid JSON",
+          });
+        } else {
+          throw error;
         }
       }
     }

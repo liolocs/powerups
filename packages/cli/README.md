@@ -78,6 +78,9 @@ pup doctor
   auto-detect from the project root.
 - **Stores** — powerups live in a global store (`~/.powerups`) and a per-project
   store (`.powerups` at the project root).
+- **Applied manifest** — every `pup use` records the powerup, pack version,
+  variables, and files it wrote in `.powerups/applied.json`. This powers
+  diagnosis and repair workflows; don't edit it by hand.
 
 ## Development
 

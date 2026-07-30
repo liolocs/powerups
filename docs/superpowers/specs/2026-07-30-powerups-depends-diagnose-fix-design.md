@@ -42,11 +42,14 @@ Rationale: this **deletes concepts instead of adding them**:
 
 ### Migration
 
-Existing multi-powerup packs are split by a new `pup pack split` command: each
-powerup becomes its own pack, inheriting the source pack's version and git
-history where possible. `include` steps referencing sibling powerups in the
-same pack are converted to `depends` entries. `include` remains supported for
-backward compatibility during a deprecation window.
+No automated tooling. The only multi-powerup pack that must be migrated is the
+repo's own internal pack, `.powerups/internal/pup-internal/`, which currently
+bundles three multi-use powerups (`cli-command`, `cli-subcommand`,
+`cli-command-with-subcommands`). It is updated **by hand**: each powerup
+becomes its own pack (own directory with a `package.json` containing a single
+`powerups.active` entry). Any `include` steps referencing sibling powerups in
+the same pack are converted to `depends` entries at the same time. `include`
+remains supported for backward compatibility during a deprecation window.
 
 ## Architecture
 
@@ -288,8 +291,9 @@ projects resolve 3.x. Both maintained from one pack name.
   fork templates updated + version bump rules (patch vs major) + manifest
   refreshed + re-render. Reuse the git-worktree test utils from
   `create-powerup.spec.ts`.
-- **Migration:** `pack split` golden-file tests over a multi-powerup fixture
-  pack.
+- **Migration:** manual verification that the hand-split `pup-internal` packs
+  validate (`pup validate`) and render identically to the pre-split behavior
+  for the three CLI-scaffolding powerups.
 
 ## Non-goals
 

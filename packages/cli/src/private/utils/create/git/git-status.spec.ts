@@ -5,7 +5,7 @@ import io from "@rcompat/io";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
-import { getGitStatus, type GitChange } from "#utils/git/git-status";
+import { getGitStatus, type GitChange } from "#utils/create/git/git-status";
 import { CodeError } from "@rcompat/error";
 import { CreateErrorCode } from "#errors/createErrors";
 import { MAIN_FOLDER, INTERNAL_FOLDER } from "#constants";

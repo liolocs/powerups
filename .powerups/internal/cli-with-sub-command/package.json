@@ -1,0 +1,9 @@
+{
+  "name": "cli-command",
+  "version": "1.0.0",
+  "description": "Scaffold a CLI with subcommands",
+  "keywords": [
+    "powerups-package"
+  ],
+  "powerup": "./instructions.json"
+}

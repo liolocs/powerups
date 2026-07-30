@@ -1,13 +1,17 @@
 import { type FileRef } from "@rcompat/fs";
+import path from "node:path";
 import is from "@rcompat/is";
+import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { Command } from "@liolocs/program";
 import create_errors from "#errors/createErrors";
 import {
   SINGULAR_NAME,
   CAPITALIZED_SINGLULAR_CLI_NAME,
+  MAIN_FOLDER,
+  INTERNAL_FOLDER,
 } from "#constants";
-import { createPowerup, printCreateSummary } from "#utils/create-powerup";
+import { createPowerup, printCreateSummary } from "#utils/create/create-powerup";
 
 const create = new Command({
   name: "create",
@@ -74,30 +78,53 @@ const create = new Command({
       throw create_errors.missing_name();
     }
 
+    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+
+    if (!(await fs.exists(mainFolder))) {
+      throw create_errors.main_folder_not_found();
+    }
+
+    const internalFolder = mainFolder.append(`/${INTERNAL_FOLDER}`);
+
+    if (!(await fs.exists(internalFolder))) {
+      await fs.create(internalFolder);
+    }
+
     const workingDirRaw = rawFlags?.find(
       f => f.flag === "--working-dir" || f.flag === "--wd",
     );
     const hasWorkingDir = is.defined(workingDirRaw);
-    const workingDirValue = hasWorkingDir
-      ? (is.defined(workingDirRaw!.value) && workingDirRaw!.value.length > 0
-        ? workingDirRaw!.value
-        : "")
-      : undefined;
 
     const powerupsType = is.defined(flags.type) ? flags.type : "single-use";
+    if (powerupsType !== "multi-use" && powerupsType !== "single-use") {
+      throw create_errors.missing_type();
+    }
+
+    const outputDir = mainFolder.append(`/${INTERNAL_FOLDER}/${name}`);
+
+    if (await fs.exists(outputDir)) {
+      throw create_errors.already_exists(name);
+    }
+
+    const workingDirFileRef = is.defined(workingDirRaw!.value)
+      && workingDirRaw!.value.length > 0
+      ? fs.ref(path.resolve(workingDirRaw!.value))
+      : runtime.cwd();
 
     const result = await createPowerup({
       name,
-      workingDir: workingDirValue,
+      workingDir: hasWorkingDir ? workingDirFileRef : undefined,
       projectRoot: root,
+      outputDir,
       pack: flags.pack,
-      type: flags.type,
+      type: powerupsType,
       description: flags.description,
       intent: flags.intent,
       variables: flags.variables,
       optionalVariables: flags.optionalVariables,
       packageDeps: flags.packageDeps,
     });
+
 
     printCreateSummary({ name, type: powerupsType, result });
   },

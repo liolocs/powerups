@@ -1,6 +1,7 @@
 {
   "name": "cli-subcommand",
   "description": "Scaffold a subcommand that attaches to an existing parent command",
+  "type": "multi-use",
   "variables": {
     "required": [
       "parentCommand",

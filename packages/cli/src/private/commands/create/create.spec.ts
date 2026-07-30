@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import create from "#commands/create/index";
 import { instructionsSchema } from "#schemas/instruction";
-import { extractPackageDependencies } from "#utils/create-powerup";
+import { extractPackageDependencies } from "#utils/create/create-powerup";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { CodeError } from "@rcompat/error";

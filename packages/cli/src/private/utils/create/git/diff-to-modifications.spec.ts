@@ -3,7 +3,7 @@ import {
   generateModifications,
   type DiffHunk,
   type DiffLine,
-} from "#utils/git/diff-to-modifications";
+} from "#utils/create/git/diff-to-modifications";
 import { modificationArraySchema } from "#schemas/modification";
 
 function line(type: DiffLine["type"], content: string, noNewline = false): DiffLine {

@@ -87,6 +87,7 @@ const packageDependencyGroupSchema = p({
 
 export const instructionsSchema = p({
   name: p.string,
+  type: p.union(p.literal("multi-use"), p.literal("single-use")),
   description: p.string,
   variables: p({
     required: p.array(p.string),

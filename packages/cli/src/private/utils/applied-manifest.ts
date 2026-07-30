@@ -99,7 +99,7 @@ export async function recordApplication(
     appliedAt: new Date().toISOString(),
     variables: rest.variables,
     files: rest.changedFiles,
-    ...(dependsOn ? { dependsOn } : {}),
+    ...(dependsOn !== undefined ? { dependsOn } : {}),
   };
 
   const samePowerup = (candidate: AppliedEntry) =>

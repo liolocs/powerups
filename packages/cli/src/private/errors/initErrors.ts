@@ -7,7 +7,7 @@ const t = error.template;
 const errorLabel = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const printInit = CLI_CMD + " project init";
-const specifyHarness = `Harness options: \n\t${printInit} --harness claude\n\t${printInit} --harness opencode\n\t${printInit} --harness pi\n\t${printInit} --harness codex`;
+const specifyHarness = `Harness options: \n\t${printInit} --harness=claude\n\t${printInit} --harness=opencode\n\t${printInit} --harness=pi\n\t${printInit} --harness=codex`;
 
 const init_errors = error.coded({
   no_harness_detected: () => {

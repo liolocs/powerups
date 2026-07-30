@@ -6,8 +6,8 @@ import {
 } from "#utils/git/diff-to-modifications";
 import { modificationArraySchema } from "#schemas/modification";
 
-function line(type: DiffLine["type"], content: string): DiffLine {
-  return { type, content };
+function line(type: DiffLine["type"], content: string, noNewline = false): DiffLine {
+  return { type, content, noNewline: noNewline || undefined };
 }
 
 function hunk(lines: DiffLine[], oldStart = 1, oldCount?: number, newStart = 1, newCount?: number): DiffHunk {
@@ -331,4 +331,119 @@ test.case("generated modifications are valid against modification schema", async
 
   const result = generateModifications({ preImage, postImage, hunks });
   modificationArraySchema.parse(result.modifications);
+});
+
+test.case("two identical replacements in one hunk resolved by preImage expansion", async assert => {
+  const preImage = "root {\n  unique-a: 1;\n  font\n  dup: 10\n  shadow\n}\ndark {\n  unique-b: 2;\n  font\n  dup: 10\n  shadow\n}\n";
+  const postImage = "root {\n  unique-a: 1;\n  font\n  dup: 20\n  shadow\n}\ndark {\n  unique-b: 2;\n  font\n  dup: 20\n  shadow\n}\n";
+  const hunks = [hunk([
+    line("context", "root {"),
+    line("context", "  unique-a: 1;"),
+    line("context", "  font"),
+    line("removed", "  dup: 10"),
+    line("added", "  dup: 20"),
+    line("context", "  shadow"),
+    line("context", "}"),
+    line("context", "dark {"),
+    line("context", "  unique-b: 2;"),
+    line("context", "  font"),
+    line("removed", "  dup: 10"),
+    line("added", "  dup: 20"),
+    line("context", "  shadow"),
+    line("context", "}"),
+  ])];
+
+  const result = generateModifications({ preImage, postImage, hunks });
+  assert(result.modifications.length).equals(2);
+  assert(applyMods(preImage, result.modifications)).equals(postImage);
+});
+
+test.case("trailing newline removal", async assert => {
+  const preImage = "line1\nline2\n}\n";
+  const postImage = "line1\nline2\n}";
+  const hunks = [hunk([
+    line("context", "line1"),
+    line("context", "line2"),
+    line("removed", "}", false),
+    line("added", "}", true),
+  ], 1, 3, 1, 3)];
+
+  const result = generateModifications({ preImage, postImage, hunks });
+  assert(result.modifications.length).equals(1);
+  assert(applyMods(preImage, result.modifications)).equals(postImage);
+});
+
+test.case("trailing newline addition", async assert => {
+  const preImage = "line1\nline2\n}";
+  const postImage = "line1\nline2\n}\n";
+  const hunks = [hunk([
+    line("context", "line1"),
+    line("context", "line2"),
+    line("removed", "}", true),
+    line("added", "}", false),
+  ], 1, 3, 1, 3)];
+
+  const result = generateModifications({ preImage, postImage, hunks });
+  assert(result.modifications.length).equals(1);
+  assert(applyMods(preImage, result.modifications)).equals(postImage);
+});
+
+test.case("content changes plus trailing newline removal in separate hunks", async assert => {
+  const preImage = "{\n  \"paths\": {\n    \"old\": 1\n  }\n}\n";
+  const postImage = "{\n  \"paths\": {\n    \"old\": 1\n    \"new\": 2\n  }\n}";
+  const hunks = [
+    hunk([
+      line("context", "  \"paths\": {"),
+      line("context", "    \"old\": 1"),
+      line("added", "    \"new\": 2"),
+      line("context", "  }"),
+    ], 2, 3, 2, 4),
+    hunk([
+      line("removed", "}", false),
+      line("added", "}", true),
+    ], 5, 1, 6, 1),
+  ];
+
+  const result = generateModifications({ preImage, postImage, hunks });
+  assert(applyMods(preImage, result.modifications)).equals(postImage);
+});
+
+test.case("fallback keeps applicable mod when other mod has unresolvable anchor", async assert => {
+  // Two identical lines, both changed to different values in separate hunks.
+  // Both mods expand to where="a\na\n" (unique in preImage), but after mod 0
+  // is applied, mod 1's anchor no longer exists — fallback skips it.
+  const preImage = "a\na\n";
+  const postImage = "b\nc\n";
+  const hunks = [
+    hunk([
+      line("removed", "a"),
+      line("added", "b"),
+    ], 1, 1, 1, 1),
+    hunk([
+      line("removed", "a"),
+      line("added", "c"),
+    ], 2, 1, 2, 1),
+  ];
+
+  const result = generateModifications({ preImage, postImage, hunks });
+  assert(result.modifications.length).equals(1);
+  assert(result.modifications[0]!.where).equals("a\na\n");
+  assert(result.warnings.length > 0).true();
+});
+
+test.case("insertion with ambiguous context resolved by preImage expansion", async assert => {
+  const preImage = ":root {\n  unique: 1;\n  dup\n  shadow\n}\n.dark {\n  other: 2;\n  dup\n  shadow\n}\n";
+  const postImage = ":root {\n  unique: 1;\n  dup\n  INSERTED\n  shadow\n}\n.dark {\n  other: 2;\n  dup\n  shadow\n}\n";
+  const hunks = [hunk([
+    line("context", ":root {"),
+    line("context", "  unique: 1;"),
+    line("context", "  dup"),
+    line("added", "  INSERTED"),
+    line("context", "  shadow"),
+    line("context", "}"),
+  ])];
+
+  const result = generateModifications({ preImage, postImage, hunks });
+  assert(result.modifications.length).equals(1);
+  assert(applyMods(preImage, result.modifications)).equals(postImage);
 });

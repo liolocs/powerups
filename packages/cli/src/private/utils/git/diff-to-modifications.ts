@@ -5,6 +5,7 @@ export type DiffLineType = "context" | "added" | "removed";
 export type DiffLine = {
   type: DiffLineType;
   content: string;
+  noNewline?: boolean;
 };
 
 export type DiffHunk = {
@@ -25,6 +26,9 @@ type AtomicEdit = {
   addedLines: string[];
   atFileStart: boolean;
   atFileEnd: boolean;
+  preImageStartLine: number;
+  oldNoNewline: boolean;
+  newNoNewline: boolean;
 };
 
 type GenerateModificationsResult = {
@@ -32,22 +36,30 @@ type GenerateModificationsResult = {
   warnings: string[];
 };
 
-const MAX_CONTEXT_EXPANSION = 10;
+const MAX_PREIMAGE_EXPANSION = 200;
 
 function countOccurrences(haystack: string, needle: string): number {
   if (needle.length === 0) return 0;
   return haystack.split(needle).length - 1;
 }
 
-function joinLines(lines: string[]): string {
+function joinLines(lines: string[], noTrailingNewline = false): string {
   if (lines.length === 0) return "";
-  return lines.join("\n") + "\n";
+  return lines.join("\n") + (noTrailingNewline ? "" : "\n");
 }
 
 function countPreImageLines(preImage: string): number {
   if (preImage.length === 0) return 0;
   const parts = preImage.split("\n");
   return preImage.endsWith("\n") ? parts.length - 1 : parts.length;
+}
+
+function getPreImageLines(preImage: string): string[] {
+  const lines = preImage.split("\n");
+  if (preImage.endsWith("\n")) {
+    lines.pop();
+  }
+  return lines;
 }
 
 function applyModificationSafe({
@@ -130,15 +142,18 @@ function parseHunksIntoEdits(hunks: DiffHunk[], preImage: string): AtomicEdit[] 
         continue;
       }
 
-      const editStartIndex = i;
       let removedLines: string[] = [];
       let addedLines: string[] = [];
+      let oldNoNewline = false;
+      let newNoNewline = false;
 
       while (i < lines.length && lines[i].type !== "context") {
         if (lines[i].type === "removed") {
           removedLines.push(lines[i].content);
+          oldNoNewline = lines[i].noNewline ?? false;
         } else {
           addedLines.push(lines[i].content);
+          newNoNewline = lines[i].noNewline ?? false;
         }
         i++;
       }
@@ -161,7 +176,6 @@ function parseHunksIntoEdits(hunks: DiffHunk[], preImage: string): AtomicEdit[] 
         j++;
       }
 
-      const editLineNumber = preImageLine - removedLines.length;
       const isLastEditInHunk = i >= lines.length || lines.slice(i).every(l => l.type === "context");
       const atFileStart = hunkIndex === 0 && edits.length === 0
         && hunk.oldStart === 1 && contextBefore.length === 0;
@@ -169,6 +183,8 @@ function parseHunksIntoEdits(hunks: DiffHunk[], preImage: string): AtomicEdit[] 
         && isLastEditInHunk
         && contextAfter.length === 0
         && hunk.oldStart + hunk.oldCount - 1 >= totalPreImageLines;
+
+      const preImageStartLine = preImageLine - 1;
 
       edits.push({
         type: editType,
@@ -178,63 +194,127 @@ function parseHunksIntoEdits(hunks: DiffHunk[], preImage: string): AtomicEdit[] 
         addedLines,
         atFileStart,
         atFileEnd,
+        preImageStartLine,
+        oldNoNewline,
+        newNoNewline,
       });
 
       contextBuffer = [...contextAfter];
       preImageLine += contextAfter.length;
+      i = j;
     }
   }
 
   return edits;
 }
 
-function expandWithContext({
+function expandBlockAnchor({
   oldBlock,
   newBlock,
   contextBefore,
   contextAfter,
   preImage,
-  isInsertion,
+  preImageStartLine,
+  oldBlockLineCount,
 }: {
   oldBlock: string;
   newBlock: string;
   contextBefore: string[];
   contextAfter: string[];
   preImage: string;
-  isInsertion: boolean;
+  preImageStartLine: number;
+  oldBlockLineCount: number;
 }): { where: string; content: string } | null {
-  const beforeLines = [...contextBefore];
-  const afterLines = [...contextAfter];
+  // Step 1: Try full hunk context first
+  const fullBefore = joinLines(contextBefore);
+  const fullAfter = joinLines(contextAfter);
+  const fullWhere = fullBefore + oldBlock + fullAfter;
+  if (countOccurrences(preImage, fullWhere) === 1) {
+    return { where: fullWhere, content: fullBefore + newBlock + fullAfter };
+  }
 
-  for (let expansion = 0; expansion < MAX_CONTEXT_EXPANSION; expansion++) {
-    if (beforeLines.length === 0 && afterLines.length === 0) break;
+  // Step 2: Expand from preImage beyond hunk context
+  const preLines = getPreImageLines(preImage);
+  const totalLines = preLines.length;
+  const preEndsWithNewline = preImage.endsWith("\n");
 
-    const useBefore = beforeLines.length > 0
-      && (afterLines.length === 0 || expansion % 2 === 0);
+  for (let exp = 1; exp <= MAX_PREIMAGE_EXPANSION; exp++) {
+    const beforeStart = preImageStartLine - exp;
+    const afterEnd = preImageStartLine + oldBlockLineCount + exp - 1;
 
-    if (useBefore) {
-      beforeLines.pop();
-    } else {
-      afterLines.shift();
+    // Try expanding before only
+    if (beforeStart >= 0) {
+      const beforeCtx = preLines.slice(beforeStart, preImageStartLine);
+      const where = joinLines(beforeCtx) + oldBlock;
+      if (countOccurrences(preImage, where) === 1) {
+        return { where, content: joinLines(beforeCtx) + newBlock };
+      }
     }
 
-    const contextBeforeUsed = contextBefore.slice(contextBefore.length - beforeLines.length);
-    const contextAfterUsed = afterLines;
+    // Try expanding after only
+    if (afterEnd < totalLines) {
+      const afterCtx = preLines.slice(preImageStartLine + oldBlockLineCount, afterEnd + 1);
+      const isLastLine = afterEnd === totalLines - 1 && !preEndsWithNewline;
+      const afterStr = joinLines(afterCtx, isLastLine);
+      const where = oldBlock + afterStr;
+      if (countOccurrences(preImage, where) === 1) {
+        return { where, content: newBlock + afterStr };
+      }
+    }
 
-    const contextBeforeStr = contextBeforeUsed.length > 0
-      ? joinLines(contextBeforeUsed)
-      : "";
-    const contextAfterStr = contextAfterUsed.length > 0
-      ? joinLines(contextAfterUsed)
-      : "";
+    // Try expanding both sides
+    if (beforeStart >= 0 && afterEnd < totalLines) {
+      const beforeCtx = preLines.slice(beforeStart, preImageStartLine);
+      const afterCtx = preLines.slice(preImageStartLine + oldBlockLineCount, afterEnd + 1);
+      const isLastLine = afterEnd === totalLines - 1 && !preEndsWithNewline;
+      const afterStr = joinLines(afterCtx, isLastLine);
+      const where = joinLines(beforeCtx) + oldBlock + afterStr;
+      if (countOccurrences(preImage, where) === 1) {
+        return { where, content: joinLines(beforeCtx) + newBlock + afterStr };
+      }
+    }
+  }
 
-    const where = contextBeforeStr + oldBlock + contextAfterStr;
-    const content = isInsertion
-      ? contextBeforeStr + newBlock + contextAfterStr
-      : contextBeforeStr + newBlock + contextAfterStr;
+  return null;
+}
 
-    if (countOccurrences(preImage, where) === 1) {
-      return { where, content };
+function expandInsertionAnchor({
+  insertedContent,
+  preImage,
+  preImageStartLine,
+}: {
+  insertedContent: string;
+  preImage: string;
+  preImageStartLine: number;
+}): Modification | null {
+  const preLines = getPreImageLines(preImage);
+  const totalLines = preLines.length;
+  const preEndsWithNewline = preImage.endsWith("\n");
+
+  // Try expanding before the insertion point (returns { after: ... } mod)
+  for (let exp = 1; exp <= MAX_PREIMAGE_EXPANSION; exp++) {
+    const beforeStart = preImageStartLine - exp;
+    if (beforeStart < 0) break;
+
+    const beforeCtx = preLines.slice(beforeStart, preImageStartLine);
+    const lastIdx = preImageStartLine - 1;
+    const isLastLine = lastIdx === totalLines - 1 && !preEndsWithNewline;
+    const anchor = joinLines(beforeCtx, isLastLine);
+    if (countOccurrences(preImage, anchor) === 1) {
+      return { where: { after: anchor }, content: insertedContent };
+    }
+  }
+
+  // Try expanding after the insertion point (returns { before: ... } mod)
+  for (let exp = 1; exp <= MAX_PREIMAGE_EXPANSION; exp++) {
+    const afterEnd = preImageStartLine + exp - 1;
+    if (afterEnd >= totalLines) break;
+
+    const afterCtx = preLines.slice(preImageStartLine, afterEnd + 1);
+    const isLastLine = afterEnd === totalLines - 1 && !preEndsWithNewline;
+    const anchor = joinLines(afterCtx, isLastLine);
+    if (countOccurrences(preImage, anchor) === 1) {
+      return { where: { before: anchor }, content: insertedContent };
     }
   }
 
@@ -248,7 +328,10 @@ function generateModificationForEdit({
   edit: AtomicEdit;
   preImage: string;
 }): { modification: Modification | null; warning: string | null } {
-  const { type, contextBefore, contextAfter, removedLines, addedLines, atFileStart, atFileEnd } = edit;
+  const {
+    type, contextBefore, contextAfter, removedLines, addedLines,
+    atFileStart, atFileEnd, preImageStartLine, oldNoNewline, newNoNewline,
+  } = edit;
 
   if (type === "insertion") {
     const insertedContent = joinLines(addedLines);
@@ -281,17 +364,14 @@ function generateModificationForEdit({
       }
     }
 
-    const expanded = expandWithContext({
-      oldBlock: "",
-      newBlock: insertedContent,
-      contextBefore,
-      contextAfter,
+    const expanded = expandInsertionAnchor({
+      insertedContent,
       preImage,
-      isInsertion: true,
+      preImageStartLine,
     });
 
     if (expanded !== null) {
-      return { modification: { where: expanded.where, content: expanded.content }, warning: null };
+      return { modification: expanded, warning: null };
     }
 
     return {
@@ -301,19 +381,20 @@ function generateModificationForEdit({
   }
 
   if (type === "deletion") {
-    const oldContent = joinLines(removedLines);
+    const oldContent = joinLines(removedLines, oldNoNewline);
 
     if (countOccurrences(preImage, oldContent) === 1) {
       return { modification: { where: oldContent, content: "" }, warning: null };
     }
 
-    const expanded = expandWithContext({
+    const expanded = expandBlockAnchor({
       oldBlock: oldContent,
       newBlock: "",
       contextBefore,
       contextAfter,
       preImage,
-      isInsertion: false,
+      preImageStartLine,
+      oldBlockLineCount: removedLines.length,
     });
 
     if (expanded !== null) {
@@ -326,20 +407,21 @@ function generateModificationForEdit({
     };
   }
 
-  const oldContent = joinLines(removedLines);
-  const newContent = joinLines(addedLines);
+  const oldContent = joinLines(removedLines, oldNoNewline);
+  const newContent = joinLines(addedLines, newNoNewline);
 
   if (countOccurrences(preImage, oldContent) === 1) {
     return { modification: { where: oldContent, content: newContent }, warning: null };
   }
 
-  const expanded = expandWithContext({
+  const expanded = expandBlockAnchor({
     oldBlock: oldContent,
     newBlock: newContent,
     contextBefore,
     contextAfter,
     preImage,
-    isInsertion: false,
+    preImageStartLine,
+    oldBlockLineCount: removedLines.length,
   });
 
   if (expanded !== null) {
@@ -361,20 +443,26 @@ function wholeHunkReplacement({
 }): { modification: Modification | null } {
   const preLines: string[] = [];
   const postLines: string[] = [];
+  let preNoNewline = false;
+  let postNoNewline = false;
 
   for (const line of hunk.lines) {
     if (line.type === "context") {
       preLines.push(line.content);
       postLines.push(line.content);
+      preNoNewline = line.noNewline ?? false;
+      postNoNewline = line.noNewline ?? false;
     } else if (line.type === "removed") {
       preLines.push(line.content);
+      preNoNewline = line.noNewline ?? false;
     } else if (line.type === "added") {
       postLines.push(line.content);
+      postNoNewline = line.noNewline ?? false;
     }
   }
 
-  const where = joinLines(preLines);
-  const content = joinLines(postLines);
+  const where = joinLines(preLines, preNoNewline);
+  const content = joinLines(postLines, postNoNewline);
 
   if (where.length === 0) return { modification: null };
   if (countOccurrences(preImage, where) === 1) {
@@ -441,17 +529,24 @@ export function generateModifications({
     return { modifications: regeneratedMods, warnings: [...warnings, ...regeneratedWarnings] };
   }
 
-  const validMods: Modification[] = [];
+  // Final fallback: keep mods that can be individually applied
+  // (anchor exists and is unique at the point of application)
+  const applicableMods: Modification[] = [];
+  let current = preImage;
+
   for (const mod of modifications) {
-    const testMods = [...validMods, mod];
-    if (validateModifications({ preImage, postImage, modifications: testMods })) {
-      validMods.push(mod);
+    const applied = applyModificationSafe({ content: current, mod });
+    if (applied !== null) {
+      applicableMods.push(mod);
+      current = applied;
+    } else {
+      warnings.push("Modification could not be applied — skipped, manual review required");
     }
   }
 
-  if (validMods.length < modifications.length) {
-    warnings.push("Some modifications could not be validated — manual review required");
+  if (current !== postImage) {
+    warnings.push("Applied modifications do not fully reproduce the target — manual review required");
   }
 
-  return { modifications: validMods, warnings };
+  return { modifications: applicableMods, warnings };
 }

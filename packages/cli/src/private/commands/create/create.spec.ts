@@ -1,6 +1,7 @@
 import test from "@rcompat/test";
 import create from "#commands/create/index";
 import { instructionsSchema } from "#schemas/instruction";
+import { extractPackageDependencies } from "#utils/create-powerup";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { CodeError } from "@rcompat/error";
@@ -344,4 +345,99 @@ test.case(`should add package to project config after creating a powerup`, async
   assert(config.packages).equals(["test-pkg"]);
 
   await testRoot.remove();
+});
+
+test.group("extractPackageDependencies", () => {
+  test.case("extracts added dependencies", async assert => {
+    const preImage = JSON.stringify({
+      name: "test",
+      dependencies: { existing: "^1.0.0" },
+      devDependencies: {},
+    });
+    const postImage = JSON.stringify({
+      name: "test",
+      dependencies: { existing: "^1.0.0", "new-dep": "^2.3.4" },
+      devDependencies: { "dev-dep": "^5.0.0" },
+    });
+
+    const result = extractPackageDependencies({ preImage, postImage, filePath: "package.json" });
+    assert(result.dependencies.length).equals(1);
+    assert(result.dependencies[0]!.target).undefined();
+    assert(result.dependencies[0]!.dependencies).equals(["new-dep@^2.3.4"]);
+    assert(result.dependencies[0]!.devDependencies).equals(["dev-dep@^5.0.0"]);
+    assert(result.hasNonDependencyChanges).false();
+  });
+
+  test.case("detects non-dependency changes", async assert => {
+    const preImage = JSON.stringify({
+      name: "test",
+      version: "1.0.0",
+      dependencies: { existing: "^1.0.0" },
+    });
+    const postImage = JSON.stringify({
+      name: "test",
+      version: "2.0.0",
+      dependencies: { existing: "^1.0.0", "new-dep": "^2.3.4" },
+    });
+
+    const result = extractPackageDependencies({ preImage, postImage, filePath: "package.json" });
+    assert(result.dependencies.length).equals(1);
+    assert(result.dependencies[0]!.dependencies).equals(["new-dep@^2.3.4"]);
+    assert(result.hasNonDependencyChanges).true();
+  });
+
+  test.case("sets target for nested package.json", async assert => {
+    const preImage = JSON.stringify({ dependencies: {} });
+    const postImage = JSON.stringify({ dependencies: { "new-dep": "^1.0.0" } });
+
+    const result = extractPackageDependencies({ preImage, postImage, filePath: "packages/web/package.json" });
+    assert(result.dependencies[0]!.target).equals("packages/web");
+  });
+
+  test.case("detects version changes as non-dependency changes", async assert => {
+    const preImage = JSON.stringify({
+      dependencies: { "existing-dep": "^1.0.0" },
+    });
+    const postImage = JSON.stringify({
+      dependencies: { "existing-dep": "^2.0.0" },
+    });
+
+    const result = extractPackageDependencies({ preImage, postImage, filePath: "package.json" });
+    assert(result.dependencies.length).equals(1);
+    assert(result.dependencies[0]!.dependencies).equals(["existing-dep@^2.0.0"]);
+    assert(result.hasNonDependencyChanges).true();
+  });
+
+  test.case("returns empty for no dependency changes", async assert => {
+    const preImage = JSON.stringify({
+      name: "test",
+      dependencies: { existing: "^1.0.0" },
+    });
+    const postImage = JSON.stringify({
+      name: "test",
+      dependencies: { existing: "^1.0.0" },
+    });
+
+    const result = extractPackageDependencies({ preImage, postImage, filePath: "package.json" });
+    assert(result.dependencies.length).equals(0);
+    assert(result.hasNonDependencyChanges).false();
+  });
+
+  test.case("returns empty with nonDependencyChanges for invalid JSON", async assert => {
+    const result = extractPackageDependencies({
+      preImage: "not json",
+      postImage: "also not json",
+      filePath: "package.json",
+    });
+    assert(result.dependencies.length).equals(0);
+    assert(result.hasNonDependencyChanges).true();
+  });
+
+  test.case("handles peerDependencies", async assert => {
+    const preImage = JSON.stringify({ peerDependencies: {} });
+    const postImage = JSON.stringify({ peerDependencies: { "peer-dep": "^3.0.0" } });
+
+    const result = extractPackageDependencies({ preImage, postImage, filePath: "package.json" });
+    assert(result.dependencies[0]!.peerDependencies).equals(["peer-dep@^3.0.0"]);
+  });
 });

@@ -20,7 +20,9 @@ import {
   PACKAGE_FILE,
   KEYWORD_PACKAGE,
   CONFIG_FILE,
+  APPLIED_FILE,
 } from "#constants";
+import { appliedManifestSchema } from "#schemas/applied";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
@@ -1298,3 +1300,90 @@ test.group("apply delete dry-run", () => {
     await testRoot.remove();
   });
 });
+
+test.case("apply records the powerup in the applied manifest",
+  async assert => {
+    await reset();
+
+    await createPowerup("manifest-widget", [
+      { type: "create", name: "widget.txt", template: "widget.njk", outputPath: ".test-manifest/{{Name}}.txt" },
+    ], { required: ["Name"] });
+    await multiUseFolder.append("/manifest-widget/widget.njk").write("hello {{Name}}");
+
+    await use.run({
+      subcommands: ["manifest-widget"],
+      flags: [{ flag: "--name", value: "Foo" }],
+      context: { root: testRoot, globalRoot: tempGlobalRoot },
+    });
+
+    const manifestRef = mainFolder.append(`/${APPLIED_FILE}`);
+    assert(await fs.exists(manifestRef)).true();
+
+    const manifest = appliedManifestSchema.parse(await manifestRef.json());
+    assert(manifest.applied.length).equals(1);
+
+    const entry = manifest.applied[0];
+    assert(entry.name).equals("manifest-widget");
+    assert(entry.powerup).equals("test-pkg");
+    assert(entry.version).equals("1.0.0");
+    assert(entry.location).equals("local");
+    assert(entry.variables.name).equals("Foo");
+    assert(entry.files.length).equals(1);
+    assert(entry.files[0].path).equals(".test-manifest/Foo.txt");
+    assert(entry.files[0].action).equals("create");
+
+    await testRoot.remove();
+  });
+
+test.case("re-applying same variables replaces the manifest entry",
+  async assert => {
+    await reset();
+
+    await createPowerup("manifest-reuse", [
+      { type: "create", name: "a.txt", template: "a.njk", outputPath: ".test-manifest-a/{{Name}}.txt" },
+    ], { required: ["Name"] });
+    await multiUseFolder.append("/manifest-reuse/a.njk").write("{{Name}}");
+
+    for (let run = 0; run < 2; run++) {
+      await use.run({
+        subcommands: ["manifest-reuse"],
+        flags: [
+          { flag: "--name", value: "Bar" },
+          { flag: "--overwrite", value: "" },
+        ],
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
+      });
+      await gitCommit(testRoot, `run ${run}`);
+    }
+
+    const manifest = appliedManifestSchema
+      .parse(await mainFolder.append(`/${APPLIED_FILE}`).json());
+    assert(manifest.applied.filter(e => e.name === "manifest-reuse").length)
+      .equals(1);
+
+    await testRoot.remove();
+  });
+
+test.case("dry-run does not write the manifest", async assert => {
+    await reset();
+
+    await createPowerup("manifest-dry", [
+      { type: "create", name: "d.txt", template: "d.njk", outputPath: ".test-manifest-d/{{Name}}.txt" },
+    ], { required: ["Name"] });
+    await multiUseFolder.append("/manifest-dry/d.njk").write("{{Name}}");
+
+    await captureStdout(async () => {
+      await use.run({
+        subcommands: ["manifest-dry"],
+        flags: [
+          { flag: "--name", value: "Baz" },
+          { flag: "--dry-run", value: "" },
+        ],
+        context: { root: testRoot, globalRoot: tempGlobalRoot },
+      });
+    });
+
+    assert(await fs.exists(mainFolder.append(`/${APPLIED_FILE}`))).false();
+
+    await testRoot.remove();
+  });

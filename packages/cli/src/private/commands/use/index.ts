@@ -18,9 +18,11 @@ import {
 } from "#utils/worktree";
 import { applyDependencies, collectDependencies } from "#utils/dependencies";
 import { resolvePowerUp } from "#utils/resolve-powerup";
+import { recordApplication } from "#utils/applied-manifest";
 import {
   CAPITALIZED_SINGLULAR_CLI_NAME,
   MAIN_FOLDER,
+  PACKAGE_FILE,
   SINGULAR_NAME,
   type PowerUpType,
 } from "#constants";
@@ -180,11 +182,21 @@ const use = new Command({
       throw error;
     }
 
-    // 10. Copy changed files back and clean up
+    // 10. Classify changed files (before copy makes everything exist)
+    const classifiedFiles = await Promise.all(changedFiles.map(async file => ({
+      path: file.projectPath,
+      action: (file.deleted === true
+        ? "delete"
+        : await fs.exists(root.append(`/${file.projectPath}`))
+          ? "modify"
+          : "create") as "create" | "modify" | "delete",
+    })));
+
+    // 11. Copy changed files back and clean up
     await copyChangedFiles(root, changedFiles);
     await removeWorktree(root, worktree.path);
 
-    // 11. Process packageDependencies
+    // 12. Process packageDependencies
     if (instructions.packageDependencies || instructions.steps.some(s => s.type === "include")) {
       try {
         const collectedDeps = await collectDependencies({ outputName: name, outputsFolder: typeFolder });
@@ -203,7 +215,26 @@ const use = new Command({
       }
     }
 
-    // 12. Log metrics (best-effort)
+    // 13. Record the application in the applied manifest (best-effort)
+    try {
+      const packJsonRef = outputFolder.up(2).append(`/${PACKAGE_FILE}`);
+      const packJson = await packJsonRef.json() as { version?: string };
+      await recordApplication({
+        root,
+        powerup: resolved.packageName,
+        name,
+        version: packJson.version ?? "0.0.0",
+        location: resolved.location,
+        variables,
+        changedFiles: classifiedFiles,
+        singleUse: resolved.type === "single-use",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      cli.print(`Warning: could not record applied manifest entry — ${message}\n`);
+    }
+
+    // 14. Log metrics (best-effort)
     try {
       await logRun(
         { output: name, characters: totalCharacters },

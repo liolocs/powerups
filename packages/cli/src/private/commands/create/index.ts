@@ -1,5 +1,4 @@
-import fs, { type FileRef } from "@rcompat/fs";
-import cli from "@rcompat/cli";
+import { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import runtime from "@rcompat/runtime";
 import { Command } from "@liolocs/program";
@@ -70,6 +69,7 @@ const create = new Command({
     const root: FileRef = context?.root ?? await runtime.projectRoot();
 
     const name = subcommands?.[0];
+
     if (!is.defined(name) || name.length === 0) {
       throw create_errors.missing_name();
     }

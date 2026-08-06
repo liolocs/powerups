@@ -107,6 +107,15 @@ importers:
         specifier: ^0.8.2
         version: 0.8.2
 
+  packages/sdk:
+    dependencies:
+      '@rcompat/test':
+        specifier: ^0.20.0
+        version: 0.20.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+
 packages:
 
   '@conventional-changelog/git-client@3.1.0':

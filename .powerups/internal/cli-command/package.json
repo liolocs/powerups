@@ -1,0 +1,19 @@
+{
+  "name": "cli-command",
+  "version": "1.0.0",
+  "description": "Scaffold a CLI with a command",
+  "type": "module",
+  "keywords": [
+    "powerups-package"
+  ],
+  "powerup": {
+    "instructions": "index.ts",
+    "compatibility": {}
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}

@@ -33,7 +33,11 @@
     }
   },
   "dependencies": {
-    "@rcompat/test": "^0.20.0",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@rcompat/fs": "^0.35.1",
+    "@rcompat/runtime": "^0.17.0",
+    "@rcompat/test": "^0.20.0"
   }
 }

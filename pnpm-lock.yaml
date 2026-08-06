@@ -109,12 +109,19 @@ importers:
 
   packages/sdk:
     dependencies:
-      '@rcompat/test':
-        specifier: ^0.20.0
-        version: 0.20.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
+    devDependencies:
+      '@rcompat/fs':
+        specifier: ^0.35.1
+        version: 0.35.1
+      '@rcompat/runtime':
+        specifier: ^0.17.0
+        version: 0.17.0
+      '@rcompat/test':
+        specifier: ^0.20.0
+        version: 0.20.0
 
 packages:
 

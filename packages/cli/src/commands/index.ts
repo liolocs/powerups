@@ -1,5 +1,6 @@
 import { type Command } from "@liolocs/program";
 import add from "./add.js";
+import build from "./build.js";
 import create from "./create.js";
 import doctor from "./doctor.js";
 import find from "./find.js";
@@ -15,6 +16,7 @@ import validate from "./validate.js";
 
 const commands: Command<any>[] = [
   add,
+  build,
   create,
   doctor,
   find,

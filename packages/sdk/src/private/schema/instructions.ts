@@ -1,10 +1,20 @@
 import zod from "zod";
 
+const variableMapSchema = zod.record(zod.string(), zod.string()).optional();
+
+const fromSchema = zod.object({
+  name: zod.string(),
+  singleUse: zod.boolean(),
+}).optional();
+
 const createStepSchema = zod.object({
   type: zod.literal("create"),
   name: zod.string(),
   template: zod.string(),
   outputPath: zod.string(),
+  variableMap: variableMapSchema,
+  __source: zod.string().optional(),
+  from: fromSchema,
 });
 
 const modifyStepSchema = zod.object({
@@ -12,12 +22,18 @@ const modifyStepSchema = zod.object({
   name: zod.string(),
   template: zod.string(),
   outputPath: zod.string(),
+  variableMap: variableMapSchema,
+  __source: zod.string().optional(),
+  from: fromSchema,
 });
 
 const deleteStepSchema = zod.object({
   type: zod.literal("delete"),
   name: zod.string(),
   outputPath: zod.string(),
+  variableMap: variableMapSchema,
+  __source: zod.string().optional(),
+  from: fromSchema,
 });
 
 const readStepSchema = zod.object({
@@ -27,45 +43,21 @@ const readStepSchema = zod.object({
   as: zod.string(),
   jsonPath: zod.string().optional(),
   template: zod.string().optional(),
+  variableMap: variableMapSchema,
+  __source: zod.string().optional(),
+  from: fromSchema,
 });
 
-// Step override value schemas (step minus `name`) — manually defined
-// to avoid Omit-type cross-module export issues
-const createStepOverrideSchema = zod.object({
-  type: zod.literal("create"),
-  template: zod.string(),
-  outputPath: zod.string(),
-});
-const modifyStepOverrideSchema = zod.object({
-  type: zod.literal("modify"),
-  template: zod.string(),
-  outputPath: zod.string(),
-});
-const deleteStepOverrideSchema = zod.object({
-  type: zod.literal("delete"),
-  outputPath: zod.string(),
-});
-const readStepOverrideSchema = zod.object({
-  type: zod.literal("read"),
-  path: zod.string(),
-  as: zod.string(),
-  jsonPath: zod.string().optional(),
-  template: zod.string().optional(),
-});
-
-const stepOverrideValueSchema = zod.discriminatedUnion("type", [
-  createStepOverrideSchema,
-  modifyStepOverrideSchema,
-  deleteStepOverrideSchema,
-  readStepOverrideSchema,
-]);
-
-const includeStepSchema = zod.object({
-  type: zod.literal("include"),
+const installStepSchema = zod.object({
+  type: zod.literal("install"),
   name: zod.string(),
-  variables: zod.record(zod.string(), zod.string()),
-  stepOverride: zod.record(zod.string(), stepOverrideValueSchema).optional(),
-  excludeSteps: zod.array(zod.string()).optional(),
+  target: zod.string().optional(),
+  dependencies: zod.array(zod.string()).optional(),
+  devDependencies: zod.array(zod.string()).optional(),
+  peerDependencies: zod.array(zod.string()).optional(),
+  variableMap: variableMapSchema,
+  __source: zod.string().optional(),
+  from: fromSchema,
 });
 
 export const stepSchema = zod.discriminatedUnion("type", [
@@ -73,17 +65,10 @@ export const stepSchema = zod.discriminatedUnion("type", [
   modifyStepSchema,
   deleteStepSchema,
   readStepSchema,
-  includeStepSchema,
+  installStepSchema,
 ]);
 
 export const stepsSchema = zod.array(stepSchema);
-
-const packageDependencyGroupSchema = zod.object({
-  target: zod.string().optional(),
-  dependencies: zod.array(zod.string()).optional(),
-  devDependencies: zod.array(zod.string()).optional(),
-  peerDependencies: zod.array(zod.string()).optional(),
-});
 
 export const instructionsSchema = zod.object({
   name: zod.string(),
@@ -94,12 +79,23 @@ export const instructionsSchema = zod.object({
     optional: zod.array(zod.string()).optional(),
   }),
   intent: zod.array(zod.string()),
-  packageDependencies: zod.array(packageDependencyGroupSchema).optional(),
   steps: stepsSchema,
-});
+}).strict();
 
-export const packageDependencyGroupArraySchema = zod.array(packageDependencyGroupSchema);
+// Hand-written (stepOverrideValueSchema was deleted; the type is still needed
+// by includePowerup). Mirrors the step shapes minus `name`, with an install variant.
+export type StepOverrideValue =
+  | { type: "create"; template: string; outputPath: string }
+  | { type: "modify"; template: string; outputPath: string }
+  | { type: "delete"; outputPath: string }
+  | { type: "read"; path: string; as: string; jsonPath?: string; template?: string }
+  | {
+      type: "install";
+      target?: string;
+      dependencies?: string[];
+      devDependencies?: string[];
+      peerDependencies?: string[];
+    };
 
 export type Step = zod.infer<typeof stepSchema>;
-export type StepOverrideValue = zod.infer<typeof stepOverrideValueSchema>;
 export type Instructions = zod.infer<typeof instructionsSchema>;

@@ -20,7 +20,6 @@
     }
   },
   "devDependencies": {
-    "@liolocs/powerups-sdk": "workspace:*",
-    "@liolocs/powerups-cli": "workspace:*"
+    "@liolocs/powerups-sdk": "link:../../packages/sdk"
   }
 }

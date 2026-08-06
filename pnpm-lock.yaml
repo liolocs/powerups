@@ -5,12 +5,15 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  sdk: link:.powerups/packages/sdk
+  '@liolocs/powerups-sdk': link:packages/sdk
 
 importers:
 
   .:
     dependencies:
+      '@liolocs/powerups-sdk':
+        specifier: link:packages/sdk
+        version: link:packages/sdk
       '@rcompat/test':
         specifier: ^0.20.0
         version: 0.20.0
@@ -80,7 +83,7 @@ importers:
         version: 0.8.2
     devDependencies:
       '@liolocs/powerups-sdk':
-        specifier: workspace:^
+        specifier: link:../sdk
         version: link:../sdk
       '@liolocs/program':
         specifier: workspace:^

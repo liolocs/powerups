@@ -26,6 +26,7 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@liolocs/powerups-sdk": "link:packages/sdk",
     "@rcompat/test": "^0.20.0",
     "@types/node": "^25.9.3",
     "@typescript/native-preview": "7.0.0-dev.20260615.1",

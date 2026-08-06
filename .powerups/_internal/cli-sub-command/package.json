@@ -20,5 +20,6 @@
     }
   },
   "devDependencies": {
+    "@liolocs/powerups-sdk": "link:../../packages/sdk"
   }
 }

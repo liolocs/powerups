@@ -24,36 +24,36 @@ const instructions: Instructions = {
   ],
   steps: [
     {
-      "type": "create",
-      "name": "parent-command.ts",
-      "template": "template/parent-command.ts",
-      "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
+      type: "create",
+      name: "parent-command.ts",
+      template: "templates/parent-command.ts",
+      outputPath: "packages/cli/src/private/commands/{{commandName}}/index.ts"
     },
    {
-      "type": "include",
-      "name": "cli-command",
-      "variables": {
-        "commandName": "{{commandName}}",
-        "description": "{{description}}",
-        "flags": "[]",
-        "errorCases": "{{errorCases}}"
+     type: "include",
+     name: "cli-command",
+     variables: {
+       commandName: "{{commandName}}",
+       description: "{{description}}",
+       flags: "[]",
+       errorCases: "{{errorCases}}"
       },
-      "excludeSteps": [
+     excludeSteps: [
         "command.ts",
         "spec.ts"
       ]
     },
     {
-      "type": "include",
-      "name": "cli-subcommand",
-      "variables": {
-        "parentCommand": "{{commandName}}",
-        "subcommandName": "{{subcommandName}}",
-        "description": "{{subcommandDescription}}",
-        "flags": "{{subcommandFlags}}",
-        "errorCases": "{{subcommandErrorCases}}"
+      type: "include",
+      name: "cli-subcommand",
+      variables: {
+        parentCommand: "{{commandName}}",
+        subcommandName: "{{subcommandName}}",
+        description: "{{subcommandDescription}}",
+        flags: "{{subcommandFlags}}",
+        errorCases: "{{subcommandErrorCases}}"
       },
-      "excludeSteps": [
+      excludeSteps: [
         "modify-index"
       ]
     }

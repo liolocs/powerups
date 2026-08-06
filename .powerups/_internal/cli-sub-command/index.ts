@@ -19,29 +19,29 @@ const instructions: Instructions = {
   ],
   steps: [
     {
-      "type": "create",
-      "name": "subcommand.ts",
-      "template": "template/subcommand.ts",
-      "outputPath": "packages/cli/src/private/commands/{{parentCommand}}/{{subcommandName}}.ts",
+      type: "create",
+      name: "subcommand.ts",
+      template: "templates/subcommand.ts",
+      outputPath: "packages/cli/src/private/commands/{{parentCommand}}/{{subcommandName}}.ts",
     },
     {
-      "type": "create",
-      "name": "subcommand-spec.ts",
-      "template": "template/subcommand-spec.ts",
-      "outputPath": "packages/cli/src/private/commands/{{parentCommand}}/{{subcommandName}}.spec.ts",
+      type: "create",
+      name: "subcommand-spec.ts",
+      template: "templates/subcommand-spec.ts",
+      outputPath: "packages/cli/src/private/commands/{{parentCommand}}/{{subcommandName}}.spec.ts",
     },
     {
-      "type": "modify",
-      "name": "modify-index",
-      "template": "template/modify-index.ts",
-      "outputPath": "packages/cli/src/private/commands/{{parentCommand}}/index.ts",
+      type: "modify",
+      name: "modify-index",
+      template: "templates/modify-index.ts",
+      outputPath: "packages/cli/src/private/commands/{{parentCommand}}/index.ts",
     },
     {
-      "type": "modify",
-      "name": "modify-errors",
-      "template": "template/modify-errors.ts",
-      "outputPath": "packages/cli/src/private/errors/{{parentCommand}}Errors.ts",
-    }
+      type: "modify",
+      name: "modify-errors",
+      template: "templates/modify-errors.ts",
+      outputPath: "packages/cli/src/private/errors/{{parentCommand}}Errors.ts",
+    },
   ],
 };
 

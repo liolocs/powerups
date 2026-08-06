@@ -1,7 +1,6 @@
 import test from "@rcompat/test";
 import create from "#commands/create/index";
 import { instructionsSchema } from "#schemas/instruction";
-import { extractPackageDependencies } from "#utils/create/create-powerup";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { CodeError } from "@rcompat/error";
@@ -16,6 +15,7 @@ import {
   CONFIG_FILE,
   CLI_NAME,
 } from "#constants";
+import { extractPackageDependencies } from "#utils/create/steps/extract-deps-from-package-changes";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");

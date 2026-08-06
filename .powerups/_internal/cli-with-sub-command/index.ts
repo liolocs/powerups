@@ -1,8 +1,11 @@
-{
-  "name": "cli-command-with-subcommands",
-  "description": "Scaffold a parent command with requiresSubcommand and its first subcommand together",
-  "variables": {
-    "required": [
+import { instructionsSchema, type Instructions } from "@liolocs/powerups-sdk";
+
+const instructions: Instructions = {
+  name: "cli-with-sub-commands",
+  type: "multi-use",
+  description: "Scaffold a CLI with subcommands",
+  variables: {
+    required: [
       "commandName",
       "description",
       "subcommandName",
@@ -10,27 +13,23 @@
       "subcommandFlags",
       "subcommandErrorCases"
     ],
-    "optional": [
+    optional: [
       "errorCases"
     ]
   },
-  "intent": [
-    "cli",
-    "command",
-    "subcommand",
-    "parent",
-    "scaffold",
-    "generate",
-    "combined"
+  intent: [
+    "create a new command and perhaps subcommands for a CLI command",
+    "scaffold a command and subcommands with flags and error handling",
+    "combined command and subcommands",
   ],
-  "steps": [
+  steps: [
     {
       "type": "create",
       "name": "parent-command.ts",
-      "template": "template/parent-command.ts.ts",
+      "template": "template/parent-command.ts",
       "outputPath": "packages/cli/src/private/commands/{{commandName}}/index.ts"
     },
-    {
+   {
       "type": "include",
       "name": "cli-command",
       "variables": {
@@ -58,5 +57,8 @@
         "modify-index"
       ]
     }
-  ]
-}
+  ],
+};
+
+// Validate at module load time so mismatches are caught early
+export default () => instructionsSchema.parse(instructions);

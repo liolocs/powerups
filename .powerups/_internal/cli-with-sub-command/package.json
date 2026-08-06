@@ -1,0 +1,26 @@
+{
+  "name": "cli-with-sub-command",
+  "version": "1.0.0",
+  "description": "Scaffold a CLI with subcommands",
+  "type": "module",
+  "scripts": {
+    "build": "pup build"
+  },
+  "keywords": [
+    "powerups-package"
+  ],
+  "powerup": {
+    "instructions": "index.ts",
+    "compatibility": {}
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "devDependencies": {
+    "@liolocs/powerups-sdk": "workspace:*",
+    "@liolocs/powerups-cli": "workspace:*"
+  }
+}

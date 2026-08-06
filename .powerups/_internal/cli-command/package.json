@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Scaffold a CLI with a command",
   "type": "module",
+  "scripts": {
+    "build": "pup build"
+  },
   "keywords": [
     "powerups-package"
   ],
@@ -15,5 +18,9 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
+  },
+  "devDependencies": {
+    "@liolocs/powerups-sdk": "workspace:*",
+    "@liolocs/powerups-cli": "workspace:*"
   }
 }

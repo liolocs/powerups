@@ -18,17 +18,18 @@
     "publish:cli": "pnpm --filter @liolocs/powerups-cli publish --access public"
   },
   "devDependencies": {
+    "@rcompat/is": "^0.12.0",
     "@rcompat/string": "^0.22.0",
     "apekit": "0.0.58",
     "eslint": "^10.5.0",
     "knip": "^6.20.0",
-    "typescript": "^6.0.3",
-    "@rcompat/is": "^0.12.0"
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "@rcompat/test": "^0.20.0",
     "@types/node": "^25.9.3",
     "@typescript/native-preview": "7.0.0-dev.20260615.1",
-    "proby": "^0.22.0"
+    "proby": "^0.22.0",
+    "sdk": "link:.powerups/packages/sdk"
   }
 }

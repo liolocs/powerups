@@ -1,4 +1,4 @@
-import fs, { type FileRef } from "@rcompat/fs";
+import { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import { Command } from "@liolocs/program";
@@ -11,7 +11,6 @@ import {
 } from "#constants";
 
 export async function buildPowerup(cwd: FileRef): Promise<void> {
-  // 1. Read package.json
   const packageJsonRef = cwd.append(`/${PACKAGE_FILE}`);
 
   if (!(await packageJsonRef.exists())) {
@@ -20,13 +19,13 @@ export async function buildPowerup(cwd: FileRef): Promise<void> {
 
   const pkgJson = await packageJsonRef.json() as Record<string, unknown>;
 
-  // 2. Guard: confirm this is a powerups package
+  // Guard: confirm this is a powerups package
   const keywords = pkgJson.keywords;
   if (!Array.isArray(keywords) || !keywords.includes(KEYWORD_PACKAGE)) {
     throw build_errors.not_a_powerups_package();
   }
 
-  // 3. Validate the powerup property
+  // Validate the powerup property
   const powerupResult = powerupPropertySchema.safeParse(
     pkgJson[SINGULAR_NAME],
   );
@@ -38,7 +37,7 @@ export async function buildPowerup(cwd: FileRef): Promise<void> {
   const instructionsPath = powerupResult.data.instructions;
   const tsFileRef = cwd.append(`/${instructionsPath}`);
 
-  // 4. Execute the TS file
+  // Execute the TS file
   const module = await tsFileRef.import();
 
   if (typeof module.default !== "function") {
@@ -47,7 +46,7 @@ export async function buildPowerup(cwd: FileRef): Promise<void> {
 
   const instructions = module.default();
 
-  // 5. Validate the instructions
+  //Validate the instructions
   const instructionsResult = instructionsSchema.safeParse(instructions);
 
   if (!instructionsResult.success) {
@@ -56,7 +55,7 @@ export async function buildPowerup(cwd: FileRef): Promise<void> {
 
   const validated = instructionsResult.data;
 
-  // 6. Create dist folder (clean rebuild)
+  //Create dist folder (clean rebuild)
   const distRef = cwd.append("/dist");
 
   if (await distRef.exists()) {
@@ -65,10 +64,10 @@ export async function buildPowerup(cwd: FileRef): Promise<void> {
 
   await distRef.create();
 
-  // 7. Write instructions.json
+  //Write instructions.json
   await distRef.append("/instructions.json").writeJSON(validated);
 
-  // 8. Copy template files
+  //Copy template files
   const templatePaths = new Set<string>();
 
   for (const step of validated.steps) {
@@ -91,7 +90,7 @@ export async function buildPowerup(cwd: FileRef): Promise<void> {
     await srcRef.copy(destRef);
   }
 
-  // 9. Print success
+  //Print success
   const green = cli.fg.green;
   const dim = cli.fg.dim;
 

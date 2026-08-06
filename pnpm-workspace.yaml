@@ -1,4 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - .powerups/internal/cli-command
 minimumReleaseAge: 0
+overrides:
+  sdk: link:.powerups/packages/sdk

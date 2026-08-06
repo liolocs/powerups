@@ -1,4 +1,6 @@
-import { instructionsSchema, type Instructions } from "@liolocs/powerups-sdk";
+import { defineInstructions, includePowerup, type Instructions } from "@liolocs/powerups-sdk";
+import cliCommand from "cli-command";
+import cliSubCommand from "cli-sub-command";
 
 const instructions: Instructions = {
   name: "cli-with-sub-commands",
@@ -11,11 +13,9 @@ const instructions: Instructions = {
       "subcommandName",
       "subcommandDescription",
       "subcommandFlags",
-      "subcommandErrorCases"
+      "subcommandErrorCases",
     ],
-    optional: [
-      "errorCases"
-    ]
+    optional: ["errorCases"],
   },
   intent: [
     "create a new command and perhaps subcommands for a CLI command",
@@ -27,38 +27,30 @@ const instructions: Instructions = {
       type: "create",
       name: "parent-command.ts",
       template: "templates/parent-command.ts",
-      outputPath: "packages/cli/src/private/commands/{{commandName}}/index.ts"
+      outputPath: "packages/cli/src/private/commands/{{commandName}}/index.ts",
     },
-   {
-     type: "include",
-     name: "cli-command",
-     variables: {
-       commandName: "{{commandName}}",
-       description: "{{description}}",
-       flags: "[]",
-       errorCases: "{{errorCases}}"
+    ...includePowerup(cliCommand, {
+      namespace: "command",
+      variables: {
+        commandName: "{{commandName}}",
+        description: "{{description}}",
+        flags: "[]",
+        errorCases: "{{errorCases}}",
       },
-     excludeSteps: [
-        "command.ts",
-        "spec.ts"
-      ]
-    },
-    {
-      type: "include",
-      name: "cli-sub-command",
+      excludeSteps: ["command", "spec"],
+    }),
+    ...includePowerup(cliSubCommand, {
+      namespace: "subcommand",
       variables: {
         parentCommand: "{{commandName}}",
         subcommandName: "{{subcommandName}}",
         description: "{{subcommandDescription}}",
         flags: "{{subcommandFlags}}",
-        errorCases: "{{subcommandErrorCases}}"
+        errorCases: "{{subcommandErrorCases}}",
       },
-      excludeSteps: [
-        "modify-index"
-      ]
-    }
+      excludeSteps: ["modify-index"],
+    }),
   ],
 };
 
-// Validate at module load time so mismatches are caught early
-export default () => instructionsSchema.parse(instructions);
+export default defineInstructions(instructions, import.meta.url);

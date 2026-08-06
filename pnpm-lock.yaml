@@ -72,6 +72,15 @@ importers:
       '@liolocs/powerups-sdk':
         specifier: link:../../../packages/sdk
         version: link:../../../packages/sdk
+      cli-command:
+        specifier: file:../cli-command
+        version: link:../cli-command
+      cli-sub-command:
+        specifier: file:../cli-sub-command
+        version: link:../cli-sub-command
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(jiti@2.7.0)(typescript@6.0.3)(yaml@2.9.0)
 
   packages/cli:
     dependencies:

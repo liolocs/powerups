@@ -131,6 +131,24 @@ const use_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  working_tree_dirty: () => {
+    const errorText =
+      "Working tree is not clean. Commit or stash your changes before running pup use.";
+    return t`${errorBGText}${errorText}`;
+  },
+
+  instructions_not_built: (name: string) => {
+    const errorText =
+      `No built instructions for ${name}. Run "pup build" in the powerup package first.`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  already_applied: (name: string) => {
+    const errorText =
+      `${CAPITALIZED_SINGLULAR_CLI_NAME} ${name} is single-use and has already been applied.`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   worktree_creation_failed: (message: string) => {
     const errorText = `Failed to create git worktree: ${message}`;
     return t`${errorBGText}${errorText}`;

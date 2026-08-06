@@ -1,4 +1,4 @@
-import { instructionsSchema, type Instructions } from "@liolocs/powerups-sdk";
+import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";
 
 const instructions: Instructions = {
   name: "cli-command",
@@ -41,5 +41,4 @@ const instructions: Instructions = {
   ],
 };
 
-// Validate at module load time so mismatches are caught early
-export default () => instructionsSchema.parse(instructions);
+export default defineInstructions(instructions, import.meta.url);

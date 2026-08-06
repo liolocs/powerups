@@ -45,7 +45,7 @@ const instructions: Instructions = {
     },
     {
       type: "include",
-      name: "cli-subcommand",
+      name: "cli-sub-command",
       variables: {
         parentCommand: "{{commandName}}",
         subcommandName: "{{subcommandName}}",

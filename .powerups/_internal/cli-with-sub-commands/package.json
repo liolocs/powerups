@@ -1,5 +1,5 @@
 {
-  "name": "cli-with-sub-command",
+  "name": "cli-with-sub-commands",
   "version": "1.0.0",
   "description": "Scaffold a CLI with subcommands",
   "type": "module",

@@ -11,7 +11,7 @@ export default defineConfig({
   splitting: false,
   // Force-inline the workspace program. Everything in `dependencies`                                                                                            
   // (@rcompat/*, nunjucks, pema) is auto-externalized and stays installable.                                                                                    
-  noExternal: ["@liolocs/program"],
+  noExternal: ["@liolocs/program", "@liolocs/powerups-sdk"],
   // banner: { js: "#!/usr/bin/env node" },
   define: { "process.env.BUNDLED": '"1"' },   
 });

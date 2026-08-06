@@ -73,6 +73,9 @@ importers:
         specifier: ^0.8.2
         version: 0.8.2
     devDependencies:
+      '@liolocs/powerups-sdk':
+        specifier: workspace:^
+        version: link:../sdk
       '@liolocs/program':
         specifier: workspace:^
         version: link:../program

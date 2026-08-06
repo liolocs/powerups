@@ -1,8 +1,2 @@
-// import CLI from "#CLI";
-
-// export { default as Command } from "#Command";
-// export type { Flag } from "#Command";
-// export default CLI;
-
-// export { default as CommandErrors } from "#errors/CommandErrors";
-// export * from "#errors/CommandErrors";
+export { powerupPropertySchema, type PowerupProperty } from "#schema/powerup";
+export { instructionsSchema, type Instructions, type Step } from "#schema/instructions";

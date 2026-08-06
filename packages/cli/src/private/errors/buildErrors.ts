@@ -32,7 +32,27 @@ const build_errors = error.coded({
   invalid_instructions_file: (fileName: string) => {
     const errorText =
       `Invalid instructions file: ${fileName}\n` +
-      `Must export a default function that returns an Instructions object.`;
+      `Must default-export the result of defineInstructions(...).`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  tsup_not_installed: () => {
+    const errorText =
+      `pup build requires tsup — add it as a devDependency of this powerup package.\n` +
+      `Run: npm i -D tsup (or pnpm add -D tsup)`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  build_validation_failed: (issues: string[]) => {
+    const issueList = issues.map(i => `  - ${i}`).join("\n");
+    const errorText = `Build validation failed:\n${issueList}`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  child_not_built: (childName: string) => {
+    const errorText =
+      `Included powerup "${childName}" has no dist/ — build it first.\n` +
+      `Run "pup build" in the ${childName} package, then rebuild the parent.`;
     return t`${errorBGText}${errorText}`;
   },
 

@@ -1,4 +1,4 @@
-import fs, { type FileRef } from "@rcompat/fs";
+import type { FileRef } from "@rcompat/fs";
 import type { Instructions, Step } from "@liolocs/powerups-sdk";
 
 export interface BuildValidationContext {
@@ -50,17 +50,6 @@ export async function validateInstructions(
       issues.push(`duplicate step name: ${step.name}`);
     }
     seen.add(step.name);
-  }
-
-  // own template existence (_internal templates are resolved at copy time)
-  for (const step of instructions.steps) {
-    const tmpl = templateOf(step);
-    if (tmpl && !tmpl.startsWith("_internal/")) {
-      const ref = ctx.outputFolder.append(`/${tmpl}`);
-      if (!(await fs.exists(ref))) {
-        issues.push(`missing template file: ${tmpl}`);
-      }
-    }
   }
 
   // variable availability (read-produced vars accumulate in order)

@@ -41,19 +41,6 @@ test.case("flags duplicate step names", async assert => {
   assert(issues.some(i => i.includes("duplicate step name: a"))).true();
 });
 
-test.case("flags missing own template", async assert => {
-  const dir = tmpBase.append("/missing");
-  await fs.create(dir);
-  const issues = await validateInstructions(
-    mkInstructions([
-      { type: "create", name: "a", template: "templates/missing.ts", outputPath: "x" },
-    ]),
-    { outputFolder: dir },
-  );
-  assert(issues.some(i => i.includes("missing template file: templates/missing.ts"))).true();
-  await dir.remove({ recursive: true });
-});
-
 test.case("flags unknown variable in outputPath", async assert => {
   const issues = await validateInstructions(
     mkInstructions([

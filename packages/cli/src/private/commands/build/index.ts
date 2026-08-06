@@ -65,7 +65,7 @@ export async function buildPowerup(cwd: FileRef): Promise<void> {
   const distRef = cwd.append("/dist");
   const distIndex = distRef.append("/index.js");
 
-  // 1. Compile with tsup (dts: true, ESM, all declared deps external)
+  // 1. Compile with tsup (ESM, all declared deps external)
   const tsup = await resolveTsup(cwd);
   if (await distRef.exists()) {
     await distRef.remove({ recursive: true });
@@ -76,7 +76,9 @@ export async function buildPowerup(cwd: FileRef): Promise<void> {
     entry: [entryPath],
     outDir: "dist",
     format: ["esm"],
-    dts: true,
+    // dts emission deferred — TS 6.0 baseUrl deprecation in tsup's dts pipeline;
+    // re-enable once the dts/tsconfig friction is resolved (type-safety across packages).
+    dts: false,
     external: collectExternals(pkgJson),
     splitting: false,
     clean: false,

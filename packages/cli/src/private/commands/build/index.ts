@@ -4,10 +4,15 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@liolocs/program";
 import { powerupPropertySchema, instructionsSchema, type Instructions, type Step } from "@liolocs/powerups-sdk";
 import build_errors from "#errors/buildErrors";
-import { validateInstructions } from "#utils/build-validation";
+import { validateInstructions } from "#utils/build/check-initial-build-for-errors/build-validation";
 import { resolveTsup } from "#utils/tsup-resolver";
 import { SINGULAR_NAME_FOR_CLI, PACKAGE_JSON, PACKAGE_JSON_KEYWORD_PROPERTY } from "#constants";
 import checkForBuildErrors from "#utils/build/check-build-errors";
+import createInitialBuild from "#utils/build/create-initial-build";
+import checkInitialBuildForErrors from "#utils/build/check-initial-build-for-errors/index";
+import createInstructionsJSONFile from "#utils/build/create-instructions-json-file";
+import copyTemplatesToDistFolder from "#utils/build/copy-templates-to-dist-folder";
+import { getPackageJson } from "#utils/build/getPackageJson";
 
 function fileUrlToDir(sourceUrl: string): FileRef {
   // sourceUrl is import.meta.url of a dist/index.js — walk up to the package root
@@ -165,8 +170,33 @@ const build = new Command({
   flags: [],
   subcommands: [],
   action: async () => {
-    // await buildPowerup(runtime.cwd());
-    checkForBuildErrors(runtime.cwd());
+    await checkForBuildErrors(runtime.cwd());
+
+    const pkgJson = await getPackageJson(runtime.cwd());
+
+    const { validatedPowerup, outputFolder: distFolderRef } =
+      await createInitialBuild({ cwd: runtime.cwd(), pkgJson });
+
+    const {
+      validatedCompiledInstructions,
+      sourceFromCompiledInstructions,
+    } = await checkInitialBuildForErrors({
+      validatedPowerup,
+      buildOutputFolder: distFolderRef,
+    });
+
+    await createInstructionsJSONFile({
+      validatedCompiledInstructions,
+      outputFolderRef: distFolderRef,
+    });
+
+    await copyTemplatesToDistFolder({
+      instructionSteps: validatedCompiledInstructions.steps,
+      cwd: runtime.cwd(),
+      distFileRef: distFolderRef,
+      sourceFromCompiledInstructions,
+      pkgJson,
+    });
   },
 });
 

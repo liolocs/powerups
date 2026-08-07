@@ -47,14 +47,14 @@
     "@rcompat/string": "^0.22.0",
     "@rcompat/type": "^0.18.0",
     "nunjucks": "^3.2.4",
-    "pema": "^0.8.2"
+    "pema": "^0.8.2",
+    "tsup": "^8.5.1"
   },
   "devDependencies": {
     "@liolocs/program": "workspace:^",
     "@liolocs/powerups-sdk": "workspace:^",
     "@types/nunjucks": "^3.2.6",
-    "commit-and-tag-version": "^13.1.2",
-    "tsup": "^8.5.1"
+    "commit-and-tag-version": "^13.1.2"
   },
   "bin": {
     "pup": "./lib/bin.js"

@@ -7,6 +7,7 @@ import build_errors from "#errors/buildErrors";
 import { validateInstructions } from "#utils/build-validation";
 import { resolveTsup } from "#utils/tsup-resolver";
 import { SINGULAR_NAME_FOR_CLI, PACKAGE_JSON, PACKAGE_JSON_KEYWORD_PROPERTY } from "#constants";
+import checkForBuildErrors from "#utils/build/check-build-errors";
 
 function fileUrlToDir(sourceUrl: string): FileRef {
   // sourceUrl is import.meta.url of a dist/index.js — walk up to the package root
@@ -164,7 +165,8 @@ const build = new Command({
   flags: [],
   subcommands: [],
   action: async () => {
-    await buildPowerup(runtime.cwd());
+    // await buildPowerup(runtime.cwd());
+    checkForBuildErrors(runtime.cwd());
   },
 });
 

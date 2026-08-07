@@ -26,6 +26,7 @@ const childInstructions: Instructions = {
 
 test.case("defineInstructions wraps instructions and source", async assert => {
   const out = defineInstructions(childInstructions, "file:///child/dist/index.js");
+
   assert(out.instructions).defined();
   assert(out.source).equals("file:///child/dist/index.js");
 });
@@ -35,6 +36,7 @@ test.case("includePowerup prefixes templates, renames steps, attaches maps", asy
   const steps = includePowerup(child, {
     variables: { commandName: "{{name}}", flags: "[]" },
   });
+
   assert(steps.length).equals(2);
   assert(steps[0].name).equals("child:command");
   assert((steps[0] as any).template).equals("_internal/child/templates/command.ts");
@@ -50,6 +52,7 @@ test.case("includePowerup honors excludeSteps", async assert => {
     variables: { commandName: "{{name}}" },
     excludeSteps: ["spec"],
   });
+
   assert(steps.length).equals(1);
   assert(steps[0].name).equals("child:command");
 });
@@ -62,6 +65,7 @@ test.case("includePowerup applies stepOverride", async assert => {
       command: { type: "create", template: "templates/other.ts", outputPath: "src/{{commandName}}.ts" },
     },
   });
+
   assert((steps[0] as any).template).equals("_internal/child/templates/other.ts");
 });
 
@@ -71,6 +75,7 @@ test.case("includePowerup uses explicit namespace", async assert => {
     namespace: "alias",
     variables: { commandName: "{{name}}" },
   });
+
   assert(steps[0].name).equals("alias:command");
   assert((steps[0] as any).template).equals("_internal/alias/templates/command.ts");
 });
@@ -88,6 +93,7 @@ test.case("includePowerup marks single-use children", async assert => {
   };
   const child = defineInstructions(singleUseChild, "file:///once/dist/index.js");
   const steps = includePowerup(child, { variables: { x: "{{name}}" } });
+
   assert((steps[0] as any).from.singleUse).true();
 });
 
@@ -118,6 +124,7 @@ test.case("includePowerup composes variableMap for transitive includes", async a
   });
   // parent map first, child's existing map second
   const map = (steps[0] as any).variableMap;
+
   assert(Object.keys(map)[0]).equals("commandName");
   assert(Object.keys(map)[1]).equals("grandName");
   assert(map.grandName).equals("{{commandName}}");

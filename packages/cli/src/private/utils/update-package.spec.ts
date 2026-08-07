@@ -3,7 +3,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import io from "@rcompat/io";
 import { updateNpmPackage, updateGitPackage } from "#utils/update-package";
-import { NPM_STORE, PACKAGE_FILE, GIT_STORE } from "#constants";
+import { FOLDER_FOR_NPM_INSTALLED_PACKAGES, PACKAGE_JSON, FOLDER_FOR_GIT_INSTALLED_PACKAGES } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -28,7 +28,7 @@ async function gitCommit(dir: FileRef, message: string): Promise<void> {
 
 /** Write a minimal package.json into a directory. */
 async function writePkgJson(dir: FileRef, name: string, version: string): Promise<void> {
-  await dir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await dir.append(`/${PACKAGE_JSON}`).writeJSON({
     name,
     version,
     description: "test package",
@@ -47,7 +47,7 @@ test.group("updateNpmPackage", () => {
 
     // Create the npm store directory but no package inside
     const storeRoot = testRoot.append("/store");
-    await fs.create(storeRoot.append(`/${NPM_STORE}/node_modules`));
+    await fs.create(storeRoot.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules`));
 
     const result = await updateNpmPackage(
       storeRoot,
@@ -68,13 +68,13 @@ test.group("updateNpmPackage", () => {
 
     // Create a fake package in the store with a name that won't exist on npm
     const storeRoot = testRoot.append("/store");
-    const pkgDir = storeRoot.append(`/${NPM_STORE}/node_modules/totally-fake-pkg-xyz-123`);
+    const pkgDir = storeRoot.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/totally-fake-pkg-xyz-123`);
     await fs.create(pkgDir);
     await writePkgJson(pkgDir, "totally-fake-pkg-xyz-123", "1.0.0");
 
     // Create the store's own package.json
-    const npmDir = storeRoot.append(`/${NPM_STORE}`);
-    await npmDir.append(`/${PACKAGE_FILE}`).writeJSON({
+    const npmDir = storeRoot.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}`);
+    await npmDir.append(`/${PACKAGE_JSON}`).writeJSON({
       name: "powerups-extensions",
       private: true,
       dependencies: {},
@@ -102,9 +102,9 @@ test.group("updateNpmPackage", () => {
     // Create the npm store with a real small package installed at its latest version.
     // We'll use npm to install it so the version matches.
     const storeRoot = testRoot.append("/store");
-    const npmDir = storeRoot.append(`/${NPM_STORE}`);
+    const npmDir = storeRoot.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}`);
     await fs.create(npmDir);
-    await npmDir.append(`/${PACKAGE_FILE}`).writeJSON({
+    await npmDir.append(`/${PACKAGE_JSON}`).writeJSON({
       name: "powerups-extensions",
       private: true,
       dependencies: {},
@@ -121,7 +121,7 @@ test.group("updateNpmPackage", () => {
     }
 
     // Read the installed version
-    const pkgJsonPath = npmDir.append(`/node_modules/left-pad/${PACKAGE_FILE}`);
+    const pkgJsonPath = npmDir.append(`/node_modules/left-pad/${PACKAGE_JSON}`);
     if (!(await fs.exists(pkgJsonPath))) {
       await testRoot.remove();
       assert(true).true();
@@ -151,9 +151,9 @@ test.group("updateNpmPackage", () => {
     await reset();
 
     const storeRoot = testRoot.append("/store");
-    const npmDir = storeRoot.append(`/${NPM_STORE}`);
+    const npmDir = storeRoot.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}`);
     await fs.create(npmDir);
-    await npmDir.append(`/${PACKAGE_FILE}`).writeJSON({
+    await npmDir.append(`/${PACKAGE_JSON}`).writeJSON({
       name: "powerups-extensions",
       private: true,
       dependencies: { "left-pad": "1.0.0" }, // pin old version
@@ -203,7 +203,7 @@ test.group("updateGitPackage", () => {
     const result = await updateGitPackage(
       storeRoot,
       "https://localhost/test/pkg",
-      `${GIT_STORE}/localhost/test/pkg`,
+      `${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/localhost/test/pkg`,
       "global",
     );
 
@@ -226,7 +226,7 @@ test.group("updateGitPackage", () => {
 
     // 2. Clone into the store
     const storeRoot = testRoot.append("/store");
-    const clonePath = `${GIT_STORE}/localhost/test/pkg`;
+    const clonePath = `${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/localhost/test/pkg`;
     const cloneDir = storeRoot.append(`/${clonePath}`);
     await fs.create(cloneDir.directory);
     await io.run(`git clone "${remoteDir.path}" "${cloneDir.path}"`);
@@ -257,7 +257,7 @@ test.group("updateGitPackage", () => {
 
     // 2. Clone into the store
     const storeRoot = testRoot.append("/store");
-    const clonePath = `${GIT_STORE}/localhost/test/pkg`;
+    const clonePath = `${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/localhost/test/pkg`;
     const cloneDir = storeRoot.append(`/${clonePath}`);
     await fs.create(cloneDir.directory);
     await io.run(`git clone "${remoteDir.path}" "${cloneDir.path}"`);
@@ -280,7 +280,7 @@ test.group("updateGitPackage", () => {
     assert(result.oldVersion !== result.newVersion).true();
 
     // Verify the clone was actually updated
-    const pkg = JSON.parse(await cloneDir.append(`/${PACKAGE_FILE}`).text());
+    const pkg = JSON.parse(await cloneDir.append(`/${PACKAGE_JSON}`).text());
     assert(pkg.version).equals("2.0.0");
 
     await testRoot.remove();
@@ -291,7 +291,7 @@ test.group("updateGitPackage", () => {
 
     // Create a repo with a broken remote (origin points to non-existent path)
     const storeRoot = testRoot.append("/store");
-    const clonePath = `${GIT_STORE}/localhost/test/pkg`;
+    const clonePath = `${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/localhost/test/pkg`;
     const repoDir = storeRoot.append(`/${clonePath}`);
     await fs.create(repoDir);
     await gitInit(repoDir);

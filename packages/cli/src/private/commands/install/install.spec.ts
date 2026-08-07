@@ -12,13 +12,13 @@ import {
   buildConfigEntry,
 } from "#utils/parse-powerup-fragment";
 import {
-  MAIN_FOLDER,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
+  CLI_FOLDER_NAME,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
   CLI_NAME,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  CONFIG_FILE,
+  CONFIG_FILE_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -28,19 +28,19 @@ async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
   // Create local .powerups (simulates project init)
-  await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
   // Create global ~/.powerups (simulates global init) in testRoot
-  await fs.create(testRoot.append(`/global-${MAIN_FOLDER}`));
+  await fs.create(testRoot.append(`/global-${CLI_FOLDER_NAME}`));
 }
 
 /**
  * Write a valid powerups package.json into a store path (simulates the
  * post-fetch state). The real npm/git fetch is not invoked by these tests.
  */
-async function writePackageJson(storeRoot: string, storePath: string, name: string, keywords = [KEYWORD_PACKAGE]) {
+async function writePackageJson(storeRoot: string, storePath: string, name: string, keywords = [PACKAGE_JSON_KEYWORD_PROPERTY]) {
   const pkgDir = testRoot.append(`/${storeRoot}/${storePath}`);
   await fs.create(pkgDir);
-  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
     name,
     version: "1.0.0",
     description: "test",
@@ -117,25 +117,25 @@ test.group("install — fragment parsing (pure functions)", () => {
 test.group("install — powerups-package validation logic", () => {
   test.case("accepts a package with the powerups-package keyword", async assert => {
     await reset();
-    await writePackageJson(`${MAIN_FOLDER}`, "npm/node_modules/good-pkg", "good-pkg");
+    await writePackageJson(`${CLI_FOLDER_NAME}`, "npm/node_modules/good-pkg", "good-pkg");
     const pkgJson = packageJsonSchema.parse(
       await testRoot
-        .append(`/${MAIN_FOLDER}/npm/node_modules/good-pkg/${PACKAGE_FILE}`)
+        .append(`/${CLI_FOLDER_NAME}/npm/node_modules/good-pkg/${PACKAGE_JSON}`)
         .json(),
     );
-    assert(pkgJson.keywords.includes(KEYWORD_PACKAGE)).true();
+    assert(pkgJson.keywords.includes(PACKAGE_JSON_KEYWORD_PROPERTY)).true();
     await testRoot.remove();
   });
 
   test.case("rejects a package without the powerups-package keyword", async assert => {
     await reset();
-    await writePackageJson(`${MAIN_FOLDER}`, "npm/node_modules/bad-pkg", "bad-pkg", ["other-keyword"]);
+    await writePackageJson(`${CLI_FOLDER_NAME}`, "npm/node_modules/bad-pkg", "bad-pkg", ["other-keyword"]);
     const pkgJson = packageJsonSchema.parse(
       await testRoot
-        .append(`/${MAIN_FOLDER}/npm/node_modules/bad-pkg/${PACKAGE_FILE}`)
+        .append(`/${CLI_FOLDER_NAME}/npm/node_modules/bad-pkg/${PACKAGE_JSON}`)
         .json(),
     );
-    assert(pkgJson.keywords.includes(KEYWORD_PACKAGE)).false();
+    assert(pkgJson.keywords.includes(PACKAGE_JSON_KEYWORD_PROPERTY)).false();
     await testRoot.remove();
   });
 });
@@ -144,7 +144,7 @@ test.group("install — guards", () => {
   test.case("global install throws global_not_initialized when global not initialized", async assert => {
     await reset();
     // Remove global folder
-    await testRoot.append(`/global-${MAIN_FOLDER}`).remove();
+    await testRoot.append(`/global-${CLI_FOLDER_NAME}`).remove();
     // Rename to simulate: global folder doesn't exist at the homeDir path
     // We need homeDir to point to a dir without .powerups
     const noGlobalRoot = testRoot.append("/no-global");
@@ -169,7 +169,7 @@ test.group("install — guards", () => {
   test.case("local install throws local_not_initialized when project not initialized", async assert => {
     await reset();
     // Remove local .powerups
-    await testRoot.append(`/${MAIN_FOLDER}`).remove();
+    await testRoot.append(`/${CLI_FOLDER_NAME}`).remove();
 
     let threw;
     try {

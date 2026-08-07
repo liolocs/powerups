@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_CMD, CLI_NAME, SINGULAR_NAME } from "#constants";
+import { CLI_CMD, CLI_NAME, SINGULAR_NAME_FOR_CLI } from "#constants";
 
 const t = error.template;
 
@@ -23,7 +23,7 @@ const pack_errors = error.coded({
     return t`${errorBGText}Invalid package name: "${name}". Package names must not be empty or contain slashes.`;
   },
   subpower_unresolvable: (subName: string, parentName: string) => {
-    return t`${errorBGText}Sub-${SINGULAR_NAME} ${subName} included by ${parentName} could not be resolved. Ensure it is in a config-listed package.`;
+    return t`${errorBGText}Sub-${SINGULAR_NAME_FOR_CLI} ${subName} included by ${parentName} could not be resolved. Ensure it is in a config-listed package.`;
   },
   circular_include: (chain: string) => {
     return t`${errorBGText}Circular include detected: ${chain}`;

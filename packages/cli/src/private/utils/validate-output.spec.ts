@@ -2,11 +2,11 @@ import test from "@rcompat/test";
 import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { validateOutputTree } from "#utils/validate-output";
-import { MAIN_FOLDER, MULTI_USE_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, MULTI_USE_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
-const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
+const mainFolder: FileRef = testRoot.append(`/${CLI_FOLDER_NAME}`);
 const multiUseFolder: FileRef = mainFolder.append(`/${MULTI_USE_FOLDER}`);
 
 async function reset() {

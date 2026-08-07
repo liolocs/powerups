@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_CMD, MAIN_FOLDER } from "#constants";
+import { CLI_CMD, CLI_FOLDER_NAME } from "#constants";
 
 const t = error.template;
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
@@ -27,7 +27,7 @@ const add_errors = error.coded({
   },
 
   project_not_initialized: () => {
-    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} project init" first.`;
+    const errorText = `${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first.`;
     return t`${errorBGText}${errorText}`;
   },
 });

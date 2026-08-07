@@ -6,12 +6,12 @@ export const CLI_CMD = "pup";
 
 export const CLI_NAME = "powerups";
 
-export const SINGULAR_NAME = "powerup";
-export const CAPITALIZED_SINGLULAR_CLI_NAME = string.upperfirst(SINGULAR_NAME);
+export const SINGULAR_NAME_FOR_CLI = "powerup";
+export const CAPITALIZED_SINGLULAR_CLI_NAME = string.upperfirst(SINGULAR_NAME_FOR_CLI);
 export const CAPITALIZED_CLI_NAME = string.upperfirst(CLI_NAME);
 
 /** Name of the main cli project folder, created at the project root. */
-export const MAIN_FOLDER = "." + CLI_NAME;
+export const CLI_FOLDER_NAME = "." + CLI_NAME;
 
 /** Subfolder for multi-use powerups (recurring patterns). */
 export const MULTI_USE_FOLDER = "multi-use";
@@ -19,14 +19,11 @@ export const MULTI_USE_FOLDER = "multi-use";
 /** Subfolder for single-use powerups (one-time additions). */
 export const SINGLE_USE_FOLDER = "single-use";
 
-/** Name of the config file storing project settings (e.g. chosen harness). */
-export const CONFIG_FILE = "config.json";
+export const CONFIG_FILE_NAME = "config.json";
 
-/** Name of the metrics log file, storing one JSON entry per output run. */
-export const METRICS_FILE = "metrics.jsonl";
+export const METRICS_FILE_NAME = "metrics.jsonl";
 
-/** Name of the applied-state manifest, recording every powerup applied to the project. */
-export const APPLIED_FILE = "applied.json";
+export const POWERUP_MANIFEST_FILE_NAME = "applied.json";
 
 export type PowerUpType = "multi-use" | "single-use";
 
@@ -35,41 +32,25 @@ export const powerupsFolderMap: Record<PowerUpType, string> = {
   "single-use": SINGLE_USE_FOLDER,
 };
 
-/** Subfolder inside .<MAIN_FOLDER>/ (or ~/.<MAIN_FOLDER>/) holding local packages. */
-export const INTERNAL_FOLDER = "internal";
+export const INTERNAL_FOLDER = "_internal";
 
-/** Name of the package.json file. */
-export const PACKAGE_FILE = "package.json";
+export const PACKAGE_JSON = "package.json";
 
-/** Keyword used in package.json so npm can find powerups packages. */
-export const KEYWORD_PACKAGE = `${CLI_NAME}-package`;
+export const PACKAGE_JSON_KEYWORD_PROPERTY = `${CLI_NAME}-package`;
 
-/** Property name in config.json listing installed packages. */
-export const PACKAGES_KEY = "packages";
+export const CONFIG_POWERUPS_KEY = "packages";
 
-/** Path to the global powerups directory (~/.<MAIN_FOLDER>/). */
-export const GLOBAL_ROOT = path.join(homedir(), MAIN_FOLDER);
+export const GLOBAL_ROOT = path.join(homedir(), CLI_FOLDER_NAME);
 
-/** Path to the global config file (~/.<MAIN_FOLDER>/config.json). */
-export const GLOBAL_CONFIG_PATH = path.join(GLOBAL_ROOT, CONFIG_FILE);
+export const GLOBAL_CONFIG_PATH = path.join(GLOBAL_ROOT, CONFIG_FILE_NAME);
 
-/** Path to the global internal packages folder (~/.<MAIN_FOLDER>/internal/). */
 export const GLOBAL_INTERNAL_PATH = path.join(GLOBAL_ROOT, INTERNAL_FOLDER);
 
-/** Subfolder for npm-installed packages. */
-export const NPM_STORE = "npm";
+export const FOLDER_FOR_NPM_INSTALLED_PACKAGES = "npm";
 
-/** Subfolder for git-cloned packages. */
-export const GIT_STORE = "git";
+export const FOLDER_FOR_GIT_INSTALLED_PACKAGES = "git";
 
-/** Fixed name for the managed npm store package.json. */
-export const NPM_EXTENSIONS_NAME = "powerups-extensions";
-
-/** Path to the global npm store (~/.<MAIN_FOLDER>/npm/). */
-export const GLOBAL_NPM_PATH = path.join(GLOBAL_ROOT, NPM_STORE);
-
-/** Path to the global git store (~/.<MAIN_FOLDER>/git/). */
-export const GLOBAL_GIT_PATH = path.join(GLOBAL_ROOT, GIT_STORE);
+export const NAME_FOR_NPM_PACKAGE_GLOBAL_GROUP = CLI_NAME;
 
 /** Global harness fingerprint paths for detection (relative to homeDir). */
 export const HARNESS_FINGERPRINTS = {

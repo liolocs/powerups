@@ -11,7 +11,7 @@ This skill has two entry modes. Determine which mode applies based on the
 user's request:
 
 **Mode A — User-directed capture:** The user points at specific files or a
-directory they've already written and wants to capture as a reusable {{ SINGULAR_NAME }}.
+directory they've already written and wants to capture as a reusable {{ SINGULAR_NAME_FOR_CLI }}.
 
 **Mode B — Survey capture:** The user wants you to survey an area of the
 codebase to find patterns worth capturing. No specific files are pointed at
@@ -19,7 +19,7 @@ codebase to find patterns worth capturing. No specific files are pointed at
 
 ### Prerequisites
 
-Before capturing a {{ SINGULAR_NAME }}, a package must exist for the {{ SINGULAR_NAME }} to live in. If no
+Before capturing a {{ SINGULAR_NAME_FOR_CLI }}, a package must exist for the {{ SINGULAR_NAME_FOR_CLI }} to live in. If no
 package exists yet, create one first:
 `{{ CLI_CMD }} pack create <package-name> --description="..."`
 
@@ -36,10 +36,10 @@ go in the same package.
 2. Read the files the user points at. Understand what was created or modified
    and what the work does.
 
-3. Run `{{ CLI_CMD }} find -q="<intent>"` to check if a similar {{ SINGULAR_NAME }}
+3. Run `{{ CLI_CMD }} find -q="<intent>"` to check if a similar {{ SINGULAR_NAME_FOR_CLI }}
    already exists. If one does, run `{{ CLI_CMD }} info <name>`
    to understand it. If it's similar enough, suggest reusing or extending the
-   existing {{ SINGULAR_NAME }} rather than creating a new one. If the new
+   existing {{ SINGULAR_NAME_FOR_CLI }} rather than creating a new one. If the new
    work partially overlaps existing powerups (same template files with minor
    variations), plan to use `include` steps to reference the existing
    powerups as subtemplates — only create new template files for the parts
@@ -48,25 +48,25 @@ go in the same package.
    overlapping powerup to understand its variables and file mapping, then
    determine how to compose the new powerup via `include` steps.
 
-4. Assess whether this is a single-use or multi-use {{ SINGULAR_NAME }}:
-   - A single-use {{ SINGULAR_NAME }} is a one-time addition to the project (e.g., add a dependency,
+4. Assess whether this is a single-use or multi-use {{ SINGULAR_NAME_FOR_CLI }}:
+   - A single-use {{ SINGULAR_NAME_FOR_CLI }} is a one-time addition to the project (e.g., add a dependency,
      set up auth). It can have variables (e.g., a project name, framework
      choice) or none at all.
-   - A multi-use {{ SINGULAR_NAME }} is a recurring pattern that will be repeated with different
+   - A multi-use {{ SINGULAR_NAME_FOR_CLI }} is a recurring pattern that will be repeated with different
      variable values (e.g., new API route, new view component).
 
    Present your assessment to the user and get confirmation on the type
    (single-use or multi-use) before proceeding. If the user later needs to
    switch types, the folder can simply be moved between
-   {{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/ and
-   {{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SINGLE_USE_FOLDER }}/.
+   {{ CLI_FOLDER_NAME }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/ and
+   {{ CLI_FOLDER_NAME }}/{{ INTERNAL_FOLDER }}/<package>/{{ SINGLE_USE_FOLDER }}/.
 
 5. Identify the capture structure:
    - Name (short, kebab-case)
    - Intent keywords (comma-separated)
    - Variables — the parts that change between uses. Both multi-use and
      single-use powers can have variables; for some single-use powers, variables may be empty.
-   - Steps: the ordered `steps` array the captured {{ SINGULAR_NAME }} will
+   - Steps: the ordered `steps` array the captured {{ SINGULAR_NAME_FOR_CLI }} will
      declare. Each step is one of:
        - `create` — render a template and write to `outputPath` (new file)
        - `modify` — render a modify template and apply patches to an existing
@@ -75,7 +75,7 @@ go in the same package.
        - `read` — read a project file and store a value as a variable for
          subsequent steps (use when the captured work depends on a value pulled
          from the project, e.g. a package name or config key)
-       - `include` — run another {{ SINGULAR_NAME }}'s steps inline (use when the
+       - `include` — run another {{ SINGULAR_NAME_FOR_CLI }}'s steps inline (use when the
          captured work overlaps an existing powerup; see the main instruction
          file for subtemplate mechanics)
      For each create/modify step: the step `name`, the template filename, and
@@ -100,17 +100,17 @@ go in the same package.
    Alternatively, if the work has already been done and the changes are visible
    in git, use `{{ CLI_CMD }} create <name> --working-dir` to auto-generate
    the steps and templates from git changes.
-   This creates the {{ SINGULAR_NAME }}'s folder and an `instructions.json`
+   This creates the {{ SINGULAR_NAME_FOR_CLI }}'s folder and an `instructions.json`
    with an empty `steps: []` array inside the specified package. It does NOT
    create any template files — you add those in the next steps (unless using
    `--working-dir`, which generates them automatically).
 
-7. Copy the original files into the {{ SINGULAR_NAME }}'s folder to serve as
+7. Copy the original files into the {{ SINGULAR_NAME_FOR_CLI }}'s folder to serve as
    the templates. Use `cp` for each file — this brings the full content onto
    disk without writing it as agent output. Do NOT write file contents from
    scratch — always copy first. Place each copied file at the path you will
    reference in the corresponding step's `template` field (the path is
-   relative to the {{ SINGULAR_NAME }}'s folder, the directory containing
+   relative to the {{ SINGULAR_NAME_FOR_CLI }}'s folder, the directory containing
    `instructions.json`).
 
 8. Edit `instructions.json` to fill in the `steps` array with the steps you
@@ -193,7 +193,7 @@ go in the same package.
 
 4. Present the candidates to the user — for each one:
    - Suggested name (short, kebab-case)
-   - Type assessment: is this a multi-use {{ SINGULAR_NAME }} (recurring pattern) or a single-use {{ SINGULAR_NAME }}
+   - Type assessment: is this a multi-use {{ SINGULAR_NAME_FOR_CLI }} (recurring pattern) or a single-use {{ SINGULAR_NAME_FOR_CLI }}
      (one-time addition)?
    - Intent keywords
    - Variables (the parts that would change between uses)

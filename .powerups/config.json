@@ -1,6 +1,9 @@
 {
   "harness": "pi",
   "packages": [
-    "pup-internal"
+    "create-powerup",
+    "cli-command",
+    "cli-sub-command",
+    "cli-with-sub-commands"
   ]
 }

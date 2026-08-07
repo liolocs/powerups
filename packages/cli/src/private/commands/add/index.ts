@@ -10,11 +10,11 @@ import { resolvePackage } from "#utils/resolve-powerup";
 import { packageJsonSchema } from "#schemas/package";
 import {
   CLI_NAME,
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
 } from "#constants";
 
 const add = new Command({
@@ -52,7 +52,7 @@ const add = new Command({
 
     // 3. Require project init before adding packages
     const root: FileRef = context?.root ?? await runtime.projectRoot();
-    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+    const mainFolder = root.append(`/${CLI_FOLDER_NAME}`);
     if (!(await fs.exists(mainFolder))) {
       throw add_errors.project_not_initialized();
     }
@@ -64,9 +64,9 @@ const add = new Command({
     }
 
     // 5. Validate it's a powerups package
-    const pkgJsonPath = pkgLoc.packageDir.append(`/${PACKAGE_FILE}`);
+    const pkgJsonPath = pkgLoc.packageDir.append(`/${PACKAGE_JSON}`);
     const pkgJson = packageJsonSchema.parse(await pkgJsonPath.json());
-    if (!pkgJson.keywords.includes(KEYWORD_PACKAGE)) {
+    if (!pkgJson.keywords.includes(PACKAGE_JSON_KEYWORD_PROPERTY)) {
       throw add_errors.not_a_powerups_package(source);
     }
 

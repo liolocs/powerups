@@ -3,7 +3,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { APPLIED_FILE, MAIN_FOLDER } from "#constants";
+import { POWERUP_MANIFEST_FILE_NAME, CLI_FOLDER_NAME } from "#constants";
 import {
   readAppliedManifest,
   writeAppliedManifest,
@@ -54,8 +54,8 @@ test.case("write then read round-trips", async assert => {
 
 test.case("read throws corrupt_manifest on invalid JSON", async assert => {
   const root = freshRoot();
-  await fs.create(root.append(`/${MAIN_FOLDER}`));
-  await root.append(`/${MAIN_FOLDER}/${APPLIED_FILE}`).write("{ not json");
+  await fs.create(root.append(`/${CLI_FOLDER_NAME}`));
+  await root.append(`/${CLI_FOLDER_NAME}/${POWERUP_MANIFEST_FILE_NAME}`).write("{ not json");
   try {
     await readAppliedManifest(root);
     assert(true).false(); // must throw

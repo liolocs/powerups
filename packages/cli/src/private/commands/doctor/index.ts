@@ -14,14 +14,14 @@ import { readAppliedManifest } from "#utils/applied-manifest";
 import { AppliedErrorCode } from "#errors/appliedErrors";
 import {
   CLI_NAME,
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
+  PACKAGE_JSON,
   GLOBAL_ROOT,
-  SINGULAR_NAME,
-  APPLIED_FILE,
+  SINGULAR_NAME_FOR_CLI,
+  POWERUP_MANIFEST_FILE_NAME,
 } from "#constants";
 
 interface DoctorIssue {
@@ -76,7 +76,7 @@ const doctor = new Command({
     }
 
     // 2. Folder structure
-    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+    const mainFolder = root.append(`/${CLI_FOLDER_NAME}`);
     if (!(await fs.exists(mainFolder))) {
       throw doctorErrors.not_initialized();
     }
@@ -96,7 +96,7 @@ const doctor = new Command({
       // Scan each package
       const packageDirs = await internalFolder.dirs();
       for (const packageDir of packageDirs) {
-        const pkgJsonPath = packageDir.append(`/${PACKAGE_FILE}`);
+        const pkgJsonPath = packageDir.append(`/${PACKAGE_JSON}`);
         if (!(await fs.exists(pkgJsonPath))) {
           issues.push({
             level: "WARN",
@@ -227,7 +227,7 @@ const doctor = new Command({
       for (const entry of config.packages) {
         const source = getPackageSource(entry);
         const spec = parseSpecifier(source);
-        const localDir = root.append(`/${MAIN_FOLDER}/${spec.storePath}`);
+        const localDir = root.append(`/${CLI_FOLDER_NAME}/${spec.storePath}`);
         const globalDir = fs.ref(`${GLOBAL_ROOT}/${spec.storePath}`);
         if (!(await fs.exists(localDir)) && !(await fs.exists(globalDir))) {
           issues.push({
@@ -241,7 +241,7 @@ const doctor = new Command({
     }
 
     // 3.6 Applied manifest health
-    const manifestRef = mainFolder.append(`/${APPLIED_FILE}`);
+    const manifestRef = mainFolder.append(`/${POWERUP_MANIFEST_FILE_NAME}`);
     if (await fs.exists(manifestRef)) {
       try {
         const manifest = await readAppliedManifest(root);
@@ -263,7 +263,7 @@ const doctor = new Command({
           issues.push({
             level: "ERROR",
             type: "manifest",
-            name: APPLIED_FILE,
+            name: POWERUP_MANIFEST_FILE_NAME,
             message: "Applied manifest is corrupt or invalid JSON",
           });
         } else {
@@ -277,7 +277,7 @@ const doctor = new Command({
     const warnCount = issues.filter(i => i.level === "WARN").length;
 
     cli.print(
-      `Doctor: checking git state, folder structure, ${multiUseCount} multi-use ${SINGULAR_NAME}(s), ${singleUseCount} single-use ${SINGULAR_NAME}(s)\n`,
+      `Doctor: checking git state, folder structure, ${multiUseCount} multi-use ${SINGULAR_NAME_FOR_CLI}(s), ${singleUseCount} single-use ${SINGULAR_NAME_FOR_CLI}(s)\n`,
     );
     cli.print("\n");
 

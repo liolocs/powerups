@@ -1,5 +1,5 @@
 import fs, { type FileRef } from "@rcompat/fs";
-import { APPLIED_FILE, MAIN_FOLDER } from "#constants";
+import { POWERUP_MANIFEST_FILE_NAME, CLI_FOLDER_NAME } from "#constants";
 import {
   appliedManifestSchema,
   type AppliedEntry,
@@ -23,7 +23,7 @@ export interface RecordApplicationArgs {
 }
 
 function manifestRef(root: FileRef): FileRef {
-  return root.append(`/${MAIN_FOLDER}/${APPLIED_FILE}`);
+  return root.append(`/${CLI_FOLDER_NAME}/${POWERUP_MANIFEST_FILE_NAME}`);
 }
 
 const emptyManifest = (): AppliedManifest => ({ version: 1, applied: [] });

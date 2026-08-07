@@ -1,7 +1,7 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import pack_errors from "#errors/packErrors";
-import { MAIN_FOLDER, INTERNAL_FOLDER, GLOBAL_INTERNAL_PATH } from "#constants";
+import { CLI_FOLDER_NAME, INTERNAL_FOLDER, GLOBAL_INTERNAL_PATH } from "#constants";
 
 /**
  * Validate the `pack move` subcommand arguments.
@@ -41,7 +41,7 @@ export async function resolveMovePaths({
   packageName,
 }: ResolveMovePathsParams): Promise<{ localPackageDir: FileRef; globalPackageDir: FileRef }> {
   const localPackageDir = root.append(
-    `/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`,
+    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${packageName}`,
   );
 
   if (!(await fs.exists(localPackageDir))) {

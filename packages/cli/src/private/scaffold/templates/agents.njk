@@ -1,10 +1,10 @@
 <!-- BEGIN {{ CLI_NAME }} -->
-## {{ CLI_NAME }} ({{ SINGULAR_NAME }} engine)
+## {{ CLI_NAME }} ({{ SINGULAR_NAME_FOR_CLI }} engine)
 
 This project uses the `{{ CLI_NAME }}` CLI to keep AI-generated content maintainable.
 
-{{ CAPITALIZED_CLI_NAME }} live inside packages at `{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/<name>/` (multi-use) or
-`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ SINGLE_USE_FOLDER }}/<name>/` (single-use).
+{{ CAPITALIZED_CLI_NAME }} live inside packages at `{{ CLI_FOLDER_NAME }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/<name>/` (multi-use) or
+`{{ CLI_FOLDER_NAME }}/{{ INTERNAL_FOLDER }}/<package>/{{ SINGLE_USE_FOLDER }}/<name>/` (single-use).
 
 Always prefer {{ CLI_NAME }} over one-off generation.
 
@@ -13,14 +13,14 @@ Always prefer {{ CLI_NAME }} over one-off generation.
 {{ CAPITALIZED_CLI_NAME }} are organized into **packages** — collections of one or more {{ CLI_NAME }} that
 can be created locally and optionally moved to a global location (`~/.{{ CLI_NAME }}/`)
 for sharing across projects.
- has a `package.json` with a `{{ CLI_NAME }}` property mapping {{ SINGULAR_NAME }} names
+ has a `package.json` with a `{{ CLI_NAME }}` property mapping {{ SINGULAR_NAME_FOR_CLI }} names
   to their `instructions.json` paths.
-- The project config at `{{ MAIN_FOLDER }}/config.json` lists installed packages in
+- The project config at `{{ CLI_FOLDER_NAME }}/config.json` lists installed packages in
   its `packages` array. Only {{ CLI_NAME }} from packages listed in the config are visible
   to `find` and `use` (config acts as a gatekeeper).
-- Local packages (in `{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/`) are prioritized over
+- Local packages (in `{{ CLI_FOLDER_NAME }}/{{ INTERNAL_FOLDER }}/`) are prioritized over
   global packages (in `~/.{{ CLI_NAME }}/{{ INTERNAL_FOLDER }}/`) when resolving a
-  {{ SINGULAR_NAME }} by name.
+  {{ SINGULAR_NAME_FOR_CLI }} by name.
 - To create a new package: `{{ CLI_CMD }} pack create <package-name>`
 - To move a local package to global: `{{ CLI_CMD }} pack move <package-name> global`
 
@@ -41,25 +41,25 @@ This project scaffolds three skills:
 |-------|-------------|
 | `{{ CLI_NAME }}-brainstorm` | Planning new work — finds existing {{ CLI_NAME }}, classifies work, produces a plan document |
 | `{{ CLI_NAME }}-implement` | Executing a plan document — works through tasks, finds/uses inline, invokes capture when needed |
-| `{{ CLI_NAME }}-capture` | Capturing already-done work as a {{ SINGULAR_NAME }} — user-directed or survey mode |
+| `{{ CLI_NAME }}-capture` | Capturing already-done work as a {{ SINGULAR_NAME_FOR_CLI }} — user-directed or survey mode |
 
 For ad-hoc work (not part of a plan), use the find → info → use pattern below directly.
 
 ### Before writing any new feature or file
 
 1. Run `{{ CLI_CMD }} find -q="<what you're about to do>"`.
-2. If a {{ SINGULAR_NAME }} matches (score > 0), run
+2. If a {{ SINGULAR_NAME_FOR_CLI }} matches (score > 0), run
    `{{ CLI_CMD }} info <name>` to see its required
    variables, generated files, and the exact use command.
 3. Use it:
    `{{ CLI_CMD }} use <name> --<variable-name>=<value> ...`
    Preview first with `--dry-run` / `-d`, then use for real.
-4. Only write fresh content if no {{ SINGULAR_NAME }} matches.
+4. Only write fresh content if no {{ SINGULAR_NAME_FOR_CLI }} matches.
 
 ### After generating new files
 
 If you just generated new files and the work seems repeatable, ask the user
-whether they'd like to capture it as a multi-use {{ SINGULAR_NAME }} (recurring) or a single-use {{ SINGULAR_NAME }}
+whether they'd like to capture it as a multi-use {{ SINGULAR_NAME_FOR_CLI }} (recurring) or a single-use {{ SINGULAR_NAME_FOR_CLI }}
 (one-time) before moving on. Only do this for new file generation — not for
 one-off edits.
 
@@ -71,7 +71,7 @@ dry-run verification.
 ### `.ts` template format (recommended)
 
 A `.ts` template is a TypeScript module that `export default`s a function.
-At run time `{{ CLI_CMD }}` calls that function with the {{ SINGULAR_NAME }}'s declared
+At run time `{{ CLI_CMD }}` calls that function with the {{ SINGULAR_NAME_FOR_CLI }}'s declared
 variables (keyed by name, all strings) and writes the returned string to the
 file's `outputPath`.
 
@@ -92,10 +92,10 @@ export default ({ componentName, theme }: Record<string, string>) =>
 - If the module has no default function (or it isn't a function), `use`
   fails with `Invalid .ts template: must export a default function that returns a
   string`. Note: `validate` only checks that the template file exists —
-  it does not import or execute it, so use the {{ SINGULAR_NAME }} once to confirm the
+  it does not import or execute it, so use the {{ SINGULAR_NAME_FOR_CLI }} once to confirm the
   default export works.
 
-### Instructions schema (`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/<name>/instructions.json`)
+### Instructions schema (`{{ CLI_FOLDER_NAME }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/<name>/instructions.json`)
 
 Fields marked `?` are optional; omit them entirely when unused.
 
@@ -132,7 +132,7 @@ The `steps` array is an ordered list of actions executed in sequence. Five step 
 - **`modify`** — render a modify template and apply anchor-based patches to an existing file
 - **`delete`** — remove the file at `outputPath`
 - **`read`** — read a file from the project, extract a value, store it as a variable for subsequent steps
-- **`include`** — execute another {{ SINGULAR_NAME }}'s steps inline, with variable mapping and optional overrides
+- **`include`** — execute another {{ SINGULAR_NAME_FOR_CLI }}'s steps inline, with variable mapping and optional overrides
 
 `read` steps support three extraction modes (precedence: `template` > `jsonPath` > raw):
 - `jsonPath` — dot-notation path into a JSON file (e.g. `"name"`, `"dependencies.express"`)
@@ -165,15 +165,15 @@ In dry-run mode, read steps set the variable to its own `as` value as a placehol
 - `excludeSteps` — array of child step names to skip
 
 Template files referenced by `create`, `modify`, and `read` (template mode) entries live anywhere
-inside the {{ SINGULAR_NAME }}'s folder (the directory containing `instructions.json`).
+inside the {{ SINGULAR_NAME_FOR_CLI }}'s folder (the directory containing `instructions.json`).
 The `template` field holds the full relative path from that folder — e.g.
 `button.svelte.tmpl`, `templates/button.ts`, or `src/sub/deep.njk`. The CLI
-resolves the file at that path. Files in the {{ SINGULAR_NAME }} folder not referenced
+resolves the file at that path. Files in the {{ SINGULAR_NAME_FOR_CLI }} folder not referenced
 by any `template` field are reported as orphaned by `{{ CLI_CMD }} doctor`.
 
 ### Required vs Optional Variables
 
-The `variables` field is always present, even when a {{ SINGULAR_NAME }} has no variables (`{ "required": [] }`). It has two arrays:
+The `variables` field is always present, even when a {{ SINGULAR_NAME_FOR_CLI }} has no variables (`{ "required": [] }`). It has two arrays:
 
 - **`required`** — variables the user must provide at use time. If any are
   missing, the CLI reports all missing required variables in a single error
@@ -183,7 +183,7 @@ The `variables` field is always present, even when a {{ SINGULAR_NAME }} has no 
   output paths resolve to `""` instead of leaving unresolved tokens.
 
 Use `--<variable-name>=<value>` flags at use time for both required and
-optional variables. When creating a {{ SINGULAR_NAME }}, use `-v` for required variables
+optional variables. When creating a {{ SINGULAR_NAME_FOR_CLI }}, use `-v` for required variables
 and `-ov` for optional variables.
 
 A variable cannot be in both `required` and `optional` — validation will reject
@@ -193,7 +193,7 @@ when omitted — it should be required instead).
 
 ### Package Dependencies
 
-The `packageDependencies` field is optional — omit it entirely if the {{ SINGULAR_NAME }}
+The `packageDependencies` field is optional — omit it entirely if the {{ SINGULAR_NAME_FOR_CLI }}
 doesn't need npm packages. Each entry is a group with an optional
 `target` (a monorepo package path like `"packages/web"`, omitted for the root
 `package.json`) and dependency category arrays. Dependency strings use the
@@ -201,7 +201,7 @@ standard `"package@version"` format, including scoped packages like
 `"@scope/pkg@^1.0.0"`. Multiple groups can target different packages in a
 monorepo.
 
-When a {{ SINGULAR_NAME }} is used, the CLI writes the declared dependencies
+When a {{ SINGULAR_NAME_FOR_CLI }} is used, the CLI writes the declared dependencies
 to the target `package.json`, detects the package manager from the lock file
 (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lockb`/`bun.lock`),
 and runs the install command automatically.
@@ -241,13 +241,13 @@ Modify template files can be:
 
 ### Subtemplates
 
-A subtemplate is a regular {{ SINGULAR_NAME }} that another {{ SINGULAR_NAME }} includes via a
-`include` step. When a {{ SINGULAR_NAME }} runs, it executes its steps in order — when it
+A subtemplate is a regular {{ SINGULAR_NAME_FOR_CLI }} that another {{ SINGULAR_NAME_FOR_CLI }} includes via a
+`include` step. When a {{ SINGULAR_NAME_FOR_CLI }} runs, it executes its steps in order — when it
 reaches an `include` step, it maps the subtemplate's declared variables to
 values from the parent (using `{{ '{{parentVar}}' }}` tokens or literals),
 optionally overriding or excluding child steps, and executes the subtemplate's steps inline.
 Subtemplates are just {{ CLI_NAME }} — they live in their own folder under
-`{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/`, have their own
+`{{ CLI_FOLDER_NAME }}/{{ INTERNAL_FOLDER }}/<package>/{{ MULTI_USE_FOLDER }}/`, have their own
 `instructions.json` and templates, and can be used standalone or included
 by multiple parents.
 
@@ -257,10 +257,10 @@ package's `package.json` `{{ CLI_NAME }}` property using `parent:child` notation
 
 #### Worked example
 
-- *Before:* You have an `api-route` {{ SINGULAR_NAME }} that generates a route handler, a
-types file, and a test. Later you build a `graphql-resolver` {{ SINGULAR_NAME }} that also
+- *Before:* You have an `api-route` {{ SINGULAR_NAME_FOR_CLI }} that generates a route handler, a
+types file, and a test. Later you build a `graphql-resolver` {{ SINGULAR_NAME_FOR_CLI }} that also
 needs a types file with the same structure.
-- *Extraction:* Create a standalone `types` {{ SINGULAR_NAME }}
+- *Extraction:* Create a standalone `types` {{ SINGULAR_NAME_FOR_CLI }}
   (`{{ CLI_CMD }} create --pack=<package> --type=multi-use -n=types ...`). Add it to both parents'
   `instructions.json`:
 
@@ -286,21 +286,21 @@ demands it — you often don't know what should be a subtemplate until you are
 faced with the actual repetition. Extract when:
 
 - You are duplicating the same template files across multiple {{ CLI_NAME }}
-- A {{ SINGULAR_NAME }} is generating files for two distinct concerns that change
+- A {{ SINGULAR_NAME_FOR_CLI }} is generating files for two distinct concerns that change
   independently
-- You find yourself copying a subset of one {{ SINGULAR_NAME }}'s output into another
+- You find yourself copying a subset of one {{ SINGULAR_NAME_FOR_CLI }}'s output into another
 
-Do NOT preemptively decompose a {{ SINGULAR_NAME }} into subtemplates upfront. Build the
-full {{ SINGULAR_NAME }}, verify it works, then extract when repetition emerges.
+Do NOT preemptively decompose a {{ SINGULAR_NAME_FOR_CLI }} into subtemplates upfront. Build the
+full {{ SINGULAR_NAME_FOR_CLI }}, verify it works, then extract when repetition emerges.
 
 #### When to compose via includes (existing overlap)
 
-When existing {{ CLI_NAME }} already cover part of a new {{ SINGULAR_NAME }}'s output, COMPOSE
+When existing {{ CLI_NAME }} already cover part of a new {{ SINGULAR_NAME_FOR_CLI }}'s output, COMPOSE
 via `includes` instead of duplicating templates. If powerup A already generates
 files that a new powerup B would recreate, B should `include` A and only add
 the genuinely new files as its own templates. Before creating any new
-{{ SINGULAR_NAME }}, run `{{ CLI_CMD }} find` and `{{ CLI_CMD }} info` on existing matches — if
-an existing {{ SINGULAR_NAME }} generates the same file with the same structure, that
+{{ SINGULAR_NAME_FOR_CLI }}, run `{{ CLI_CMD }} find` and `{{ CLI_CMD }} info` on existing matches — if
+an existing {{ SINGULAR_NAME_FOR_CLI }} generates the same file with the same structure, that
 file belongs in an `includes` entry, not a copied template.
 
 ### Quick reference
@@ -309,15 +309,15 @@ file belongs in an `includes` entry, not a copied template.
 |--------|---------|
 | Find {{ CLI_NAME }} | `{{ CLI_CMD }} find -q="..."` |
 | Find multi-use only | `{{ CLI_CMD }} find -q="..." --type=multi-use` |
-| Get info on a {{ SINGULAR_NAME }} | `{{ CLI_CMD }} info <name>` |
-| Use a {{ SINGULAR_NAME }} | `{{ CLI_CMD }} use <name> --<variable>=<value> [-d]` |
+| Get info on a {{ SINGULAR_NAME_FOR_CLI }} | `{{ CLI_CMD }} info <name>` |
+| Use a {{ SINGULAR_NAME_FOR_CLI }} | `{{ CLI_CMD }} use <name> --<variable>=<value> [-d]` |
 | Create a package | `{{ CLI_CMD }} pack create <package-name>` |
 | Create a global package | `{{ CLI_CMD }} pack create <package-name> -g` |
 | Move package to global | `{{ CLI_CMD }} pack move <package-name> global` |
 | Move & remove from config | `{{ CLI_CMD }} pack move <package-name> global -d` |
-| Create a multi-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=multi-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
-| Create a single-use {{ SINGULAR_NAME }} | `{{ CLI_CMD }} create --pack=<pkg> --type=single-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
-| Validate a {{ SINGULAR_NAME }} | `{{ CLI_CMD }} validate <name>` |
+| Create a multi-use {{ SINGULAR_NAME_FOR_CLI }} | `{{ CLI_CMD }} create --pack=<pkg> --type=multi-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
+| Create a single-use {{ SINGULAR_NAME_FOR_CLI }} | `{{ CLI_CMD }} create --pack=<pkg> --type=single-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
+| Validate a {{ SINGULAR_NAME_FOR_CLI }} | `{{ CLI_CMD }} validate <name>` |
 | Initialize {{ CLI_NAME }} | `{{ CLI_CMD }} init` |
 | Health check all | `{{ CLI_CMD }} doctor` |
 | Usage metrics | `{{ CLI_CMD }} metrics summary` |

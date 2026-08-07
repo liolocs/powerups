@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_NAME, CLI_CMD, MAIN_FOLDER } from "#constants";
+import { CLI_NAME, CLI_CMD, CLI_FOLDER_NAME } from "#constants";
 
 const t = error.template;
 
@@ -12,7 +12,7 @@ const project_errors = error.coded({
     return t`${errorLabel} ${CLI_NAME} is already initialized for this project.`;
   },
   project_not_initialized: () => {
-    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} project init" first.`;
+    const errorText = `${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first.`;
     return t`${errorBGText}${errorText}`;
   },
 });

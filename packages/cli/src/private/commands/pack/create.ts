@@ -6,12 +6,12 @@ import { Command } from "@liolocs/program";
 import pack_errors from "#errors/packErrors";
 import create_errors from "#errors/createErrors";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
   GLOBAL_INTERNAL_PATH,
   GLOBAL_ROOT,
   CLI_NAME,
@@ -54,7 +54,7 @@ const packCreate = new Command({
       baseDir = fs.ref(GLOBAL_INTERNAL_PATH);
     } else {
       const root: FileRef = context?.root ?? await runtime.projectRoot();
-      const mainFolder = root.append(`/${MAIN_FOLDER}`);
+      const mainFolder = root.append(`/${CLI_FOLDER_NAME}`);
       if (!(await fs.exists(mainFolder))) {
         throw create_errors.main_folder_not_found();
       }
@@ -87,7 +87,7 @@ const packCreate = new Command({
       name: packageName,
       version: "1.0.0",
       description,
-      keywords: [KEYWORD_PACKAGE],
+      keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
       [CLI_NAME]: {
         active: {
           [MULTI_USE_FOLDER]: {},
@@ -96,7 +96,7 @@ const packCreate = new Command({
       },
     };
 
-    await packageDir.append(`/${PACKAGE_FILE}`).writeJSON(packageJson as never);
+    await packageDir.append(`/${PACKAGE_JSON}`).writeJSON(packageJson as never);
 
     const green = cli.fg.green;
     const dim = cli.fg.dim;

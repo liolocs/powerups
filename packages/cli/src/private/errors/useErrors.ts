@@ -1,7 +1,7 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
 import type { FileRef } from "@rcompat/fs";
-import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD, MAIN_FOLDER } from "#constants";
+import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD, CLI_FOLDER_NAME } from "#constants";
 import { toKebabCase } from "#utils/variables";
 
 const t = error.template;
@@ -10,7 +10,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const use_errors = error.coded({
   main_folder_not_found: () => {
-    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} project init" first.`;
+    const errorText = `${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first.`;
     return t`${errorBGText}${errorText}`;
   },
 

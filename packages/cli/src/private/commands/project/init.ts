@@ -6,7 +6,7 @@ import { Command } from "@liolocs/program";
 import project_errors from "#errors/projectErrors";
 import { scaffold, type RollbackInfo } from "#scaffold/index";
 import { writeConfig, ensureGlobalInit } from "#utils/config";
-import { MAIN_FOLDER, CLI_NAME } from "#constants";
+import { CLI_FOLDER_NAME, CLI_NAME } from "#constants";
 
 const projectInit = new Command({
   name: "init",
@@ -28,7 +28,7 @@ const projectInit = new Command({
   action: async ({ context, flags }: any) => {
     const homeDirStr = context?.homeDir ?? homedir();
     const root: FileRef = context?.root ?? await runtime.projectRoot();
-    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+    const mainFolder = root.append(`/${CLI_FOLDER_NAME}`);
     const harnessFlag: string | undefined = flags?.harness ?? undefined;
 
     if (await fs.exists(mainFolder)) {
@@ -51,7 +51,7 @@ const projectInit = new Command({
     await writeConfig(root, { packages: [] });
 
     // 3. Harness scaffold into the project root.
-    const rollback: RollbackInfo = { remove: [MAIN_FOLDER], restore: [] };
+    const rollback: RollbackInfo = { remove: [CLI_FOLDER_NAME], restore: [] };
 
     try {
       const result = await scaffold(root, harnessFlag, { rollback });

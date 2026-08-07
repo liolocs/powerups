@@ -1,4 +1,4 @@
-import { CLI_NAME, PACKAGE_FILE } from "#constants";
+import { CLI_NAME, PACKAGE_JSON } from "#constants";
 import { packageJsonSchema } from "#schemas/package";
 import {
   addPackageToGlobalConfig,
@@ -40,7 +40,7 @@ const packMove = new Command({
     });
 
     const localPkgJson = packageJsonSchema.parse(
-      await localPackageDir.append(`/${PACKAGE_FILE}`).json(),
+      await localPackageDir.append(`/${PACKAGE_JSON}`).json(),
     );
 
     const collected = await collectAllSubPowerUps({
@@ -59,7 +59,7 @@ const packMove = new Command({
     const updatedPowerups = buildUpdatedPowerups({ activeRecord, collected });
     const globalPkgJson = buildGlobalPackageJson({ localPkgJson, updatedPowerups });
     await globalPackageDir
-      .append(`/${PACKAGE_FILE}`)
+      .append(`/${PACKAGE_JSON}`)
       .writeJSON(globalPkgJson as never);
 
     await verifyMoveSuccess({ packageName, globalPackageDir });

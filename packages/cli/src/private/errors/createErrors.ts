@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD, MAIN_FOLDER, SINGULAR_NAME } from "#constants";
+import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD, CLI_FOLDER_NAME, SINGULAR_NAME_FOR_CLI } from "#constants";
 
 const t = error.template;
 
@@ -8,7 +8,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const create_errors = error.coded({
   main_folder_not_found: () => {
-    const errorText = `${MAIN_FOLDER} folder not found. Run "${CLI_CMD} project init" first.`;
+    const errorText = `${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first.`;
     return t`${errorBGText}${errorText}`;
   },
   missing_type: () => {
@@ -27,7 +27,7 @@ const create_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
   not_a_git_repo: () => {
-    const errorText = `Working directory is not a git repository. Run "${CLI_CMD} create <name>" without --working-dir to create a blank ${SINGULAR_NAME}.`;
+    const errorText = `Working directory is not a git repository. Run "${CLI_CMD} create <name>" without --working-dir to create a blank ${SINGULAR_NAME_FOR_CLI}.`;
     return t`${errorBGText}${errorText}`;
   },
   package_not_initialized: () => {

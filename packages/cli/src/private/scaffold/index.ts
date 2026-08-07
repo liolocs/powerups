@@ -8,12 +8,12 @@ import { writeSkillFile } from "#scaffold/write";
 import {
   CLI_NAME,
   CLI_CMD,
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   CAPITALIZED_CLI_NAME,
-  SINGULAR_NAME,
+  SINGULAR_NAME_FOR_CLI,
 } from "#constants";
 
 const SCAFFOLD_DIR = is.truthy(process.env.BUNDLED)
@@ -79,12 +79,12 @@ export async function scaffold(
   const variables = {
     CLI_NAME,
     CLI_CMD,
-    MAIN_FOLDER,
+    CLI_FOLDER_NAME,
     INTERNAL_FOLDER,
     MULTI_USE_FOLDER,
     SINGLE_USE_FOLDER,
     CAPITALIZED_CLI_NAME,
-    SINGULAR_NAME,
+    SINGULAR_NAME_FOR_CLI,
   };
 
   // Render the agents template once — same content for all harnesses

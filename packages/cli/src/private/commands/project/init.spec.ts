@@ -7,13 +7,13 @@ import { ProjectErrorCode } from "#errors/projectErrors";
 import { InitErrorCode } from "#errors/initErrors";
 import captureStdout from "#test-utils/capture-stdout";
 import { readGlobalConfig } from "#utils/config";
-import { MAIN_FOLDER, CLI_NAME, CONFIG_FILE, HARNESS_FINGERPRINTS, SKILLS_DIRS } from "#constants";
+import { CLI_FOLDER_NAME, CLI_NAME, CONFIG_FILE_NAME, HARNESS_FINGERPRINTS, SKILLS_DIRS } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/project-init-spec");
 const homeRoot = root.append("/tmp/project-init-home");
-const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
-const globalFolder = homeRoot.append(`/${MAIN_FOLDER}`);
+const mainFolder = testRoot.append(`/${CLI_FOLDER_NAME}`);
+const globalFolder = homeRoot.append(`/${CLI_FOLDER_NAME}`);
 
 async function reset() {
   await testRoot.remove();
@@ -41,7 +41,7 @@ test.group("project init — config + global bootstrap", () => {
 
     await projectInit.run({ subcommands: [], flags: [{ flag: "--harness", value: "claude" }], context: ctx() });
 
-    const configPath = mainFolder.append(`/${CONFIG_FILE}`);
+    const configPath = mainFolder.append(`/${CONFIG_FILE_NAME}`);
     assert(await fs.exists(configPath)).true();
     const config = await configPath.json() as Record<string, unknown>;
     assert(config.packages).equals([]);
@@ -55,7 +55,7 @@ test.group("project init — config + global bootstrap", () => {
 
     await projectInit.run({ subcommands: [], flags: [{ flag: "--harness", value: "claude" }], context: ctx() });
 
-    const config = await mainFolder.append(`/${CONFIG_FILE}`).json() as Record<string, unknown>;
+    const config = await mainFolder.append(`/${CONFIG_FILE_NAME}`).json() as Record<string, unknown>;
     assert("harness" in config).false();
 
     await testRoot.remove();
@@ -112,7 +112,7 @@ test.group("project init — global bootstrap", () => {
   test.case("does not re-create ~/.powerups when it already exists", async assert => {
     await reset();
     await fs.create(globalFolder);
-    await globalFolder.append(`/${CONFIG_FILE}`).writeJSON({ packages: ["existing"] });
+    await globalFolder.append(`/${CONFIG_FILE_NAME}`).writeJSON({ packages: ["existing"] });
 
     await projectInit.run({ subcommands: [], flags: [{ flag: "--harness", value: "claude" }], context: ctx() });
 

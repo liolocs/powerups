@@ -4,16 +4,16 @@ import runtime from "@rcompat/runtime";
 import list from "#commands/list/index";
 import captureStdout from "#test-utils/capture-stdout";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
-  NPM_STORE,
-  GIT_STORE,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
+  FOLDER_FOR_NPM_INSTALLED_PACKAGES,
+  FOLDER_FOR_GIT_INSTALLED_PACKAGES,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
   CLI_NAME,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  CONFIG_FILE,
+  CONFIG_FILE_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -22,7 +22,7 @@ const testRoot = root.append("/tmp");
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
-  await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
 }
 
 /**
@@ -34,7 +34,7 @@ async function writePackage(
   name: string,
   powerups: { multiUse?: string[]; singleUse?: string[] } = {},
 ) {
-  const pkgDir = projectRoot.append(`/${MAIN_FOLDER}/${storePath}`);
+  const pkgDir = projectRoot.append(`/${CLI_FOLDER_NAME}/${storePath}`);
   const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
@@ -63,17 +63,17 @@ async function writePackage(
       `./${SINGLE_USE_FOLDER}/${powerName}/instructions.json`;
   }
 
-  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
     name,
     version: "1.0.0",
     description: "test",
-    keywords: [KEYWORD_PACKAGE],
+    keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
     [CLI_NAME]: { active: powerupsProperty },
   });
 }
 
 async function createConfig(packages: any[]) {
-  await testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({
+  await testRoot.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`).writeJSON({
     packages,
   });
 }
@@ -99,7 +99,7 @@ test.group("list", () => {
 
   test.case("lists unregistered npm package", async assert => {
     await reset();
-    await writePackage(testRoot, `${NPM_STORE}/node_modules/other-pkg`, "other-pkg",
+    await writePackage(testRoot, `${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/other-pkg`, "other-pkg",
       { multiUse: ["b-power"] });
     await createConfig([]);
 
@@ -117,7 +117,7 @@ test.group("list", () => {
 
   test.case("lists unregistered git package with reconstructed https source", async assert => {
     await reset();
-    await writePackage(testRoot, `${GIT_STORE}/github.com/foo/bar`, "bar",
+    await writePackage(testRoot, `${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/github.com/foo/bar`, "bar",
       { singleUse: ["c-power"] });
     await createConfig([]);
 
@@ -152,7 +152,7 @@ test.group("list", () => {
 
   test.case("excludes registered package (object entry)", async assert => {
     await reset();
-    await writePackage(testRoot, `${NPM_STORE}/node_modules/other-pkg`, "other-pkg");
+    await writePackage(testRoot, `${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/other-pkg`, "other-pkg");
     await createConfig([{ package: "npm:other-pkg", powerups: { include: ["a"] } }]);
 
     const output = await captureStdout(() => list.run({
@@ -167,9 +167,9 @@ test.group("list", () => {
 
   test.case("skips invalid package.json silently", async assert => {
     await reset();
-    const pkgDir = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/bad-pkg`);
+    const pkgDir = testRoot.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/bad-pkg`);
     await fs.create(pkgDir);
-    await pkgDir.append(`/${PACKAGE_FILE}`).write("{ not valid json");
+    await pkgDir.append(`/${PACKAGE_JSON}`).write("{ not valid json");
     await createConfig([]);
 
     const output = await captureStdout(() => list.run({
@@ -199,7 +199,7 @@ test.group("list", () => {
 
   test.case("handles scoped npm package (@scope/pkg)", async assert => {
     await reset();
-    await writePackage(testRoot, `${NPM_STORE}/node_modules/@scope/scoped-pkg`, "@scope/scoped-pkg",
+    await writePackage(testRoot, `${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/@scope/scoped-pkg`, "@scope/scoped-pkg",
       { multiUse: ["scoped-power"] });
     await createConfig([]);
 
@@ -236,7 +236,7 @@ test.group("list", () => {
 
   test.case("shows add hint with reconstructed git source", async assert => {
     await reset();
-    await writePackage(testRoot, `${GIT_STORE}/github.com/foo/bar`, "bar",
+    await writePackage(testRoot, `${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/github.com/foo/bar`, "bar",
       { multiUse: ["c-power"] });
     await createConfig([]);
 
@@ -259,8 +259,8 @@ test.group("list", () => {
     await createConfig([]);
     // Create a separate homeDir with global config that registers the package
     const globalHome = testRoot.append("/global-home");
-    await fs.create(globalHome.append(`/${MAIN_FOLDER}`));
-    await globalHome.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({
+    await fs.create(globalHome.append(`/${CLI_FOLDER_NAME}`));
+    await globalHome.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`).writeJSON({
       packages: ["global-pkg"],
     });
 

@@ -12,10 +12,10 @@ import { resolvePackage } from "#utils/resolve-powerup";
 import { instructionsSchema } from "#schemas/instruction";
 import {
   CLI_NAME,
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  SINGULAR_NAME,
+  SINGULAR_NAME_FOR_CLI,
   type PowerUpType,
 } from "#constants";
 
@@ -49,7 +49,7 @@ const find = new Command({
   subcommands: [],
   action: async ({ flags, context }) => {
     const root: FileRef = context?.root ?? await runtime.projectRoot();
-    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+    const mainFolder = root.append(`/${CLI_FOLDER_NAME}`);
 
     if (!(await fs.exists(mainFolder))) {
       throw create_errors.main_folder_not_found();
@@ -138,7 +138,7 @@ const find = new Command({
       return b.score - a.score;
     });
 
-    cli.print(`Found ${results.length} matching ${SINGULAR_NAME}(s):\n`);
+    cli.print(`Found ${results.length} matching ${SINGULAR_NAME_FOR_CLI}(s):\n`);
     cli.print("Local first, highest rank first\n");
     cli.print("\n");
 

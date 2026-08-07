@@ -12,9 +12,9 @@ import { parseFragment, mergeFilters, buildConfigEntry } from "#utils/parse-powe
 import { installNpmPackage, installGitPackage } from "#utils/install-package";
 import { packageJsonSchema } from "#schemas/package";
 import {
-  MAIN_FOLDER,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
+  CLI_FOLDER_NAME,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
 } from "#constants";
 
 const install = new Command({
@@ -70,12 +70,12 @@ const install = new Command({
       f => f.flag === "--local" || f.flag === "-l",
     );
     const homeDirStr = context?.homeDir ?? homedir();
-    const globalRoot = fs.ref(path.join(homeDirStr, MAIN_FOLDER));
-    const storeRoot = isLocal ? root.append(`/${MAIN_FOLDER}`) : globalRoot;
+    const globalRoot = fs.ref(path.join(homeDirStr, CLI_FOLDER_NAME));
+    const storeRoot = isLocal ? root.append(`/${CLI_FOLDER_NAME}`) : globalRoot;
 
     // 6. Guards: local requires project init, global requires global init
     if (isLocal) {
-      if (!(await fs.exists(root.append(`/${MAIN_FOLDER}`)))) {
+      if (!(await fs.exists(root.append(`/${CLI_FOLDER_NAME}`)))) {
         throw install_errors.local_not_initialized();
       }
     } else {
@@ -93,14 +93,14 @@ const install = new Command({
 
     // 8. Validate the installed package has powerups property
     const packageDir = storeRoot.append(`/${spec.storePath}`);
-    const pkgJsonPath = packageDir.append(`/${PACKAGE_FILE}`);
+    const pkgJsonPath = packageDir.append(`/${PACKAGE_JSON}`);
     if (!(await fs.exists(pkgJsonPath))) {
       throw install_errors.fetch_failed(source, "package.json not found after install");
     }
 
     const pkgJson = packageJsonSchema.parse(await pkgJsonPath.json());
     // Validate it's a powerups package (check keywords for powerups-package)
-    if (!pkgJson.keywords.includes(KEYWORD_PACKAGE)) {
+    if (!pkgJson.keywords.includes(PACKAGE_JSON_KEYWORD_PROPERTY)) {
       throw install_errors.not_a_powerups_package(source);
     }
 

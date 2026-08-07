@@ -7,12 +7,12 @@ import { instructionsSchema } from "#schemas/instruction";
 import { CodeError } from "@rcompat/error";
 import { CreateErrorCode } from "#errors/createErrors";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   SINGLE_USE_FOLDER,
   MULTI_USE_FOLDER,
-  PACKAGE_FILE,
-  CONFIG_FILE,
+  PACKAGE_JSON,
+  CONFIG_FILE_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -38,9 +38,9 @@ async function setupTestEnv(): Promise<{ envRoot: FileRef; projectRoot: FileRef 
 
   await gitInit(testRoot);
 
-  await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
-  await fs.create(testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}`));
-  await testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({ packages: [] });
+  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
+  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}`));
+  await testRoot.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`).writeJSON({ packages: [] });
 
   return { envRoot: testRoot, projectRoot: testRoot };
 }
@@ -69,11 +69,11 @@ async function cleanup(): Promise<void> {
 }
 
 function readInstructions(dir: FileRef, name: string): Promise<any> {
-  return dir.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${name}/instructions.json`).json() as Promise<any>;
+  return dir.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${name}/instructions.json`).json() as Promise<any>;
 }
 
 function powerupDir(dir: FileRef, name: string): FileRef {
-  return dir.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${name}`);
+  return dir.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${name}`);
 }
 
 // test.case("blank mode creates instructions.json with empty steps", async assert => {
@@ -268,7 +268,7 @@ function powerupDir(dir: FileRef, name: string): FileRef {
 // //   });
 
 // //   const packageJsonPath = powerupDir(testRoot, "auto-pkg-test")
-// //     .append(`/${PACKAGE_FILE}`);
+// //     .append(`/${PACKAGE_JSON}`);
 // //   assert(await fs.exists(packageJsonPath)).true();
 
 // //   const pkgJson = await packageJsonPath.json() as Record<string, unknown>;
@@ -332,7 +332,7 @@ function powerupDir(dir: FileRef, name: string): FileRef {
 // //   });
 
 // //   const pkgJson = await powerupDir(testRoot, "register-test")
-// //     .append(`/${PACKAGE_FILE}`)
+// //     .append(`/${PACKAGE_JSON}`)
 // //     .json() as Record<string, unknown>;
 // //   const powerups = (pkgJson.powerups as Record<string, Record<string, Record<string, string>>>).active;
 // //   assert(powerups[SINGLE_USE_FOLDER]["register-test"]).defined();
@@ -449,7 +449,7 @@ function powerupDir(dir: FileRef, name: string): FileRef {
 
 // //   // multi-use type should register in multi-use folder
 // //   const pkgJson = await powerupDir(testRoot, "flags-test")
-// //     .append(`/${PACKAGE_FILE}`)
+// //     .append(`/${PACKAGE_JSON}`)
 // //     .json() as Record<string, unknown>;
 // //   const powerups = (pkgJson.powerups as Record<string, Record<string, Record<string, string>>>).active;
 // //   assert(powerups[MULTI_USE_FOLDER]["flags-test"]).defined();
@@ -466,7 +466,7 @@ function powerupDir(dir: FileRef, name: string): FileRef {
 // //   });
 
 // //   const config = await testRoot
-// //     .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+// //     .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
 // //     .json() as Record<string, unknown>;
 // //   assert((config.packages as string[]).includes("config-test")).true();
 

@@ -12,7 +12,7 @@ import {
   ensureGlobalInit,
   type PackageEntry,
 } from "#utils/config";
-import { MAIN_FOLDER, CONFIG_FILE } from "#constants";
+import { CLI_FOLDER_NAME, CONFIG_FILE_NAME } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -25,7 +25,7 @@ async function reset() {
 test.group("readConfig", () => {
   test.case("should return null when config file does not exist", async assert => {
     await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+    await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
 
     const config = await readConfig(testRoot);
     assert(config).equals(null);
@@ -33,7 +33,7 @@ test.group("readConfig", () => {
     await testRoot.remove();
   });
 
-  test.case(`should return null when ${MAIN_FOLDER} folder does not exist`, async assert => {
+  test.case(`should return null when ${CLI_FOLDER_NAME} folder does not exist`, async assert => {
     await reset();
 
     const config = await readConfig(testRoot);
@@ -44,9 +44,9 @@ test.group("readConfig", () => {
 
   test.case("should read packages array from config file", async assert => {
     await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+    await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
     await testRoot
-      .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+      .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .write(JSON.stringify({ packages: ["my-pkg", "other-pkg"] }));
 
     const config = await readConfig(testRoot);
@@ -57,10 +57,10 @@ test.group("readConfig", () => {
 
   test.case("should read packages array with object entries from config file", async assert => {
     await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+    await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
     const entry: PackageEntry = { package: "npm:other", powerups: { include: ["a"] } };
     await testRoot
-      .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+      .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .write(JSON.stringify({ packages: ["my-pkg", entry] }));
 
     const config = await readConfig(testRoot);
@@ -72,9 +72,9 @@ test.group("readConfig", () => {
 
   test.case("should return empty packages array when not in config", async assert => {
     await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+    await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
     await testRoot
-      .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+      .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .write(JSON.stringify({}));
 
     const config = await readConfig(testRoot);
@@ -90,7 +90,7 @@ test.group("writeConfig", () => {
 
     await writeConfig(testRoot, { packages: [] });
 
-    const configPath = testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`);
+    const configPath = testRoot.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`);
     assert(await fs.exists(configPath)).equals(true);
 
     const config = await readConfig(testRoot);
@@ -133,9 +133,9 @@ test.group("readGlobalConfig", () => {
 
   test.case("should read packages from global config", async assert => {
     await reset();
-    const globalDir = testRoot.append(`/${MAIN_FOLDER}`);
+    const globalDir = testRoot.append(`/${CLI_FOLDER_NAME}`);
     await fs.create(globalDir);
-    await globalDir.append(`/${CONFIG_FILE}`).writeJSON({ packages: ["global-pkg"] });
+    await globalDir.append(`/${CONFIG_FILE_NAME}`).writeJSON({ packages: ["global-pkg"] });
 
     const config = await readGlobalConfig(testRoot.path);
     assert(config?.packages).equals(["global-pkg"]);
@@ -180,9 +180,9 @@ test.group("getPackageSource", () => {
 test.group("addPackageToConfig", () => {
   test.case("adds a plain string entry to config", async assert => {
     await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+    await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
     await testRoot
-      .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+      .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .writeJSON({ packages: [] });
 
     await addPackageToConfig(testRoot, "npm:pkg");
@@ -194,9 +194,9 @@ test.group("addPackageToConfig", () => {
 
   test.case("adds an object entry with a powerups filter", async assert => {
     await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+    await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
     await testRoot
-      .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+      .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .writeJSON({ packages: [] });
 
     const entry: PackageEntry = { package: "npm:pkg", powerups: { include: ["a"] } };
@@ -210,9 +210,9 @@ test.group("addPackageToConfig", () => {
 
   test.case("updates an existing entry with the same source (dedup)", async assert => {
     await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+    await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
     await testRoot
-      .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+      .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .writeJSON({ packages: ["npm:pkg"] });
 
     const entry: PackageEntry = { package: "npm:pkg", powerups: { include: ["a"] } };
@@ -228,9 +228,9 @@ test.group("addPackageToConfig", () => {
 test.group("removePackageFromConfig", () => {
   test.case("removes a plain string entry by source", async assert => {
     await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+    await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
     await testRoot
-      .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+      .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .writeJSON({ packages: ["npm:pkg", "other"] });
 
     await removePackageFromConfig(testRoot, "npm:pkg");
@@ -242,10 +242,10 @@ test.group("removePackageFromConfig", () => {
 
   test.case("removes an object entry by matching source", async assert => {
     await reset();
-    await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+    await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
     const entry: PackageEntry = { package: "npm:pkg", powerups: { include: ["a"] } };
     await testRoot
-      .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+      .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .writeJSON({ packages: [entry, "other"] });
 
     await removePackageFromConfig(testRoot, "npm:pkg");
@@ -263,7 +263,7 @@ test.group("ensureGlobalInit", () => {
     const created = await ensureGlobalInit(testRoot.path);
 
     assert(created).true();
-    assert(await fs.exists(testRoot.append(`/${MAIN_FOLDER}`))).true();
+    assert(await fs.exists(testRoot.append(`/${CLI_FOLDER_NAME}`))).true();
     const config = await readGlobalConfig(testRoot.path);
     assert(config?.packages).equals([]);
 
@@ -273,8 +273,8 @@ test.group("ensureGlobalInit", () => {
   test.case("no-ops and returns false when already present", async assert => {
     await reset();
     await writeConfig(testRoot, { packages: [] });
-    const globalDir = testRoot.append(`/${MAIN_FOLDER}`);
-    await globalDir.append(`/${CONFIG_FILE}`).writeJSON({ packages: ["existing"] });
+    const globalDir = testRoot.append(`/${CLI_FOLDER_NAME}`);
+    await globalDir.append(`/${CONFIG_FILE_NAME}`).writeJSON({ packages: ["existing"] });
 
     const created = await ensureGlobalInit(testRoot.path);
 

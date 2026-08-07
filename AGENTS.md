@@ -67,7 +67,7 @@ const harness = await detectHarness(projectRoot, harnessFlag, options);
   const variables = {
     CLI_NAME,
     CLI_CMD,
-    MAIN_FOLDER,
+    CLI_FOLDER_NAME,
     INTERNAL_FOLDER,
   };
   const filesWritten: string[] = [];
@@ -85,7 +85,7 @@ const harness = await detectHarness(projectRoot, harnessFlag, options);
   const variables = {
     CLI_NAME,
     CLI_CMD,
-    MAIN_FOLDER,
+    CLI_FOLDER_NAME,
     INTERNAL_FOLDER,
   };
   const filesWritten: string[] = [];

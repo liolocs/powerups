@@ -6,15 +6,15 @@ import { type PackageEntry } from "#utils/config";
 import { CodeError } from "@rcompat/error";
 import { PowerErrorCode } from "#errors/powerErrors";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  CONFIG_FILE,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
+  CONFIG_FILE_NAME,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
   CLI_NAME,
-  SINGULAR_NAME,
+  SINGULAR_NAME_FOR_CLI,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -31,7 +31,7 @@ async function createPackage(
   powerups: { name: string; type: "multi-use" | "single-use" }[] = [],
 ): Promise<void> {
   const pkgDir = projectRoot.append(
-    `/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`,
+    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${packageName}`,
   );
   const srcActive = pkgDir;
 
@@ -58,11 +58,11 @@ async function createPackage(
       `./${typeFolder}/${powerup.name}/instructions.json`;
   }
 
-  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
     name: packageName,
     version: "1.0.0",
     description: "test package",
-    keywords: [KEYWORD_PACKAGE],
+    keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
     [CLI_NAME]: { active: powerupsProperty },
   });
 }
@@ -71,14 +71,14 @@ async function createConfig(
   projectRoot: FileRef,
   packages: PackageEntry[],
 ): Promise<void> {
-  const configDir = projectRoot.append(`/${MAIN_FOLDER}`);
+  const configDir = projectRoot.append(`/${CLI_FOLDER_NAME}`);
   await fs.create(configDir);
-  await configDir.append(`/${CONFIG_FILE}`).writeJSON({
+  await configDir.append(`/${CONFIG_FILE_NAME}`).writeJSON({
     packages,
   });
 }
 
-test.case(`resolves a ${SINGULAR_NAME} from a local package`, async assert => {
+test.case(`resolves a ${SINGULAR_NAME_FOR_CLI} from a local package`, async assert => {
   await reset();
   await createPackage(testRoot, "my-pkg", [{ name: "my-powerup", type: "multi-use" }]);
   await createConfig(testRoot, ["my-pkg"]);
@@ -92,7 +92,7 @@ test.case(`resolves a ${SINGULAR_NAME} from a local package`, async assert => {
   await testRoot.remove();
 });
 
-test.case(`resolves a single-use ${SINGULAR_NAME}`, async assert => {
+test.case(`resolves a single-use ${SINGULAR_NAME_FOR_CLI}`, async assert => {
   await reset();
   await createPackage(testRoot, "my-pkg", [{ name: "my-powerup", type: "single-use" }]);
   await createConfig(testRoot, ["my-pkg"]);
@@ -104,7 +104,7 @@ test.case(`resolves a single-use ${SINGULAR_NAME}`, async assert => {
   await testRoot.remove();
 });
 
-test.case(`throws not_found when ${SINGULAR_NAME} is not in any config-listed package`, async assert => {
+test.case(`throws not_found when ${SINGULAR_NAME_FOR_CLI} is not in any config-listed package`, async assert => {
   await reset();
   await createPackage(testRoot, "my-pkg", [{ name: "my-powerup", type: "multi-use" }]);
   await createConfig(testRoot, ["my-pkg"]);
@@ -149,7 +149,7 @@ test.case("resolves from second package when not in first", async assert => {
   await testRoot.remove();
 });
 
-test.case(`throws ambiguous when same ${SINGULAR_NAME} name in multiple local packages`, async assert => {
+test.case(`throws ambiguous when same ${SINGULAR_NAME_FOR_CLI} name in multiple local packages`, async assert => {
   await reset();
   await createPackage(testRoot, "pkg-a", [{ name: "shared", type: "multi-use" }]);
   await createPackage(testRoot, "pkg-b", [{ name: "shared", type: "multi-use" }]);
@@ -167,7 +167,7 @@ test.case(`throws ambiguous when same ${SINGULAR_NAME} name in multiple local pa
   await testRoot.remove();
 });
 
-test.case(`disambiguates by type when same ${SINGULAR_NAME} in both types in same package`, async assert => {
+test.case(`disambiguates by type when same ${SINGULAR_NAME_FOR_CLI} in both types in same package`, async assert => {
   await reset();
   await createPackage(testRoot, "my-pkg", [
     { name: "shared", type: "multi-use" },
@@ -312,8 +312,8 @@ test.group("resolvePowerUp with fallbackToGlobal", () => {
     await createPackage(testRoot, "global-pkg", [{ name: "global-power", type: "multi-use" }]);
     // Create global config (no local config)
     const homeDir = testRoot.append("/home");
-    await fs.create(homeDir.append(`/${MAIN_FOLDER}`));
-    await homeDir.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({ packages: ["global-pkg"] });
+    await fs.create(homeDir.append(`/${CLI_FOLDER_NAME}`));
+    await homeDir.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`).writeJSON({ packages: ["global-pkg"] });
 
     // Resolve with fallbackToGlobal — package exists in local store, config entry from global
     const result = await resolvePowerUp(testRoot, "global-power", undefined, {
@@ -335,8 +335,8 @@ test.group("resolvePowerUp with fallbackToGlobal", () => {
     await createConfig(testRoot, ["local-pkg"]);
     // Create global config with both packages (local-pkg should be deduped)
     const homeDir = testRoot.append("/home");
-    await fs.create(homeDir.append(`/${MAIN_FOLDER}`));
-    await homeDir.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({ packages: ["local-pkg", "global-pkg"] });
+    await fs.create(homeDir.append(`/${CLI_FOLDER_NAME}`));
+    await homeDir.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`).writeJSON({ packages: ["local-pkg", "global-pkg"] });
 
     // Both powers should be found
     const localResult = await resolvePowerUp(testRoot, "local-power", undefined, {

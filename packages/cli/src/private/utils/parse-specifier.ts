@@ -1,4 +1,4 @@
-import { INTERNAL_FOLDER, NPM_STORE, GIT_STORE } from "#constants";
+import { INTERNAL_FOLDER, FOLDER_FOR_NPM_INSTALLED_PACKAGES, FOLDER_FOR_GIT_INSTALLED_PACKAGES } from "#constants";
 
 export type SourceType = "internal" | "npm" | "git";
 
@@ -17,7 +17,7 @@ export interface PackageSpecifier {
  *  - `http(s)://...`       → git store (`git/<domain>/<owner>/<repo>`)
  *  - bare name             → internal store (`internal/<name>`)
  *
- * `storePath` is relative to the `.<MAIN_FOLDER>/` root (local or global).
+ * `storePath` is relative to the `.<CLI_FOLDER_NAME>/` root (local or global).
  */
 export function parseSpecifier(source: string): PackageSpecifier {
   // npm: prefix
@@ -27,7 +27,7 @@ export function parseSpecifier(source: string): PackageSpecifier {
       type: "npm",
       source,
       name,
-      storePath: `${NPM_STORE}/node_modules/${name}`,
+      storePath: `${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/${name}`,
     };
   }
 
@@ -41,7 +41,7 @@ export function parseSpecifier(source: string): PackageSpecifier {
     const owner = parts[0] ?? "";
     const repo = parts[1] ?? "";
     // storePath: git/<domain>/<owner>/<repo>
-    const storePath = `${GIT_STORE}/${domain}/${owner}/${repo}`;
+    const storePath = `${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/${domain}/${owner}/${repo}`;
     return {
       type: "git",
       source,

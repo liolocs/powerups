@@ -6,16 +6,16 @@ import runtime from "@rcompat/runtime";
 import { Command } from "@liolocs/program";
 import create_errors from "#errors/createErrors";
 import {
-  SINGULAR_NAME,
+  SINGULAR_NAME_FOR_CLI,
   CAPITALIZED_SINGLULAR_CLI_NAME,
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
 } from "#constants";
 import { createPowerup, printCreateSummary } from "#utils/create/create-powerup";
 
 const create = new Command({
   name: "create",
-  description: `Create a new ${SINGULAR_NAME}`,
+  description: `Create a new ${SINGULAR_NAME_FOR_CLI}`,
   flags: [
     {
       name: "workingDir",
@@ -78,7 +78,7 @@ const create = new Command({
       throw create_errors.missing_name();
     }
 
-    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+    const mainFolder = root.append(`/${CLI_FOLDER_NAME}`);
 
     if (!(await fs.exists(mainFolder))) {
       throw create_errors.main_folder_not_found();

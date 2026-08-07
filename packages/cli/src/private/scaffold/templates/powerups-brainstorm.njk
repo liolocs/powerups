@@ -11,7 +11,7 @@ Brainstorm a plan using {{ CLI_NAME }}.
    - Run `{{ CLI_CMD }} find -q="<what the user wants to plan>"` to see if
      any powerups already relate to this area.
    - If the find returns "No matching powerups found", check whether
-     `{{ MAIN_FOLDER }}/{{ INTERNAL_FOLDER }}/` exists and contains any
+     `{{ CLI_FOLDER_NAME }}/{{ INTERNAL_FOLDER }}/` exists and contains any
      packages with `instructions.json` files. This distinguishes "nothing exists
      yet" (greenfield) from "items exist but none match this request."
 
@@ -71,7 +71,7 @@ the wrong approach. Find is not optional.
    A task is one-off if:
    - It's project configuration (tsconfig, path aliases)
    - It only adds npm dependencies (use `packageDependencies` in the
-     {{ SINGULAR_NAME }}'s `instructions.json` instead — the CLI handles `package.json`
+     {{ SINGULAR_NAME_FOR_CLI }}'s `instructions.json` instead — the CLI handles `package.json`
      updates and install automatically)
    - It's a bridge or adapter specific to this project's setup
    - It's content (locale strings, copy text, data files)
@@ -104,7 +104,7 @@ the wrong approach. Find is not optional.
    - Multi-use capture candidates (to capture after implementation is verified,
      with suggested name, intent keywords, and variables)
    - Single-use capture candidates (to capture after implementation is verified)
-   - Non-{{ SINGULAR_NAME }} work (one-off tasks)
+   - Non-{{ SINGULAR_NAME_FOR_CLI }} work (one-off tasks)
    - Suggested order of implementation
 
    Present only the final plan. Do not include your reasoning process, internal
@@ -115,7 +115,7 @@ the wrong approach. Find is not optional.
 8. Self-review the plan:
    - Did every identified intent get searched? (Check your recorded results.)
    - Are all capture candidates marked for post-implementation (not pre)?
-   - Is the build-first principle followed? (No "create {{ SINGULAR_NAME }} first" steps.)
+   - Is the build-first principle followed? (No "create {{ SINGULAR_NAME_FOR_CLI }} first" steps.)
    - Are there any planned powerups that duplicate template content from
      existing powerups? If so, they should use `include` steps to reference the
      existing ones instead of recreating templates. Check every planned

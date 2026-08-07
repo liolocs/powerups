@@ -1,8 +1,8 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import io from "@rcompat/io";
 import {
-  NPM_STORE,
-  PACKAGE_FILE,
+  FOLDER_FOR_NPM_INSTALLED_PACKAGES,
+  PACKAGE_JSON,
 } from "#constants";
 
 /**
@@ -34,8 +34,8 @@ export async function updateNpmPackage(
 ): Promise<UpdateResult> {
   try {
     // 1. Read installed version
-    const pkgDir = storeRoot.append(`/${NPM_STORE}/node_modules/${packageName}`);
-    const pkgJsonPath = pkgDir.append(`/${PACKAGE_FILE}`);
+    const pkgDir = storeRoot.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/${packageName}`);
+    const pkgJsonPath = pkgDir.append(`/${PACKAGE_JSON}`);
 
     if (!(await fs.exists(pkgJsonPath))) {
       return {
@@ -71,8 +71,8 @@ export async function updateNpmPackage(
     }
 
     // 4. Update: set dep to latest and run npm install
-    const npmDir = storeRoot.append(`/${NPM_STORE}`);
-    const storePkgJsonPath = npmDir.append(`/${PACKAGE_FILE}`);
+    const npmDir = storeRoot.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}`);
+    const storePkgJsonPath = npmDir.append(`/${PACKAGE_JSON}`);
     const storePkgJson = await storePkgJsonPath.json() as Record<string, any>;
 
     if (!storePkgJson.dependencies) {

@@ -8,7 +8,7 @@ import { randomBytes } from "node:crypto";
 import { getGitStatus, type GitChange } from "#utils/create/git/git-status";
 import { CodeError } from "@rcompat/error";
 import { CreateErrorCode } from "#errors/createErrors";
-import { MAIN_FOLDER, INTERNAL_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, INTERNAL_FOLDER } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -182,7 +182,7 @@ test.case(".powerups/ paths are excluded", async assert => {
   await fs.create(testRoot);
   await gitInit(testRoot);
 
-  await createFile(testRoot, ".powerups/internal/test-pkg/dummy.json", "{}\n");
+  await createFile(testRoot, ".powerups/_internal/test-pkg/dummy.json", "{}\n");
 
   const changes = await getGitStatus({ workingDir: testRoot, projectRoot: testRoot });
   const powerupsChange = changes.find(c => c.path.startsWith(".powerups/"));

@@ -1,7 +1,7 @@
 import {
-  KEYWORD_PACKAGE,
-  PACKAGE_FILE,
-  SINGULAR_NAME,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
+  PACKAGE_JSON,
+  SINGULAR_NAME_FOR_CLI,
   type PowerUpType,
 } from "#constants";
 import {
@@ -131,11 +131,11 @@ async function createPowerupPackage({
     name,
     version: "1.0.0",
     description: "",
-    keywords: [KEYWORD_PACKAGE],
-    [SINGULAR_NAME]: "./instructions.json",
+    keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
+    [SINGULAR_NAME_FOR_CLI]: "./instructions.json",
   };
 
-  await outputDir.append(`/${PACKAGE_FILE}`).writeJSON(packageJson as never);
+  await outputDir.append(`/${PACKAGE_JSON}`).writeJSON(packageJson as never);
 }
 
 function buildInstructions({

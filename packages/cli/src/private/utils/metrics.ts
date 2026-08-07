@@ -1,7 +1,7 @@
 import fs from "@rcompat/fs";
 import path from "node:path";
 import { encodeProjectPath, decodeProjectPath } from "#utils/project-path";
-import { GLOBAL_ROOT, METRICS_FILE } from "#constants";
+import { GLOBAL_ROOT, METRICS_FILE_NAME } from "#constants";
 
 export interface MetricsEntry {
   timestamp: string;
@@ -26,7 +26,7 @@ function resolveOptions(options?: MetricsOptions) {
 }
 
 function getMetricsPath(cwd: string, globalRoot: string): string {
-  return path.join(globalRoot, "projects", encodeProjectPath(cwd), METRICS_FILE);
+  return path.join(globalRoot, "projects", encodeProjectPath(cwd), METRICS_FILE_NAME);
 }
 
 /**
@@ -101,7 +101,7 @@ export async function readAllMetrics(options?: { globalRoot?: string }): Promise
 
   for (const dir of dirs) {
     if (!dir.name.startsWith("--") || !dir.name.endsWith("--")) continue;
-    const metricsPath = path.join(dir.path, METRICS_FILE);
+    const metricsPath = path.join(dir.path, METRICS_FILE_NAME);
     if (!(await fs.exists(metricsPath))) continue;
 
     const content = await fs.text(metricsPath);

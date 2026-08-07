@@ -1,6 +1,6 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import pack_errors from "#errors/packErrors";
-import { PACKAGE_FILE } from "#constants";
+import { PACKAGE_JSON } from "#constants";
 
 type VerifyMoveSuccessParams = {
   packageName: string;
@@ -27,7 +27,7 @@ export async function verifyMoveSuccess({
   }
 
   // 2. package.json exists and is readable JSON
-  const globalPkgFile = globalPackageDir.append(`/${PACKAGE_FILE}`);
+  const globalPkgFile = globalPackageDir.append(`/${PACKAGE_JSON}`);
   if (!(await fs.exists(globalPkgFile))) {
     throw pack_errors.move_verification_failed(
       packageName,

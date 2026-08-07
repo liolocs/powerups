@@ -10,7 +10,7 @@ import { InitErrorCode } from "#errors/initErrors";
 import { UpdateErrorCode } from "#errors/updateErrors";
 import { ProjectErrorCode } from "#errors/projectErrors";
 import { writeGlobalConfig } from "#utils/config";
-import { MAIN_FOLDER, CLI_NAME, HARNESS_FINGERPRINTS, SKILLS_DIRS } from "#constants";
+import { CLI_FOLDER_NAME, CLI_NAME, HARNESS_FINGERPRINTS, SKILLS_DIRS } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -345,7 +345,7 @@ test.case("update --packages updates git packages", async assert => {
 
   // Clone into the global git store (under homeRoot)
   const gitStore = homeRoot.append(
-    `/${MAIN_FOLDER}/git/localhost/test/remote-repo`,
+    `/${CLI_FOLDER_NAME}/git/localhost/test/remote-repo`,
   );
   await fs.create(gitStore.directory);
   await io.run(`git clone "${remoteDir.path}" "${gitStore.path}"`);
@@ -393,7 +393,7 @@ test.case("update --packages continues on failure", async assert => {
   await createRemoteRepo(remoteDir, "1.0.0", "init");
 
   const validGitStore = homeRoot.append(
-    `/${MAIN_FOLDER}/git/localhost/test/remote-repo-valid`,
+    `/${CLI_FOLDER_NAME}/git/localhost/test/remote-repo-valid`,
   );
   await fs.create(validGitStore.directory);
   await io.run(`git clone "${remoteDir.path}" "${validGitStore.path}"`);
@@ -458,7 +458,7 @@ test.case("update <source> updates one git package", async assert => {
 
   // Clone into the global git store (under homeRoot)
   const gitStore = homeRoot.append(
-    `/${MAIN_FOLDER}/git/localhost/test/remote-repo`,
+    `/${CLI_FOLDER_NAME}/git/localhost/test/remote-repo`,
   );
   await fs.create(gitStore.directory);
   await io.run(`git clone "${remoteDir.path}" "${gitStore.path}"`);

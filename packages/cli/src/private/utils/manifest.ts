@@ -1,6 +1,6 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
-import { MAIN_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME } from "#constants";
 
 const MANIFEST_FILE = "manifest.jsonl";
 
@@ -17,7 +17,7 @@ export interface ManifestEntry {
 }
 
 function manifestRef(root: FileRef): FileRef {
-  return root.append(`/${MAIN_FOLDER}/${MANIFEST_FILE}`);
+  return root.append(`/${CLI_FOLDER_NAME}/${MANIFEST_FILE}`);
 }
 
 export async function readManifest(root: FileRef): Promise<ManifestEntry[]> {

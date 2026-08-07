@@ -11,7 +11,7 @@ import { scaffold } from "#scaffold/index";
 import { readConfig, readGlobalConfig, getPackageSource } from "#utils/config";
 import { parseSpecifier } from "#utils/parse-specifier";
 import { updateNpmPackage, updateGitPackage, type UpdateResult } from "#utils/update-package";
-import { MAIN_FOLDER, CLI_NAME } from "#constants";
+import { CLI_FOLDER_NAME, CLI_NAME } from "#constants";
 
 interface DiscoveredPackage {
   source: string;
@@ -96,7 +96,7 @@ const update = new Command({
       : positionalSource;
 
     if (doScaffold) {
-      if (!(await fs.exists(root.append(`/${MAIN_FOLDER}`)))) {
+      if (!(await fs.exists(root.append(`/${CLI_FOLDER_NAME}`)))) {
         throw project_errors.project_not_initialized();
       }
 
@@ -130,9 +130,9 @@ const update = new Command({
           throw update_errors.package_not_found(isSinglePackageUpdate!);
         }
 
-        const localDir = root.append(`/${MAIN_FOLDER}/${spec.storePath}`);
+        const localDir = root.append(`/${CLI_FOLDER_NAME}/${spec.storePath}`);
         const globalDir = fs.ref(
-          path.join(homeDirStr, MAIN_FOLDER, spec.storePath),
+          path.join(homeDirStr, CLI_FOLDER_NAME, spec.storePath),
         );
 
         const inLocal = await fs.exists(localDir);
@@ -196,8 +196,8 @@ const update = new Command({
       for (const pkg of toUpdate) {
         const spec = parseSpecifier(pkg.source);
         const storeRoot = pkg.location === "local"
-          ? root.append(`/${MAIN_FOLDER}`)
-          : fs.ref(path.join(homeDirStr, MAIN_FOLDER));
+          ? root.append(`/${CLI_FOLDER_NAME}`)
+          : fs.ref(path.join(homeDirStr, CLI_FOLDER_NAME));
 
         let result: UpdateResult;
 

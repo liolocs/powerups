@@ -7,22 +7,22 @@ import { verifyMoveSuccess } from "#utils/move/verify";
 import { CodeError } from "@rcompat/error";
 import { PackErrorCode } from "#errors/packErrors";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
-  CONFIG_FILE,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
+  CONFIG_FILE_NAME,
   CLI_NAME,
   GLOBAL_INTERNAL_PATH,
   GLOBAL_CONFIG_PATH,
-  SINGULAR_NAME,
+  SINGULAR_NAME_FOR_CLI,
 } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/move-spec");
-const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
+const mainFolder = testRoot.append(`/${CLI_FOLDER_NAME}`);
 const internalFolder = mainFolder.append(`/${INTERNAL_FOLDER}`);
 const globalInternal = fs.ref(GLOBAL_INTERNAL_PATH);
 const globalConfigFile = fs.ref(GLOBAL_CONFIG_PATH);
@@ -39,7 +39,7 @@ async function reset() {
 }
 
 async function createConfig(packages: string[]) {
-  await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
+  await mainFolder.append(`/${CONFIG_FILE_NAME}`).writeJSON({
     packages,
   });
 }
@@ -78,11 +78,11 @@ async function createPackageOnDisk({
       `./${typeFolder}/${power.name}/instructions.json`;
   }
 
-  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
     name: packageName,
     version: "1.0.0",
     description: "test package",
-    keywords: [KEYWORD_PACKAGE],
+    keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
     [CLI_NAME]: { active: powerupsProperty },
   });
 }
@@ -225,7 +225,7 @@ test.group("pack move (errors)", () => {
     await testRoot.remove();
   });
 
-  test.case(`errors on unresolvable sub-${SINGULAR_NAME} include`, async assert => {
+  test.case(`errors on unresolvable sub-${SINGULAR_NAME_FOR_CLI} include`, async assert => {
     await reset();
     await createPackageOnDisk({
       packageName: "bad-include-pkg",
@@ -319,7 +319,7 @@ test.group("pack move (success)", () => {
 
       // Verify global package.json has correct name
       const globalPkgJson = await globalPkg
-        .append(`/${PACKAGE_FILE}`)
+        .append(`/${PACKAGE_JSON}`)
         .json() as Record<string, unknown>;
       assert(globalPkgJson.name).equals(pkgName);
 
@@ -388,7 +388,7 @@ test.group("pack move (success)", () => {
 
       // Verify parent:child entry in global package.json
       const globalPkgJson = await globalPkg
-        .append(`/${PACKAGE_FILE}`)
+        .append(`/${PACKAGE_JSON}`)
         .json() as Record<string, unknown>;
       const powerupsProp = globalPkgJson[CLI_NAME] as unknown as {
         active: Record<string, Record<string, string>>;
@@ -430,7 +430,7 @@ test.group("pack move (success)", () => {
 
       // Verify package was removed from project config
       const config = await mainFolder
-        .append(`/${CONFIG_FILE}`)
+        .append(`/${CONFIG_FILE_NAME}`)
         .json() as Record<string, unknown>;
       const packages = config.packages as string[];
       assert(packages.includes(pkgName)).false();
@@ -469,7 +469,7 @@ test.group("pack move (success)", () => {
 
       // Verify package is still in project config
       const config = await mainFolder
-        .append(`/${CONFIG_FILE}`)
+        .append(`/${CONFIG_FILE_NAME}`)
         .json() as Record<string, unknown>;
       const packages = config.packages as string[];
       assert(packages.includes(pkgName)).true();
@@ -495,7 +495,7 @@ test.group("verifyMoveSuccess", () => {
     const pkgName = "verify-ok";
     const globalPkg = globalInternal.append(`/${pkgName}`);
     await fs.create(globalPkg);
-    await globalPkg.append(`/${PACKAGE_FILE}`).writeJSON({ name: pkgName });
+    await globalPkg.append(`/${PACKAGE_JSON}`).writeJSON({ name: pkgName });
 
     await verifyMoveSuccess({
       packageName: pkgName,
@@ -554,7 +554,7 @@ test.group("verifyMoveSuccess", () => {
     const pkgName = "verify-bad-json";
     const globalPkg = globalInternal.append(`/${pkgName}`);
     await fs.create(globalPkg);
-    await globalPkg.append(`/${PACKAGE_FILE}`).write("{ this is not valid json ");
+    await globalPkg.append(`/${PACKAGE_JSON}`).write("{ this is not valid json ");
 
     let threw;
     try {

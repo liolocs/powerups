@@ -5,11 +5,11 @@ import { parseSpecifier } from "#utils/parse-specifier";
 import { packageJsonSchema, type PowerUpProperty } from "#schemas/package";
 import power_errors from "#errors/powerErrors";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   GLOBAL_ROOT,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
+  PACKAGE_JSON,
   type PowerUpType,
   CLI_NAME,
 } from "#constants";
@@ -43,9 +43,9 @@ export async function resolvePackage(
   const spec = parseSpecifier(source);
 
   // Check local first
-  const localDir = projectRoot.append(`/${MAIN_FOLDER}/${spec.storePath}`);
+  const localDir = projectRoot.append(`/${CLI_FOLDER_NAME}/${spec.storePath}`);
   if (await fs.exists(localDir)) {
-    const pkgJsonPath = localDir.append(`/${PACKAGE_FILE}`);
+    const pkgJsonPath = localDir.append(`/${PACKAGE_JSON}`);
     if (await fs.exists(pkgJsonPath)) {
       const pkgJson = packageJsonSchema.parse(await pkgJsonPath.json());
       return {
@@ -60,7 +60,7 @@ export async function resolvePackage(
   // Check global
   const globalDir = fs.ref(`${GLOBAL_ROOT}/${spec.storePath}`);
   if (await fs.exists(globalDir)) {
-    const pkgJsonPath = globalDir.append(`/${PACKAGE_FILE}`);
+    const pkgJsonPath = globalDir.append(`/${PACKAGE_JSON}`);
     if (await fs.exists(pkgJsonPath)) {
       const pkgJson = packageJsonSchema.parse(await pkgJsonPath.json());
       return {

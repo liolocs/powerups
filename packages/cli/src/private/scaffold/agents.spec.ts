@@ -5,7 +5,7 @@ import { writeToAgentsOrClaudeMD } from "#scaffold/agents";
 import { runTemplate } from "#template-runners/index";
 import {
   CLI_NAME,
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
@@ -20,7 +20,7 @@ async function renderAgents(): Promise<string> {
     templatePath: scaffoldDir.append("/templates/agents.njk"),
     variables: {
       CLI_NAME,
-      MAIN_FOLDER,
+      CLI_FOLDER_NAME,
       INTERNAL_FOLDER,
       MULTI_USE_FOLDER,
       SINGLE_USE_FOLDER,

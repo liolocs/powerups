@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_CMD, SINGULAR_NAME, KEYWORD_PACKAGE } from "#constants";
+import { CLI_CMD, SINGULAR_NAME_FOR_CLI, PACKAGE_JSON_KEYWORD_PROPERTY } from "#constants";
 
 const t = error.template;
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
@@ -9,15 +9,15 @@ const build_errors = error.coded({
   no_package_json: () => {
     const errorText =
       `No package.json found in the current directory.\n\n` +
-      `Run "${CLI_CMD} build" from inside a ${SINGULAR_NAME} directory.`;
+      `Run "${CLI_CMD} build" from inside a ${SINGULAR_NAME_FOR_CLI} directory.`;
     return t`${errorBGText}${errorText}`;
   },
 
   not_a_powerups_package: () => {
     const errorText =
-      `This directory is not a ${SINGULAR_NAME} package.\n` +
-      `package.json must have "${KEYWORD_PACKAGE}" in its keywords array.\n\n` +
-      `Run "${CLI_CMD} build" from inside a ${SINGULAR_NAME} directory.`;
+      `This directory is not a ${SINGULAR_NAME_FOR_CLI} package.\n` +
+      `package.json must have "${PACKAGE_JSON_KEYWORD_PROPERTY}" in its keywords array.\n\n` +
+      `Run "${CLI_CMD} build" from inside a ${SINGULAR_NAME_FOR_CLI} directory.`;
     return t`${errorBGText}${errorText}`;
   },
 

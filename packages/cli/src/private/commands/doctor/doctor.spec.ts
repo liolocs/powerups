@@ -13,19 +13,19 @@ import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
-  CONFIG_FILE,
-  APPLIED_FILE,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
+  CONFIG_FILE_NAME,
+  POWERUP_MANIFEST_FILE_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot: FileRef = root.append("/tmp");
-const mainFolder: FileRef = testRoot.append(`/${MAIN_FOLDER}`);
+const mainFolder: FileRef = testRoot.append(`/${CLI_FOLDER_NAME}`);
 const internalFolder: FileRef = mainFolder.append(`/${INTERNAL_FOLDER}`);
 const multiUseFolder: FileRef = internalFolder.append(`/test-pkg/${MULTI_USE_FOLDER}`);
 
@@ -57,15 +57,15 @@ async function reset() {
   const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
-  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
     name: "test-pkg",
     version: "1.0.0",
     description: "test",
-    keywords: [KEYWORD_PACKAGE],
+    keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
     powerups: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
   });
   // Create config with test-pkg listed
-  await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({
+  await mainFolder.append(`/${CONFIG_FILE_NAME}`).writeJSON({
     packages: ["test-pkg"],
   });
   await gitInit(testRoot);
@@ -203,9 +203,9 @@ test.case("doctor errors when not a git repo", async assert => {
   // Use a temp dir outside the project's git repo
   const noGitRoot = fs.ref(path.join(tmpdir(), `powerups-test-nogit-${randomBytes(4).toString("hex")}`));
   await fs.create(noGitRoot);
-  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
-  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}`));
-  await fs.create(noGitRoot.append(`/${MAIN_FOLDER}/${MULTI_USE_FOLDER}`));
+  await fs.create(noGitRoot.append(`/${CLI_FOLDER_NAME}`));
+  await fs.create(noGitRoot.append(`/${CLI_FOLDER_NAME}`));
+  await fs.create(noGitRoot.append(`/${CLI_FOLDER_NAME}/${MULTI_USE_FOLDER}`));
 
   const { output } = await captureStdoutOrError(() => doctor.run({
     subcommands: [],
@@ -256,7 +256,7 @@ test.case("doctor checks both types in one pass", async assert => {
 });
 
 test.group("doctor errors", () => {
-  test.case(`should fail with not_initialized when ${MAIN_FOLDER} folder not found`, async assert => {
+  test.case(`should fail with not_initialized when ${CLI_FOLDER_NAME} folder not found`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
     await gitInit(testRoot);
@@ -320,7 +320,7 @@ test.case("doctor warns when manifest references a missing file",
   async assert => {
     await reset();
 
-    await mainFolder.append(`/${APPLIED_FILE}`).writeJSON({
+    await mainFolder.append(`/${POWERUP_MANIFEST_FILE_NAME}`).writeJSON({
       version: 1,
       applied: [{
         powerup: "@powerups/widget", name: "widget", version: "1.0.0",
@@ -341,7 +341,7 @@ test.case("doctor warns when manifest references a missing file",
 test.case("doctor errors on a corrupt manifest", async assert => {
     await reset();
 
-    await mainFolder.append(`/${APPLIED_FILE}`).write("{ broken");
+  await mainFolder.append(`/${POWERUP_MANIFEST_FILE_NAME}`).write("{ broken");
 
     const { output, error } = await captureStdoutOrError(() =>
       doctor.run({ subcommands: [], flags: [], context: { root: testRoot } }));

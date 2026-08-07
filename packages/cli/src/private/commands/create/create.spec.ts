@@ -6,20 +6,20 @@ import runtime from "@rcompat/runtime";
 import { CodeError } from "@rcompat/error";
 import { CreateErrorCode } from "#errors/createErrors";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
-  CONFIG_FILE,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
+  CONFIG_FILE_NAME,
   CLI_NAME,
 } from "#constants";
 import { extractPackageDependencies } from "#utils/create/steps/extract-deps-from-package-changes";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
-const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
+const mainFolder = testRoot.append(`/${CLI_FOLDER_NAME}`);
 const internalFolder = mainFolder.append(`/${INTERNAL_FOLDER}`);
 
 async function reset() {
@@ -33,11 +33,11 @@ async function createTestPackage(name: string) {
   const pkgDir = internalFolder.append(`/${name}`);
   await fs.create(pkgDir.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(pkgDir.append(`/${SINGLE_USE_FOLDER}`));
-  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
     name,
     version: "1.0.0",
     description: "test",
-    keywords: [KEYWORD_PACKAGE],
+    keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
     powerups: { active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} } },
   });
 }
@@ -145,7 +145,7 @@ test.case("create without -p flag omits packageDependencies", async assert => {
 });
 
 test.group("create errors", () => {
-  test.case(`should fail with main_folder_not_found without ${MAIN_FOLDER} folder`, async assert => {
+  test.case(`should fail with main_folder_not_found without ${CLI_FOLDER_NAME} folder`, async assert => {
     await testRoot.remove();
     await fs.create(testRoot);
 
@@ -320,7 +320,7 @@ test.case(`should update package.json ${CLI_NAME} property after creating a powe
   });
 
   const pkgJson = await internalFolder
-    .append(`/test-pkg/${PACKAGE_FILE}`)
+    .append(`/test-pkg/${PACKAGE_JSON}`)
     .json() as Record<string, unknown>;
   const powerups = (pkgJson.powerups as Record<string, Record<string, Record<string, string>>>).active;
   assert(powerups[SINGLE_USE_FOLDER]["test-powerup"]).defined();
@@ -331,7 +331,7 @@ test.case(`should update package.json ${CLI_NAME} property after creating a powe
 test.case(`should add package to project config after creating a powerup`, async assert => {
   await reset();
   await createTestPackage("test-pkg");
-  await mainFolder.append(`/${CONFIG_FILE}`).writeJSON({ packages: [] });
+  await mainFolder.append(`/${CONFIG_FILE_NAME}`).writeJSON({ packages: [] });
 
   await create.run({
     subcommands: ["test-powerup"],
@@ -341,7 +341,7 @@ test.case(`should add package to project config after creating a powerup`, async
     context: { root: testRoot },
   });
 
-  const config = await mainFolder.append(`/${CONFIG_FILE}`).json() as Record<string, unknown>;
+  const config = await mainFolder.append(`/${CONFIG_FILE_NAME}`).json() as Record<string, unknown>;
   assert(config.packages).equals(["test-pkg"]);
 
   await testRoot.remove();

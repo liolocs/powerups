@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { APPLIED_FILE, CLI_CMD, MAIN_FOLDER } from "#constants";
+import { POWERUP_MANIFEST_FILE_NAME, CLI_CMD, CLI_FOLDER_NAME } from "#constants";
 
 const t = error.template;
 
@@ -9,7 +9,7 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 const applied_errors = error.coded({
   corrupt_manifest: () => {
     const errorText =
-      `${MAIN_FOLDER}/${APPLIED_FILE} is corrupt or not valid JSON. ` +
+      `${CLI_FOLDER_NAME}/${POWERUP_MANIFEST_FILE_NAME} is corrupt or not valid JSON. ` +
       `Re-run "${CLI_CMD} use" for the powerups you know were applied, or delete the file.`;
     return t`${errorBGText}${errorText}`;
   },

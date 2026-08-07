@@ -11,12 +11,12 @@ import { reconstructGitSource } from "#utils/parse-specifier";
 import { packageJsonSchema } from "#schemas/package";
 import {
   CLI_NAME,
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   GLOBAL_ROOT,
   INTERNAL_FOLDER,
-  NPM_STORE,
-  GIT_STORE,
-  PACKAGE_FILE,
+  FOLDER_FOR_NPM_INSTALLED_PACKAGES,
+  FOLDER_FOR_GIT_INSTALLED_PACKAGES,
+  PACKAGE_JSON,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
   CLI_CMD,
@@ -53,7 +53,7 @@ const list = new Command({
     }
 
     // 2. Scan all six store locations
-    const localRoot = root.append(`/${MAIN_FOLDER}`);
+    const localRoot = root.append(`/${CLI_FOLDER_NAME}`);
     const globalRoot = fs.ref(GLOBAL_ROOT);
 
     const found: InstalledPackage[] = [];
@@ -78,7 +78,7 @@ const list = new Command({
       ["local", localRoot],
       ["global", globalRoot],
     ] as const) {
-      const nodeModulesDir = storeRoot.append(`/${NPM_STORE}/node_modules`);
+      const nodeModulesDir = storeRoot.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules`);
       if (await fs.exists(nodeModulesDir)) {
         const entries = await nodeModulesDir.dirs();
         for (const entry of entries) {
@@ -114,7 +114,7 @@ const list = new Command({
       ["local", localRoot],
       ["global", globalRoot],
     ] as const) {
-      const gitDir = storeRoot.append(`/${GIT_STORE}`);
+      const gitDir = storeRoot.append(`/${FOLDER_FOR_GIT_INSTALLED_PACKAGES}`);
       if (await fs.exists(gitDir)) {
         await scanGitStore(gitDir, gitDir, location, found);
       }
@@ -186,11 +186,11 @@ async function scanGitStore(
   const entries = await currentDir.dirs();
   for (const entry of entries) {
     // Check if this directory has a package.json
-    const pkgJsonPath = entry.append(`/${PACKAGE_FILE}`);
+    const pkgJsonPath = entry.append(`/${PACKAGE_JSON}`);
     if (await fs.exists(pkgJsonPath)) {
       // This is a repo directory — reconstruct source
       const relativePath = entry.path.slice(baseDir.path.length + 1);
-      const source = reconstructGitSource(`${GIT_STORE}/${relativePath}`);
+      const source = reconstructGitSource(`${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/${relativePath}`);
       const pkg = await tryReadPackage(entry, "git", location, source);
       if (pkg) found.push(pkg);
     } else if (depth < 2) {
@@ -210,7 +210,7 @@ async function tryReadPackage(
   location: "local" | "global",
   explicitSource?: string,
 ): Promise<InstalledPackage | null> {
-  const pkgJsonPath = dir.append(`/${PACKAGE_FILE}`);
+  const pkgJsonPath = dir.append(`/${PACKAGE_JSON}`);
   if (!(await fs.exists(pkgJsonPath))) return null;
 
   try {

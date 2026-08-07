@@ -6,7 +6,7 @@ import { powerupPropertySchema, instructionsSchema, type Instructions, type Step
 import build_errors from "#errors/buildErrors";
 import { validateInstructions } from "#utils/build-validation";
 import { resolveTsup } from "#utils/tsup-resolver";
-import { SINGULAR_NAME, PACKAGE_FILE, KEYWORD_PACKAGE } from "#constants";
+import { SINGULAR_NAME_FOR_CLI, PACKAGE_JSON, PACKAGE_JSON_KEYWORD_PROPERTY } from "#constants";
 
 function fileUrlToDir(sourceUrl: string): FileRef {
   // sourceUrl is import.meta.url of a dist/index.js — walk up to the package root
@@ -17,7 +17,7 @@ function fileUrlToDir(sourceUrl: string): FileRef {
 async function resolvePackageDir(sourceUrl: string): Promise<FileRef> {
   let dir = fileUrlToDir(sourceUrl);
   for (let i = 0; i < 20; i++) {
-    if (await fs.exists(dir.append(`/${PACKAGE_FILE}`))) {
+    if (await fs.exists(dir.append(`/${PACKAGE_JSON}`))) {
       return dir;
     }
     dir = dir.up(1);
@@ -45,18 +45,18 @@ function collectExternals(pkgJson: Record<string, unknown>): string[] {
 }
 
 export async function buildPowerup(cwd: FileRef): Promise<void> {
-  const packageJsonRef = cwd.append(`/${PACKAGE_FILE}`);
+  const packageJsonRef = cwd.append(`/${PACKAGE_JSON}`);
   if (!(await packageJsonRef.exists())) {
     throw build_errors.no_package_json();
   }
 
   const pkgJson = await packageJsonRef.json() as Record<string, unknown>;
   const keywords = pkgJson.keywords;
-  if (!Array.isArray(keywords) || !keywords.includes(KEYWORD_PACKAGE)) {
+  if (!Array.isArray(keywords) || !keywords.includes(PACKAGE_JSON_KEYWORD_PROPERTY)) {
     throw build_errors.not_a_powerups_package();
   }
 
-  const powerupResult = powerupPropertySchema.safeParse(pkgJson[SINGULAR_NAME]);
+  const powerupResult = powerupPropertySchema.safeParse(pkgJson[SINGULAR_NAME_FOR_CLI]);
   if (!powerupResult.success) {
     throw build_errors.malformed_powerup_property(powerupResult.error.message);
   }
@@ -153,14 +153,14 @@ export async function buildPowerup(cwd: FileRef): Promise<void> {
 
   const green = cli.fg.green;
   const dim = cli.fg.dim;
-  const name = typeof pkgJson.name === "string" ? pkgJson.name : SINGULAR_NAME;
-  cli.print(`${green("✓")} Built ${SINGULAR_NAME}: ${name}\n`);
+  const name = typeof pkgJson.name === "string" ? pkgJson.name : SINGULAR_NAME_FOR_CLI;
+  cli.print(`${green("✓")} Built ${SINGULAR_NAME_FOR_CLI}: ${name}\n`);
   cli.print(`  ${dim("output:")} ${distRef.path}\n`);
 }
 
 const build = new Command({
   name: "build",
-  description: `Build a ${SINGULAR_NAME} for distribution`,
+  description: `Build a ${SINGULAR_NAME_FOR_CLI} for distribution`,
   flags: [],
   subcommands: [],
   action: async () => {

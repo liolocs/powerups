@@ -15,9 +15,9 @@ import { logRun } from "#utils/metrics";
 import { resolvePowerUp } from "#utils/resolve-powerup";
 import {
   CAPITALIZED_SINGLULAR_CLI_NAME,
-  MAIN_FOLDER,
-  PACKAGE_FILE,
-  SINGULAR_NAME,
+  CLI_FOLDER_NAME,
+  PACKAGE_JSON,
+  SINGULAR_NAME_FOR_CLI,
   type PowerUpType,
 } from "#constants";
 
@@ -85,7 +85,7 @@ function includedPowerupEntries(
 
 const use = new Command({
   name: "use",
-  description: `Use a ${SINGULAR_NAME}, rendering templates with variables`,
+  description: `Use a ${SINGULAR_NAME_FOR_CLI}, rendering templates with variables`,
   flags: [
     { name: "type", long: "type", short: "t", description: `${CAPITALIZED_SINGLULAR_CLI_NAME} type (multi-use or single-use) for disambiguation` },
     { name: "dry-run", long: "dry-run", short: "d", description: "Print output to stdout instead of writing files" },
@@ -99,7 +99,7 @@ const use = new Command({
     }
 
     const root: FileRef = context?.root ?? await runtime.projectRoot();
-    const mainFolder = root.append(`/${MAIN_FOLDER}`);
+    const mainFolder = root.append(`/${CLI_FOLDER_NAME}`);
     if (!(await fs.exists(mainFolder))) {
       throw use_errors.main_folder_not_found();
     }
@@ -161,7 +161,7 @@ const use = new Command({
 
     let version = "0.0.0";
     try {
-      const pkgJson = await packageDir.append(`/${PACKAGE_FILE}`).json() as { version?: string };
+      const pkgJson = await packageDir.append(`/${PACKAGE_JSON}`).json() as { version?: string };
       version = pkgJson.version ?? version;
     } catch { /* best-effort */ }
 

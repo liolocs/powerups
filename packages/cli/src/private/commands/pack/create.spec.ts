@@ -6,12 +6,12 @@ import { CodeError } from "@rcompat/error";
 import { PackErrorCode } from "#errors/packErrors";
 import captureStdout from "#test-utils/capture-stdout";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
   CLI_NAME,
   GLOBAL_INTERNAL_PATH,
   GLOBAL_ROOT,
@@ -20,7 +20,7 @@ import {
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/create-spec");
-const mainFolder = testRoot.append(`/${MAIN_FOLDER}`);
+const mainFolder = testRoot.append(`/${CLI_FOLDER_NAME}`);
 const internalFolder = mainFolder.append(`/${INTERNAL_FOLDER}`);
 const globalInternal = fs.ref(GLOBAL_INTERNAL_PATH);
 const globalConfigFile = fs.ref(GLOBAL_CONFIG_PATH);
@@ -41,7 +41,7 @@ function pkgDir(name: string): FileRef {
 }
 
 function pkgJson(name: string): FileRef {
-  return pkgDir(name).append(`/${PACKAGE_FILE}`);
+  return pkgDir(name).append(`/${PACKAGE_JSON}`);
 }
 
 /**
@@ -52,11 +52,11 @@ async function createPackageOnDisk(packageName: string) {
   const srcActive = dir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
-  await dir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await dir.append(`/${PACKAGE_JSON}`).writeJSON({
     name: packageName,
     version: "1.0.0",
     description: "",
-    keywords: [KEYWORD_PACKAGE],
+    keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
     [CLI_NAME]: {
       active: {
         [MULTI_USE_FOLDER]: {},
@@ -243,7 +243,7 @@ test.group("pack create (local)", () => {
     assert(pkg.name).equals("my-pkg");
     assert(pkg.version).equals("1.0.0");
     assert(pkg.description).equals("A test package");
-    assert(pkg.keywords).equals([KEYWORD_PACKAGE]);
+    assert(pkg.keywords).equals([PACKAGE_JSON_KEYWORD_PROPERTY]);
 
     const powerups = (pkg[CLI_NAME] as Record<string, Record<string, Record<string, string>>>).active;
     assert(powerups[MULTI_USE_FOLDER]).equals({});
@@ -334,11 +334,11 @@ test.group("pack create (global)", () => {
 
       // Verify package.json
       const pkg = await globalPkg
-        .append(`/${PACKAGE_FILE}`)
+        .append(`/${PACKAGE_JSON}`)
         .json() as Record<string, unknown>;
       assert(pkg.name).equals(pkgName);
       assert(pkg.version).equals("1.0.0");
-      assert(pkg.keywords).equals([KEYWORD_PACKAGE]);
+      assert(pkg.keywords).equals([PACKAGE_JSON_KEYWORD_PROPERTY]);
 
       const powerups = (pkg[CLI_NAME] as Record<string, Record<string, Record<string, string>>>).active;
       assert(powerups[MULTI_USE_FOLDER]).equals({});

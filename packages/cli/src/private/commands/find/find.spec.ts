@@ -6,13 +6,13 @@ import { CodeError } from "@rcompat/error";
 import { FindErrorCode } from "#errors/findErrors";
 import captureStdout from "#test-utils/capture-stdout";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  CONFIG_FILE,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
+  CONFIG_FILE_NAME,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
   CLI_NAME,
   CAPITALIZED_SINGLULAR_CLI_NAME,
 } from "#constants";
@@ -23,8 +23,8 @@ const testRoot = root.append("/tmp");
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
-  await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
-  await fs.create(testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}`));
+  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
+  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}`));
 }
 
 async function createPackageWithPower(
@@ -34,7 +34,7 @@ async function createPackageWithPower(
   type: "multi-use" | "single-use" = "multi-use",
 ) {
   const typeFolder = type === "multi-use" ? MULTI_USE_FOLDER : SINGLE_USE_FOLDER;
-  const pkgDir = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`);
+  const pkgDir = testRoot.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${packageName}`);
   const powerDir = pkgDir.append(`/${typeFolder}/${powerupsName}`);
 
   await fs.create(powerDir);
@@ -46,11 +46,11 @@ async function createPackageWithPower(
     steps: [],
   });
 
-  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
     name: packageName,
     version: "1.0.0",
     description: "test",
-    keywords: [KEYWORD_PACKAGE],
+    keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
     [CLI_NAME]: {
       active: {
         [MULTI_USE_FOLDER]: type === "multi-use"
@@ -66,7 +66,7 @@ async function createPackageWithPower(
 
 async function createConfig(packages: string[]) {
   await testRoot
-    .append(`/${MAIN_FOLDER}/${CONFIG_FILE}`)
+    .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
     .writeJSON({ packages });
 }
 

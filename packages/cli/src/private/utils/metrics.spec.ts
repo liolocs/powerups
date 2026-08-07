@@ -1,7 +1,7 @@
 import test from "@rcompat/test";
 import fs from "@rcompat/fs";
 import { logRun, readMetrics, readAllMetrics, type MetricsEntry, type ProjectMetricsEntry } from "#utils/metrics";
-import { METRICS_FILE } from "#constants";
+import { METRICS_FILE_NAME } from "#constants";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
@@ -71,7 +71,7 @@ test.case("should skip blank and corrupt lines on readMetrics", async assert => 
   // Manually write a file with blank lines and corrupt JSON
   const { encodeProjectPath } = await import("#utils/project-path");
   const projectDir = path.join(tempGlobalRoot, "projects", encodeProjectPath(fakeCwd));
-  const metricsPath = path.join(projectDir, METRICS_FILE);
+  const metricsPath = path.join(projectDir, METRICS_FILE_NAME);
   await fs.ref(projectDir).create();
   await fs.write(metricsPath,
     '{"timestamp":"2025-01-01T00:00:00.000Z","output":"good","characters":100}\n' +

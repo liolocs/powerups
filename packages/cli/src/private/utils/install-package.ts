@@ -2,9 +2,9 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import io from "@rcompat/io";
 import {
-  NPM_STORE,
-  NPM_EXTENSIONS_NAME,
-  PACKAGE_FILE,
+  FOLDER_FOR_NPM_INSTALLED_PACKAGES,
+  NAME_FOR_NPM_PACKAGE_GLOBAL_GROUP,
+  PACKAGE_JSON,
 } from "#constants";
 
 /**
@@ -12,13 +12,13 @@ import {
  * Creates the directory and initializes package.json if missing.
  */
 async function ensureNpmStore(storeRoot: FileRef): Promise<FileRef> {
-  const npmDir = storeRoot.append(`/${NPM_STORE}`);
+  const npmDir = storeRoot.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}`);
   await fs.create(npmDir);
 
-  const pkgJsonPath = npmDir.append(`/${PACKAGE_FILE}`);
+  const pkgJsonPath = npmDir.append(`/${PACKAGE_JSON}`);
   if (!(await fs.exists(pkgJsonPath))) {
     await pkgJsonPath.writeJSON({
-      name: NPM_EXTENSIONS_NAME,
+      name: NAME_FOR_NPM_PACKAGE_GLOBAL_GROUP,
       private: true,
       dependencies: {},
     });
@@ -36,7 +36,7 @@ export async function installNpmPackage(
   packageName: string,
 ): Promise<void> {
   const npmDir = await ensureNpmStore(storeRoot);
-  const pkgJsonPath = npmDir.append(`/${PACKAGE_FILE}`);
+  const pkgJsonPath = npmDir.append(`/${PACKAGE_JSON}`);
   const pkgJson = await pkgJsonPath.json() as Record<string, any>;
 
   if (!pkgJson.dependencies) {

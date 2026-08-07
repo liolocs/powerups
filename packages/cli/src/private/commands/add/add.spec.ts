@@ -7,14 +7,14 @@ import { AddErrorCode } from "#errors/addErrors";
 import { readConfig, type PackageEntry } from "#utils/config";
 import captureStdout from "#test-utils/capture-stdout";
 import {
-  MAIN_FOLDER,
+  CLI_FOLDER_NAME,
   INTERNAL_FOLDER,
   MULTI_USE_FOLDER,
   SINGLE_USE_FOLDER,
-  PACKAGE_FILE,
-  KEYWORD_PACKAGE,
+  PACKAGE_JSON,
+  PACKAGE_JSON_KEYWORD_PROPERTY,
   CLI_NAME,
-  CONFIG_FILE,
+  CONFIG_FILE_NAME,
 } from "#constants";
 
 const root = await runtime.projectRoot();
@@ -23,7 +23,7 @@ const testRoot = root.append("/tmp");
 async function reset() {
   await testRoot.remove();
   await fs.create(testRoot);
-  await fs.create(testRoot.append(`/${MAIN_FOLDER}`));
+  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
 }
 
 async function createPackage(
@@ -31,7 +31,7 @@ async function createPackage(
   packageName: string,
   powerups: { name: string; type: "multi-use" | "single-use" }[] = [],
 ) {
-  const pkgDir = projectRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/${packageName}`);
+  const pkgDir = projectRoot.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${packageName}`);
   const srcActive = pkgDir;
   await fs.create(srcActive.append(`/${MULTI_USE_FOLDER}`));
   await fs.create(srcActive.append(`/${SINGLE_USE_FOLDER}`));
@@ -52,17 +52,17 @@ async function createPackage(
       `./${typeFolder}/${powerup.name}/instructions.json`;
   }
 
-  await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+  await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
     name: packageName,
     version: "1.0.0",
     description: "test package",
-    keywords: [KEYWORD_PACKAGE],
+    keywords: [PACKAGE_JSON_KEYWORD_PROPERTY],
     [CLI_NAME]: { active: powerupsProperty },
   });
 }
 
 async function createConfig(packages: PackageEntry[]) {
-  await testRoot.append(`/${MAIN_FOLDER}/${CONFIG_FILE}`).writeJSON({
+  await testRoot.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`).writeJSON({
     packages,
   });
 }
@@ -234,9 +234,9 @@ test.group("add", () => {
   test.case("throws not_a_powerups_package when keyword missing", async assert => {
     await reset();
     // Create a package in the internal store without the powerups-package keyword.
-    const pkgDir = testRoot.append(`/${MAIN_FOLDER}/${INTERNAL_FOLDER}/plain-pkg`);
+    const pkgDir = testRoot.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/plain-pkg`);
     await fs.create(pkgDir);
-    await pkgDir.append(`/${PACKAGE_FILE}`).writeJSON({
+    await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
       name: "plain-pkg",
       version: "1.0.0",
       description: "test",
@@ -284,7 +284,7 @@ test.group("add", () => {
   test.case("throws project_not_initialized when no .powerups folder", async assert => {
     await reset();
     // Remove the .powerups folder to simulate project not initialized
-    await testRoot.append(`/${MAIN_FOLDER}`).remove();
+    await testRoot.append(`/${CLI_FOLDER_NAME}`).remove();
 
     let threw;
     try {

@@ -77,6 +77,7 @@ export const instructionsSchema = zod.object({
   variables: zod.object({
     required: zod.array(zod.string()),
     optional: zod.array(zod.string()).optional(),
+    defaults: zod.record(zod.string(), zod.string()).optional(),
   }),
   intent: zod.array(zod.string()),
   steps: stepsSchema,

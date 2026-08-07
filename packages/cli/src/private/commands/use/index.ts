@@ -122,6 +122,7 @@ const use = new Command({
       required: instructions.variables.required,
       optional: instructions.variables.optional ?? [],
       excludeFlags: EXCLUDE_FLAGS,
+      defaults: instructions.variables.defaults ?? {},
       onMissing: (missing) => {
         throw use_errors.missing_variables(missing, instructions.variables.required, name);
       },

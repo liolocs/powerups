@@ -73,6 +73,32 @@ test.case("should default optional variables to empty string when not provided",
   assert(result.subDescription).equals("");
 });
 
+test.case("should apply declared defaults to optional variables when not provided", async assert => {
+  const result = extractVariables({
+    rawFlags: [{ flag: "--name", value: "greet" }],
+    required: ["name"],
+    optional: ["outputPath", "type"],
+    excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+    defaults: { outputPath: ".powerups/_internal", type: "single-use" },
+    onMissing: throwMissing,
+  });
+  assert(result.name).equals("greet");
+  assert(result.outputPath).equals(".powerups/_internal");
+  assert(result.type).equals("single-use");
+});
+
+test.case("provided optional values override declared defaults", async assert => {
+  const result = extractVariables({
+    rawFlags: [{ flag: "--name", value: "greet" }, { flag: "--output-path", value: "elsewhere" }],
+    required: ["name"],
+    optional: ["outputPath"],
+    excludeFlags: ["--dry-run", "-d", "--help", "-h"],
+    defaults: { outputPath: ".powerups/_internal" },
+    onMissing: throwMissing,
+  });
+  assert(result.outputPath).equals("elsewhere");
+});
+
 test.case("should use provided optional variable values", async assert => {
   const result = extractVariables({
     rawFlags: [{ flag: "--component-name", value: "Button" }, { flag: "--sub", value: "detail" }],

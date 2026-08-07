@@ -50,9 +50,10 @@ export function extractVariables(args: {
   required: string[];
   optional: string[];
   excludeFlags: string[];
+  defaults?: Record<string, string>;
   onMissing: (missing: string[]) => never;
 }): VariableResult {
-  const { rawFlags, required, optional, excludeFlags, onMissing } = args;
+  const { rawFlags, required, optional, excludeFlags, defaults, onMissing } = args;
 
   // 1. Filter out excluded flags (--dry-run, -d, --overwrite, -O, --help, -h)
   const variableFlags = rawFlags.filter(
@@ -80,13 +81,13 @@ export function extractVariables(args: {
     onMissing(missing);
   }
 
-  // 4. Optional: if provided, use the value; if not, default to ""
+  // 4. Optional: if provided, use the value; if not, use a declared default or ""
   for (const declared of optional) {
     const matched = Object.keys(result).find(
       k => k.toLowerCase() === declared.toLowerCase(),
     );
     if (is.falsy(matched)) {
-      result[declared] = "";
+      result[declared] = defaults?.[declared] ?? "";
     }
   }
 

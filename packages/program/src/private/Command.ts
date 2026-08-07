@@ -16,11 +16,12 @@ type FlagRecord<T extends readonly Flag[]> = {
   [K in FlagNames<T>]: string | undefined;
 };
 
-type ActionProps<T extends readonly Flag[]> = FlagNames<T> extends never
-  ? (props?: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; homeDir?: string; globalRoot?: string } }) =>
-      any | Promise<any>
-  : (props: { flags: FlagRecord<T>; subcommands?: string[]; rawFlags?: { flag: string; value: string }[]; context?: { root?: any; homeDir?: string; globalRoot?: string } }) =>
-      any | Promise<any>;
+type ActionProps<T extends readonly Flag[]> = (props: {
+  flags: FlagRecord<T>;
+  subcommands?: string[];
+  rawFlags?: { flag: string; value: string }[];
+  context?: { root?: any; homeDir?: string; globalRoot?: string };
+}) => any | Promise<any>;
 
 export default class Command<T extends readonly Flag[]> {
   name: string;
@@ -92,7 +93,7 @@ export default class Command<T extends readonly Flag[]> {
     }
 
     if (!is.defined(args)) {
-      // @ts-expect-error — flags are optional
+      // @ts-expect-error — args is undefined here, so flags/context are not typed
       return this.action({ flags: {}, subcommands: [], rawFlags: [], context: args?.context });
     }
 

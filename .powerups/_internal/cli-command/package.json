@@ -21,7 +21,6 @@
     }
   },
   "devDependencies": {
-    "@liolocs/powerups-sdk": "link:../../packages/sdk",
-    "tsup": "^8.5.1"
+    "@liolocs/powerups-sdk": "link:../../packages/sdk"
   }
 }

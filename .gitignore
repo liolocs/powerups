@@ -1,5 +1,5 @@
 bin
-build/
+dist/
 node_modules
 .worktrees/
 tmp/

@@ -36,13 +36,6 @@ const build_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
-  tsup_not_installed: () => {
-    const errorText =
-      `pup build requires tsup — add it as a devDependency of this powerup package.\n` +
-      `Run: npm i -D tsup (or pnpm add -D tsup)`;
-    return t`${errorBGText}${errorText}`;
-  },
-
   build_validation_failed: (issues: string[]) => {
     const issueList = issues.map(i => `  - ${i}`).join("\n");
     const errorText = `Build validation failed:\n${issueList}`;

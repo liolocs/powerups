@@ -1,12 +1,12 @@
 import { SINGULAR_NAME_FOR_CLI } from "#constants";
-import checkForBuildErrors from "#utils/build/check-build-errors";
-import checkInitialBuildForErrors from "#utils/build/check-initial-build-for-errors/index";
+import checkForPreBuildErrors from "#utils/build/check-pre-build-errors";
+import checkCompiledInstructionsForErrors from "#utils/build/check-compiled-instructions-for-errors/index";
 import copyTemplatesToDistFolder from "#utils/build/copy-templates-to-dist-folder";
-import createInitialBuild from "#utils/build/create-initial-build";
+import compileIndexFile from "#utils/build/compile-index-file";
 import createInstructionsJSONFile from "#utils/build/create-instructions-json-file";
 import { getPackageJson } from "#utils/build/getPackageJson";
 import { Command } from "@liolocs/program";
-import { FileRef } from "@rcompat/fs";
+import type { FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 
 const build = new Command({
@@ -20,20 +20,19 @@ const build = new Command({
 
   action: async ({ context }) => {
     const root: FileRef = context?.root ?? await runtime.projectRoot();
-    await checkForBuildErrors(root);
+
+    await checkForPreBuildErrors(root);
 
     const pkgJson = await getPackageJson(root);
 
-    const { validatedPowerup, outputFolder: distFolderRef } =
-      await createInitialBuild({ cwd: root, pkgJson });
+    const { compiledIndexFile, outputFolder: distFolderRef } =
+      await compileIndexFile({ root, pkgJson });
 
     const {
       validatedCompiledInstructions,
-      sourceFromCompiledInstructions,
-    } = await checkInitialBuildForErrors({
-      validatedPowerup,
-      buildOutputFolder: distFolderRef,
-    });
+    } = await checkCompiledInstructionsForErrors(
+      compiledIndexFile.default.instructions,
+    );
 
     await createInstructionsJSONFile({
       validatedCompiledInstructions,
@@ -44,8 +43,8 @@ const build = new Command({
       instructionSteps: validatedCompiledInstructions.steps,
       cwd: root,
       distFileRef: distFolderRef,
-      sourceFromCompiledInstructions,
-      pkgJson,
+      sourceFromCompiledInstructions: compiledIndexFile.default.source,
+      powerupName: validatedCompiledInstructions.name,
     });
   },
 });

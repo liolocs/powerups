@@ -1,13 +1,9 @@
-import { CLI_FOLDER_NAME, INTERNAL_FOLDER, PACKAGE_JSON } from "#constants";
-import { BuildErrorCode } from "#errors/buildErrors";
-import captureStdout from "#test-utils/capture-stdout";
+import build from "#commands/build/index";
+import { CLI_FOLDER_NAME, INTERNAL_FOLDER } from "#constants";
 import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
 import test from "#test-utils/test/index";
-import copyTemplatesToDistFolder from "#utils/build/copy-templates-to-dist-folder";
-import { type Instructions, type Step } from "@liolocs/powerups-sdk";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import build from "#commands/build/index";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");

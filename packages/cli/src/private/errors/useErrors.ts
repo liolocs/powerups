@@ -14,6 +14,16 @@ const use_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  config_not_found: () => {
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} config.json not found`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  not_in_config: () => {
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} not in config.json`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   unsupported_step_type: (type: string) => {
     const errorText =
       `Unsupported step type: ${type}\n` +

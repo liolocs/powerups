@@ -30,7 +30,7 @@ export default async function createFullyBuiltPowerupForTest({
   powerupName = "test-powerup",
   testRoot,
   instructions = defaultInstructions(powerupName),
-  templates
+  templates,
 }: {
     powerupName?: string;
     testRoot: FileRef;
@@ -140,6 +140,8 @@ export async function createSimpleScaffoldPowerupForTest({
     instructions: instructionsForScaffoldingSimpleFile,
     templates,
   });
+
+  await targetDir.append("/.powerups/config.json").writeJSON({ packages: [powerupName] });
 
   try {
     await git.commitAll({ cwd: targetDir, message: "initial commit" });

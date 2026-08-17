@@ -4,6 +4,7 @@ import runtime from "@rcompat/runtime";
 import use from "#commands/use/use-new";
 import { createSimpleScaffoldPowerupForTest } from "#test-utils/create-fully-built-powerup-for-test";
 import { UseErrorCode } from "#errors/useErrors";
+import { CLI_FOLDER_NAME } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -51,13 +52,15 @@ test.case("should not create any files anything with dry run flag", async assert
 test.case("should use the powerup according to the instructions without any errors", async assert => {
   await setupTestDir();
   const powerupName = "simple-powerup";
-  const { packageDir, targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
+  const { targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
 
   await use.run({
     subcommands: ["test-powerup"],
     flags: [],
     context: { root: targetDir },
   });
+
+  await cleanup();
 });
 
 test.case("should give an error if a powerup name was not passed", async assert => {
@@ -70,4 +73,22 @@ test.case("should give an error if a powerup name was not passed", async assert 
     flags: [],
     context: { root: targetDir },
   })).throwsAsync(UseErrorCode.missing_name);
+
+  await cleanup();
 });
+
+// test.case("should give an error if the powerup is not in the config", async assert => {
+//   await setupTestDir();
+//   const powerupName = "simple-powerup";
+//   const { targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
+
+//   await targetDir.append(`/${CLI_FOLDER_NAME}/config.json`).remove();
+
+//   await assert(use.run({
+//     subcommands: ["test-powerup"],
+//     flags: [],
+//     context: { root: targetDir },
+//   })).throwsAsync(UseErrorCode.not_in_config);
+
+//   await cleanup();
+// });

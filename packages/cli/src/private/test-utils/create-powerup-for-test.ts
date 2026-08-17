@@ -2,6 +2,7 @@ import { CLI_FOLDER_NAME, INTERNAL_FOLDER } from "#constants";
 import fs from "@rcompat/fs";
 import { type Instructions } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
+import io from "@rcompat/io";
 
 const defaultInstructions = (powerupName: string): Instructions => ({
   name: powerupName,
@@ -145,6 +146,8 @@ export default defineInstructions(instructions, import.meta.url);
 
   // E.G. .powerups/_internal/cli-command/.gitignore
   await packageDir.append("/.gitignore").write("node_modules\ndist\n");
+
+  await io.run("pnpm install", { cwd: packageDir.path });
 
   return instructions;
 }

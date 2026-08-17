@@ -1,6 +1,4 @@
 import { SINGULAR_NAME_FOR_CLI } from "#constants";
-import runPowerup from "#utils/use/run-powerup/index";
-import saveManifest from "#utils/use/run-powerup/save-manifest";
 import { Command, type Flag } from "@liolocs/program";
 import type { FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";

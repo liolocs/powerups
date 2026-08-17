@@ -25,7 +25,7 @@ test.case("should use a fully-built powerup without errors", async assert => {
 
 
   await assert(use.run({
-    subcommands: ["test-powerup"],
+    subcommands: [powerupName],
     flags: [],
     context: { root: targetDir },
   })).noErrorAsync();
@@ -36,10 +36,10 @@ test.case("should use a fully-built powerup without errors", async assert => {
 test.case("should not create any files anything with dry run flag", async assert => {
   await setupTestDir();
   const powerupName = "test-powerup";
-  const { packageDir, targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
+  const { targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
 
   await assert(use.run({
-    subcommands: ["test-powerup"],
+    subcommands: [powerupName],
     flags: [{ flag: "-dr", value: "" }],
     context: { root: targetDir },
   })).noErrorAsync();
@@ -55,7 +55,7 @@ test.case("should use the powerup according to the instructions without any erro
   const { targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
 
   await use.run({
-    subcommands: ["test-powerup"],
+    subcommands: [powerupName],
     flags: [],
     context: { root: targetDir },
   });
@@ -77,18 +77,32 @@ test.case("should give an error if a powerup name was not passed", async assert 
   await cleanup();
 });
 
-// test.case("should give an error if the powerup is not in the config", async assert => {
-//   await setupTestDir();
-//   const powerupName = "simple-powerup";
-//   const { targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
+test.case("should give an error if the config file is missing", async assert => {
+  await setupTestDir();
+  const powerupName = "simple-powerup";
+  const { targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
 
-//   await targetDir.append(`/${CLI_FOLDER_NAME}/config.json`).remove();
+  await targetDir.append(`/${CLI_FOLDER_NAME}/config.json`).remove();
 
-//   await assert(use.run({
-//     subcommands: ["test-powerup"],
-//     flags: [],
-//     context: { root: targetDir },
-//   })).throwsAsync(UseErrorCode.not_in_config);
+  await assert(use.run({
+    subcommands: [powerupName],
+    flags: [],
+    context: { root: targetDir },
+  })).throwsAsync(UseErrorCode.config_not_found);
 
-//   await cleanup();
-// });
+  await cleanup();
+});
+
+test.case("should give an error if the powerup is not in the config", async assert => {
+  await setupTestDir();
+  const powerupName = "simple-powerup";
+  const { targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
+
+  await assert(use.run({
+    subcommands: ["test-powerup"],
+    flags: [],
+    context: { root: targetDir },
+  })).throwsAsync(UseErrorCode.not_in_config);
+
+  await cleanup();
+});

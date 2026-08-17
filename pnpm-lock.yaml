@@ -11,9 +11,6 @@ importers:
 
   .:
     dependencies:
-      '@liolocs/powerups-sdk':
-        specifier: link:packages/sdk
-        version: link:packages/sdk
       '@rcompat/test':
         specifier: ^0.20.0
         version: 0.20.0
@@ -26,16 +23,7 @@ importers:
       proby:
         specifier: ^0.22.0
         version: 0.22.0(@rcompat/test@0.20.0)
-      sdk:
-        specifier: link:.powerups/packages/sdk
-        version: link:.powerups/packages/sdk
     devDependencies:
-      '@rcompat/is':
-        specifier: ^0.12.0
-        version: 0.12.0
-      '@rcompat/string':
-        specifier: ^0.22.0
-        version: 0.22.0
       apekit:
         specifier: 0.0.58
         version: 0.0.58(eslint@10.5.0(jiti@2.7.0))
@@ -54,18 +42,12 @@ importers:
       '@liolocs/powerups-sdk':
         specifier: link:../../../packages/sdk
         version: link:../../../packages/sdk
-      tsup:
-        specifier: ^8.5.1
-        version: 8.5.1(jiti@2.7.0)(typescript@6.0.3)(yaml@2.9.0)
 
   .powerups/_internal/cli-sub-command:
     devDependencies:
       '@liolocs/powerups-sdk':
         specifier: link:../../../packages/sdk
         version: link:../../../packages/sdk
-      tsup:
-        specifier: ^8.5.1
-        version: 8.5.1(jiti@2.7.0)(typescript@6.0.3)(yaml@2.9.0)
 
   .powerups/_internal/cli-with-sub-commands:
     devDependencies:
@@ -78,18 +60,12 @@ importers:
       cli-sub-command:
         specifier: file:../cli-sub-command
         version: link:../cli-sub-command
-      tsup:
-        specifier: ^8.5.1
-        version: 8.5.1(jiti@2.7.0)(typescript@6.0.3)(yaml@2.9.0)
 
   .powerups/_internal/create-powerup:
     devDependencies:
       '@liolocs/powerups-sdk':
         specifier: link:../../../packages/sdk
         version: link:../../../packages/sdk
-      tsup:
-        specifier: ^8.5.1
-        version: 8.5.1(jiti@2.7.0)(typescript@6.0.3)(yaml@2.9.0)
 
   packages/cli:
     dependencies:
@@ -123,6 +99,9 @@ importers:
       pema:
         specifier: ^0.8.2
         version: 0.8.2
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(jiti@2.7.0)(typescript@6.0.3)(yaml@2.9.0)
     devDependencies:
       '@liolocs/powerups-sdk':
         specifier: link:../sdk
@@ -136,15 +115,9 @@ importers:
       commit-and-tag-version:
         specifier: ^13.1.2
         version: 13.1.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.1)
-      tsup:
-        specifier: ^8.5.1
-        version: 8.5.1(jiti@2.7.0)(typescript@6.0.3)(yaml@2.9.0)
 
   packages/program:
     dependencies:
-      '@rcompat/array':
-        specifier: ^0.19.0
-        version: 0.19.0
       '@rcompat/cli':
         specifier: ^0.25.0
         version: 0.25.0
@@ -157,25 +130,12 @@ importers:
       '@rcompat/runtime':
         specifier: ^0.17.0
         version: 0.17.0
-      pema:
-        specifier: ^0.8.2
-        version: 0.8.2
 
   packages/sdk:
     dependencies:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
-    devDependencies:
-      '@rcompat/fs':
-        specifier: ^0.35.1
-        version: 0.35.1
-      '@rcompat/runtime':
-        specifier: ^0.17.0
-        version: 0.17.0
-      '@rcompat/test':
-        specifier: ^0.20.0
-        version: 0.20.0
 
 packages:
 
@@ -679,9 +639,6 @@ packages:
     resolution: {integrity: sha512-H7BCt/VnS9hnmMp42eGhZ99izSCRvlnWwy/N71K1/J8QoExwY4262Z8QiEkMDtduRJrztayDxETTckmUuAVL9Q==}
     cpu: [x64]
     os: [win32]
-
-  '@rcompat/array@0.19.0':
-    resolution: {integrity: sha512-p8CUqB5GMI1YvOKVCdPtXaJhhW2UWZdCbnREde6Pa1AqoVTRwBJbTmN7HHyzv+XG4eXjUaQiuELN5ZRgMjsF0A==}
 
   '@rcompat/assert@0.13.0':
     resolution: {integrity: sha512-uoKwxXwiEyx23bUW5ZqtXtL45+XGzr2UFbffTvbykbty9HCe4+LhiVvMu8v0j1smoEjjCOosTa2/NzD71T7DaQ==}
@@ -2083,10 +2040,6 @@ snapshots:
 
   '@oxc-resolver/binding-win32-x64-msvc@11.21.3':
     optional: true
-
-  '@rcompat/array@0.19.0':
-    dependencies:
-      '@rcompat/assert': 0.14.0
 
   '@rcompat/assert@0.13.0':
     dependencies:

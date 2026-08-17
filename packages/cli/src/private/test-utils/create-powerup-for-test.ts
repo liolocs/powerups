@@ -24,6 +24,37 @@ const defaultInstructions = (powerupName: string): Instructions => ({
   ],
 });
 
+const defaultTemplates = () => {
+  const indexTemplateContent = `export default function(variables: Record<string, string>): string {
+  const { name } = variables;
+  return \`export const \${name} = "";\\n\`;
+}`;
+
+  const templateComponentContent = `export default function(variables: Record<string, string>): string {
+  const { name } = variables;
+  return \`export const \${name} = "";\\n\`;
+}`;
+
+  return [
+    {
+      name: "index",
+      templatePath: "/templates/index.ts",
+      content: indexTemplateContent,
+    },
+    {
+      name: "component",
+      templatePath: "/templates/component.ts",
+      content: templateComponentContent,
+    },
+  ];
+};
+
+export type DefaultTemplateForTest = {
+  name: string;
+  templatePath: string;
+  content: string;
+};
+
 /**
  * Creates a real, buildable powerup package on disk under
  * `/tmp/.powerups/_internal/<powerupName>/`, mirroring the layout of a
@@ -41,11 +72,13 @@ export async function createPowerupPackageForTest({
   powerupName = "test-powerup",
   testRoot,
   instructions = defaultInstructions(powerupName),
+  templates = defaultTemplates(),
 }:
   {
     powerupName?: string;
     testRoot: FileRef;
     instructions?: Instructions;
+    templates?: DefaultTemplateForTest[];
   }): Promise<Instructions> {
   // Root of the powerup package: /tmp/.powerups/_internal/<powerupName>/
   const packageDir = testRoot.append(
@@ -72,7 +105,7 @@ export async function createPowerupPackageForTest({
         types: "./dist/index.d.ts",
       },
     },
-    devDependencies: {
+    dependencies: {
       // /tmp/.powerups/_internal/<powerupName> -> <projectRoot>/packages/sdk
       // is four directories up: <powerupName> -> _internal -> .powerups -> tmp -> <projectRoot>
       "@liolocs/powerups-sdk": "link:../../../../packages/sdk",
@@ -80,8 +113,10 @@ export async function createPowerupPackageForTest({
   };
   await packageDir.append("/package.json").writeJSON(packageJsonContents);
 
+  for (const template of templates) {
+    await packageDir.append(`${template.templatePath}`).write(template.content);
+  }
 
-  //  E.G. .powerups/_internal/cli-command/index.ts
   const indexTsContents = `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";
 
 const instructions: Instructions = ${JSON.stringify(instructions, null, 2)};
@@ -89,14 +124,6 @@ const instructions: Instructions = ${JSON.stringify(instructions, null, 2)};
 export default defineInstructions(instructions, import.meta.url);
 `;
   await packageDir.append("/index.ts").write(indexTsContents);
-
-  // E.G. .powerups/_internal/cli-command/templates/component.ts
-  const templateContents = `export default function(variables: Record<string, string>): string {
-  const { name } = variables;
-  return \`export const \${name} = "";\\n\`;
-}
-`;
-  await packageDir.append("/templates/component.ts").write(templateContents);
 
   // E.G. .powerups/_internal/cli-command/tsconfig.json)
   const tsconfigContents = {

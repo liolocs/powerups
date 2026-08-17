@@ -16,9 +16,8 @@ export default function(variables: Record<string, string>): string {
         types: "./dist/index.d.ts",
       },
     },
-    devDependencies: {
+    dependencies: {
       "@liolocs/powerups-sdk": "link:../../packages/sdk",
-      "tsup": "^8.5.1",
     },
   };
 

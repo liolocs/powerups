@@ -14,6 +14,13 @@ const use_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  unsupported_step_type: (type: string) => {
+    const errorText =
+      `Unsupported step type: ${type}\n` +
+      `Only create, modify, delete, read, and install are supported.`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   missing_name: () => {
     const errorText =
       `${CAPITALIZED_SINGLULAR_CLI_NAME} name required.\n\nUsage: ${CLI_CMD} use <name> [variables]`;

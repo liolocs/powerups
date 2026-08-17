@@ -1,455 +1,196 @@
-# Use Command Overhaul — Design
+# Use Command Overhaul — Design (Incremental Migration revision)
 
 ## Overview
 
-Overhaul the `pup use` command to work with the new powerup format (one powerup per package, `package.json["powerup"]` singular, type declared in instructions, built `dist/instructions.json`). Follow the same decomposed coding style as the `build` command refactor: thin command action calling focused utility functions, each in its own file under `utils/use/`.
+Overhaul the `pup use` command to work with the new powerup format (one powerup per package, `package.json["powerup"]` singular, type declared in instructions, built `dist/instructions.json`).
 
-Remove metrics logging from `use`. Move the manifest schema to the SDK package using zod. Delete the old-format commands (`add`, `find`, `pack`, `install`, `list`, `metrics`) and their associated utilities, errors, and constants.
+**This is an incremental, human-supervised migration, not a big-bang rewrite.** An incomplete skeleton already exists at `packages/cli/src/private/commands/use/use-new.ts`. Implementation proceeds **one small step at a time**: each step moves one slice of functionality out of the old `packages/cli/src/private/commands/use/index.ts` and into the functions laid out by the `use-new.ts` skeleton (and their supporting utils). The old command keeps working throughout. Only at the very end is the old command deleted and `use-new.ts` promoted to replace it.
 
-## Background
+**STOP-and-report protocol (binding):** after **every** step in Section 0.3, the agent stops, shows the diff, and reports what changed. The user reviews, runs whatever checks they want, makes their own adjustments to the agent's changes, and reports back. The agent does **not** proceed to the next step until the user confirms. The user may redirect, reorder, or reshape any step based on what they see.
 
-### New powerup format
+## Current State (already on disk — do not recreate)
 
-Observable in `.powerups/_internal/` powerups and the refactored `build` command:
+| File | Status |
+|---|---|
+| `packages/cli/src/private/commands/use/use-new.ts` | **Skeleton, incomplete.** Defines the new command with a thin `action` and TODO-commented call sites: `checkForPreUseErrors`, `getPowerup`, `validatePowerup`, `checkForOtherPreFlightErrors`, `runPowerup`. Only `getFlagFromRawFlags` is implemented. Missing `--type` and `--overwrite` flags. Several referenced functions don't exist yet. |
+| `packages/cli/src/private/utils/use/run-powerup/index.ts` | Skeleton. Loops steps, calls `runStep`, calls `saveManifest` per step (non-dry-run). No variable resolution, no overwrite support, no skip/no-op handling, no revert-on-failure. |
+| `packages/cli/src/private/utils/use/run-powerup/run-step.ts` | Skeleton dispatcher (`stepTypes` map) for create/modify/delete/read/install. Only the install handler exists. Also has a bug (`is.truthy(runStep)` should check `runStepFn`). |
+| `packages/cli/src/private/utils/use/run-powerup/steps/run-install-step.ts` (+ spec) | First concrete step handler — pattern to follow for the other four. |
+| `packages/cli/src/private/utils/use/run-powerup/save-manifest.ts` (+ spec) | Writes manifest lines. Needs rework for real JSONL append semantics (currently rewrites a JSON array). |
+| `packages/sdk/src/private/schema/manifest.ts` | **Created — see Section 2.** Per-step-line zod schema (differs from the earlier entry-based draft; the on-disk schema is authoritative). |
+| `packages/cli/src/private/test-utils/create-fully-built-powerup-for-test.ts` | **Created — see Section 1.** Builds a real powerup package via the actual `build` command and returns `{ instructions, packageDir }`. |
+| `packages/cli/src/private/commands/use/index.ts` | **Old command — the migration source.** Fully working; keeps working until the final swap. Its inline logic is what gets carved out step by step. |
+| `packages/cli/src/commands/use.ts` | Thin re-export of `private/commands/use/index.js`. Only touched at the final swap (if at all — the swap can keep this path stable by replacing `index.ts`). |
 
-- One powerup per package
-- `package.json` has `"powerup": { "instructions": "index.ts", "compatibility": {} }` (singular), validated by the SDK's `powerupPropertySchema`
-- `keywords: ["powerups-package"]` identifies a powerups package
-- Powerup type (`"multi-use"` | `"single-use"`) is declared inside the instructions, not derived from folder structure
-- Built output: `dist/instructions.json` (schema-validated) + `dist/templates/...`
-- Powerups are defined with `defineInstructions(instructions, import.meta.url)` and composed with `includePowerup()`
+## Section 0: Step-by-Step Interactive Migration
 
-### Old format (being replaced)
+### 0.1 Ground rules
 
-- `package.json["powerups"]` (plural) with `active: { "multi-use": {name: path}, "single-use": {name: path} }` subfolder maps
-- Powerups in `multi-use/` / `single-use/` subfolders
-- Validated by CLI-local `#schemas/package.ts` (pema)
-- Resolved by `resolve-powerup.ts` searching subfolder maps
+1. **One step at a time.** Each step in 0.3 is one atomic, reviewable change (ideally one function's worth). No batching steps without user approval.
+2. **Stop and report after every step.** Agent reports: files changed, behavior moved, tests run and their results, any open questions or divergences discovered. Then waits.
+3. **The user is an active editor.** The user will make their own changes on top of the agent's output at every step and report back. The agent must re-read the files before continuing — never assume the tree matches what the agent last wrote.
+4. **The old command stays green until the swap.** Old specs must keep passing at every step. New code lives in `use-new.ts` and `utils/use/run-powerup/` (or new files alongside) without disturbing `private/commands/use/index.ts` until the final step.
+5. **Tests accompany each step**, written in the established style (Section 0.4), run before the agent reports back. A step is not done until its specs are green.
+6. **Divergence handling.** When the skeleton, the old code, and this plan disagree, the agent surfaces the disagreement in its report and the user decides. Do not silently pick one.
 
-### Build refactor pattern (coding style to follow)
+### 0.2 What the skeleton promises (function-by-function migration map)
 
-- Thin command action in `private/commands/<cmd>/index.ts` — just calls utility functions in sequence
-- Each utility in its own file under `utils/<cmd>/`, single responsibility
-- Helper functions colocated below the main exported function
-- Multi-parameter functions take typed object parameters
-- Descriptive variable names, proper spacing, self-documenting code (no numbered comments)
-- Spec file for every utility
+The `use-new.ts` `action` is the target shape. Each commented call site absorbs specific behavior from the old `use/index.ts`:
 
-## Section 1: Deletion Scope
+| Skeleton call site | Absorbs from old `use/index.ts` | New home |
+|---|---|---|
+| (top of action) | `missing_name` and `main_folder_not_found` guards, root resolution | stays inline in `use-new.ts` action |
+| flag parsing | dry-run detection (add `--type`, `--overwrite` flags + parsing) | `getFlagFromRawFlags` + flag defs |
+| `checkForPreUseErrors(root, rawFlags)` | `verifyGitRepo`, `ensureCleanTree` (skip entirely on dry-run) | `#utils/use/check-pre-use-errors.ts` |
+| `getPowerup({ root, name, type })` | new-format resolution: config → `parseSpecifier` → local-then-global store dirs → keyword check → `powerupPropertySchema` → `dist/instructions.json` load + `instructionsSchema` validation → match by `instructions.name` (+`type` filter) → `not_found` / `ambiguous` errors. Also absorbs the old `instructions_not_built` existence check and best-effort version read. | `#utils/use/get-powerup/` (dir with `index.ts` + `load-instructions.ts`) |
+| (in action) | `extractVariables` with `EXCLUDE_FLAGS`, `missing_variables` | stays inline in action (existing `#utils/variables`) |
+| `validatePowerup(powerup)` | semantic validation beyond schema (shared with `build` later under `#utils/validate/`); initially thin | `#utils/validate/validate-powerup.ts` |
+| `checkForOtherPreFlightErrors({ root, powerup })` | (1) `preFlight` destination-exists checks; (2) single-use top-level `already_applied` check; (3) compute steps-to-skip from already-applied included single-use powerups | `#utils/use/check-pre-flight-errors.ts` (reusing/relocating `#utils/pre-flight`) |
+| `runPowerup({ destination, powerupDir, instructions, isDryRun })` | step execution with variable resolution (`variableMap`), overwrite handling, skip-already-applied marking, no-op detection, revert-on-failure, per-step manifest recording | `#utils/use/run-powerup/` (exists, needs completion) |
+
+### 0.3 Steps (each ends at a checkpoint)
+
+**Step 0 — already done (user-confirmed).** SDK manifest schema, `create-fully-built-powerup-for-test.ts`, `use-new.ts` skeleton, `run-powerup` skeleton, install-step handler.
+
+**Step 1 — Skeleton gap-fill.** Add `--type`/`--overwrite` flag definitions to `use-new.ts`; create stub or minimal files for every referenced-but-missing function so `use-new.ts` typechecks. Fix the `runStep` truthiness bug. *Report + wait.*
+
+**Step 2 — Variable extraction.** Wire `extractVariables` into the action (required/optional/defaults/`missing_variables`), passing results through `runPowerup` to the step handlers. *Report + wait.*
+
+**Step 3 — `checkForPreUseErrors`.** New `#utils/use/check-pre-use-errors.ts`: `verifyGitRepo` + `ensureCleanTree`, skipped when dry-run. Spec with `create-project-for-test` (see Section 1; build fixture first if user hasn't added it). *Report + wait.*
+
+**Step 4 — `getPowerup` (resolver).** `#utils/use/get-powerup/` implementing Section 3's flow; returns `{ instructions, folder (dist), packageDir, packageName, location, version }`. Add `ambiguous` to `useErrors`. Specs with `create-fully-built-powerup-for-test`. *Report + wait.*
+
+**Step 5 — `validatePowerup`.** Initially a thin schema-validation pass placed at `#utils/validate/` so `build` can reuse it later; exact scope decided with the user at this checkpoint. *Report + wait.*
+
+**Step 6 — `checkForOtherPreFlightErrors`.** Relocate/update `preFlight` for create-destination checks; add single-use top-level check and compute `{ effectiveSteps, skippedSteps, fromInfo }`-equivalent data for `runPowerup` (naming aligned to the new line-based manifest at this checkpoint). *Report + wait.*
+
+**Step 7 — Step handlers, one at a time (each its own checkpoint).** Port from old `execute-steps.ts` into `utils/use/run-powerup/steps/`, returning a manifest line per the SDK schema: 7a `run-create-step` (incl. overwrite), 7b `run-modify-step`, 7c `run-delete-step`, 7d `run-read-step` (variable assignment incl. `variableMap` composition). Reuse the existing `run-install-step.ts` as the style template. *Report + wait after each.*
+
+**Step 8 — `runPowerup` orchestration.** Skip-already-applied marking, no-op detection (`Nothing to do` message), revert-on-failure on the recorded files, correct dry-run flow (no git checks, no manifest writes). *Report + wait.*
+
+**Step 9 — `save-manifest` rework.** True JSONL append (one line per step), populate `commit` (nullable) and the discriminated `output` union per the SDK schema. Provide the read side needed by the already-applied checks. *Report + wait.*
+
+**Step 10 — Integration spec.** `use.spec.ts` driving `use.run(...)` end-to-end with `create-fully-built-powerup-for-test`: happy path, dry-run, missing name, missing CLI folder, not_found, already_applied. Compare behavior side-by-side with the old command's specs. *Report + wait.*
+
+**Step 11 — The swap.** Copy the finalized `use-new.ts` over `private/commands/use/index.ts` (keeping the export shape so `commands/use.ts` is untouched), delete `use-new.ts`, delete `utils/execute-steps.ts` and other superseded old utils. Full suite green. *Report + wait.*
+
+**Step 12 — Final cleanup.** Delete old commands (`add`, `find`, `pack`, `install`, `list`, `metrics`) and their utils/errors/constants per Section 5; `knip` sweep; full suite green. *Report + done.*
+
+### 0.4 Testing style (unchanged from established pattern)
+
+- Specs colocated as `*.spec.ts`, using the extended runner `#test-utils/test/index` → `test.case(...)`, `await assert(x).throwsAsync(UseErrorCode.<code>)`, `await assert(x).noErrorAsync()`.
+- Real filesystem fixtures in `<projectRoot>/tmp` with `setupTestDir`/`cleanup` — no mocks.
+- Fixtures: `create-fully-built-powerup-for-test.ts` (exists, Section 1) for the producer side; `create-project-for-test.ts` (consumer project root with config + manifest + optional git init) — **confirm with user whether it already exists before creating it.**
+
+## Section 1: Test Infrastructure
+
+| File | Status | Purpose |
+|---|---|---|
+| `create-fully-built-powerup-for-test.ts` | **Exists** | Creates a real powerup package under `<root>/.powerups/_internal/<name>/` and builds it with the actual `build` command → real `dist/instructions.json` + templates. Returns `{ instructions, packageDir }`. Default instructions take a required `name` variable and one `create` step; callers pass custom `Instructions` to exercise other step types. |
+| `create-project-for-test.ts` | **To confirm/create at Step 3** | Consumer project root: `.powerups/config.json` with `packages` entries, seeded `.powerups/manifest.jsonl`, optional `git init` (needed for git-guard specs). |
+
+## Section 2: SDK Manifest Schema (as created — authoritative)
+
+`packages/sdk/src/private/schema/manifest.ts` **already exists** and defines a **per-step line** model (supersedes the earlier aggregated-entry draft in this document's history):
+
+- `manifestLineSchema`: `{ powerupName, version, location, type, timestamp, stepName, stepType, status, output, from?, commit }`
+- `stepOutputSchema`: discriminated union over `create | modify | delete | install | read | none` — create/modify carry `path`, `action`, `characterCount`; install carries dependency arrays; read carries `variable`; delete carries `path`.
+- `manifestSchema = zod.array(manifestLineSchema)` — a manifest file is an array of lines stored as JSONL (`manifest.jsonl`, one JSON object per line).
+- Exported types: `StepOutput`, `ManifestEntry` (= one line), `ManifestFile` (= array of lines).
+
+Consequences for the CLI (folded into Steps 6/8/9):
+
+- The old `utils/manifest.ts` (`readManifest` / `appendManifestEntry` / `hasBeenApplied`, aggregated entries) is **reworked or replaced** by the line-based model: `save-manifest.ts` writes lines; the already-applied checks read lines and match on `powerupName` (+ `type` for single-use blocking).
+- Included single-use powerups still get their own lines (`from`-grouped) so standalone reuse is blocked later — re-express this against the line schema at the Step 6/8 checkpoints with the user.
+- `revert.ts` consumes the recorded file list produced during a run; shape aligned at Step 8.
+
+## Section 3: New-Format Resolver (`getPowerup`)
+
+Implemented at Step 4. Resolution flow:
+
+1. Read project config → `packages` array (existing `readConfig`), falling back to the global config for global resolution.
+2. For each entry, `parseSpecifier` → store path (bare names → `_internal/<name>`, `npm:` → npm store, URLs → git store).
+3. Check local dir (`root/.powerups/<storePath>`) **first**, then global (`~/.powerups/<storePath>`).
+4. Per package dir: `keywords` includes `powerups-package`; `package.json["powerup"]` passes SDK `powerupPropertySchema`; `dist/instructions.json` exists (else `use_errors.instructions_not_built`) and passes `instructionsSchema`; `instructions.name` matches the requested name (and `instructions.type` matches `--type` when given).
+5. Local wins on collision. Zero matches → `not_found`; multiple local matches → new `use_errors.ambiguous`.
+
+Return value bundles everything downstream steps need (instructions, dist folder, package dir, packageName, location, best-effort version) so nothing downstream re-reads `package.json` or `instructions.json`.
+
+## Section 4: Step Execution (`runPowerup` / `runStep` / `steps/*`)
+
+The skeleton's dispatch-map style (`stepTypes` in `run-step.ts`) is kept — it matches the per-handler decomposition the old `execute-steps.ts` switch needed anyway:
+
+- `steps/run-create-step.ts` — template render, dry-run print, destination-exists guard, `--overwrite`, manifest line with `create` output.
+- `steps/run-modify-step.ts` — `applyMultipleModifications`, dry-run print, warning-on-failure → `skipped-warning` line.
+- `steps/run-delete-step.ts` — existence check, remove, dry-run print.
+- `steps/run-read-step.ts` — file read, optional template transform, JSON-path extraction, assign into the shared variables map (requires variables threading from Step 2).
+- `steps/run-install-step.ts` — **exists**; dependency merge, lock-file detection, dry-run print.
+
+`runPowerup` (Step 8) owns: the loop, skip marking (`skipped-already-applied`), no-op detection, failure → `revertChanges`, and calls `saveManifest` per completed step (non-dry-run only).
+
+## Section 5: Deletion Scope (Step 12 — after the swap)
 
 ### Commands deleted
 
-Both `commands/*.ts` and `private/commands/*/`:
-
-- `add`, `find`, `pack`, `install`, `list`, `metrics`
+Both `commands/*.ts` and `private/commands/*/`: `add`, `find`, `pack`, `install`, `list`, `metrics`.
 
 ### Utils deleted
 
+- `utils/execute-steps.ts` (+ spec) — superseded by `run-powerup/steps/*` (deleted at Step 11)
 - `utils/move/` (entire directory — only used by `pack`)
-- `utils/resolve-powerup.ts` (+ spec) — replaced by new-format resolver
-- `utils/metrics.ts` (+ spec)
+- `utils/resolve-powerup.ts` (+ spec) — superseded by `get-powerup`
+- `utils/metrics.ts` (+ spec) — metrics logging removed from `use`
 - `utils/project-path.ts` (+ spec) — only used by `metrics`
 - `utils/install-package.ts` — only used by `install`
-- `utils/dependencies.ts` (+ spec) — delete if orphaned after removing `install`
-- `utils/score-intent.ts`, `utils/tokenize.ts` — delete if orphaned after removing `find`/`list`
+- `utils/dependencies.ts`, `utils/score-intent.ts`, `utils/tokenize.ts` — delete if orphaned
+- `utils/manifest.ts` — reworked or deleted at Steps 6/9 depending on the line-model decision
+- Old `utils/pre-flight.ts` / `utils/revert.ts` originals — after relocation into `utils/use/`
 
-### Schemas deleted
+### Schemas / errors / constants
 
-- `schemas/package.ts` (+ spec) — old format, all consumers deleted or overhauled
-
-### Errors deleted
-
-- `addErrors.ts`, `findErrors.ts`, `packErrors.ts`, `installErrors.ts`, `listErrors.ts` — commands deleted
-- `powerErrors.ts` — old resolver deleted
-- `moveErrors.ts` — orphaned
-- `validateErrors.ts` — orphaned
-
-### Untouched
-
-- `applied-manifest.ts` + `schemas/applied.ts` — stays for `doctor` (removed when `doctor` is migrated later)
-- `manifest.ts` — retired to use SDK schema (Section 2)
-- `parse-specifier.ts` (+ spec) — kept; new resolver uses it to resolve config entries to store paths
-- `config.ts` (+ spec) — kept; still needed to read config packages
+- Deleted: `schemas/package.ts` (+ spec); `addErrors.ts`, `findErrors.ts`, `packErrors.ts`, `installErrors.ts`, `listErrors.ts`, `powerErrors.ts`, `moveErrors.ts`, `validateErrors.ts`
+- `useErrors.ts`: **add `ambiguous`** (Step 4); keep all existing codes
+- Constants deleted from `constants.ts`: `powerupsFolderMap`, `METRICS_FILE_NAME`, `NAME_FOR_NPM_PACKAGE_GLOBAL_GROUP`
+- Kept: `MULTI_USE_FOLDER`, `SINGLE_USE_FOLDER` (doctor/scaffold), `PowerUpType`, `applied-manifest.ts` + `schemas/applied.ts` (doctor), `parse-specifier.ts`, `config.ts`
 
 ### Surviving command set
 
 `build`, `create`, `doctor`, `project`, `update`, `use`
 
-## Section 2: SDK Manifest Schema
-
-New file: `packages/sdk/src/private/schema/manifest.ts` — zod, following the `instructions.ts` pattern.
-
-```ts
-import zod from "zod";
-
-const manifestFileActionSchema = zod.enum(["create", "modify", "delete"]);
-
-const manifestFileSchema = zod.object({
-  path: zod.string(),
-  action: manifestFileActionSchema,
-});
-
-const manifestStepStatusSchema = zod.enum([
-  "applied",
-  "skipped-warning",
-  "skipped-already-applied",
-]);
-
-const manifestStepSchema = zod.object({
-  name: zod.string(),
-  type: zod.string(),
-  status: manifestStepStatusSchema,
-  from: zod.string().optional(),
-});
-
-const manifestEntrySchema = zod.object({
-  powerup: zod.string(),
-  package: zod.string(),
-  version: zod.string(),
-  location: zod.enum(["local", "global"]),
-  type: zod.enum(["multi-use", "single-use"]),
-  timestamp: zod.string(),
-  variables: zod.record(zod.string(), zod.string()),
-  steps: zod.array(manifestStepSchema),
-  files: zod.array(manifestFileSchema),
-});
-
-export type ManifestEntry = zod.infer<typeof manifestEntrySchema>;
-export type ManifestFile = zod.infer<typeof manifestFileSchema>;
-export type ManifestStep = zod.infer<typeof manifestStepSchema>;
-```
-
-Exported from `packages/sdk/src/private/index.ts`:
-
-```ts
-export { manifestEntrySchema, type ManifestEntry, type ManifestFile, type ManifestStep } from "#schema/manifest";
-```
-
-CLI's `manifest.ts` stays at `utils/manifest.ts` (schema-backed I/O module, not use-specific orchestration). It drops its hand-written `ManifestEntry` interface and imports the types from `@liolocs/powerups-sdk`. Its functions (`readManifest`, `appendManifestEntry`, `hasBeenApplied`) and JSONL storage format (`manifest.jsonl`) stay the same — only the types come from the SDK now.
-
-`revert.ts` imports `ManifestFile` from the SDK (through `manifest.ts` re-export or directly) instead of `ManifestEntry["files"]`.
-
-## Section 3: New-Format Resolver
-
-New file: `utils/use/resolve-powerup.ts` — replaces the old `utils/resolve-powerup.ts`.
-
-### Resolution flow
-
-1. Read project config → `packages` array (via existing `readConfig`)
-2. For each package entry, `parseSpecifier` → `storePath` (same mechanism: bare names → `_internal/<name>`, `npm:` → npm store, URLs → git store)
-3. Resolve to local dir (`root/.powerups/<storePath>`) first, then global (`~/.powerups/<storePath>`)
-4. For each resolved package dir:
-   - Read `package.json`, check `keywords` includes `powerups-package`
-   - Parse `package.json["powerup"]` via SDK's `powerupPropertySchema`
-   - Read `dist/instructions.json` → parse via `instructionsSchema` (via `load-instructions.ts`)
-   - If `instructions.name` matches the requested name (and `instructions.type` matches if `--type` flag given) → match
-5. Return the match, preferring local on collision. Throw `not_found` if zero matches, `ambiguous` if multiple local matches.
-
-### Return type
-
-```ts
-interface ResolvedPowerUp {
-  folder: FileRef;            // the dist/ dir (instructions.json + templates live here)
-  packageName: string;
-  location: "local" | "global";
-  instructions: Instructions; // parsed from dist/instructions.json
-}
-```
-
-The resolver returns the parsed `instructions` directly — it already reads `dist/instructions.json` to match by name, so there's no re-read in the command action. The `--type` flag is kept for disambiguation (filters matches by `instructions.type`).
-
-### Helper
-
-`utils/use/load-instructions.ts` — reads + schema-validates `dist/instructions.json` from a given folder. Called by the resolver; kept separate for testability.
-
-`parse-specifier.ts` and `config.ts` stay at `utils/` level — shared infrastructure, not use-specific.
-
-## Section 4: Use Command Decomposition
-
-`use/index.ts` becomes a thin action — just orchestration, like `build/index.ts`:
-
-```ts
-action: async ({ subcommands, rawFlags, flags, context }) => {
-  const name = getName(subcommands);
-  const root = await getRoot(context);
-  await ensureMainFolder(root);
-
-  const resolved = await resolvePowerUp({ root, name, typeFlag: flags.type });
-  const variables = extractVariables({ rawFlags, ...resolved.instructions.variables, excludeFlags, onMissing });
-  const { effectiveSteps, skippedSteps, fromInfo } = await checkAlreadyApplied({ root, instructions: resolved.instructions });
-  const meta = await getPackageMeta({ resolved, variables });
-
-  const record = await runSteps({
-    steps: effectiveSteps,
-    skippedSteps,
-    variables,
-    outputFolder: resolved.folder,
-    rootDir: root,
-    isDryRun,
-    isOverwrite,
-  });
-
-  if (isNoOp(record)) {
-    cli.print(`Nothing to do — all steps already applied or skipped.\n`);
-    return;
-  }
-
-  await recordManifest({ root, instructions: resolved.instructions, record, meta, fromInfo });
-}
-```
-
-### New files under `utils/use/`
-
-| File | Responsibility |
-|---|---|
-| `resolve-powerup.ts` | New-format resolver (Section 3) |
-| `load-instructions.ts` | Read + schema-validate `dist/instructions.json` |
-| `check-already-applied.ts` | Single-use top-level check + skip steps from already-applied included single-use powerups; returns `{ effectiveSteps, skippedSteps, fromInfo }` |
-| `get-package-meta.ts` | Best-effort read of package version from `package.json`; returns `PackageMeta` and exports the type. `PackageMeta = { packageName: string; version: string; location: "local" \| "global"; variables: Record<string, string> }` |
-| `run-steps.ts` | Orchestrates execution — dry-run path (just `executeSteps` + record skipped) vs non-dry-run path (git verify, clean tree, pre-flight, `executeSteps` with revert on failure, record skipped). Returns `RunRecord`. Also exports `isNoOp`. |
-| `record-manifest.ts` | Builds parent manifest entry + per-included-powerup entries, appends them via `manifest.ts` |
-
-### Moved from `utils/` into `utils/use/`
-
-- `execute-steps.ts` (+ spec) — decomposed further (Section 5)
-- `pre-flight.ts` (+ spec) — updated for clean coding principles (object params, spacing, descriptive names, self-documenting)
-- `revert.ts` (+ spec)
-
-### Stays at `utils/` level (shared infrastructure)
-
-- `variables.ts` — `toKebabCase` used by `useErrors.ts`
-- `git.ts`, `config.ts`, `parse-specifier.ts`, `manifest.ts`
-- Template/output utilities (`resolve-template-string.ts`, `modify-engine.ts`, etc.)
-
-### Spec files
-
-Every new file gets a spec file. Existing spec files move with their source. New specs: `resolve-powerup.spec.ts`, `load-instructions.spec.ts`, `check-already-applied.spec.ts`, `get-package-meta.spec.ts`, `run-steps.spec.ts`, `record-manifest.spec.ts`, plus decomposed step handler specs (Section 5).
-
-## Section 5: execute-steps Decomposition
-
-The current `execute-steps.ts` is one large function with a `switch` over five step types. Decompose into an orchestrator + per-step-type handlers.
-
-### Orchestrator: `utils/use/execute-steps.ts`
-
-Keeps the loop, step-variable resolution, `from` tracking, and `RunRecord` type. Dispatches to the appropriate handler:
-
-```ts
-export async function executeSteps({
-  steps,
-  variables,
-  outputFolder,
-  rootDir,
-  isDryRun,
-  isOverwrite,
-  record,
-}: ExecuteStepsArgs): Promise<void> {
-  for (const step of steps) {
-    const stepVars = resolveStepVariables(step, variables);
-    const from = fromOf(step);
-
-    switch (step.type) {
-      case "read":    await runRead({ step, stepVars, outputFolder, rootDir, isDryRun, record }); break;
-      case "create":  await runCreate({ step, stepVars, outputFolder, rootDir, isDryRun, isOverwrite, record }); break;
-      case "modify":  await runModify({ step, stepVars, outputFolder, rootDir, isDryRun, record }); break;
-      case "delete":  await runDelete({ step, stepVars, rootDir, isDryRun, record }); break;
-      case "install": await runInstall({ step, stepVars, rootDir, isDryRun, record }); break;
-    }
-  }
-}
-```
-
-Stays in the orchestrator:
-- `RunRecord` interface + `ExecuteStepsArgs` interface
-- `resolveStepVariables` — applies `variableMap` composition before dispatching
-- `fromOf` — extracts `from.name` for step record tracking
-
-### Per-step handlers under `utils/use/steps/`
-
-| File | Extracted logic | Private helpers that move with it |
-|---|---|---|
-| `run-read.ts` | Read step: file read, optional template transform, JSON path extraction, `variables[as]` assignment | `navigateJsonPath` |
-| `run-create.ts` | Create step: template render, dry-run print, destination-exists check, write | — |
-| `run-modify.ts` | Modify step: dry-run print, `applyMultipleModifications`, write, warning-on-failure | — |
-| `run-delete.ts` | Delete step: dry-run print, existence check, remove | — |
-| `run-install.ts` | Install step: dependency merge into `package.json`, lock-file detection, package manager run | `parseDepName`, `depVersion`, `LOCK_FILES` |
-| `index.ts` | Barrel re-exporting all handlers | — |
-
-### Handler signature
-
-Uniform across all five — each handler gets only the params it actually uses:
-
-```ts
-export async function runCreate({
-  step,
-  stepVars,
-  outputFolder,
-  rootDir,
-  isDryRun,
-  isOverwrite,
-  record,
-}: {
-  step: Extract<Step, { type: "create" }>;
-  stepVars: VariableResult;
-  outputFolder: FileRef;
-  rootDir: FileRef;
-  isDryRun: boolean;
-  isOverwrite: boolean;
-  record: RunRecord;
-}): Promise<void>
-```
-
-`run-read` and `run-delete` don't need `isOverwrite`. `run-install` doesn't need `outputFolder` or `isOverwrite`. Each handler pushes to `record.steps` and `record.files` internally.
-
-### Spec files
-
-- `execute-steps.spec.ts` moves and tests the orchestrator dispatch + `resolveStepVariables`
-- `run-read.spec.ts`, `run-create.spec.ts`, `run-modify.spec.ts`, `run-delete.spec.ts`, `run-install.spec.ts` — each tests its handler in isolation
-
-## Section 6: Manifest Recording
-
-New file: `utils/use/record-manifest.ts`
-
-Extracts the manifest-entry building logic currently inline in `use/index.ts`.
-
-### `buildManifestEntry`
-
-Builds the parent entry from the instructions + run record + meta:
-
-```ts
-function buildManifestEntry({
-  instructions,
-  record,
-  meta,
-}: {
-  instructions: Instructions;
-  record: RunRecord;
-  meta: PackageMeta;
-}): ManifestEntry {
-  return {
-    powerup: instructions.name,
-    package: meta.packageName,
-    version: meta.version,
-    location: meta.location,
-    type: instructions.type,
-    timestamp: new Date().toISOString(),
-    variables: meta.variables,
-    steps: record.steps,
-    files: record.files,
-  };
-}
-```
-
-### `includedPowerupEntries`
-
-Builds one entry per included powerup, grouped by `from.name` among applied steps. Preserves the current behavior: an included single-use powerup gets its own manifest entry so it's blocked if someone tries to apply it standalone later.
-
-### `recordManifest`
-
-The exported orchestrator:
-
-```ts
-export async function recordManifest({
-  root,
-  instructions,
-  record,
-  meta,
-  fromInfo,
-}: { ... }): Promise<void> {
-  await appendManifestEntry(root, buildManifestEntry({ instructions, record, meta }));
-  for (const entry of includedPowerupEntries({ record, fromInfo, meta })) {
-    await appendManifestEntry(root, entry);
-  }
-}
-```
-
-### `fromInfo`
-
-The `Map<string, { name: string; singleUse: boolean }>` is built in `check-already-applied.ts` (iterates steps to extract `from` fields) and returned as part of its result. The `FromInfo` type is exported from `check-already-applied.ts` and consumed by `record-manifest.ts`.
-
-### No metrics logging
-
-The `logRun` call is removed entirely. `utils/metrics.ts` is deleted (Section 1).
-
-## Section 7: Error & Constant Cleanup
-
-### Error files deleted
-
-| File | Reason |
-|---|---|
-| `addErrors.ts` | `add` command deleted |
-| `findErrors.ts` | `find` command deleted |
-| `packErrors.ts` | `pack` command deleted |
-| `installErrors.ts` | `install` command deleted |
-| `listErrors.ts` | `list` command deleted |
-| `powerErrors.ts` | old `resolve-powerup.ts` deleted |
-| `moveErrors.ts` | orphaned (move utils deleted) |
-| `validateErrors.ts` | orphaned (no usage found) |
-
-### Error files kept (unchanged)
-
-`buildErrors.ts`, `createErrors.ts`, `doctorErrors.ts`, `appliedErrors.ts`, `projectErrors.ts`, `runnerErrors.ts`, `updateErrors.ts`, `initErrors.ts`
-
-### `useErrors.ts` updated
-
-- Add `ambiguous` (migrated from `powerErrors` — the new resolver throws it on multiple local matches)
-- All existing error codes stay (`not_found`, `already_applied`, `template_not_found`, `destination_file_exists`, git errors, modify errors, read errors, etc.)
-- `instructions_not_built` stays — still relevant when `dist/instructions.json` is missing
-
-### Constants deleted from `constants.ts`
-
-| Constant | Reason |
-|---|---|
-| `powerupsFolderMap` | no usage outside constants |
-| `METRICS_FILE_NAME` | only used by `metrics.ts` (deleted) |
-| `NAME_FOR_NPM_PACKAGE_GLOBAL_GROUP` | only used by `install-package.ts` (deleted) |
-
-### Constants kept
-
-- `MULTI_USE_FOLDER`, `SINGLE_USE_FOLDER` — still used by `doctor` + `scaffold` (project init)
-- `PowerUpType` — used by `create` command + new `use` resolver (`--type` flag)
-- All others unchanged
-
 ### Final verification
 
-After all deletions, run `knip` to catch any remaining orphaned files or exports.
+Full test suite green + `knip` clean after Step 12.
 
 ## File Map Summary
 
 ### SDK package (`packages/sdk/`)
 
-| Action | File |
-|---|---|
-| New | `src/private/schema/manifest.ts` |
-| Modified | `src/private/index.ts` (add manifest exports) |
-| New | `src/private/schema/manifest.spec.ts` |
+| Action | File | Step |
+|---|---|---|
+| **Done** | `src/private/schema/manifest.ts` | 0 |
+| Spec (if not present) | `src/private/schema/manifest.spec.ts` | 2 (confirm with user) |
+| Export check | `src/private/index.ts` | 2 |
 
 ### CLI package (`packages/cli/`)
 
-| Action | File |
-|---|---|
-| Modified | `src/commands/index.ts` (remove deleted commands) |
-| Rewritten | `src/private/commands/use/index.ts` (thin action) |
-| New | `src/private/utils/use/resolve-powerup.ts` + spec |
-| New | `src/private/utils/use/load-instructions.ts` + spec |
-| New | `src/private/utils/use/check-already-applied.ts` + spec |
-| New | `src/private/utils/use/get-package-meta.ts` + spec |
-| New | `src/private/utils/use/run-steps.ts` + spec |
-| New | `src/private/utils/use/record-manifest.ts` + spec |
-| Moved + decomposed | `src/private/utils/use/execute-steps.ts` + spec |
-| New | `src/private/utils/use/steps/run-read.ts` + spec |
-| New | `src/private/utils/use/steps/run-create.ts` + spec |
-| New | `src/private/utils/use/steps/run-modify.ts` + spec |
-| New | `src/private/utils/use/steps/run-delete.ts` + spec |
-| New | `src/private/utils/use/steps/run-install.ts` + spec |
-| New | `src/private/utils/use/steps/index.ts` |
-| Moved + updated | `src/private/utils/use/pre-flight.ts` + spec |
-| Moved | `src/private/utils/use/revert.ts` + spec |
-| Modified | `src/private/utils/manifest.ts` (import types from SDK) |
-| Modified | `src/private/errors/useErrors.ts` (add `ambiguous`) |
-| Modified | `src/private/constants.ts` (delete 3 constants) |
-| Deleted | `src/commands/{add,find,pack,install,list,metrics}.ts` |
-| Deleted | `src/private/commands/{add,find,pack,install,list,metrics}/` |
-| Deleted | `src/private/utils/{move/,resolve-powerup,metrics,project-path,install-package}.ts` + specs |
-| Deleted | `src/private/utils/{dependencies,score-intent,tokenize}.ts` + specs (if orphaned) |
-| Deleted | `src/private/schemas/package.ts` + spec |
-| Deleted | `src/private/errors/{add,find,pack,install,list,power,move,validate}Errors.ts` |
+| Action | File | Step |
+|---|---|---|
+| **Done (skeleton)** | `src/private/commands/use/use-new.ts` | 0 |
+| **Done (fixture)** | `src/private/test-utils/create-fully-built-powerup-for-test.ts` | 0 |
+| **Done (skeleton)** | `src/private/utils/use/run-powerup/{index,run-step,save-manifest}.ts`, `steps/run-install-step.ts` | 0 |
+| Gap-fill | `use-new.ts` flags + missing stubs | 1 |
+| New/confirm | `src/private/test-utils/create-project-for-test.ts` | 3 |
+| New | `src/private/utils/use/check-pre-use-errors.ts` + spec | 3 |
+| New | `src/private/utils/use/get-powerup/` + specs | 4 |
+| Modified | `src/private/errors/useErrors.ts` (`ambiguous`) | 4 |
+| New | `src/private/utils/validate/validate-powerup.ts` + spec | 5 |
+| New/moved | `src/private/utils/use/check-pre-flight-errors.ts` + spec (from `pre-flight`) | 6 |
+| New | `steps/run-create-step.ts` + spec | 7a |
+| New | `steps/run-modify-step.ts` + spec | 7b |
+| New | `steps/run-delete-step.ts` + spec | 7c |
+| New | `steps/run-read-step.ts` + spec | 7d |
+| Completed | `run-powerup/index.ts` orchestration + spec | 8 |
+| Reworked | `run-powerup/save-manifest.ts` + read side | 9 |
+| New | `src/private/commands/use/use.spec.ts` (integration) | 10 |
+| Swap | `use-new.ts` → `private/commands/use/index.ts`; delete `use-new.ts`, `execute-steps.ts` | 11 |
+| Deleted | old commands/utils/errors/constants (Section 5) | 12 |

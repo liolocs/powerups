@@ -1,8 +1,11 @@
-import { CLI_FOLDER_NAME, INTERNAL_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER, INTERNAL_FOLDER } from "#constants";
 import fs from "@rcompat/fs";
 import { type Instructions } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
 import io from "@rcompat/io";
+import runtime from "@rcompat/runtime";
+import path from "node:path";
+import nodeFs from "node:fs";
 
 const defaultInstructions = (powerupName: string): Instructions => ({
   name: powerupName,
@@ -83,10 +86,15 @@ export async function createPowerupPackageForTest({
   }): Promise<Instructions> {
   // Root of the powerup package: /tmp/.powerups/_internal/<powerupName>/
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.INTERNAL}/${powerupName}`,
   );
 
-  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}`));
+  // Absolute path to the workspace SDK, and a `link:` specifier relative to
+  // this package's directory. Both stay correct for any folder depth/name.
+  const sdkPackageAbsolutePath = path.resolve((await runtime.projectRoot()).path, "packages/sdk");
+  const sdkPackageLinkSpecifier = `link:${path.relative(packageDir.path, sdkPackageAbsolutePath)}`;
+
+  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.INTERNAL}`));
 
   await fs.create(packageDir.append("/templates"));
 
@@ -107,12 +115,25 @@ export async function createPowerupPackageForTest({
       },
     },
     dependencies: {
-      // /tmp/.powerups/_internal/<powerupName> -> <projectRoot>/packages/sdk
-      // is four directories up: <powerupName> -> _internal -> .powerups -> tmp -> <projectRoot>
-      "@liolocs/powerups-sdk": "link:../../../../packages/sdk",
+      // Computed relative to this package's directory so it stays correct no
+      // matter how deep under tmp/ or global-tmp/ the test project lives.
+      "@liolocs/powerups-sdk": sdkPackageLinkSpecifier,
     },
   };
   await packageDir.append("/package.json").writeJSON(packageJsonContents);
+
+  // Create the node_modules/@liolocs/powerups-sdk symlink so Node's ESM resolver
+  // can find the SDK at runtime when the build step does `import("dist/index.js")`.
+  // This mirrors what `pnpm install` would create for a static workspace package,
+  // but is done at scaffold time so it works for dynamically-created test
+  // projects (which are wiped & recreated by test setup and never see a
+  // `pnpm install`) at any folder depth / name.
+  const liolocsNodeModulesRef = packageDir.append("/node_modules/@liolocs");
+  await liolocsNodeModulesRef.create();
+
+  const sdkSymlinkPath = path.resolve(liolocsNodeModulesRef.path, "powerups-sdk");
+  nodeFs.rmSync(sdkSymlinkPath, { force: true, recursive: true });
+  nodeFs.symlinkSync(path.relative(liolocsNodeModulesRef.path, sdkPackageAbsolutePath), sdkSymlinkPath, "dir");
 
   for (const template of templates) {
     await packageDir.append(`${template.templatePath}`).write(template.content);

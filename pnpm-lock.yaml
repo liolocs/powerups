@@ -37,8 +37,32 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  global-tmp/.powerups/_internal/test-powerup:
-    dependencies:
+  .powerups/installed/_internal/cli-command:
+    devDependencies:
+      '@liolocs/powerups-sdk':
+        specifier: link:../../../../packages/sdk
+        version: link:../../../../packages/sdk
+
+  .powerups/installed/_internal/cli-sub-command:
+    devDependencies:
+      '@liolocs/powerups-sdk':
+        specifier: link:../../../../packages/sdk
+        version: link:../../../../packages/sdk
+
+  .powerups/installed/_internal/cli-with-sub-commands:
+    devDependencies:
+      '@liolocs/powerups-sdk':
+        specifier: link:../../../../packages/sdk
+        version: link:../../../../packages/sdk
+      cli-command:
+        specifier: file:../cli-command
+        version: link:../cli-command
+      cli-sub-command:
+        specifier: file:../cli-sub-command
+        version: link:../cli-sub-command
+
+  .powerups/installed/_internal/create-powerup:
+    devDependencies:
       '@liolocs/powerups-sdk':
         specifier: link:../../../../packages/sdk
         version: link:../../../../packages/sdk

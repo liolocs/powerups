@@ -1,7 +1,9 @@
-import { CLI_FOLDER_NAME, GLOBAL_ROOT } from "#constants";
+import { CLI_FOLDER_NAME, GLOBAL_ROOT, INSTALLED_FOLDER } from "#constants";
 import type { Instructions, PowerupConfig } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import getPowerupInstallFromConfig from "#utils/use/getPowerup/getPowerupInstallFromConfig";
+import is from "@rcompat/is";
+import use_errors from "#errors/useErrors";
 
 export default async function getPowerup({
   root,
@@ -11,7 +13,7 @@ export default async function getPowerup({
   root: FileRef;
   globalRoot: FileRef;
   name: string;
-}): Promise<{ instructions: Instructions }> {
+  }): Promise<{ instructions: Instructions, location: FileRef }> {
   /**
    * should should for the powerup:
    * 1. locally: .powerups/installed/_internal, .powerups/installed/.npm, .powerups/installed/.git folders
@@ -21,7 +23,8 @@ export default async function getPowerup({
   const localConfigRef = root.append(`/${CLI_FOLDER_NAME}/config.json`);
   const globalConfigRef = globalRoot.append("/config.json");
 
-  let localConfig: PowerupConfig;
+  let localConfig: Awaited<ReturnType<typeof getPowerupInstallFromConfig>>;
+  let globalConfig: Awaited<ReturnType<typeof getPowerupInstallFromConfig>>;;
 
   try {
     localConfig = await getPowerupInstallFromConfig({ configRef: localConfigRef, powerupName });
@@ -29,17 +32,56 @@ export default async function getPowerup({
     // it is fine if the local config.json is not found or invalid
   }
 
-  const globalConfig = await getPowerupInstallFromConfig({ configRef: globalConfigRef, powerupName });
-
-  const searchLocations = [
-    root, GLOBAL_ROOT,
-  ];
-
-  for (const searchLocation of searchLocations) {
-    const powerupDir = searchLocation.append(`/${powerupName}`);
-
-    if (await powerupDir.exists()) {
-      return { instructions: powerupDir };
-    }
+  try {
+    globalConfig = await getPowerupInstallFromConfig({ configRef: globalConfigRef, powerupName });
+  } catch {
+    // it is fine if the global config.json is not found or invalid
   }
+
+  // @ts-expect-error it is fine to use before its defined in this case
+  if (is.undefined(localConfig) && is.undefined(globalConfig)) {
+    throw use_errors.not_installed(powerupName);
+  }
+
+  // @ts-expect-error it is fine to use before its defined in this case
+  if (is.defined(localConfig)) {
+    // get it from the local config
+    return fetchPowerup({ root, installationType: localConfig.where, powerupName });
+    // @ts-expect-error it is fine to use before its defined in this case
+  } else if (is.defined(globalConfig)) {
+    // get it from the global config
+    return fetchPowerup({ root: globalRoot, installationType: globalConfig.where, powerupName });
+  }
+}
+
+async function fetchPowerup({
+  root,
+  installationType,
+  powerupName,
+}: {
+  root: FileRef;
+  installationType: "internal" | "npm" | "git";
+  powerupName: string;
+}) {
+  let powerupDir = root.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER[installationType]}/${powerupName}`);
+
+  if (installationType === "internal") {
+    powerupDir = root.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.INTERNAL}/${powerupName}`);
+  }
+
+  if (await powerupDir.exists() === false) {
+    throw use_errors.powerup_missing(powerupName);
+  }
+
+  let instructionsJSON: Instructions;
+  try {
+    instructionsJSON = await powerupDir.append("/dist/instructions.json").json();
+  } catch {
+    throw use_errors.instructions_not_built(powerupName);
+  }
+
+  return {
+    instructions: instructionsJSON,
+    location: powerupDir,
+  };
 }

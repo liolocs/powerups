@@ -2,7 +2,7 @@ import { type Instructions } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
 import { createPowerupPackageForTest, type DefaultTemplateForTest } from "#test-utils/create-powerup-for-test";
 import build from "#commands/build/index";
-import { CLI_FOLDER_NAME, INTERNAL_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER, INTERNAL_FOLDER } from "#constants";
 import git from "#utils/git";
 
 const defaultInstructions = (powerupName: string): Instructions => ({
@@ -38,7 +38,7 @@ export default async function createFullyBuiltPowerupForTest({
   templates?: DefaultTemplateForTest[];
 }): Promise<{ instructions: Instructions; packageDir: FileRef }> {
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.INTERNAL}/${powerupName}`,
   );
   await createPowerupPackageForTest({
     powerupName,
@@ -96,7 +96,7 @@ export async function createSimpleScaffoldPowerupForTest({
     ],
   };
 
-  // E.G. .powerups/_internal/cli-command/templates/component.ts
+  // E.G. .powerups/installed/installed/_internal/cli-command/templates/component.ts
   const indexTemplateContent = `export default function(variables: Record<string, string>): string {
   const { name } = variables;
   return \`export const \${name} = "";\\n\`;
@@ -136,12 +136,12 @@ export async function createSimpleScaffoldPowerupForTest({
 
   const result = await createFullyBuiltPowerupForTest({
     powerupName,
-    testRoot,
+    testRoot: targetDir,
     instructions: instructionsForScaffoldingSimpleFile,
     templates,
   });
 
-  await targetDir.append("/.powerups/config.json").writeJSON({ packages: [powerupName] });
+  await targetDir.append("/.powerups/config.json").writeJSON({ packages: ["internal:" + powerupName] });
 
   try {
     await git.commitAll({ cwd: targetDir, message: "initial commit" });
@@ -197,7 +197,7 @@ export async function createSimpleGlobalScaffoldPowerupForTest({
     ],
   };
 
-  // E.G. .powerups/_internal/cli-command/templates/component.ts
+  // E.G. .powerups/installed/_internal/cli-command/templates/component.ts
   const indexTemplateContent = `export default function(variables: Record<string, string>): string {
   const { name } = variables;
   return \`export const \${name} = "";\\n\`;
@@ -243,7 +243,7 @@ export async function createSimpleGlobalScaffoldPowerupForTest({
   });
 
   await targetDir.append("/.powerups/config.json").writeJSON({ packages: [] });
-  await globalRoot.append("/config.json").writeJSON({ packages: [powerupName] });
+  await globalRoot.append("/config.json").writeJSON({ packages: ["internal:" + powerupName] });
 
   try {
     await git.commitAll({ cwd: targetDir, message: "initial commit" });

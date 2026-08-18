@@ -32,6 +32,12 @@ export const powerupsFolderMap: Record<PowerUpType, string> = {
   "single-use": SINGLE_USE_FOLDER,
 };
 
+export const INSTALLED_FOLDER = {
+  INTERNAL: "installed/_internal",
+  NPM: "installed/npm",
+  GIT: "installed/git",
+};
+
 export const INTERNAL_FOLDER = "_internal";
 
 export const PACKAGE_JSON = "package.json";

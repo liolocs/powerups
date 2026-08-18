@@ -14,6 +14,11 @@ const use_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  powerup_missing: (name: string) => {
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} ${name} not found`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   unsupported_package_type: (name: string) => {
     const errorText = `Unsupported package type: ${name}`;
     return t`${errorBGText}${errorText}`;

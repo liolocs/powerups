@@ -1,9 +1,7 @@
 packages:
   - apps/*
   - packages/*
-  - .powerups/_internal/*
-  - tmp/.powerups/_internal/*
-  - global-tmp/.powerups/_internal/*
+  - .powerups/installed/_internal/*
 minimumReleaseAge: 0
 overrides:
   '@liolocs/powerups-sdk': link:packages/sdk

@@ -14,7 +14,7 @@ export default async function getPowerupInstallFromConfig({
   }> {
   const config = await getConfig(configRef);
 
-  const found = config.packages.find(p => p.includes(powerupName));
+  const found = config.packages.find(p => p.split(":")[1] === powerupName);
 
   if (is.falsy(found)) {
     throw use_errors.not_in_config(powerupName);

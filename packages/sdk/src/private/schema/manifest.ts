@@ -36,6 +36,7 @@ const installOutputSchema = zod.object({
   dependencies: zod.array(zod.string()).optional(),
   devDependencies: zod.array(zod.string()).optional(),
   peerDependencies: zod.array(zod.string()).optional(),
+  packageManager: zod.string(),
 }).strict();
 
 const readOutputSchema = zod.object({

@@ -14,12 +14,6 @@ export default async function getPowerup({
   globalRoot: FileRef;
   name: string;
   }): Promise<{ instructions: Instructions, location: FileRef }> {
-  /**
-   * should should for the powerup:
-   * 1. locally: .powerups/installed/_internal, .powerups/installed/.npm, .powerups/installed/.git folders
-   * 2. globally: ~/.powerups/installed/_internal, ~/.powerups/installed/.npm, ~/.powerups/installed/.git folders
-   */
-
   const localConfigRef = root.append(`/${CLI_FOLDER_NAME}/config.json`);
   const globalConfigRef = globalRoot.append("/config.json");
 

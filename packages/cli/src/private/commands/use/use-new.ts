@@ -77,25 +77,10 @@ const use = new Command({
     await runPowerup({
       destination: root,
       powerupDir: powerup.location,
-      instructions: powerup.instructions,
+      instructions: validatedCompiledInstructions,
       isDryRun,
     });
   },
 });
 
 export default use;
-
-// function getFlagFromRawFlags(
-//   flag: Flag,
-//   rawFlags?: Array<{ flag: string; value: string }>,
-// ): { flag: string; value: string } | undefined {
-//   if (is.falsy(rawFlags)) {
-//     return undefined;
-//   }
-
-//   const found = rawFlags!.find(f =>
-//     f.flag === `--${flag.long}` ||
-//     f.flag === `-${flag.short}`);
-
-//   return found;
-// }

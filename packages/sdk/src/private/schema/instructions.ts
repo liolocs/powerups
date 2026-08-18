@@ -55,6 +55,13 @@ const installStepSchema = zod.object({
   dependencies: zod.array(zod.string()).optional(),
   devDependencies: zod.array(zod.string()).optional(),
   peerDependencies: zod.array(zod.string()).optional(),
+  packageManager: zod.union([
+    zod.literal("pnpm"),
+    zod.literal("npm"),
+    zod.literal("bun"),
+    zod.literal("yarn"),
+    zod.literal("auto"),
+  ]).default("npm"),
   variableMap: variableMapSchema,
   __source: zod.string().optional(),
   from: fromSchema,

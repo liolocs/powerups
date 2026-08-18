@@ -154,3 +154,105 @@ export async function createSimpleScaffoldPowerupForTest({
     ...result,
   };
 }
+
+export async function createSimpleGlobalScaffoldPowerupForTest({
+  powerupName = "test-powerup",
+  projectName = "new-project",
+  globalRoot,
+  testRoot,
+}: {
+  powerupName?: string;
+  projectName?: string;
+  globalRoot: FileRef;
+  testRoot: FileRef;
+}) {
+  const targetDir = testRoot.append(`/${projectName}`);
+  await targetDir.create();
+  await git.init({ cwd: targetDir });
+
+  const instructionsForScaffoldingSimpleFile: Instructions = {
+    name: powerupName,
+    type: "single-use",
+    description: "a test powerup",
+    variables: {
+      required: ["name"],
+      optional: [],
+    },
+    intent: [
+      "create a test component",
+    ],
+    steps: [
+      {
+        type: "create",
+        name: "index",
+        template: "templates/index.ts",
+        outputPath: "index.ts",
+      },
+      {
+        type: "create",
+        name: "package.json",
+        template: "templates/package.json.ts",
+        outputPath: "package.json",
+      },
+    ],
+  };
+
+  // E.G. .powerups/_internal/cli-command/templates/component.ts
+  const indexTemplateContent = `export default function(variables: Record<string, string>): string {
+  const { name } = variables;
+  return \`export const \${name} = "";\\n\`;
+}
+`;
+  const packageJsonTemplateContent = `export default function(variables: Record<string, string>): string {
+  const { name } = variables;
+  return \`{
+  "name": "${powerupName}",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \\"Error: no test specified\\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+\\n\`;
+  return \`export const \${name} = "";\\n\`;
+}
+`;
+
+  const templates: DefaultTemplateForTest[] = [
+    {
+      name: "index",
+      templatePath: "/templates/index.ts",
+      content: indexTemplateContent,
+    },
+    {
+      name: "package.json",
+      templatePath: "/templates/package.json.ts",
+      content: packageJsonTemplateContent,
+    },
+  ];
+
+  const result = await createFullyBuiltPowerupForTest({
+    powerupName,
+    testRoot: globalRoot,
+    instructions: instructionsForScaffoldingSimpleFile,
+    templates,
+  });
+
+  await targetDir.append("/.powerups/config.json").writeJSON({ packages: [] });
+  await globalRoot.append("/config.json").writeJSON({ packages: [powerupName] });
+
+  try {
+    await git.commitAll({ cwd: targetDir, message: "initial commit" });
+  } catch (e) {
+    console.error(e);
+  }
+
+  return {
+    targetDir,
+    ...result,
+  };
+}

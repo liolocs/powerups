@@ -14,13 +14,33 @@ const use_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  unsupported_package_type: (name: string) => {
+    const errorText = `Unsupported package type: ${name}`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  global_config_not_found: () => {
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} global config.json not found`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  not_in_config: (powerupName: string) => {
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} ${powerupName} is not in the config.json`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   config_not_found: () => {
     const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} config.json not found`;
     return t`${errorBGText}${errorText}`;
   },
 
-  not_in_config: () => {
-    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} not in config.json`;
+  config_invalid_file: () => {
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} config.json is invalid`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  not_installed: (powerupName: string) => {
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} ${powerupName} is not installed. You must install it first with ${CLI_CMD} install <${CAPITALIZED_SINGLULAR_CLI_NAME}>.`;
     return t`${errorBGText}${errorText}`;
   },
 

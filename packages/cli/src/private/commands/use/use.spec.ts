@@ -23,7 +23,6 @@ test.case("should use a fully-built powerup without errors", async assert => {
   const powerupName = "test-powerup";
   const { targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
 
-
   await assert(use.run({
     subcommands: [powerupName],
     flags: [],

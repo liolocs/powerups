@@ -37,6 +37,12 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  global-tmp/.powerups/_internal/test-powerup:
+    dependencies:
+      '@liolocs/powerups-sdk':
+        specifier: link:../../../../packages/sdk
+        version: link:../../../../packages/sdk
+
   packages/cli:
     dependencies:
       '@rcompat/cli':
@@ -106,12 +112,6 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
-
-  tmp/.powerups/_internal/simple-powerup:
-    dependencies:
-      '@liolocs/powerups-sdk':
-        specifier: link:../../../../packages/sdk
-        version: link:../../../../packages/sdk
 
 packages:
 

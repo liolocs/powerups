@@ -1,9 +1,11 @@
-import { SINGULAR_NAME_FOR_CLI } from "#constants";
+import { GLOBAL_ROOT, SINGULAR_NAME_FOR_CLI } from "#constants";
 import { Command, type Flag } from "@liolocs/program";
 import type { FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
+import fs from "@rcompat/fs";
 import checkForPreUseErrors from "#utils/use/check-for-pre-use-errors/index";
+import getPowerup from "#utils/use/getPowerup/getPowerup";
 
 const dryRunFlag: Flag = {
   name: "dryRun",
@@ -32,7 +34,8 @@ const use = new Command({
 
     /**
      Check:
-     * Is a git repo? If not its ok, the goal is to have a clean git state and if there is not .git folder then we can assume its a new project and we can use the powerup
+     * Powerup was passed
+     * Powerup is in config
      * Clean git state
      */
     await checkForPreUseErrors({ cwd: root, powerupName });
@@ -44,7 +47,11 @@ const use = new Command({
      * Should use the config.json locally and the global config.json to get the powerup (installed powerups are registered in the local or global config.json based on where they are installed)
      * The config.json is the same type of file as settings.json for pi.dev except that we record powerups instead of pi extensions
      */
-    // const { powerupInstructions, powerupLocation } = await getPowerup({ root, name: powerupName, type: powerupType });
+    const powerup = await getPowerup({
+      root,
+      name: powerupName!,
+      globalRoot: fs.ref(GLOBAL_ROOT),
+    });
 
     // /**
     //  * Should check for similar validation that is currently done in the build command (eventually this funcitonality should live in the validate command so lets import it from a #utils/validate/ location and use it in both build and use)

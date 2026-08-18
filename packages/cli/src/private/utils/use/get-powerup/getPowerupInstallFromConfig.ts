@@ -1,6 +1,6 @@
 import use_errors from "#errors/useErrors";
 import { type FileRef } from "@rcompat/fs";
-import { getConfig } from "#utils/use/getPowerup/getConfig";
+import { getConfig } from "#utils/use/get-powerup/getConfig";
 import is from "@rcompat/is";
 
 export default async function getPowerupInstallFromConfig({

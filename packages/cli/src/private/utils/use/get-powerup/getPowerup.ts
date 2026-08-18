@@ -1,7 +1,7 @@
-import { CLI_FOLDER_NAME, GLOBAL_ROOT, INSTALLED_FOLDER } from "#constants";
-import type { Instructions, PowerupConfig } from "@liolocs/powerups-sdk";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
+import type { Instructions } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
-import getPowerupInstallFromConfig from "#utils/use/getPowerup/getPowerupInstallFromConfig";
+import getPowerupInstallFromConfig from "#utils/use/get-powerup/getPowerupInstallFromConfig";
 import is from "@rcompat/is";
 import use_errors from "#errors/useErrors";
 
@@ -39,11 +39,6 @@ export default async function getPowerup({
   }
 
   // @ts-expect-error it is fine to use before its defined in this case
-  if (is.undefined(localConfig) && is.undefined(globalConfig)) {
-    throw use_errors.not_installed(powerupName);
-  }
-
-  // @ts-expect-error it is fine to use before its defined in this case
   if (is.defined(localConfig)) {
     // get it from the local config
     return fetchPowerup({ root, installationType: localConfig.where, powerupName });
@@ -51,6 +46,8 @@ export default async function getPowerup({
   } else if (is.defined(globalConfig)) {
     // get it from the global config
     return fetchPowerup({ root: globalRoot, installationType: globalConfig.where, powerupName });
+  } else {
+    throw use_errors.not_installed(powerupName);
   }
 }
 

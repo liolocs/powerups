@@ -2,7 +2,7 @@ import build_errors from "#errors/buildErrors";
 import { type Instructions, instructionsSchema } from "@liolocs/powerups-sdk";
 import {
   getListOfIssuesWithInstructions,
-} from "#utils/build/check-compiled-instructions-for-errors/get-list-of-issues-with-instructions";
+} from "#utils/validate/check-compiled-instructions-for-errors/get-list-of-issues-with-instructions";
 
 export default async function checkCompiledInstructionsForErrors(
   compiledInstructions: Instructions,

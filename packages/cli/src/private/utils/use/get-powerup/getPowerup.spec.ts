@@ -1,5 +1,5 @@
 import test from "#test-utils/test/index";
-import getPowerup from "#utils/use/getPowerup/getPowerup";
+import getPowerup from "#utils/use/get-powerup/getPowerup";
 import { UseErrorCode } from "#errors/useErrors";
 import runtime from "@rcompat/runtime";
 import fs from "@rcompat/fs";

@@ -2,7 +2,7 @@ import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import runInstallStep from "#utils/use/run-powerup/steps/run-install-step";
-import { type Step } from "@liolocs/powerups-sdk";
+import { type ManifestEntry, type Step } from "@liolocs/powerups-sdk";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -34,7 +34,11 @@ test.case("should successfully install a package based on the .lock file if pack
   let threw = false;
   try {
     const manifest = await runInstallStep({ step, isDryRun: false, destination: destinationRef });
+    const { output } = manifest;
     assert(manifest.output.type).equals("install");
+    // type to manifest.output.type "install"
+    assert(manifest.output.packageManager)
+      .equals("auto");
   } catch {
     threw = true;
   }

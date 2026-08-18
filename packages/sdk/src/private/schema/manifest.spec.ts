@@ -57,6 +57,7 @@ test.group("manifest line acceptance", () => {
       stepName: "install-deps",
       output: {
         type: "install",
+        packageManager: "auto",
         dependencies: ["lodash@^4.0.0"],
         devDependencies: ["vitest"],
         peerDependencies: ["react@^18.0.0"],
@@ -73,7 +74,7 @@ test.group("manifest line acceptance", () => {
     const result = manifestLineSchema.parse({
       ...base,
       stepType: "install",
-      output: { type: "install", dependencies: ["zod"] },
+      output: { type: "install", packageManager: "pnpm", dependencies: ["zod"] },
     });
 
     assert((result.output as any).dependencies).equals(["zod"]);
@@ -85,7 +86,7 @@ test.group("manifest line acceptance", () => {
     const result = manifestLineSchema.parse({
       ...base,
       stepType: "install",
-      output: { type: "install" },
+      output: { type: "install", packageManager: "auto" },
     });
 
     assert(result.output.type).equals("install");
@@ -203,7 +204,7 @@ test.group("manifest line rejections", () => {
   rejects("create output with non-integer characterCount", { ...base, output: { type: "create", path: "x", action: "create", characterCount: 1.5 } });
   rejects("create output with unknown action", { ...base, output: { type: "create", path: "x", action: "move", characterCount: 1 } });
   rejects("delete output with a characterCount (not in shape)", { ...base, stepType: "delete", output: { type: "delete", path: "x", characterCount: 1 } });
-  rejects("install output with non-string dependencies", { ...base, stepType: "install", output: { type: "install", dependencies: [1] } });
+  rejects("install output with non-string dependencies", { ...base, stepType: "install", output: { type: "install", packageManager: "auto", dependencies: [1] } });
   rejects("read output missing variable", { ...base, stepType: "read", output: { type: "read" } });
   rejects("none output with extra fields", { ...base, status: "skipped-already-applied", output: { type: "none", path: "x" } });
   rejects("non-string powerupName (number)", { ...base, powerupName: 1 });

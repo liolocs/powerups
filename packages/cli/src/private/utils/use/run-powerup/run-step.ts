@@ -11,7 +11,9 @@ export type StepRunArgs = {
   powerupDir: FileRef;
 };
 
-const stepTypes: Record<Step["type"], (args: StepRunArgs) => Promise<ManifestEntry>> = {
+type StepRunner<S extends Step> = (args: { step: S; isDryRun: boolean; destination: FileRef; powerupDir: FileRef }) => Promise<ManifestEntry>;
+
+const stepTypes: Partial<{ [K in Step["type"]]: StepRunner<Extract<Step, { type: K }>> }> = {
   // create: runCreateStep,
   // modify: runModifyStep,
   // delete: runDeleteStep,

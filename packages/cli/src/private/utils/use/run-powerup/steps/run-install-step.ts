@@ -1,4 +1,4 @@
-import { ManifestEntry, type Step } from "@liolocs/powerups-sdk";
+import { InstallManifestEntry, InstallStep } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
 
 export default async function runInstallStep({
@@ -6,8 +6,8 @@ export default async function runInstallStep({
   isDryRun,
   destination,
 }: {
-  step: Step;
-  isDryRun: boolean;
-  destination: FileRef;
-  }): Promise<ManifestEntry> {
+    step: InstallStep;
+    isDryRun: boolean;
+    destination: FileRef;
+  }): Promise<InstallManifestEntry> {
 }

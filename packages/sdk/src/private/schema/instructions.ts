@@ -7,7 +7,7 @@ const fromSchema = zod.object({
   singleUse: zod.boolean(),
 }).optional();
 
-const createStepSchema = zod.object({
+export const createStepSchema = zod.object({
   type: zod.literal("create"),
   name: zod.string(),
   template: zod.string(),
@@ -17,7 +17,7 @@ const createStepSchema = zod.object({
   from: fromSchema,
 });
 
-const modifyStepSchema = zod.object({
+export const modifyStepSchema = zod.object({
   type: zod.literal("modify"),
   name: zod.string(),
   template: zod.string(),
@@ -27,7 +27,7 @@ const modifyStepSchema = zod.object({
   from: fromSchema,
 });
 
-const deleteStepSchema = zod.object({
+export const deleteStepSchema = zod.object({
   type: zod.literal("delete"),
   name: zod.string(),
   outputPath: zod.string(),
@@ -36,7 +36,7 @@ const deleteStepSchema = zod.object({
   from: fromSchema,
 });
 
-const readStepSchema = zod.object({
+export const readStepSchema = zod.object({
   type: zod.literal("read"),
   name: zod.string(),
   path: zod.string(),
@@ -48,7 +48,7 @@ const readStepSchema = zod.object({
   from: fromSchema,
 });
 
-const installStepSchema = zod.object({
+export const installStepSchema = zod.object({
   type: zod.literal("install"),
   name: zod.string(),
   target: zod.string().optional(),
@@ -66,6 +66,12 @@ const installStepSchema = zod.object({
   __source: zod.string().optional(),
   from: fromSchema,
 });
+
+export type CreateStep = zod.infer<typeof createStepSchema>;
+export type ModifyStep = zod.infer<typeof modifyStepSchema>;
+export type DeleteStep = zod.infer<typeof deleteStepSchema>;
+export type ReadStep = zod.infer<typeof readStepSchema>;
+export type InstallStep = zod.infer<typeof installStepSchema>;
 
 export const stepSchema = zod.discriminatedUnion("type", [
   createStepSchema,
@@ -90,8 +96,6 @@ export const instructionsSchema = zod.object({
   steps: stepsSchema,
 }).strict();
 
-// Hand-written (stepOverrideValueSchema was deleted; the type is still needed
-// by includePowerup). Mirrors the step shapes minus `name`, with an install variant.
 export type StepOverrideValue =
   | { type: "create"; template: string; outputPath: string }
   | { type: "modify"; template: string; outputPath: string }
@@ -105,5 +109,5 @@ export type StepOverrideValue =
       peerDependencies?: string[];
     };
 
-export type Step = zod.infer<typeof stepSchema>;
+export type Step = CreateStep | ModifyStep | DeleteStep | ReadStep | InstallStep;
 export type Instructions = zod.infer<typeof instructionsSchema>;

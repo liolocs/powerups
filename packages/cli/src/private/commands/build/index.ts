@@ -1,6 +1,6 @@
 import { SINGULAR_NAME_FOR_CLI } from "#constants";
 import checkForPreBuildErrors from "#utils/build/check-pre-build-errors";
-import checkCompiledInstructionsForErrors from "#utils/build/check-compiled-instructions-for-errors/index";
+import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
 import copyTemplatesToDistFolder from "#utils/build/copy-templates-to-dist-folder";
 import compileIndexFile from "#utils/build/compile-index-file";
 import createInstructionsJSONFile from "#utils/build/create-instructions-json-file";

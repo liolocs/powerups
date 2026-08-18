@@ -5,7 +5,10 @@ import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
 import fs from "@rcompat/fs";
 import checkForPreUseErrors from "#utils/use/check-for-pre-use-errors/index";
-import getPowerup from "#utils/use/getPowerup/getPowerup";
+import getPowerup from "#utils/use/get-powerup/getPowerup";
+import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
+import checkForUsePreflightErrors from "#utils/use/check-for-use-preflight-errors/index";
+import runPowerup from "#utils/use/run-powerup/index";
 
 const dryRunFlag: Flag = {
   name: "dryRun",
@@ -53,29 +56,30 @@ const use = new Command({
       globalRoot: fs.ref(GLOBAL_ROOT),
     });
 
-    // /**
-    //  * Should check for similar validation that is currently done in the build command (eventually this funcitonality should live in the validate command so lets import it from a #utils/validate/ location and use it in both build and use)
-    //  */
-    // const validatedPowerup = validatePowerup(powerup);
+    const {
+      validatedCompiledInstructions,
+    } = await checkCompiledInstructionsForErrors(
+      powerup.instructions,
+    );
 
     // /**
     //  * Should check for
     //  * 1. create destinations should not exist before creation
     //  * 2. Should check for previous manifest entries for the same powerup to ensure a single-use powerup is not applied more than once
     //  */
-    // await checkForOtherPreFlightErrors({root, powerup});
+    // await checkForUsePreflightErrors({ cwd: root, instructions: powerup.instructions });
 
     /**
      * Should execute the steps one by one
      * Should skip steps that have already applied
      * Manifest file is created when runStep is called but we also want to create a commit after all steps are run and then add the manifest entries afterwards so that we can mark the commit that was used to run the step
      */
-    // await runPowerup({
-    //   destination: root,
-    //   powerupDir: powerupLocation,
-    //   instructions: powerupInstructions,
-    //   isDryRun,
-    // });
+    await runPowerup({
+      destination: root,
+      powerupDir: powerup.location,
+      instructions: powerup.instructions,
+      isDryRun,
+    });
   },
 });
 

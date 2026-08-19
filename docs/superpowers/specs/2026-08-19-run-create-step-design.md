@@ -65,14 +65,14 @@ use-new.ts
 Recreated from `utils/resolve-template-string.ts`. Resolves `{{var}}` tokens in a string using the variables record. Case-insensitive matching, unresolved tokens left as-is.
 
 ```ts
-import type { VariableResult } from "#utils/use/variable-result";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 
 export default function applyVariablesToTemplateString({
   templateString,
   variables,
 }: {
   templateString: string;
-  variables: VariableResult;
+  variables: ResolvedVariable;
 }): string {
   return templateString.replace(/\{\{(\w+)\}\}/g, (match, token: string) => {
     const key = Object.keys(variables).find(
@@ -90,7 +90,7 @@ Recreated from `utils/variables.ts`. Extracts variables from raw CLI flags, norm
 
 ```ts
 import is from "@rcompat/is";
-import type { VariableResult } from "#utils/use/variable-result";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 
 export default function extractVariables({
   rawFlags,
@@ -106,12 +106,12 @@ export default function extractVariables({
   excludeFlags: string[];
   defaults?: Record<string, string>;
   onMissing: (missing: string[]) => never;
-}): VariableResult {
+}): ResolvedVariable {
   const variableFlags = rawFlags.filter(
     flag => !excludeFlags.includes(flag.flag),
   );
 
-  const result: VariableResult = {};
+  const result: ResolvedVariable = {};
   for (const flag of variableFlags) {
     const key = normalizeFlagName(flag.flag);
     result[key] = flag.value;
@@ -175,7 +175,7 @@ await runPowerup({
 
 ### Layer 2: `run-powerup/index.ts`
 
-`runPowerup` gains a `variables: VariableResult` parameter and passes it to `runStep`:
+`runPowerup` gains a `variables: ResolvedVariable` parameter and passes it to `runStep`:
 
 ```ts
 export default async function runPowerup({
@@ -189,7 +189,7 @@ export default async function runPowerup({
   powerupDirectory: FileRef;
   instructions: Instructions;
   isDryRun: boolean;
-  variables: VariableResult;
+  variables: ResolvedVariable;
 }): Promise<void> {
   const steps = instructions.steps;
 
@@ -205,7 +205,7 @@ export default async function runPowerup({
 
 ### Layer 3: `run-powerup/run-step.ts`
 
-`runStep` gains a `variables: VariableResult` parameter. Before dispatching to a step runner, it resolves the step's `variableMap` via `resolveStepVariables` and passes the resolved variables through.
+`runStep` gains a `variables: ResolvedVariable` parameter. Before dispatching to a step runner, it resolves the step's `variableMap` via `resolveStepVariables` and passes the resolved variables through.
 
 ```ts
 type StepRunner<S extends Step> = (args: {
@@ -213,7 +213,7 @@ type StepRunner<S extends Step> = (args: {
   isDryRun: boolean;
   destination: FileRef;
   powerupDirectory: FileRef;
-  variables: VariableResult;
+  variables: ResolvedVariable;
 }) => Promise<Omit<ManifestEntry, BaseManifestProperties>>;
 
 export default async function runStep({
@@ -227,7 +227,7 @@ export default async function runStep({
   isDryRun: boolean;
   destination: FileRef;
   powerupDirectory: FileRef;
-  variables: VariableResult;
+  variables: ResolvedVariable;
 }): Promise<Omit<ManifestEntry, BaseManifestProperties>> {
   const stepType = step.type;
   const runStepFunction = stepTypes[stepType];
@@ -249,7 +249,7 @@ Recreated from `execute-steps.ts` with cleaner naming and formatting, using the 
 
 ```ts
 import type { Step } from "@liolocs/powerups-sdk";
-import type { VariableResult } from "#utils/use/variable-result";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
 
 export function resolveStepVariables({
@@ -257,15 +257,15 @@ export function resolveStepVariables({
   variables,
 }: {
   step: Step;
-  variables: VariableResult;
-}): VariableResult {
+  variables: ResolvedVariable;
+}): ResolvedVariable {
   const variableMap = (step as Step & { variableMap?: Record<string, string> }).variableMap;
 
   if (!variableMap) {
     return variables;
   }
 
-  const stepVariables: VariableResult = { ...variables };
+  const stepVariables: ResolvedVariable = { ...variables };
 
   for (const [location, value] of Object.entries(variableMap)) {
     stepVariables[location] = applyVariablesToTemplateString({ templateString: value, variables: stepVariables });
@@ -282,7 +282,7 @@ export function resolveStepVariables({
 Resolves `{{var}}` tokens in the step's `outputPath` using the step variables, via the new `applyVariablesToTemplateString`:
 
 ```ts
-import type { VariableResult } from "#utils/use/variable-result";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
 
 export default function resolveOutputPath({
@@ -290,7 +290,7 @@ export default function resolveOutputPath({
   variables,
 }: {
   outputPath: string;
-  variables: VariableResult;
+  variables: ResolvedVariable;
 }): string {
   return applyVariablesToTemplateString({ templateString: outputPath, variables });
 }
@@ -303,7 +303,7 @@ Handles template-exists check + rendering. Throws `template_not_found` if the te
 ```ts
 import fs from "@rcompat/fs";
 import type { FileRef } from "@rcompat/fs";
-import type { VariableResult } from "#utils/use/variable-result";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import { runTemplate } from "#template-runners/index";
 import use_errors from "#errors/useErrors";
 
@@ -314,7 +314,7 @@ export default async function renderTemplate({
 }: {
   template: string;
   powerupDirectory: FileRef;
-  variables: VariableResult;
+  variables: ResolvedVariable;
 }): Promise<string> {
   const templatePath = powerupDirectory.append(`/${template}`);
 
@@ -333,7 +333,7 @@ import type { CreateManifestEntry, CreateStep } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import fs from "@rcompat/fs";
 import cli from "@rcompat/cli";
-import type { VariableResult } from "#utils/use/variable-result";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
 import resolveOutputPath from "#utils/use/run-powerup/steps/run-create-step/resolve-output-path";
 import renderTemplate from "#utils/use/run-powerup/steps/run-create-step/render-template";
@@ -349,7 +349,7 @@ export default async function runCreateStep({
   isDryRun: boolean;
   destination: FileRef;
   powerupDirectory: FileRef;
-  variables: VariableResult;
+  variables: ResolvedVariable;
 }): Promise<Omit<CreateManifestEntry, BaseManifestProperties>> {
   const resolvedOutputPath = resolveOutputPath({
     outputPath: step.outputPath,
@@ -364,10 +364,7 @@ export default async function runCreateStep({
 
   const characterCount = renderedContent.length;
 
-  if (isDryRun) {
-    cli.print(`${resolvedOutputPath} (${characterCount} chars)\n`);
-
-    return {
+  const manifest: Omit<InstallManifestEntry, BaseManifestProperties> = {
       timestamp: new Date(),
       stepName: step.name,
       from: step.from?.name,
@@ -379,38 +376,26 @@ export default async function runCreateStep({
         action: "create",
         characterCount,
       },
-    };
   }
 
   const targetPath = destination.append(`/${resolvedOutputPath}`);
 
   if (await fs.exists(targetPath)) {
     return {
-      timestamp: new Date(),
-      stepName: step.name,
-      from: step.from?.name,
-      stepType: "create",
+      ...manifest,
       status: "skipped-warning",
       output: { type: "none" },
-    };
+    }
   }
 
-  await fs.create(targetPath.directory);
-  await targetPath.write(renderedContent);
+  if (isDryRun) {
+    cli.print(`${resolvedOutputPath} (${characterCount} chars)\n`);
+  } else {
+    await fs.create(targetPath.directory);
+    await targetPath.write(renderedContent);
+  }
 
-  return {
-    timestamp: new Date(),
-    stepName: step.name,
-    from: step.from?.name,
-    stepType: "create",
-    status: "applied",
-    output: {
-      type: "create",
-      path: resolvedOutputPath,
-      action: "create",
-      characterCount,
-    },
-  };
+  return manifest;
 }
 ```
 
@@ -461,6 +446,6 @@ export default async function runCreateStep({
 
 ## Open Items
 
-- **`VariableResult` type location:** A `utils/use/variable-result.ts` file is referenced in the imports above. This is a simple interface (`{ [key: string]: string }`) that needs to be created. It could also be defined inline in each file, but a shared type file avoids duplication. The existing `VariableResult` in `utils/variables.ts` is not imported — per conventions, we create a new one inside `utils/use/`.
+- **`ResolvedVariable` type location:** A `utils/use/resolved-variable.ts` file is referenced in the imports above. This is a simple interface (`{ [key: string]: string }`) that needs to be created. It could also be defined inline in each file, but a shared type file avoids duplication. The existing `VariableResult` in `utils/variables.ts` is not imported — per conventions, we create a new `ResolvedVariable` inside `utils/use/`.
 - **`powerupDir` → `powerupDirectory` rename:** The new code uses `powerupDirectory` for descriptive naming consistency. The existing `run-step.ts` and `runPowerup` use `powerupDir`. These should be renamed for consistency, which touches the install step's signature as well (even though it ignores the param).
 - **`runTemplate` import:** `runTemplate` from `#template-runners/index` is imported as a core platform dependency (it contains complex runtime-specific code for Bun/Deno/Node). It is not recreated inside `utils/use/`. If this should be recreated instead, flag it.

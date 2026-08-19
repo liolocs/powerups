@@ -86,64 +86,129 @@ export default function applyVariablesToTemplateString({
 
 #### `extract-variables.ts`
 
-Recreated from `utils/variables.ts`. Extracts variables from raw CLI flags, normalizes to camelCase, validates required variables, applies defaults for optional ones.
+Recreated from `utils/variables.ts`. Extracts variables from raw CLI flags, normalizes to camelCase, validates required variables (throws directly — no `onMissing` callback), and applies defaults for optional ones. Broken into small helper functions for readability.
 
 ```ts
 import is from "@rcompat/is";
+import type { Instructions } from "@liolocs/powerups-sdk";
 import type { ResolvedVariable } from "#utils/use/resolved-variable";
+import use_errors from "#errors/useErrors";
 
 export default function extractVariables({
   rawFlags,
-  required,
-  optional,
+  variables,
   excludeFlags,
-  defaults,
-  onMissing,
+  powerupName,
 }: {
   rawFlags: { flag: string; value: string }[];
-  required: string[];
-  optional: string[];
+  variables: Instructions["variables"];
   excludeFlags: string[];
-  defaults?: Record<string, string>;
-  onMissing: (missing: string[]) => never;
+  powerupName: string;
 }): ResolvedVariable {
-  const variableFlags = rawFlags.filter(
+  const variableFlags = getVariableFlags({
+    rawFlags,
+    excludeFlags,
+  });
+
+  const extractedVariables: ResolvedVariable = getExtractedVariables({
+    variableFlags,
+  });
+
+  const missingVariables: string[] = getMissingVariables({
+    extractedVariables,
+    required: variables.required,
+  });
+
+  if (missingVariables.length > 0) {
+    throw use_errors.missing_variables(missingVariables, variables.required, powerupName);
+  }
+
+  const variablesWithDefaults: ResolvedVariable = getVariablesWithDefaults({
+    extractedVariables,
+    variables,
+  });
+
+  return variablesWithDefaults;
+}
+
+function getVariableFlags({
+  rawFlags,
+  excludeFlags,
+}: {
+  rawFlags: { flag: string; value: string }[];
+  excludeFlags: string[];
+}): { flag: string; value: string }[] {
+  return rawFlags.filter(
     flag => !excludeFlags.includes(flag.flag),
   );
+}
 
-  const result: ResolvedVariable = {};
+function getExtractedVariables({
+  variableFlags,
+}: {
+  variableFlags: { flag: string; value: string }[];
+}): ResolvedVariable {
+  const variables: ResolvedVariable = {};
   for (const flag of variableFlags) {
     const key = normalizeFlagName(flag.flag);
-    result[key] = flag.value;
+    variables[key] = flag.value;
   }
 
-  const missing: string[] = [];
+  return variables;
+}
+
+function getMissingVariables({
+  extractedVariables,
+  required,
+}: {
+  extractedVariables: ResolvedVariable;
+  required: string[];
+}): string[] {
+  const missingVariables: string[] = [];
+
   for (const declared of required) {
-    const matched = Object.keys(result).find(
+    const matched = Object.keys(extractedVariables).find(
       key => key.toLowerCase() === declared.toLowerCase(),
     );
-    if (is.falsy(matched)) {
-      missing.push(declared);
-    }
-  }
-  if (missing.length > 0) {
-    onMissing(missing);
-  }
 
-  for (const declared of optional) {
-    const matched = Object.keys(result).find(
-      key => key.toLowerCase() === declared.toLowerCase(),
-    );
     if (is.falsy(matched)) {
-      result[declared] = defaults?.[declared] ?? "";
+      missingVariables.push(declared);
     }
   }
 
-  return result;
+  return missingVariables;
+}
+
+function getVariablesWithDefaults({
+  extractedVariables,
+  variables,
+}: {
+  extractedVariables: ResolvedVariable;
+  variables: Instructions["variables"];
+}): ResolvedVariable {
+  const variablesWithDefaults: ResolvedVariable = { ...extractedVariables };
+
+  for (const declared of variables.optional) {
+    const matched = Object.keys(variablesWithDefaults).find(
+      key => key.toLowerCase() === declared.toLowerCase(),
+    );
+    if (is.falsy(matched)) {
+      variablesWithDefaults[declared] = variables.defaults?.[declared] ?? "";
+    }
+  }
+
+  return variablesWithDefaults;
+}
+
+function normalizeFlagName(flag: string): string {
+  const stripped = flag.replace(/^--?/, "");
+  const parts = stripped.split("-");
+  return parts[0] +
+    parts.slice(1)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join("");
 }
 ```
-
-(`normalizeFlagName` is a private helper within the same file, same logic as the original.)
 
 ### Layer 1: `use-new.ts`
 
@@ -155,13 +220,9 @@ const EXCLUDE_FLAGS = ["--dry-run", "-d", "--help", "-h"];
 // ... after validatedCompiledInstructions:
 const variables = extractVariables({
   rawFlags: rawFlags ?? [],
-  required: validatedCompiledInstructions.variables.required,
-  optional: validatedCompiledInstructions.variables.optional ?? [],
+  variables: validatedCompiledInstructions.variables,
   excludeFlags: EXCLUDE_FLAGS,
-  defaults: validatedCompiledInstructions.variables.defaults ?? {},
-  onMissing: (missing) => {
-    throw use_errors.missing_variables(missing, validatedCompiledInstructions.variables.required, powerupName!);
-  },
+  powerupName: powerupName!,
 });
 
 await runPowerup({
@@ -419,10 +480,11 @@ export default async function runCreateStep({
 - Leaves unresolved tokens as-is
 
 ### `extract-variables.spec.ts`
-- Extracts variables from raw flags, normalizing to camelCase
-- Calls `onMissing` when required variables are absent
+- Extracts variables from raw flags, normalizing to camelCase (`--component-name=foo` → `{ componentName: "foo" }`)
+- Throws `missing_variables` error when required variables are absent
 - Applies defaults for optional variables not provided
-- Filters out excluded flags
+- Filters out excluded flags (e.g. `--dry-run` is not treated as a variable)
+- Returns extracted variables merged with defaults (does not lose user-provided values)
 
 ### `resolve-output-path.spec.ts`
 - Resolves `{{var}}` tokens in a path string

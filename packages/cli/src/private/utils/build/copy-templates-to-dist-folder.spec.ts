@@ -116,7 +116,8 @@ test.case("should skip steps that do not declare a template", async assert => {
       {
         type: "install",
         name: "component",
-        dependencies: ["lodash"],
+        dependencies: ["lodash@^4.0.0"],
+        packageManager: "auto",
       },
     ],
   };

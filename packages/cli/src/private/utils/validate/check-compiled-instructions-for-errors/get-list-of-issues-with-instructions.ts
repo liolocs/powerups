@@ -56,6 +56,9 @@ export async function getListOfIssuesWithInstructions(
     ...optional.map(o => o.toLowerCase()),
   ]);
 
+
+  // TODO should sanitise dependencies from install steps
+
   // unique step names
   const seen = new Set<string>();
   for (const step of instructions.steps) {

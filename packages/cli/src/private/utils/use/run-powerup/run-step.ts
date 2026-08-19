@@ -31,7 +31,7 @@ export default async function runStep({
   isDryRun: boolean;
   destination: FileRef;
   powerupDir: FileRef;
-  }): Promise<ManifestEntry> {
+  }): Promise<ManifestEntry | void> {
   const stepType = step.type;
   const runStepFn = stepTypes[stepType];
 

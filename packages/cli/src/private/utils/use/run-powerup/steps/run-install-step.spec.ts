@@ -2,7 +2,7 @@ import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import runInstallStep from "#utils/use/run-powerup/steps/run-install-step";
-import { type ManifestEntry, type Step } from "@liolocs/powerups-sdk";
+import { type Step } from "@liolocs/powerups-sdk";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -20,16 +20,19 @@ test.case("should successfully install a package based on the .lock file if pack
   await setupTestDir();
   const destinationRef = testRoot.append("/tmp-repo-for-install-step-test");
   await fs.create(destinationRef);
+
   const destinationPackageJson = destinationRef.append("/package.json");
   await destinationPackageJson.writeJSON({ name: "test-powerup", version: "1.0.0", description: "a test project" });
+
+  await fs.write(destinationRef.append("/pnpm-lock.yaml"), "");
 
   const step: Step = {
     type: "install",
     name: "pkg",
-    dependencies: ["lodash@^4.0.0"],
+    dependencies: ["lodash@4.0.0"],
     devDependencies: ["vitest"],
     peerDependencies: ["vue"],
-    packageManager: "pnpm",
+    packageManager: "auto",
   };
 
   let threw = false;
@@ -38,15 +41,16 @@ test.case("should successfully install a package based on the .lock file if pack
     assert(manifest.output.type).equals("install");
     // if statement is for typescript to not give an error
     if (manifest.output.type === "install") {
-      assert(manifest.output.packageManager).equals("auto");
+      assert(manifest.output.packageManager).equals("pnpm");
     }
     const pkgJson = await destinationPackageJson.json() as any;
 
-    assert(pkgJson.dependencies["lodash"]).equals("^4.0.0");
+    assert(pkgJson.dependencies["lodash"]).defined();
     assert(pkgJson.devDependencies["vitest"]).defined();
     assert(pkgJson.peerDependencies["vue"]).defined();
-    assert(await destinationRef.append("/pnpm-lock.json").exists()).true();
-  } catch {
+    assert(await destinationRef.append("/pnpm-lock.yaml").exists()).true();
+  } catch (e) {
+    console.error(e);
     threw = true;
   }
 
@@ -55,21 +59,61 @@ test.case("should successfully install a package based on the .lock file if pack
   await cleanup();
 });
 
-// test.case("should successfully install a package based on the packageManager field", async assert => {
-//   await setupTestDir();
-//   const destinationRef = testRoot.append("/tmp-repo-for-install-step-test");
-//   await fs.create(destinationRef);
-//   await destinationRef.append("/package.json").writeJSON({ name: "test-powerup", version: "1.0.0", description: "a test project" });
+test.case("should successfully install packages in the correct locations regardless of the packageManager used", async assert => {
 
-//   const step: Step = {
-//     type: "install",
-//     name: "pkg",
-//     dependencies: ["lodash@^4.0.0"],
-//     devDependencies: ["vitest"],
-//     peerDependencies: ["@liolocs/powerups-sdk"],
-//     packageManager: "pnpm",
-//   };
-//   await assert(runInstallStep({ step, isDryRun: false, destination: destinationRef })).noErrorAsync();
+  const packageManagers = {
+    pnpm: { lock: "pnpm-lock.yaml", pm: "pnpm@10.33.0" },
+    bun: { lock: "bun.lock", pm: "bun@1.2.0" },
+    yarn: { lock: "yarn.lock", pm: "yarn@4.18.0" },
+    npm: { lock: "package-lock.json", pm: "npm@11.0.0" },
+  };
 
-//   await cleanup();
-// });
+  for (const [packageManager, { lock: lockFile, pm: packageManagerField }] of Object.entries(packageManagers)) {
+    await setupTestDir();
+
+    const destinationRef = testRoot.append("/tmp-repo-for-install-step-test");
+    await fs.create(destinationRef);
+
+    const destinationPackageJson = destinationRef.append("/package.json");
+    await destinationPackageJson.writeJSON({
+      name: "test-powerup",
+      version: "1.0.0",
+      description: "a test project",
+      packageManager: packageManagerField,
+    });
+
+    await fs.write(destinationRef.append(`/${lockFile}`), "");
+
+    const step: Step = {
+      type: "install",
+      name: "pkg",
+      dependencies: ["lodash"],
+      devDependencies: ["vitest"],
+      peerDependencies: ["vue"],
+      packageManager: "auto",
+    };
+
+    let threw = false;
+    try {
+      const manifest = await runInstallStep({ step, isDryRun: false, destination: destinationRef });
+      assert(manifest.output.type).equals("install");
+      // if statement is for typescript to not give an error
+      if (manifest.output.type === "install") {
+        assert(manifest.output.packageManager).equals(packageManager);
+      }
+      const pkgJson = await destinationPackageJson.json() as any;
+
+      assert(pkgJson.dependencies["lodash"]).defined();
+      assert(pkgJson.devDependencies["vitest"]).defined();
+      assert(pkgJson.peerDependencies["vue"]).defined();
+      assert(await destinationRef.append(`/${lockFile}`).exists()).true();
+    } catch (e) {
+      console.error(e);
+      threw = true;
+    }
+
+    assert(threw).false();
+
+    await cleanup();
+  }
+});

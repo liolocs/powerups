@@ -17,6 +17,11 @@ export {
   type InstallOutput,
   type ReadOutput,
   type NoneOutput,
+  installManifestEntrySchema,
+  createManifestEntrySchema,
+  modifyManifestEntrySchema,
+  deleteManifestEntrySchema,
+  readManifestEntrySchema,
 } from "#schema/manifest";
 export {
   instructionsSchema,

@@ -71,7 +71,7 @@ const manifestLineBase = {
   version: zod.string(),
   location: zod.string(),
   type: powerupTypeSchema,
-  timestamp: zod.string(),
+  timestamp: zod.date(),
   stepName: zod.string(),
   status: stepStatusSchema,
   from: zod.string().optional(),

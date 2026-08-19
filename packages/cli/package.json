@@ -51,8 +51,8 @@
     "tsup": "^8.5.1"
   },
   "devDependencies": {
-    "@liolocs/program": "workspace:^",
     "@liolocs/powerups-sdk": "workspace:^",
+    "@liolocs/program": "workspace:^",
     "@types/nunjucks": "^3.2.6",
     "commit-and-tag-version": "^13.1.2"
   },

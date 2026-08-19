@@ -19,7 +19,7 @@ export default async function runPowerup({
   for (const step of steps) {
     const manifest = await runStep({ step, isDryRun, destination, powerupDir });
 
-    if (!isDryRun) {
+    if (!isDryRun && manifest) {
       await saveManifest({ destination: powerupDir, manifest });
     }
   }

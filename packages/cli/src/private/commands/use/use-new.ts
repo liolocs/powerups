@@ -9,6 +9,9 @@ import getPowerup from "#utils/use/get-powerup/getPowerup";
 import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
 import checkForUsePreflightErrors from "#utils/use/check-for-use-preflight-errors/index";
 import runPowerup from "#utils/use/run-powerup/index";
+import extractVariables from "#utils/use/extract-variables";
+
+const EXCLUDE_FLAGS = ["--dry-run", "-d", "--help", "-h"];
 
 const dryRunFlag: Flag = {
   name: "dryRun",
@@ -28,7 +31,7 @@ const use = new Command({
 
   subcommands: [],
 
-  action: async ({ context, subcommands, flags }) => {
+  action: async ({ context, subcommands, flags, rawFlags }) => {
     const root: FileRef = context?.root ?? await runtime.projectRoot();
 
     const isDryRun = is.defined(flags.dryRun);
@@ -69,6 +72,13 @@ const use = new Command({
     //  */
     // await checkForUsePreflightErrors({ cwd: root, instructions: powerup.instructions });
 
+    const variables = extractVariables({
+      rawFlags: rawFlags ?? [],
+      variables: validatedCompiledInstructions.variables,
+      excludeFlags: EXCLUDE_FLAGS,
+      powerupName: powerupName!,
+    });
+
     /**
      * Should execute the steps one by one
      * Should skip steps that have already applied
@@ -76,9 +86,10 @@ const use = new Command({
      */
     await runPowerup({
       destination: root,
-      powerupDir: powerup.location,
+      powerupDirectory: powerup.location,
       instructions: validatedCompiledInstructions,
       isDryRun,
+      variables,
     });
   },
 });

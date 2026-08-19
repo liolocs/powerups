@@ -1,15 +1,68 @@
-import { type CreateManifestEntry, type CreateStep } from "@liolocs/powerups-sdk";
-import { type FileRef } from "@rcompat/fs";
-import { type BaseManifestProperties } from "#utils/use/run-powerup/run-step";
+import type { CreateManifestEntry, CreateStep } from "@liolocs/powerups-sdk";
+import type { FileRef } from "@rcompat/fs";
+import fs from "@rcompat/fs";
+import cli from "@rcompat/cli";
+import type { ResolvedVariable } from "#utils/variables";
+import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
+import resolveOutputPath from "#utils/use/run-powerup/steps/run-create-step/resolve-output-path";
+import renderTemplate from "#utils/use/run-powerup/steps/run-create-step/render-template";
+
 export default async function runCreateStep({
   step,
   isDryRun,
   destination,
-  powerupDir,
+  powerupDirectory,
+  variables,
 }: {
   step: CreateStep;
   isDryRun: boolean;
   destination: FileRef;
-  powerupDir: FileRef;
+  powerupDirectory: FileRef;
+  variables: ResolvedVariable;
 }): Promise<Omit<CreateManifestEntry, BaseManifestProperties>> {
+  const resolvedOutputPath = resolveOutputPath({
+    outputPath: step.outputPath,
+    variables,
+  });
+
+  const renderedContent = await renderTemplate({
+    template: step.template,
+    powerupDirectory,
+    variables,
+  });
+
+  const characterCount = renderedContent.length;
+
+  const manifest: Omit<CreateManifestEntry, BaseManifestProperties> = {
+    timestamp: new Date(),
+    stepName: step.name,
+    from: step.from?.name,
+    stepType: "create",
+    status: "applied",
+    output: {
+      type: "create",
+      path: resolvedOutputPath,
+      action: "create",
+      characterCount,
+    },
+  };
+
+  const targetPath = destination.append(`/${resolvedOutputPath}`);
+
+  if (await fs.exists(targetPath)) {
+    return {
+      ...manifest,
+      status: "skipped-warning",
+      output: { type: "none" },
+    };
+  }
+
+  if (isDryRun) {
+    cli.print(`${resolvedOutputPath} (${characterCount} chars)\n`);
+  } else {
+    await fs.create(targetPath.directory);
+    await targetPath.write(renderedContent);
+  }
+
+  return manifest;
 }

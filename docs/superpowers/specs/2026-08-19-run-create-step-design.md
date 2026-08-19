@@ -7,19 +7,32 @@ Revamp the `create` step in the new `use` command flow (`use-new.ts`) to match t
 1. **Plumbing** — threading variables from the command through `runPowerup` → `runStep` → step runners, with `variableMap` resolution at the `runStep` level.
 2. **Create step module** — decomposed into focused sub-modules (`resolve-output-path.ts`, `render-template.ts`, `index.ts`), each with its own spec.
 
+## Conventions
+
+All utilities used by the new `use` flow are created **new inside `utils/use/`**. We do **not** import existing utilities from the broader `utils/` folder (e.g. `resolveTemplateString`, `extractVariables`). Instead, we recreate them inside `utils/use/` with cleaner names and the coding style established throughout `utils/use/`:
+
+- Destructured object parameters (`{ step, variables }`), not positional
+- Full descriptive names — no abbreviations (`variableMap` not `map`, `stepVariables` not `stepVars`)
+- Descriptive function names (`applyVariablesToTemplateString` not `resolveTemplateString`)
+- Clean early-return formatting with proper spacing
+
+**The only exception** is sharing **within `utils/use/`** itself — sub-modules import from each other via `#utils/use/...` paths (the same pattern used in `check-for-pre-use-errors/`).
+
+**External dependencies are fine** — `@rcompat/*`, `@liolocs/powerups-sdk`, `#constants`, `#errors`, and core platform modules like `#template-runners/index` (which contains complex runtime-specific code for Bun/Deno/Node) are imported, not recreated.
+
 ## Architecture
 
 ### Call chain after changes
 
 ```
 use-new.ts
-  → extractVariables(rawFlags, instructions.variables)
+  → extractVariables({ rawFlags, ... })          // new, inside utils/use/
   → runPowerup({ ..., variables })
     → runStep({ ..., variables })
-      → resolveStepVariables({ step, variables })   // handles variableMap
+      → resolveStepVariables({ step, variables })   // new, inside utils/use/run-powerup/
       → runCreateStep({ step, isDryRun, destination, powerupDirectory, variables: resolvedVariables })
-        → resolveOutputPath({ outputPath, variables })
-        → renderTemplate({ template, powerupDirectory, variables })
+        → resolveOutputPath({ outputPath, variables })           // new, inside run-create-step/
+        → renderTemplate({ template, powerupDirectory, variables })  // new, inside run-create-step/
         → write file + build manifest entry
 ```
 
@@ -27,10 +40,14 @@ use-new.ts
 
 | File | Action |
 |------|--------|
-| `commands/use/use-new.ts` | Modify — extract variables, pass to `runPowerup` |
+| `utils/use/apply-variables-to-template-string.ts` | **New** — recreated from `utils/resolve-template-string.ts` with cleaner name |
+| `utils/use/apply-variables-to-template-string.spec.ts` | **New** |
+| `utils/use/extract-variables.ts` | **New** — recreated from `utils/variables.ts` with coding style from `utils/use/` |
+| `utils/use/extract-variables.spec.ts` | **New** |
+| `commands/use/use-new.ts` | Modify — extract variables using new `extractVariables`, pass to `runPowerup` |
 | `utils/use/run-powerup/index.ts` | Modify — accept `variables`, pass to `runStep` |
 | `utils/use/run-powerup/run-step.ts` | Modify — accept `variables`, resolve `variableMap`, pass resolved variables to step runners |
-| `utils/use/run-powerup/resolve-step-variables.ts` | **New** — relocated from `execute-steps.ts` |
+| `utils/use/run-powerup/resolve-step-variables.ts` | **New** — recreated from `execute-steps.ts` |
 | `utils/use/run-powerup/resolve-step-variables.spec.ts` | **New** |
 | `utils/use/run-powerup/steps/run-create-step/index.ts` | Modify — implement `runCreateStep` orchestrator |
 | `utils/use/run-powerup/steps/run-create-step/resolve-output-path.ts` | **New** |
@@ -41,11 +58,101 @@ use-new.ts
 
 ## Plumbing Changes
 
-### Layer 1: `use-new.ts`
+### New shared utilities (inside `utils/use/`)
 
-The command destructures `{ context, subcommands, flags, rawFlags }`. After obtaining `validatedCompiledInstructions`, extract variables:
+#### `apply-variables-to-template-string.ts`
+
+Recreated from `utils/resolve-template-string.ts`. Resolves `{{var}}` tokens in a string using the variables record. Case-insensitive matching, unresolved tokens left as-is.
 
 ```ts
+import type { VariableResult } from "#utils/use/variable-result";
+
+export default function applyVariablesToTemplateString({
+  templateString,
+  variables,
+}: {
+  templateString: string;
+  variables: VariableResult;
+}): string {
+  return templateString.replace(/\{\{(\w+)\}\}/g, (match, token: string) => {
+    const key = Object.keys(variables).find(
+      matchedKey => matchedKey.toLowerCase() === token.toLowerCase(),
+    );
+
+    return key !== undefined ? variables[key] : match;
+  });
+}
+```
+
+#### `extract-variables.ts`
+
+Recreated from `utils/variables.ts`. Extracts variables from raw CLI flags, normalizes to camelCase, validates required variables, applies defaults for optional ones.
+
+```ts
+import is from "@rcompat/is";
+import type { VariableResult } from "#utils/use/variable-result";
+
+export default function extractVariables({
+  rawFlags,
+  required,
+  optional,
+  excludeFlags,
+  defaults,
+  onMissing,
+}: {
+  rawFlags: { flag: string; value: string }[];
+  required: string[];
+  optional: string[];
+  excludeFlags: string[];
+  defaults?: Record<string, string>;
+  onMissing: (missing: string[]) => never;
+}): VariableResult {
+  const variableFlags = rawFlags.filter(
+    flag => !excludeFlags.includes(flag.flag),
+  );
+
+  const result: VariableResult = {};
+  for (const flag of variableFlags) {
+    const key = normalizeFlagName(flag.flag);
+    result[key] = flag.value;
+  }
+
+  const missing: string[] = [];
+  for (const declared of required) {
+    const matched = Object.keys(result).find(
+      key => key.toLowerCase() === declared.toLowerCase(),
+    );
+    if (is.falsy(matched)) {
+      missing.push(declared);
+    }
+  }
+  if (missing.length > 0) {
+    onMissing(missing);
+  }
+
+  for (const declared of optional) {
+    const matched = Object.keys(result).find(
+      key => key.toLowerCase() === declared.toLowerCase(),
+    );
+    if (is.falsy(matched)) {
+      result[declared] = defaults?.[declared] ?? "";
+    }
+  }
+
+  return result;
+}
+```
+
+(`normalizeFlagName` is a private helper within the same file, same logic as the original.)
+
+### Layer 1: `use-new.ts`
+
+The command destructures `{ context, subcommands, flags, rawFlags }`. After obtaining `validatedCompiledInstructions`, extract variables using the new `extractVariables` from `#utils/use/extract-variables`:
+
+```ts
+const EXCLUDE_FLAGS = ["--dry-run", "-d", "--help", "-h"];
+
+// ... after validatedCompiledInstructions:
 const variables = extractVariables({
   rawFlags: rawFlags ?? [],
   required: validatedCompiledInstructions.variables.required,
@@ -56,11 +163,15 @@ const variables = extractVariables({
     throw use_errors.missing_variables(missing, validatedCompiledInstructions.variables.required, powerupName!);
   },
 });
+
+await runPowerup({
+  destination: root,
+  powerupDirectory: powerup.location,
+  instructions: validatedCompiledInstructions,
+  isDryRun,
+  variables,
+});
 ```
-
-An `EXCLUDE_FLAGS` constant is defined for the flags that should not be treated as variables (e.g. `--dry-run`, `-d`, `--help`, `-h`).
-
-Pass `variables` to `runPowerup`.
 
 ### Layer 2: `run-powerup/index.ts`
 
@@ -134,9 +245,13 @@ The install step (`runInstallStep`) does not need changes — TypeScript allows 
 
 ### `resolve-step-variables.ts` (new file)
 
-Moved from `execute-steps.ts` with cleaner naming and formatting:
+Recreated from `execute-steps.ts` with cleaner naming and formatting, using the new `applyVariablesToTemplateString`:
 
 ```ts
+import type { Step } from "@liolocs/powerups-sdk";
+import type { VariableResult } from "#utils/use/variable-result";
+import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
+
 export function resolveStepVariables({
   step,
   variables,
@@ -153,7 +268,7 @@ export function resolveStepVariables({
   const stepVariables: VariableResult = { ...variables };
 
   for (const [location, value] of Object.entries(variableMap)) {
-    stepVariables[location] = applyVariablesToTemplateString(value, stepVariables);
+    stepVariables[location] = applyVariablesToTemplateString({ templateString: value, variables: stepVariables });
   }
 
   return stepVariables;
@@ -164,9 +279,12 @@ export function resolveStepVariables({
 
 ### `resolve-output-path.ts`
 
-Resolves `{{var}}` tokens in the step's `outputPath` using the step variables:
+Resolves `{{var}}` tokens in the step's `outputPath` using the step variables, via the new `applyVariablesToTemplateString`:
 
 ```ts
+import type { VariableResult } from "#utils/use/variable-result";
+import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
+
 export default function resolveOutputPath({
   outputPath,
   variables,
@@ -174,15 +292,21 @@ export default function resolveOutputPath({
   outputPath: string;
   variables: VariableResult;
 }): string {
-  return applyVariablesToTemplateString(outputPath, variables);
+  return applyVariablesToTemplateString({ templateString: outputPath, variables });
 }
 ```
 
 ### `render-template.ts`
 
-Handles template-exists check + rendering. Throws `template_not_found` if the template file doesn't exist in the powerup directory:
+Handles template-exists check + rendering. Throws `template_not_found` if the template file doesn't exist in the powerup directory. Uses `runTemplate` from `#template-runners/index` (core platform module, not recreated):
 
 ```ts
+import fs from "@rcompat/fs";
+import type { FileRef } from "@rcompat/fs";
+import type { VariableResult } from "#utils/use/variable-result";
+import { runTemplate } from "#template-runners/index";
+import use_errors from "#errors/useErrors";
+
 export default async function renderTemplate({
   template,
   powerupDirectory,
@@ -205,6 +329,15 @@ export default async function renderTemplate({
 ### `index.ts` (orchestrator)
 
 ```ts
+import type { CreateManifestEntry, CreateStep } from "@liolocs/powerups-sdk";
+import type { FileRef } from "@rcompat/fs";
+import fs from "@rcompat/fs";
+import cli from "@rcompat/cli";
+import type { VariableResult } from "#utils/use/variable-result";
+import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
+import resolveOutputPath from "#utils/use/run-powerup/steps/run-create-step/resolve-output-path";
+import renderTemplate from "#utils/use/run-powerup/steps/run-create-step/render-template";
+
 export default async function runCreateStep({
   step,
   isDryRun,
@@ -294,6 +427,17 @@ export default async function runCreateStep({
 
 ## Testing
 
+### `apply-variables-to-template-string.spec.ts`
+- Resolves `{{var}}` tokens in a string
+- Case-insensitive matching (`{{ComponentName}}` matches key `componentName`)
+- Leaves unresolved tokens as-is
+
+### `extract-variables.spec.ts`
+- Extracts variables from raw flags, normalizing to camelCase
+- Calls `onMissing` when required variables are absent
+- Applies defaults for optional variables not provided
+- Filters out excluded flags
+
 ### `resolve-output-path.spec.ts`
 - Resolves `{{var}}` tokens in a path string
 - Leaves unresolved tokens as-is
@@ -317,6 +461,6 @@ export default async function runCreateStep({
 
 ## Open Items
 
-- **`powerupDir` → `powerupDirectory` rename:** The new code uses `powerupDirectory` for descriptive naming consistency. The existing `run-step.ts` and `runPowerup` use `powerupDir`. These should be renamed for consistency, but the rename touches the install step's signature as well (even though it ignores the param).
-- **`resolveTemplateString` → `applyVariablesToTemplateString` rename:** The existing utility is named `resolveTemplateString`. The cleaner name `applyVariablesToTemplateString` is used in the `resolveStepVariables` function. This rename is optional but improves readability.
-- **`EXCLUDE_FLAGS` in `use-new.ts`:** The new command doesn't currently have `--overwrite` or `--type` flags. The exclude list should only include flags that actually exist in the new command (`--dry-run`, `-d`, `--help`, `-h`).
+- **`VariableResult` type location:** A `utils/use/variable-result.ts` file is referenced in the imports above. This is a simple interface (`{ [key: string]: string }`) that needs to be created. It could also be defined inline in each file, but a shared type file avoids duplication. The existing `VariableResult` in `utils/variables.ts` is not imported — per conventions, we create a new one inside `utils/use/`.
+- **`powerupDir` → `powerupDirectory` rename:** The new code uses `powerupDirectory` for descriptive naming consistency. The existing `run-step.ts` and `runPowerup` use `powerupDir`. These should be renamed for consistency, which touches the install step's signature as well (even though it ignores the param).
+- **`runTemplate` import:** `runTemplate` from `#template-runners/index` is imported as a core platform dependency (it contains complex runtime-specific code for Bun/Deno/Node). It is not recreated inside `utils/use/`. If this should be recreated instead, flag it.

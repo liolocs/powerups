@@ -65,7 +65,7 @@ use-new.ts
 Recreated from `utils/resolve-template-string.ts`. Resolves `{{var}}` tokens in a string using the variables record. Case-insensitive matching, unresolved tokens left as-is.
 
 ```ts
-import type { ResolvedVariable } from "#utils/use/resolved-variable";
+import type { ResolvedVariable } from "#utils/variables";
 
 export default function applyVariablesToTemplateString({
   templateString,
@@ -91,7 +91,7 @@ Recreated from `utils/variables.ts`. Extracts variables from raw CLI flags, norm
 ```ts
 import is from "@rcompat/is";
 import type { Instructions } from "@liolocs/powerups-sdk";
-import type { ResolvedVariable } from "#utils/use/resolved-variable";
+import type { ResolvedVariable } from "#utils/variables";
 import use_errors from "#errors/useErrors";
 
 export default function extractVariables({
@@ -310,7 +310,7 @@ Recreated from `execute-steps.ts` with cleaner naming and formatting, using the 
 
 ```ts
 import type { Step } from "@liolocs/powerups-sdk";
-import type { ResolvedVariable } from "#utils/use/resolved-variable";
+import type { ResolvedVariable } from "#utils/variables";
 import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
 
 export function resolveStepVariables({
@@ -343,7 +343,7 @@ export function resolveStepVariables({
 Resolves `{{var}}` tokens in the step's `outputPath` using the step variables, via the new `applyVariablesToTemplateString`:
 
 ```ts
-import type { ResolvedVariable } from "#utils/use/resolved-variable";
+import type { ResolvedVariable } from "#utils/variables";
 import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
 
 export default function resolveOutputPath({
@@ -364,7 +364,7 @@ Handles template-exists check + rendering. Throws `template_not_found` if the te
 ```ts
 import fs from "@rcompat/fs";
 import type { FileRef } from "@rcompat/fs";
-import type { ResolvedVariable } from "#utils/use/resolved-variable";
+import type { ResolvedVariable } from "#utils/variables";
 import { runTemplate } from "#template-runners/index";
 import use_errors from "#errors/useErrors";
 
@@ -394,7 +394,7 @@ import type { CreateManifestEntry, CreateStep } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import fs from "@rcompat/fs";
 import cli from "@rcompat/cli";
-import type { ResolvedVariable } from "#utils/use/resolved-variable";
+import type { ResolvedVariable } from "#utils/variables";
 import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
 import resolveOutputPath from "#utils/use/run-powerup/steps/run-create-step/resolve-output-path";
 import renderTemplate from "#utils/use/run-powerup/steps/run-create-step/render-template";
@@ -510,6 +510,5 @@ export default async function runCreateStep({
 
 ## Open Items
 
-- **`ResolvedVariable` type location:** A `utils/use/resolved-variable.ts` file is referenced in the imports above. This is a simple interface (`{ [key: string]: string }`) that needs to be created. It could also be defined inline in each file, but a shared type file avoids duplication. The existing `ResolvedVariable` in `utils/variables.ts` is not imported — per conventions, we create a new `ResolvedVariable` inside `utils/use/`.
 - **`powerupDir` → `powerupDirectory` rename:** The new code uses `powerupDirectory` for descriptive naming consistency. The existing `run-step.ts` and `runPowerup` use `powerupDir`. These should be renamed for consistency, which touches the install step's signature as well (even though it ignores the param).
 - **`runTemplate` import:** `runTemplate` from `#template-runners/index` is imported as a core platform dependency (it contains complex runtime-specific code for Bun/Deno/Node). It is not recreated inside `utils/use/`. If this should be recreated instead, flag it.

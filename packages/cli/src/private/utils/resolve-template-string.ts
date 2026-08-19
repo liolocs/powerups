@@ -1,4 +1,4 @@
-import type { VariableResult } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/variables";
 
 /**
  * Resolve {{var}} tokens in a string using the variables record.
@@ -7,7 +7,7 @@ import type { VariableResult } from "#utils/variables";
  */
 export function resolveTemplateString(
   str: string,
-  variables: VariableResult,
+  variables: ResolvedVariable,
 ): string {
   return str.replace(/\{\{(\w+)\}\}/g, (match, token: string) => {
     const key = Object.keys(variables).find(

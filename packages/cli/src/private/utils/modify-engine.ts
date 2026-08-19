@@ -2,7 +2,7 @@ import { modificationArraySchema } from "#schemas/modification";
 import type { Modification } from "#schemas/modification";
 import { runTemplate } from "#template-runners/index";
 import type { FileRef } from "@rcompat/fs";
-import type { VariableResult } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/variables";
 import fs from "@rcompat/fs";
 import type use_errors from "#errors/useErrors";
 
@@ -11,7 +11,7 @@ type ErrorSet = typeof use_errors;
 export interface ModifyTask {
   templatePath: FileRef;
   outputPath: string; // relative to project root
-  variables: VariableResult;
+  variables: ResolvedVariable;
 }
 
 export interface AppliedModification {
@@ -26,7 +26,7 @@ export interface AppliedModification {
  */
 export async function parseModifyTemplate(
   templatePath: FileRef,
-  variables: VariableResult,
+  variables: ResolvedVariable,
   errors: ErrorSet,
 ): Promise<Modification[]> {
   const ext = templatePath.extension;

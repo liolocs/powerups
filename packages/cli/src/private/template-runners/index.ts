@@ -1,13 +1,13 @@
 import is from "@rcompat/is";
 import type { FileRef } from "@rcompat/fs";
-import type { VariableResult } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/variables";
 import runnerErrors from "#errors/runnerErrors";
 import tsRunner from "#template-runners/ts";
 import njkRunner from "#template-runners/njk";
 
 export interface TemplateContext {
   templatePath: FileRef;
-  variables: VariableResult;
+  variables: ResolvedVariable;
 }
 
 export type TemplateRunner = (ctx: TemplateContext) => Promise<string>;

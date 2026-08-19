@@ -4,7 +4,7 @@ import io from "@rcompat/io";
 import is from "@rcompat/is";
 import type { JSONValue } from "@rcompat/type";
 import type { Step } from "@liolocs/powerups-sdk";
-import type { VariableResult } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/variables";
 import { resolveTemplateString } from "#utils/resolve-template-string";
 import { runTemplate } from "#template-runners/index";
 import { applyMultipleModifications } from "#utils/modify-engine";
@@ -33,7 +33,7 @@ export interface RunRecord {
 
 export interface ExecuteStepsArgs {
   steps: Step[];
-  variables: VariableResult;
+  variables: ResolvedVariable;
   outputFolder: FileRef;
   rootDir: FileRef;
   isDryRun: boolean;
@@ -43,13 +43,13 @@ export interface ExecuteStepsArgs {
 
 export function resolveStepVariables(
   step: Step,
-  variables: VariableResult,
-): VariableResult {
+  variables: ResolvedVariable,
+): ResolvedVariable {
   const map = (step as Step & { variableMap?: Record<string, string> }).variableMap;
   if (!map) {
     return variables;
   }
-  const stepVars: VariableResult = { ...variables };
+  const stepVars: ResolvedVariable = { ...variables };
   for (const [key, value] of Object.entries(map)) {
     stepVars[key] = resolveTemplateString(value, stepVars);
   }
@@ -89,7 +89,7 @@ function depVersion(spec: string): string {
 
 async function handleInstall(
   step: Extract<Step, { type: "install" }>,
-  stepVars: VariableResult,
+  stepVars: ResolvedVariable,
   rootDir: FileRef,
   isDryRun: boolean,
 ): Promise<"applied" | "skipped-warning"> {

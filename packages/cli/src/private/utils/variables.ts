@@ -1,6 +1,6 @@
 import is from "@rcompat/is";
 
-export interface VariableResult {
+export interface ResolvedVariable {
   [key: string]: string;
 }
 
@@ -52,7 +52,7 @@ export function extractVariables(args: {
   excludeFlags: string[];
   defaults?: Record<string, string>;
   onMissing: (missing: string[]) => never;
-}): VariableResult {
+}): ResolvedVariable {
   const { rawFlags, required, optional, excludeFlags, defaults, onMissing } = args;
 
   // 1. Filter out excluded flags (--dry-run, -d, --overwrite, -O, --help, -h)
@@ -61,7 +61,7 @@ export function extractVariables(args: {
   );
 
   // 2. Build camelCase key/value record
-  const result: VariableResult = {};
+  const result: ResolvedVariable = {};
   for (const f of variableFlags) {
     const key = normalizeFlagName(f.flag);
     result[key] = f.value;

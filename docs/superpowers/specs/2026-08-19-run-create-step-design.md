@@ -510,6 +510,6 @@ export default async function runCreateStep({
 
 ## Open Items
 
-- **`ResolvedVariable` type location:** A `utils/use/resolved-variable.ts` file is referenced in the imports above. This is a simple interface (`{ [key: string]: string }`) that needs to be created. It could also be defined inline in each file, but a shared type file avoids duplication. The existing `VariableResult` in `utils/variables.ts` is not imported — per conventions, we create a new `ResolvedVariable` inside `utils/use/`.
+- **`ResolvedVariable` type location:** A `utils/use/resolved-variable.ts` file is referenced in the imports above. This is a simple interface (`{ [key: string]: string }`) that needs to be created. It could also be defined inline in each file, but a shared type file avoids duplication. The existing `ResolvedVariable` in `utils/variables.ts` is not imported — per conventions, we create a new `ResolvedVariable` inside `utils/use/`.
 - **`powerupDir` → `powerupDirectory` rename:** The new code uses `powerupDirectory` for descriptive naming consistency. The existing `run-step.ts` and `runPowerup` use `powerupDir`. These should be renamed for consistency, which touches the install step's signature as well (even though it ignores the param).
 - **`runTemplate` import:** `runTemplate` from `#template-runners/index` is imported as a core platform dependency (it contains complex runtime-specific code for Bun/Deno/Node). It is not recreated inside `utils/use/`. If this should be recreated instead, flag it.

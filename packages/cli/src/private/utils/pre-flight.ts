@@ -1,6 +1,6 @@
 import fs, { type FileRef } from "@rcompat/fs";
 import type { Instructions, Step } from "@liolocs/powerups-sdk";
-import type { VariableResult } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/variables";
 import { resolveTemplateString } from "#utils/resolve-template-string";
 import use_errors from "#errors/useErrors";
 
@@ -8,7 +8,7 @@ export interface PreFlightArgs {
   instructions: Instructions;
   outputFolder: FileRef;
   rootDir: FileRef;
-  variables: VariableResult;
+  variables: ResolvedVariable;
   isOverwrite: boolean;
 }
 
@@ -31,10 +31,10 @@ function mapKeys(step: Step): Set<string> {
   return new Set(map ? Object.keys(map) : []);
 }
 
-export function stepVars(step: Step, variables: VariableResult): VariableResult {
+export function stepVars(step: Step, variables: ResolvedVariable): ResolvedVariable {
   const map = (step as Step & { variableMap?: Record<string, string> }).variableMap;
   if (!map) return variables;
-  const v: VariableResult = { ...variables };
+  const v: ResolvedVariable = { ...variables };
   for (const [k, val] of Object.entries(map)) {
     v[k] = resolveTemplateString(val, v);
   }

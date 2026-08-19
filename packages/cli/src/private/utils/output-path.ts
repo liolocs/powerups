@@ -1,4 +1,4 @@
-import type { VariableResult } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/variables";
 import { resolveTemplateString } from "#utils/resolve-template-string";
 
 /**
@@ -8,7 +8,7 @@ import { resolveTemplateString } from "#utils/resolve-template-string";
  */
 export function resolveOutputPath(
   outputPath: string,
-  variables: VariableResult,
+  variables: ResolvedVariable,
 ): string {
   return resolveTemplateString(outputPath, variables);
 }

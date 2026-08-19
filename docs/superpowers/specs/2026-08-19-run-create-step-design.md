@@ -364,7 +364,7 @@ export default async function runCreateStep({
 
   const characterCount = renderedContent.length;
 
-  const manifest: Omit<InstallManifestEntry, BaseManifestProperties> = {
+  const manifest: Omit<CreateManifestEntry, BaseManifestProperties> = {
       timestamp: new Date(),
       stepName: step.name,
       from: step.from?.name,
@@ -403,7 +403,8 @@ export default async function runCreateStep({
 
 | Scenario | Renders template? | Writes file? | Prints? | Status | Output |
 |----------|-------------------|-------------|---------|--------|--------|
-| Dry-run | Yes | No | Yes (path + char count) | `applied` | `CreateOutput` |
+| Dry-run — file doesn't exist | Yes | No | Yes (path + char count) | `applied` | `CreateOutput` |
+| Dry-run — file already exists | Yes | No | No | `skipped-warning` | `NoneOutput` |
 | Normal — file doesn't exist | Yes | Yes | No | `applied` | `CreateOutput` |
 | Normal — file already exists | Yes | No | No | `skipped-warning` | `NoneOutput` |
 | Template not found | — | — | — | Throws `template_not_found` | — |
@@ -435,7 +436,8 @@ export default async function runCreateStep({
 ### `run-create-step.spec.ts`
 - Writes a file to the correct resolved path and returns `applied` manifest with `CreateOutput`
 - Skips with `skipped-warning` + `NoneOutput` when destination file already exists
-- Dry-run returns manifest with `CreateOutput` and does NOT write the file
+- Dry-run + file doesn't exist → returns `applied` manifest with `CreateOutput`, prints summary line, does NOT write the file
+- Dry-run + file already exists → returns `skipped-warning` + `NoneOutput`, does NOT print, does NOT write
 - Different variable values produce different output paths and content
 - Creates parent directories that don't exist yet
 

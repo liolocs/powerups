@@ -1,7 +1,7 @@
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import findPackageManagerAtDestination from "#utils/use/run-powerup/steps/find-package-manager-at-destination";
+import findPackageManagerAtDestination from "#utils/use/run-powerup/steps/run-install-step/find-package-manager-at-destination";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/find-package-manager-at-destination");

@@ -1,5 +1,5 @@
 import { type FileRef } from "@rcompat/fs";
-import findPackageManagerAtDestination from "#utils/use/run-powerup/steps/find-package-manager-at-destination";
+import findPackageManagerAtDestination from "#utils/use/run-powerup/steps/run-install-step/find-package-manager-at-destination";
 
 export default async function getPackageManagerToUse({
   packageManager,

@@ -1,7 +1,7 @@
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import runInstallStep from "#utils/use/run-powerup/steps/run-install-step";
+import runInstallStep from "#utils/use/run-powerup/steps/run-install-step/index";
 import { type Step } from "@liolocs/powerups-sdk";
 
 const root = await runtime.projectRoot();

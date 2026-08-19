@@ -1,10 +1,9 @@
-import getPackageManagerToUse from "#utils/use/run-powerup/steps/get-package-manager-to-use";
+import getPackageManagerToUse from "#utils/use/run-powerup/steps/run-install-step/get-package-manager-to-use";
 import { type InstallManifestEntry, type InstallStep } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
 import io from "@rcompat/io";
 import is from "@rcompat/is";
-
-type BaseManifestProperties = "powerupName" | "version" | "location" | "type";
+import { type BaseManifestProperties } from "#utils/use/run-powerup/run-step";
 
 export default async function runInstallStep({
   step,

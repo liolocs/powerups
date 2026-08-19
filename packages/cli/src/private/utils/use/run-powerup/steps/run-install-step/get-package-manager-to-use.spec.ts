@@ -1,7 +1,7 @@
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import getPackageManagerToUse from "#utils/use/run-powerup/steps/get-package-manager-to-use";
+import getPackageManagerToUse from "#utils/use/run-powerup/steps/run-install-step/get-package-manager-to-use";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");

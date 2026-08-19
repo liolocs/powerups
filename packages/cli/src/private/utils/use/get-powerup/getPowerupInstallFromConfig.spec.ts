@@ -1,9 +1,8 @@
-import use_errors, { UseErrorCode } from "#errors/useErrors";
+import { UseErrorCode } from "#errors/useErrors";
 import test from "#test-utils/test/index";
+import getPowerupInstallFromConfig from "#utils/use/get-powerup/getPowerupInstallFromConfig";
 import { type PowerupConfig } from "@liolocs/powerups-sdk";
-import { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import getPowerupInstallFromConfig from "#utils/use/getPowerup/getPowerupInstallFromConfig";
 
 const testRoot = (await runtime.projectRoot()).append("/tmp/test-dir");
 

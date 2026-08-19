@@ -2,7 +2,7 @@ import { UseErrorCode } from "#errors/useErrors";
 import test from "#test-utils/test/index";
 import { type PowerupConfig } from "@liolocs/powerups-sdk";
 import runtime from "@rcompat/runtime";
-import { getConfig } from "#utils/use/getPowerup/getConfig";
+import { getConfig } from "#utils/use/get-powerup/getConfig";
 
 const testRoot = (await runtime.projectRoot()).append("/tmp/test-dir");
 

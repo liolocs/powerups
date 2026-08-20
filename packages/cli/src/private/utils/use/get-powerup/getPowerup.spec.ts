@@ -4,7 +4,7 @@ import { UseErrorCode } from "#errors/useErrors";
 import runtime from "@rcompat/runtime";
 import fs from "@rcompat/fs";
 import { createSimpleGlobalScaffoldPowerupForTest, createSimpleScaffoldPowerupForTest } from "#test-utils/create-fully-built-powerup-for-test";
-import { CLI_FOLDER_NAME } from "#constants";
+import { CLI_FOLDER_NAME, PACKAGE_JSON } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -21,6 +21,17 @@ async function cleanup(): Promise<void> {
   await testRoot.remove();
   await globalRoot.remove();
 }
+
+test.case("should return an error if the package.json is missing from the powerup", async assert => {
+  await setupTestDir();
+  const powerupName = "test-powerup";
+  const { packageDir, targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
+  await packageDir.append(`/${PACKAGE_JSON}`).remove();
+
+  await assert(getPowerup({ root: targetDir, name: powerupName, globalRoot })).throwsAsync(UseErrorCode.package_json_error);
+
+  await cleanup();
+});
 
 test.case("should return an error if the config file is missing both locally and globally", async assert => {
   await setupTestDir();

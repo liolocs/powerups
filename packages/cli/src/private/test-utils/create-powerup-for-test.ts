@@ -86,7 +86,7 @@ export async function createPowerupPackageForTest({
   }): Promise<Instructions> {
   // Root of the powerup package: /tmp/.powerups/_internal/<powerupName>/
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.INTERNAL}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
 
   // Absolute path to the workspace SDK, and a `link:` specifier relative to
@@ -94,7 +94,7 @@ export async function createPowerupPackageForTest({
   const sdkPackageAbsolutePath = path.resolve((await runtime.projectRoot()).path, "packages/sdk");
   const sdkPackageLinkSpecifier = `link:${path.relative(packageDir.path, sdkPackageAbsolutePath)}`;
 
-  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.INTERNAL}`));
+  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}`));
 
   await fs.create(packageDir.append("/templates"));
 

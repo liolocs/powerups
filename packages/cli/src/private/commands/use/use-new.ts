@@ -89,6 +89,8 @@ const use = new Command({
       instructions: validatedCompiledInstructions,
       isDryRun,
       variables,
+      powerupVersion: powerup.version,
+      powerupLocation: powerup.location.path,
     });
   },
 });

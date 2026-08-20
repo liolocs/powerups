@@ -14,6 +14,11 @@ const use_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  package_json_error: (name: string) => {
+    const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} ${name} package.json is invalid`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   powerup_missing: (name: string) => {
     const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} ${name} not found`;
     return t`${errorBGText}${errorText}`;

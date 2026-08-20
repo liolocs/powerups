@@ -13,7 +13,7 @@ export default async function getPowerup({
   root: FileRef;
   globalRoot: FileRef;
   name: string;
-  }): Promise<{ instructions: Instructions, location: FileRef }> {
+  }): Promise<{ instructions: Instructions, location: FileRef, version: string }> {
   const localConfigRef = root.append(`/${CLI_FOLDER_NAME}/config.json`);
   const globalConfigRef = globalRoot.append("/config.json");
 
@@ -54,11 +54,7 @@ async function fetchPowerup({
   installationType: "internal" | "npm" | "git";
   powerupName: string;
 }) {
-  let powerupDir = root.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER[installationType]}/${powerupName}`);
-
-  if (installationType === "internal") {
-    powerupDir = root.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.INTERNAL}/${powerupName}`);
-  }
+  const powerupDir = root.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER[installationType]}/${powerupName}`);
 
   if (await powerupDir.exists() === false) {
     throw use_errors.powerup_missing(powerupName);
@@ -71,8 +67,24 @@ async function fetchPowerup({
     throw use_errors.instructions_not_built(powerupName);
   }
 
+  let version: string;
+  try {
+    const pkgJson = await powerupDir.append("/package.json").json() as Record<string, unknown>;
+
+    console.log(JSON.stringify(pkgJson));
+
+    if (is.falsy(pkgJson.version)) {
+      throw new Error("version not found");
+    }
+
+    version = pkgJson.version as unknown as string;
+  } catch {
+    throw use_errors.package_json_error(powerupName);
+  }
+
   return {
     instructions: instructionsJSON,
     location: powerupDir,
+    version: version,
   };
 }

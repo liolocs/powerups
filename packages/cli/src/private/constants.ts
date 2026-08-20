@@ -33,9 +33,9 @@ export const powerupsFolderMap: Record<PowerUpType, string> = {
 };
 
 export const INSTALLED_FOLDER = {
-  INTERNAL: "installed/_internal",
-  NPM: "installed/npm",
-  GIT: "installed/git",
+  internal: "installed/_internal",
+  npm: "installed/npm",
+  git: "installed/git",
 };
 
 export const INTERNAL_FOLDER = "_internal";

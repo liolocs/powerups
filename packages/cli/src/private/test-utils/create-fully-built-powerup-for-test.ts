@@ -38,7 +38,7 @@ export default async function createFullyBuiltPowerupForTest({
   templates?: DefaultTemplateForTest[];
 }): Promise<{ instructions: Instructions; packageDir: FileRef }> {
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.INTERNAL}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
   await createPowerupPackageForTest({
     powerupName,

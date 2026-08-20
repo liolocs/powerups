@@ -27,7 +27,7 @@ test.case("read then create flow with variable threading writes file and manifes
 
   await fs.write(
     testPowerupDir.append("/server-template.ts"),
-    `export default (vars: Record<string, string>) => \`const port = \${vars.serverPort};\`;`,
+    `export default (props: Record<string, string>) => \`const port = \${props.serverPort};\`;`,
   );
 
   const instructions: Instructions = {
@@ -87,7 +87,7 @@ test.case("dry-run does not create manifest or write files to destination", asyn
 
   await fs.write(
     testPowerupDir.append("/server-template.ts"),
-    `export default (vars: Record<string, string>) => \`const port = \${vars.serverPort};\`;`,
+    `export default (props: Record<string, string>) => \`const port = \${props.serverPort};\`;`,
   );
 
   const instructions: Instructions = {
@@ -135,7 +135,7 @@ test.case("create then delete flow removes file and writes manifest with both en
 
   await fs.write(
     testPowerupDir.append("/component-template.ts"),
-    `export default (vars: Record<string, string>) => \`export const \${vars.name} = "hello";\`;`,
+    `export default (props: Record<string, string>) => \`export const \${props.name} = "hello";\`;`,
   );
 
   const instructions: Instructions = {

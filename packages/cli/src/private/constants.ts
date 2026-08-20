@@ -50,7 +50,7 @@ export const GLOBAL_ROOT = path.join(homedir(), CLI_FOLDER_NAME);
 
 export const GLOBAL_CONFIG_PATH = path.join(GLOBAL_ROOT, CONFIG_FILE_NAME);
 
-export const GLOBAL_INTERNAL_PATH = path.join(GLOBAL_ROOT, INTERNAL_FOLDER);
+export const GLOBAL_INTERNAL_PATH = path.join(GLOBAL_ROOT, INSTALLED_FOLDER.internal);
 
 export const FOLDER_FOR_NPM_INSTALLED_PACKAGES = "npm";
 

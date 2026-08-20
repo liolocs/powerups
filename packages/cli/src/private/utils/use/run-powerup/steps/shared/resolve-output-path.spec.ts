@@ -1,5 +1,5 @@
 import test from "#test-utils/test/index";
-import resolveOutputPath from "#utils/use/run-powerup/steps/run-create-step/resolve-output-path";
+import resolveOutputPath from "#utils/use/run-powerup/steps/shared/resolve-output-path";
 
 test.case("resolves {{var}} tokens in a path string", async assert => {
   const result = resolveOutputPath({

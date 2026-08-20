@@ -5,6 +5,39 @@ import type { ResolvedVariable } from "#utils/variables";
 import runStep from "#utils/use/run-powerup/run-step";
 import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
 import saveManifest from "#utils/use/run-powerup/save-manifest";
+import is from "@rcompat/is";
+
+export default async function runPowerup({
+  destination,
+  powerupDirectory,
+  instructions,
+  isDryRun,
+  variables,
+}: {
+  destination: FileRef;
+  powerupDirectory: FileRef;
+  instructions: Instructions;
+  isDryRun: boolean;
+  variables: ResolvedVariable;
+}): Promise<void> {
+  const steps = instructions.steps;
+
+  for (const step of steps) {
+    const { manifest, variableUpdate } = await runStep({ step, isDryRun, destination, powerupDirectory, variables });
+
+    if (is.truthy(variableUpdate)) {
+      variables[variableUpdate!.name] = variableUpdate!.value;
+    }
+
+    // TODO: should amend the manifest to include the other required values from ManifestEntry here
+
+    printStepSummary({ manifest });
+
+    if (!isDryRun && is.truthy(manifest)) {
+      await saveManifest({ destination: powerupDirectory, manifest });
+    }
+  }
+}
 
 function printStepSummary({
   manifest,
@@ -36,35 +69,5 @@ function printStepSummary({
   if (output.type === "install") {
     cli.print(`Installed dependencies\n`);
     return;
-  }
-}
-
-export default async function runPowerup({
-  destination,
-  powerupDirectory,
-  instructions,
-  isDryRun,
-  variables,
-}: {
-  destination: FileRef;
-  powerupDirectory: FileRef;
-  instructions: Instructions;
-  isDryRun: boolean;
-  variables: ResolvedVariable;
-}): Promise<void> {
-  const steps = instructions.steps;
-
-  for (const step of steps) {
-    const { manifest, variableUpdate } = await runStep({ step, isDryRun, destination, powerupDirectory, variables });
-
-    if (variableUpdate) {
-      variables[variableUpdate.name] = variableUpdate.value;
-    }
-
-    printStepSummary({ manifest });
-
-    if (!isDryRun && manifest) {
-      await saveManifest({ destination: powerupDirectory, manifest });
-    }
   }
 }

@@ -19,7 +19,7 @@ export default async function runModifyStep({
   destination: FileRef;
   powerupDirectory: FileRef;
   variables: ResolvedVariable;
-}): Promise<Omit<ModifyManifestEntry, BaseManifestProperties>> {
+}): Promise<{ manifest: Omit<ModifyManifestEntry, BaseManifestProperties> }> {
   const resolvedOutputPath = resolveOutputPath({
     outputPath: step.outputPath,
     variables,
@@ -62,19 +62,23 @@ export default async function runModifyStep({
     }
 
     return {
-      ...manifest,
-      output: {
-        type: "modify",
-        path: resolvedOutputPath,
-        action: "modify",
-        characterCount,
+      manifest: {
+        ...manifest,
+        output: {
+          type: "modify",
+          path: resolvedOutputPath,
+          action: "modify",
+          characterCount,
+        },
       },
     };
   } catch {
     return {
-      ...manifest,
-      status: "skipped-warning",
-      output: { type: "none" },
+      manifest: {
+        ...manifest,
+        status: "skipped-warning",
+        output: { type: "none" },
+      },
     };
   }
 }

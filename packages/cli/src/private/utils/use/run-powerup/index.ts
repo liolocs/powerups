@@ -28,6 +28,11 @@ function printStepSummary({
     return;
   }
 
+  if (output.type === "read") {
+    cli.print(`Read: ${output.variable}\n`);
+    return;
+  }
+
   if (output.type === "install") {
     cli.print(`Installed dependencies\n`);
     return;
@@ -50,7 +55,11 @@ export default async function runPowerup({
   const steps = instructions.steps;
 
   for (const step of steps) {
-    const manifest = await runStep({ step, isDryRun, destination, powerupDirectory, variables });
+    const { manifest, variableUpdate } = await runStep({ step, isDryRun, destination, powerupDirectory, variables });
+
+    if (variableUpdate) {
+      variables[variableUpdate.name] = variableUpdate.value;
+    }
 
     printStepSummary({ manifest });
 

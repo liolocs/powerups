@@ -13,7 +13,7 @@ export default async function runInstallStep({
   step: InstallStep;
   isDryRun: boolean;
   destination: FileRef;
-}): Promise<Omit<InstallManifestEntry, BaseManifestProperties>> {
+}): Promise<{ manifest: Omit<InstallManifestEntry, BaseManifestProperties> }> {
   const { packageManager } = step;
   const packageManagerToUse = await getPackageManagerToUse({
     packageManager,
@@ -65,7 +65,7 @@ export default async function runInstallStep({
     },
   };
 
-  return installManifest;
+  return { manifest: installManifest };
 }
 
 async function installAllDependencies({

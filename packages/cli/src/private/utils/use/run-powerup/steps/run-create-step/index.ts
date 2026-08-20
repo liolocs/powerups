@@ -18,7 +18,7 @@ export default async function runCreateStep({
   destination: FileRef;
   powerupDirectory: FileRef;
   variables: ResolvedVariable;
-}): Promise<Omit<CreateManifestEntry, BaseManifestProperties>> {
+}): Promise<{ manifest: Omit<CreateManifestEntry, BaseManifestProperties> }> {
   const resolvedOutputPath = resolveOutputPath({
     outputPath: step.outputPath,
     variables,
@@ -50,18 +50,20 @@ export default async function runCreateStep({
 
   if (await fs.exists(targetPath)) {
     return {
-      ...manifest,
-      status: "skipped-warning",
-      output: { type: "none" },
+      manifest: {
+        ...manifest,
+        status: "skipped-warning",
+        output: { type: "none" },
+      },
     };
   }
 
   if (isDryRun) {
-    return manifest;
+    return { manifest };
   }
 
   await fs.create(targetPath.directory);
   await targetPath.write(renderedContent);
 
-  return manifest;
+  return { manifest };
 }

@@ -37,7 +37,7 @@ test.case("should successfully install a package based on the .lock file if pack
 
   let threw = false;
   try {
-    const manifest = await runInstallStep({ step, isDryRun: false, destination: destinationRef });
+    const { manifest } = await runInstallStep({ step, isDryRun: false, destination: destinationRef });
     assert(manifest.output.type).equals("install");
     // if statement is for typescript to not give an error
     if (manifest.output.type === "install") {
@@ -95,7 +95,7 @@ test.case("should successfully install packages in the correct locations regardl
 
     let threw = false;
     try {
-      const manifest = await runInstallStep({ step, isDryRun: false, destination: destinationRef });
+      const { manifest } = await runInstallStep({ step, isDryRun: false, destination: destinationRef });
       assert(manifest.output.type).equals("install");
       // if statement is for typescript to not give an error
       if (manifest.output.type === "install") {

@@ -1,7 +1,8 @@
-import type { CreateStep, InstallStep, ManifestEntry, ModifyStep, Step } from "@liolocs/powerups-sdk";
+import type { CreateStep, InstallStep, ManifestEntry, ModifyStep, ReadStep, Step } from "@liolocs/powerups-sdk";
 import runInstallStep from "#utils/use/run-powerup/steps/run-install-step/index";
 import runCreateStep from "#utils/use/run-powerup/steps/run-create-step/index";
 import runModifyStep from "#utils/use/run-powerup/steps/run-modify-step/index";
+import runReadStep from "#utils/use/run-powerup/steps/run-read-step/index";
 import is from "@rcompat/is";
 import { type FileRef } from "@rcompat/fs";
 import type { ResolvedVariable } from "#utils/variables";
@@ -18,19 +19,24 @@ export type StepRunArgs = {
 
 export type BaseManifestProperties = "powerupName" | "version" | "location" | "type";
 
+export type StepRunnerResult = {
+  manifest: Omit<ManifestEntry, BaseManifestProperties>;
+  variableUpdate?: { name: string; value: string };
+};
+
 type StepRunner<S extends Step> = (args: {
   step: S;
   isDryRun: boolean;
   destination: FileRef;
   powerupDirectory: FileRef;
   variables: ResolvedVariable;
-}) => Promise<Omit<ManifestEntry, BaseManifestProperties>>;
+}) => Promise<StepRunnerResult>;
 
 const stepTypes: Partial<{ [K in Step["type"]]: StepRunner<Extract<Step, { type: K }>> }> = {
   create: runCreateStep,
   modify: runModifyStep,
   // delete: runDeleteStep,
-  // read: runReadStep,
+  read: runReadStep,
   install: runInstallStep,
 };
 
@@ -41,12 +47,12 @@ export default async function runStep({
   powerupDirectory,
   variables,
 }: {
-  step: InstallStep | CreateStep | ModifyStep;
+  step: InstallStep | CreateStep | ModifyStep | ReadStep;
   isDryRun: boolean;
   destination: FileRef;
   powerupDirectory: FileRef;
   variables: ResolvedVariable;
-}): Promise<Omit<ManifestEntry, BaseManifestProperties>> {
+}): Promise<StepRunnerResult> {
   const stepType = step.type;
   const runStepFunction = stepTypes[stepType];
 

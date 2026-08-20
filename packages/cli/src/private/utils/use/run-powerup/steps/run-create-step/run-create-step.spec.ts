@@ -38,7 +38,7 @@ test.case("writes a file to the correct resolved path and returns applied manife
   await setupTestDir();
   await createTemplateFile();
 
-  const manifest = await runCreateStep({
+  const { manifest } = await runCreateStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
@@ -70,7 +70,7 @@ test.case("skips with skipped-warning and NoneOutput when destination file alrea
   await fs.create(targetDir);
   await fs.write(testDestinationDir.append("/src/MyComponent.ts"), "existing content");
 
-  const manifest = await runCreateStep({
+  const { manifest } = await runCreateStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
@@ -92,7 +92,7 @@ test.case("dry-run with file not existing returns applied manifest, prints summa
   await setupTestDir();
   await createTemplateFile();
 
-  const manifest = await runCreateStep({
+  const { manifest } = await runCreateStep({
     step: baseStep,
     isDryRun: true,
     destination: testDestinationDir,
@@ -122,7 +122,7 @@ test.case("dry-run with file already existing returns skipped-warning and NoneOu
   await fs.create(targetDir);
   await fs.write(testDestinationDir.append("/src/MyComponent.ts"), "existing content");
 
-  const manifest = await runCreateStep({
+  const { manifest } = await runCreateStep({
     step: baseStep,
     isDryRun: true,
     destination: testDestinationDir,

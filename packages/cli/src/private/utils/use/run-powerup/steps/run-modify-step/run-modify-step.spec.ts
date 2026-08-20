@@ -45,7 +45,7 @@ test.case("applies modifications to an existing file and returns applied manifes
   await createTemplateFile();
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
-  const manifest = await runModifyStep({
+  const { manifest } = await runModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
@@ -72,7 +72,7 @@ test.case("returns skipped-warning and NoneOutput when target file does not exis
   await setupTestDir();
   await createTemplateFile();
 
-  const manifest = await runModifyStep({
+  const { manifest } = await runModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
@@ -97,7 +97,7 @@ test.case("returns skipped-warning and NoneOutput when an anchor is not found in
     `[{"where":{"after":"NONEXISTENT_ANCHOR"},"content":"inserted"}]`,
   );
 
-  const manifest = await runModifyStep({
+  const { manifest } = await runModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
@@ -119,7 +119,7 @@ test.case("returns skipped-warning and NoneOutput when template does not exist",
   await setupTestDir();
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
-  const manifest = await runModifyStep({
+  const { manifest } = await runModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
@@ -142,7 +142,7 @@ test.case("returns skipped-warning and NoneOutput when template produces invalid
   await fs.write(testPowerupDir.append("/mod.json"), `{not valid json}`);
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
-  const manifest = await runModifyStep({
+  const { manifest } = await runModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
@@ -161,7 +161,7 @@ test.case("dry-run applies modifications but does NOT write the file", async ass
   await createTemplateFile();
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
-  const manifest = await runModifyStep({
+  const { manifest } = await runModifyStep({
     step: baseStep,
     isDryRun: true,
     destination: testDestinationDir,
@@ -229,7 +229,7 @@ test.case("creates parent directories that do not exist yet when writing", async
   await fs.create(nestedDir);
   await fs.write(testDestinationDir.append("/src/deep/nested/Nested.ts"), "original\n");
 
-  const manifest = await runModifyStep({
+  const { manifest } = await runModifyStep({
     step: deepStep,
     isDryRun: false,
     destination: testDestinationDir,

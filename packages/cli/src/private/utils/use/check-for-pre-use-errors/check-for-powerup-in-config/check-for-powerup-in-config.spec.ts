@@ -26,7 +26,7 @@ test.case("should throw an error if the config file is missing globally", async 
     cwd: testRoot,
     globalRoot,
     powerupName: "test-powerup",
-  })).throwsAsync(UseErrorCode.global_config_not_found);
+  })).throwsAsync(UseErrorCode.not_installed);
 
   await cleanup();
 });

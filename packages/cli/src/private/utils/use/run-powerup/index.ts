@@ -45,7 +45,7 @@ export default async function runPowerup({
 
     if (!isDryRun && is.truthy(manifest)) {
       await saveManifest({
-        destination: powerupDirectory,
+        destination,
         manifest: fullManifest,
       });
     }

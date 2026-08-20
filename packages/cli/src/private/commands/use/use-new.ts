@@ -67,8 +67,7 @@ const use = new Command({
 
     // /**
     //  * Should check for
-    //  * 1. create destinations should not exist before creation
-    //  * 2. Should check for previous manifest entries for the same powerup to ensure a single-use powerup is not applied more than once
+    //  * 1. Should check for previous manifest entries for the same powerup to ensure a single-use powerup is not applied more than once
     //  */
     // await checkForUsePreflightErrors({ cwd: root, instructions: powerup.instructions });
 

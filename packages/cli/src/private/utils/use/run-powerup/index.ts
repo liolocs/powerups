@@ -13,12 +13,16 @@ export default async function runPowerup({
   instructions,
   isDryRun,
   variables,
+  powerupVersion,
+  powerupLocation,
 }: {
   destination: FileRef;
   powerupDirectory: FileRef;
   instructions: Instructions;
   isDryRun: boolean;
   variables: ResolvedVariable;
+    powerupVersion: string;
+    powerupLocation: string;
 }): Promise<void> {
   const steps = instructions.steps;
 
@@ -29,12 +33,21 @@ export default async function runPowerup({
       variables[variableUpdate!.name] = variableUpdate!.value;
     }
 
-    // TODO: should amend the manifest to include the other required values from ManifestEntry here
+    const fullManifest: ManifestEntry = {
+      ...manifest,
+      powerupName: instructions.name,
+      version: powerupVersion,
+      location: powerupLocation,
+      type: instructions.type,
+    };
 
-    printStepSummary({ manifest });
+    printStepSummary({ manifest: fullManifest });
 
     if (!isDryRun && is.truthy(manifest)) {
-      await saveManifest({ destination: powerupDirectory, manifest });
+      await saveManifest({
+        destination: powerupDirectory,
+        manifest: fullManifest,
+      });
     }
   }
 }
@@ -42,7 +55,7 @@ export default async function runPowerup({
 function printStepSummary({
   manifest,
 }: {
-  manifest: Omit<ManifestEntry, BaseManifestProperties>;
+    manifest: ManifestEntry;
 }): void {
   const { stepName, status, output } = manifest;
 

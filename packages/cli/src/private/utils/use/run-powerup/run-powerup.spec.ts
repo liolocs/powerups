@@ -67,7 +67,7 @@ test.case("read then create flow with variable threading writes file and manifes
   const content = (await testDestinationDir.append("/server.ts").text()).trim();
   assert(content).equals("const port = 3000;");
 
-  const manifestPath = testPowerupDir.append("/manifest.jsonl");
+  const manifestPath = testDestinationDir.append("/manifest.jsonl");
   assert(await fs.exists(manifestPath)).true();
 
   const entries = await manifestPath.json() as unknown as ManifestEntry[];
@@ -123,7 +123,7 @@ test.case("dry-run does not create manifest or write files to destination", asyn
     powerupLocation: "test-location",
   });
 
-  assert(await fs.exists(testPowerupDir.append("/manifest.jsonl"))).false();
+  assert(await fs.exists(testDestinationDir.append("/manifest.jsonl"))).false();
   assert(await testDestinationDir.append("/server.ts").exists()).false();
   assert(await testDestinationDir.append("/config.json").exists()).true();
 
@@ -171,7 +171,7 @@ test.case("create then delete flow removes file and writes manifest with both en
 
   assert(await testDestinationDir.append("/component.ts").exists()).false();
 
-  const manifestPath = testPowerupDir.append("/manifest.jsonl");
+  const manifestPath = testDestinationDir.append("/manifest.jsonl");
   assert(await fs.exists(manifestPath)).true();
 
   const entries = await manifestPath.json() as unknown as ManifestEntry[];

@@ -1,5 +1,5 @@
 import use_errors from "#errors/useErrors";
-import { Instructions, Step } from "@liolocs/powerups-sdk";
+import type { Instructions, Step } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
 
 export default async function checkForUsePreflightErrors({

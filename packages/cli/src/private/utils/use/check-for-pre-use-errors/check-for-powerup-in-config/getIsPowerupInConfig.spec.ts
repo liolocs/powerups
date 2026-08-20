@@ -11,6 +11,26 @@ test.case("should return true if the powerup is in the config", async assert => 
   assert(result).true();
 });
 
+test.case("should return true if the powerup is in the config with a source prefix (e.g. internal:)", async assert => {
+  const config = {
+    packages: ["internal:test-powerup"],
+  };
+
+  const result = getIsPowerupInConfig({ config, powerupName: "test-powerup" });
+
+  assert(result).true();
+});
+
+test.case("should return true if the powerup is in the config as a package object", async assert => {
+  const config = {
+    packages: [{ package: "internal:test-powerup" }],
+  };
+
+  const result = getIsPowerupInConfig({ config, powerupName: "test-powerup" });
+
+  assert(result).true();
+});
+
 test.case("should return false if the powerup is NOT in the config", async assert => {
   const config = {
     packages: [],

@@ -7,7 +7,7 @@ import fs from "@rcompat/fs";
 import checkForPreUseErrors from "#utils/use/check-for-pre-use-errors/index";
 import getPowerup from "#utils/use/get-powerup/getPowerup";
 import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
-import checkForUsePreflightErrors from "#utils/use/check-for-use-preflight-errors/index";
+// import checkForUsePreflightErrors from "#utils/use/check-for-use-preflight-errors/index";
 import runPowerup from "#utils/use/run-powerup/index";
 import extractVariables from "#utils/use/extract-variables";
 

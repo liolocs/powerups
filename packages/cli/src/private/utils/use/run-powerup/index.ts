@@ -66,6 +66,11 @@ function printStepSummary({
     return;
   }
 
+  if (output.type === "delete") {
+    cli.print(`Deleted: ${output.path}\n`);
+    return;
+  }
+
   if (output.type === "install") {
     cli.print(`Installed dependencies\n`);
     return;

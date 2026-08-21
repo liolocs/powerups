@@ -1,13 +1,14 @@
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import create from "#commands/create/create-new";
+import create from "#commands/create/index";
 import { CreateErrorCode } from "#errors/createErrors";
 import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
+import { type Instructions } from "@liolocs/powerups-sdk";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
-const realCreatePowerupDir = root.directory.directory.append("/.powerups/installed/_internal/create-powerup");
+const realCreatePowerupDir = root.append("/.powerups/installed/_internal/create-powerup");
 
 async function setupTestDir(): Promise<void> {
   await testRoot.remove();
@@ -33,11 +34,11 @@ async function copyCreatePowerupAssets(targetDir: import("@rcompat/fs").FileRef)
   const distDir = targetDir.append("/dist");
   await fs.create(distDir);
 
-  const instructionsJson = await realCreatePowerupDir.append("/dist/instructions.json").text();
-  await fs.write(distDir.append("/instructions.json"), instructionsJson);
+  const instructionsJson = await realCreatePowerupDir.append("/dist/instructions.json").json() as Instructions;
+  await fs.writeJSON(distDir.append("/instructions.json"), instructionsJson);
 
-  const packageJson = await realCreatePowerupDir.append("/package.json").text();
-  await fs.write(targetDir.append("/package.json"), packageJson);
+  const packageJson = await realCreatePowerupDir.append("/package.json").json();
+  await fs.writeJSON(targetDir.append("/package.json"), packageJson);
 
   const templatesDir = targetDir.append("/templates");
   await fs.create(templatesDir);

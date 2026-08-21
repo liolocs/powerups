@@ -11,10 +11,10 @@ const create_errors = error.coded({
     const errorText = `${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first.`;
     return t`${errorBGText}${errorText}`;
   },
-  missing_type: () => {
+  invalid_capture: (value: string) => {
     const errorText =
-      `Invalid --type value. Must be "multi-use" or "single-use".\n\n` +
-      `Usage: ${CLI_CMD} create <name> --type=<multi-use|single-use> ...`;
+      `Invalid --capture value "${value}". Must be "all" or "workingDir".\n\n` +
+      `Usage: ${CLI_CMD} create <name> --capture=<all|workingDir>`;
     return t`${errorBGText}${errorText}`;
   },
   already_exists: (name: string) => {
@@ -22,22 +22,21 @@ const create_errors = error.coded({
     const errorText = `${CAPITALIZED_SINGLULAR_CLI_NAME} ${nameText} already exists.`;
     return t`${errorBGText}${errorText}`;
   },
-  invalid_package_deps_json: () => {
-    const errorText = "Invalid JSON for --package-deps flag.";
-    return t`${errorBGText}${errorText}`;
-  },
-  not_a_git_repo: () => {
-    const errorText = `Working directory is not a git repository. Run "${CLI_CMD} create <name>" without --working-dir to create a blank ${SINGULAR_NAME_FOR_CLI}.`;
-    return t`${errorBGText}${errorText}`;
-  },
-  package_not_initialized: () => {
-    const errorText = `Could not determine package name from package.json. Pass --pack=<name> explicitly.`;
-    return t`${errorBGText}${errorText}`;
-  },
   missing_name: () => {
     const errorText =
       `${CAPITALIZED_SINGLULAR_CLI_NAME} name is required.\n\n` +
       `Usage: ${CLI_CMD} create <name> [options]`;
+    return t`${errorBGText}${errorText}`;
+  },
+  missing_description: () => {
+    const errorText =
+      `${CAPITALIZED_SINGLULAR_CLI_NAME} description is required.\n\n` +
+      `Usage: ${CLI_CMD} create <name> --description="..."`;
+    return t`${errorBGText}${errorText}`;
+  },
+  global_root_not_found: () => {
+    const errorText =
+      `Global ${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first, or use --local to create locally.`;
     return t`${errorBGText}${errorText}`;
   },
 });

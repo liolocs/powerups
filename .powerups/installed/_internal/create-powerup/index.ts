@@ -8,7 +8,7 @@ const instructions: Instructions = {
     required: ["name", "description"],
     optional: ["intent", "requiredVariables", "optionalVariables", "powerupType", "outputPath"],
     defaults: {
-      outputPath: ".powerups/_internal",
+      outputPath: ".powerups/installed/_internal",
       powerupType: "single-use",
     },
   },

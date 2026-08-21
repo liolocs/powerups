@@ -169,7 +169,7 @@ inside the {{ SINGULAR_NAME_FOR_CLI }}'s folder (the directory containing `instr
 The `template` field holds the full relative path from that folder — e.g.
 `button.svelte.tmpl`, `templates/button.ts`, or `src/sub/deep.njk`. The CLI
 resolves the file at that path. Files in the {{ SINGULAR_NAME_FOR_CLI }} folder not referenced
-by any `template` field are reported as orphaned by `{{ CLI_CMD }} doctor`.
+by any `template` field are reported as orphaned.
 
 ### Required vs Optional Variables
 
@@ -319,6 +319,5 @@ file belongs in an `includes` entry, not a copied template.
 | Create a single-use {{ SINGULAR_NAME_FOR_CLI }} | `{{ CLI_CMD }} create --pack=<pkg> --type=single-use -n=<name> -d="..." -i="..." -v="..." -ov="..." -p='...'` |
 | Validate a {{ SINGULAR_NAME_FOR_CLI }} | `{{ CLI_CMD }} validate <name>` |
 | Initialize {{ CLI_NAME }} | `{{ CLI_CMD }} init` |
-| Health check all | `{{ CLI_CMD }} doctor` |
 | Usage metrics | `{{ CLI_CMD }} metrics summary` |
 <!-- END {{ CLI_NAME }} -->

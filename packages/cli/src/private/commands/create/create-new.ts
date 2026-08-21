@@ -113,9 +113,11 @@ const create = new Command({
     });
 
     let captureResult;
+
     if (is.defined(flags.capture)) {
       const newPowerupDirectory = destination.append(`/${outputPath}/${powerupName}`);
       const indexFilePath = newPowerupDirectory.append("/index.ts");
+
       captureResult = await captureFiles({
         captureMode: flags.capture as "all" | "workingDir",
         projectRoot,

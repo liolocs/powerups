@@ -22,7 +22,6 @@ const program = new CLI({
     `$ ${CLI_CMD} find -q="summarize a pdf"`,
     `$ ${CLI_CMD} info my-powerup`,
     `$ ${CLI_CMD} use my-powerup --var name=foo`,
-    `$ ${CLI_CMD} doctor`,
   ],
 });
 

@@ -24,9 +24,9 @@ async function setupTestDir(): Promise<void> {
 
   await copyCreatePowerupAssets(targetCreatePowerupDir);
 
-  await fs.write(
+  await fs.writeJSON(
     testRoot.append(`/${CLI_FOLDER_NAME}/config.json`),
-    JSON.stringify({ packages: ["internal:create-powerup"] }) + "\n",
+    { packages: ["internal:create-powerup"] },
   );
 }
 

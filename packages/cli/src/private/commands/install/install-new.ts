@@ -1,4 +1,4 @@
-import fs, { FileRef } from "@rcompat/fs";
+import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
 import { InstallErrorCode } from "#errors/installErrors";

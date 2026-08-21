@@ -133,3 +133,15 @@ test.case("should install an powerup from git globally if local flag is NOT pass
 
   await cleanup();
 });
+
+test.case("should throw if user is trying to install a non powerup dir from npm locally", async assert => {
+});
+
+test.case("should throw if user is trying to install a non powerup dir from npm globally", async assert => {
+});
+
+test.case("should throw if user is trying to install a non powerup dir from git locally", async assert => {
+});
+
+test.case("should throw if user is trying to install a non powerup dir from git globally", async assert => {
+});

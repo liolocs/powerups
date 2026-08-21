@@ -1,12 +1,15 @@
 import cli from "@rcompat/cli";
 import type { CaptureResult } from "#utils/create/capture-files/index";
+import is from "@rcompat/is";
 
 export default function printCreateSummary({
   name,
+  outputPath,
   isDryRun,
   captureResult,
 }: {
   name: string;
+    outputPath: string;
   isDryRun: boolean;
   captureResult?: CaptureResult;
 }): void {
@@ -14,18 +17,18 @@ export default function printCreateSummary({
   const dim = cli.fg.dim;
 
   if (isDryRun) {
-    cli.print(`${green("✓")} (dry-run) Would create powerup: ${name}\n`);
+    cli.print(`${green("✓")} (dry-run) Would create powerup: ${name} at ${outputPath}\n`);
   } else {
-    cli.print(`${green("✓")} Created powerup: ${name}\n`);
+    cli.print(`${green("✓")} Created powerup: ${name} at ${outputPath}\n`);
   }
 
-  if (captureResult) {
-    if (captureResult.steps.length > 0) {
+  if (is.truthy(captureResult)) {
+    if (captureResult!.steps.length > 0) {
       cli.print(`  ${dim("captured:")} ${captureResult.fileCount} files, ${captureResult.steps.length} steps\n`);
     }
-    if (captureResult.warnings.length > 0) {
+    if (captureResult!.warnings.length > 0) {
       cli.print(`  ${dim("warnings:")}\n`);
-      for (const warning of captureResult.warnings) {
+      for (const warning of captureResult!.warnings) {
         cli.print(`    - ${warning}\n`);
       }
     }

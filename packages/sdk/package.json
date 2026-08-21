@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepublishOnly": "npm run build",
-    "test": "npx proby"
+    "test": "npx proby",
+    "release": "commit-and-tag-version --preset conventionalcommits",
+    "release:dry-run": "commit-and-tag-version --preset conventionalcommits --dry-run"
   },
   "type": "module",
   "files": [
@@ -34,5 +36,8 @@
   },
   "dependencies": {
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "commit-and-tag-version": "^13.1.2"
   }
 }

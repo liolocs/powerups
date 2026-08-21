@@ -67,7 +67,7 @@ const create = new Command({
     const isLocal = is.defined(flags.local);
     const powerupName = subcommands?.[0];
 
-    const destination = isLocal ? projectRoot : fs.ref(GLOBAL_ROOT);
+    const cwd = isLocal ? projectRoot : fs.ref(GLOBAL_ROOT);
     const outputPath = isLocal
       ? `${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}`
       : INSTALLED_FOLDER.internal;
@@ -77,7 +77,7 @@ const create = new Command({
       captureValue: flags.capture,
       description: flags.description,
       isLocal,
-      powerupDirectory: destination.append(`/${outputPath}`),
+      powerupDirectory: cwd.append(`/${outputPath}`),
       projectRoot,
       globalRoot: fs.ref(GLOBAL_ROOT),
     });
@@ -103,7 +103,7 @@ const create = new Command({
     });
 
     await runPowerup({
-      destination,
+      destination: cwd,
       powerupDirectory: powerup.location,
       instructions: validatedCompiledInstructions,
       isDryRun,
@@ -115,7 +115,7 @@ const create = new Command({
     let captureResult;
 
     if (is.defined(flags.capture)) {
-      const newPowerupDirectory = destination.append(`/${outputPath}/${powerupName}`);
+      const newPowerupDirectory = cwd.append(`/${outputPath}/${powerupName}`);
       const indexFilePath = newPowerupDirectory.append("/index.ts");
 
       captureResult = await captureFiles({
@@ -132,7 +132,12 @@ const create = new Command({
       await registerPowerup({ name: powerupName!, isLocal, projectRoot });
     }
 
-    printCreateSummary({ name: powerupName!, isDryRun, captureResult });
+    printCreateSummary({
+      name: powerupName!,
+      isDryRun,
+      captureResult,
+      outputPath: cwd.append(`/${outputPath}/${powerupName}`).path,
+    });
   },
 });
 

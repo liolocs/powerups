@@ -71,8 +71,6 @@ async function fetchPowerup({
   try {
     const pkgJson = await powerupDir.append("/package.json").json() as Record<string, unknown>;
 
-    console.log(JSON.stringify(pkgJson));
-
     if (is.falsy(pkgJson.version)) {
       throw new Error("version not found");
     }

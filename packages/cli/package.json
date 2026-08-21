@@ -53,10 +53,10 @@
   "devDependencies": {
     "@liolocs/powerups-sdk": "workspace:^",
     "@liolocs/program": "workspace:^",
-    "@types/nunjucks": "^3.2.6",
-    "commit-and-tag-version": "^13.1.2"
+    "@types/nunjucks": "^3.2.6"
   },
   "bin": {
-    "pup": "./lib/bin.js"
+    "pup": "./lib/bin.js",
+    "commit-and-tag-version": "^13.1.2"
   }
 }

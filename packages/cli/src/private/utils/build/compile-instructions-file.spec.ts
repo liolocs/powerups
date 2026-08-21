@@ -2,7 +2,8 @@ import runtime from "@rcompat/runtime";
 import fs from "@rcompat/fs";
 import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
 import test from "#test-utils/test/index";
-import compileIndexFile from "#utils/build/compile-index-file";
+import io from "@rcompat/io";
+import compileInstructionsFile from "#utils/build/compile-instructions-file";
 import { getPackageJson } from "#utils/build/getPackageJson";
 import { BuildErrorCode } from "#errors/buildErrors";
 import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
@@ -60,7 +61,7 @@ test.case("should create a dist folder with the compiled index file", async asse
     `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
 
-  await compileIndexFile({ root: packageDir, pkgJson: await getPackageJson(packageDir) });
+  await compileInstructionsFile({ root: packageDir, pkgJson: await getPackageJson(packageDir) });
 
   assert(await fs.exists(packageDir.append("/dist"))).true();
   assert(await fs.exists(packageDir.append("/dist/index.js"))).true();
@@ -83,10 +84,38 @@ test.case("should flag when invalid exports are generated for the index file", a
     `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
 
+  // invalid instructions file
   await fs.write(packageDir.append("/index.ts"), "export default 123;");
 
   const pkgJson = await getPackageJson(packageDir);
-  await assert(compileIndexFile({ root: packageDir, pkgJson })).throwsAsync(BuildErrorCode.invalid_instructions_file);
+  await assert(compileInstructionsFile({ root: packageDir, pkgJson })).throwsAsync(BuildErrorCode.invalid_instructions_file);
+
+  await cleanup();
+});
+
+test.case("should work when the package.json powerup.instructions uses another file name other than index.ts", async assert => {
+  await setupTestDir();
+  const powerupName = "test-powerup";
+  const powerupInstructions = await createPowerupPackageForTest({ powerupName, testRoot });
+
+  const packageDir = testRoot.append(
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
+  );
+
+  await assert(io.run("mv index.ts instructions.ts", { cwd: packageDir.path })).noErrorAsync();
+  const pkgJson = await getPackageJson(packageDir) as unknown as Record<string, any>;
+  pkgJson.powerup.instructions = "instructions.ts";
+
+  await compileInstructionsFile({ root: packageDir, pkgJson });
+
+  assert(await fs.exists(packageDir.append("/dist"))).true();
+  assert(await fs.exists(packageDir.append("/dist/instructions.js"))).true();
+
+  const indexJs = await fs.ref(packageDir.append("/dist/instructions.js")).import();
+
+  assert(indexJs!.default.instructions.name).equals(powerupName);
+  assert(indexJs!.default.instructions.type).equals(powerupInstructions.type);
+  assert(indexJs!.default.instructions.description).equals(powerupInstructions.description);
 
   await cleanup();
 });

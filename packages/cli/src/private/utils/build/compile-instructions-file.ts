@@ -2,11 +2,12 @@ import { SINGULAR_NAME_FOR_CLI } from "#constants";
 import { type Instructions, powerupPropertySchema, type PowerupProperty } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
+import fs from "@rcompat/fs";
 import tsup from "tsup";
 import path from "node:path";
 import build_errors from "#errors/buildErrors";
 
-type CompiledIndexFile = {
+type CompiledInstructionsFile = {
   default: {
     instructions: Instructions;
     source: string;
@@ -20,7 +21,10 @@ export default async function compileIndexFile({
     root: FileRef;
     pkgJson: Record<string, unknown>;
   }): Promise<{
-    compiledIndexFile: CompiledIndexFile;
+    compiledInstructionsFile: {
+      instructions: Instructions;
+      source: string;
+    };
     validatedPowerup: PowerupProperty;
     outputFolder: FileRef;
   }> {
@@ -50,16 +54,20 @@ export default async function compileIndexFile({
   // file on subsequent imports of the same path (no mtime check). Without a
   // cache-busting query string, a second build into the same dist/index.js
   // path within one process returns the stale module from the first build.
-  const compiledIndexFile: CompiledIndexFile =
-    await import(`${distFolderRef.path}/index.js?t=${Date.now()}`);
+  const instructionsFileName = validatedPowerup.instructions.replace(/\.ts$/, "");
+  const compiledInstructionsFile: CompiledInstructionsFile =
+    await import(`${distFolderRef.path}/${instructionsFileName}.js?t=${Date.now()}`);
 
   checkCompiledIndexFileForValidExports({
-    compiledIndexFile,
+    compiledIndexFile: compiledInstructionsFile,
     instructionsPath: validatedPowerup.instructions,
   });
 
   return {
-    compiledIndexFile,
+    compiledInstructionsFile: {
+      instructions: compiledInstructionsFile.default.instructions,
+      source: compiledInstructionsFile.default.source,
+    },
     validatedPowerup,
     outputFolder: distFolderRef,
   };

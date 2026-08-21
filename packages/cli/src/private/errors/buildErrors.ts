@@ -13,6 +13,13 @@ const build_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  built_instructions_failed: (instructionsPath: string) => {
+    const errorText =
+      `Failed to build instructions.json based on ${instructionsPath}.\n\n` +
+      `Run "${CLI_CMD} build" from inside a ${SINGULAR_NAME_FOR_CLI} directory.`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   not_a_powerups_package: () => {
     const errorText =
       `This directory is not a ${SINGULAR_NAME_FOR_CLI} package.\n` +

@@ -2,7 +2,7 @@ import { SINGULAR_NAME_FOR_CLI } from "#constants";
 import checkForPreBuildErrors from "#utils/build/check-pre-build-errors";
 import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
 import copyTemplatesToDistFolder from "#utils/build/copy-templates-to-dist-folder";
-import compileIndexFile from "#utils/build/compile-index-file";
+import compileInstructionsFile from "#utils/build/compile-instructions-file";
 import createInstructionsJSONFile from "#utils/build/create-instructions-json-file";
 import { getPackageJson } from "#utils/build/getPackageJson";
 import { Command } from "@liolocs/program";
@@ -25,13 +25,14 @@ const build = new Command({
 
     const pkgJson = await getPackageJson(root);
 
-    const { compiledIndexFile, outputFolder: distFolderRef } =
-      await compileIndexFile({ root, pkgJson });
+    const { compiledInstructionsFile,
+      outputFolder: distFolderRef,
+    } = await compileInstructionsFile({ root, pkgJson });
 
     const {
       validatedCompiledInstructions,
     } = await checkCompiledInstructionsForErrors(
-      compiledIndexFile.default.instructions,
+      compiledInstructionsFile.instructions,
     );
 
     await createInstructionsJSONFile({
@@ -43,7 +44,7 @@ const build = new Command({
       instructionSteps: validatedCompiledInstructions.steps,
       cwd: root,
       distFileRef: distFolderRef,
-      sourceFromCompiledInstructions: compiledIndexFile.default.source,
+      sourceFromCompiledInstructions: compiledInstructionsFile.source,
       powerupName: validatedCompiledInstructions.name,
     });
   },

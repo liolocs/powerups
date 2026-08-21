@@ -67,8 +67,14 @@ test.case("should create instructions.json based on the compiled index file", as
   assert(createdInstructionsJson.steps.length).equals(1);
   assert(createdInstructionsJson.steps[0].type).equals(instructions.steps[0].type);
   assert(createdInstructionsJson.steps[0].name).equals(instructions.steps[0].name);
-  assert(createdInstructionsJson.steps[0].template).equals(instructions.steps[0].template);
-  assert(createdInstructionsJson.steps[0].outputPath).equals(instructions.steps[0].outputPath);
+
+  const createdStep = createdInstructionsJson.steps[0];
+  const originalStep = instructions.steps[0];
+
+  if (createdStep.type === "create" && originalStep.type === "create") {
+    assert(createdStep.template).equals(originalStep.template);
+    assert(createdStep.outputPath).equals(originalStep.outputPath);
+  }
 
   await cleanup();
 });

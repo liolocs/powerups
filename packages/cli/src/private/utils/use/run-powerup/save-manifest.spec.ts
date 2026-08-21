@@ -50,9 +50,14 @@ test.case("should successfully save the manifest", async assert => {
   assert(entries[0].stepType).equals("create");
   assert(entries[0].status).equals("applied");
   assert(entries[0].output.type).equals("create");
-  assert(entries[0].output.path).equals("src/App.tsx");
-  assert(entries[0].output.action).equals("create");
-  assert(entries[0].output.characterCount).equals(412);
+
+  const output = entries[0].output;
+
+  if (output.type === "create") {
+    assert(output.path).equals("src/App.tsx");
+    assert(output.action).equals("create");
+    assert(output.characterCount).equals(412);
+  }
 
   await cleanup();
 });

@@ -1,5 +1,5 @@
 import use_errors from "#errors/useErrors";
-import { type PowerupConfig } from "@liolocs/powerups-sdk";
+import { powerupConfigSchema, type PowerupConfig } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
 
 export async function getConfig(
@@ -10,7 +10,7 @@ export async function getConfig(
   }
 
   try {
-    return await configRef.json();
+    return powerupConfigSchema.parse(await configRef.json());
   } catch {
     throw use_errors.config_invalid_file();
   }

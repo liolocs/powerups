@@ -45,6 +45,10 @@ test.case("routes to create step and returns correct manifest", async assert => 
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
     variables: { name: "MyComponent" },
+    powerupName: "test-powerup",
+    powerupVersion: "1.0.0",
+    powerupLocation: "test-location",
+    powerupType: "multi-use",
   });
 
   assert(manifest.status).equals("applied");
@@ -77,6 +81,10 @@ test.case("resolves variableMap before dispatching to step runner", async assert
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
     variables: { componentName: "Widget" },
+    powerupName: "test-powerup",
+    powerupVersion: "1.0.0",
+    powerupLocation: "test-location",
+    powerupType: "multi-use",
   });
 
   assert(manifest.status).equals("applied");
@@ -107,6 +115,10 @@ test.case("passes through variableUpdate from read step", async assert => {
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
     variables: {},
+    powerupName: "test-powerup",
+    powerupVersion: "1.0.0",
+    powerupLocation: "test-location",
+    powerupType: "multi-use",
   });
 
   assert(manifest.stepType).equals("read");
@@ -126,6 +138,10 @@ test.case("throws unsupported_step_type error for unknown step type", async asse
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
     variables: {},
+    powerupName: "test-powerup",
+    powerupVersion: "1.0.0",
+    powerupLocation: "test-location",
+    powerupType: "multi-use",
   })).throwsAsync(UseErrorCode.unsupported_step_type);
 
   await cleanup();

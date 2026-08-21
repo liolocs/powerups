@@ -36,7 +36,10 @@ test.case("should create a powerup package with correct folder structure", async
   assert(await packageDir.append("/templates/component.ts").exists()).true();
 
   // The package.json must declare itself as a powerups package.
-  const pkgJson = await packageDir.append("/package.json").json();
+  const pkgJson = await packageDir.append("/package.json").json() as {
+    keywords: string[];
+    powerup: { instructions: string };
+  };
   assert(Array.isArray(pkgJson.keywords)).true();
   assert(pkgJson.keywords.includes("powerups-package")).true();
   assert(pkgJson.powerup.instructions).equals("index.ts");

@@ -16,7 +16,7 @@ export default async function saveManifest({
   if (!fileExists) {
     await ref.write(JSON.stringify([manifest]) + "\n");
   } else {
-    const existing = await ref.json() as ManifestEntry[];
+    const existing = await ref.json() as unknown as ManifestEntry[];
 
     existing.push(manifest);
 

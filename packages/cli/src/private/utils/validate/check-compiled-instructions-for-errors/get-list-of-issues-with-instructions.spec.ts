@@ -1,5 +1,5 @@
 import test from "#test-utils/test/index";
-import { type Instructions } from "@liolocs/powerups-sdk";
+import { type Instructions, type Step } from "@liolocs/powerups-sdk";
 import { getListOfIssuesWithInstructions, instruction_errors } from "#utils/validate/check-compiled-instructions-for-errors/get-list-of-issues-with-instructions";
 
 test.case("should have no issues with valid instructions", async assert => {
@@ -88,7 +88,7 @@ test.case("should have no errors when parent variable is mapped to child through
 
 test.case("should flag when an unknown variable is used", async assert => {
   const unknownVariable = "random";
-  const steps = [
+  const steps: Step[] = [
     { type: "read", name: "pkg", path: "{{random}}.json", as: "pkgName", jsonPath: "name" },
     { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "src/{{random}}.ts" },
   ];

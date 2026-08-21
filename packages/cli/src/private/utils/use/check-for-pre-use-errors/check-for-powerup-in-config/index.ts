@@ -1,5 +1,5 @@
-import { type PowerupConfig } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
+import { getConfig } from "#utils/use/get-powerup/getConfig";
 import getIsPowerupInConfig from "#utils/use/check-for-pre-use-errors/check-for-powerup-in-config/getIsPowerupInConfig";
 import use_errors from "#errors/useErrors";
 import { CLI_FOLDER_NAME } from "#constants";
@@ -29,26 +29,22 @@ export default async function checkForPowerupInConfig({
   }
 
   if (localConfigExists && !globalConfigExists) {
-    const localConfig: PowerupConfig =
-      await localConfigRef.json();
+    const localConfig = await getConfig(localConfigRef);
     const isPowerupInLocalConfig = getIsPowerupInConfig({ config: localConfig, powerupName });
 
     if (!isPowerupInLocalConfig) {
       throw use_errors.not_installed(powerupName!);
     }
   } else if (!localConfigExists && globalConfigExists) {
-    const globalConfig: PowerupConfig =
-      await globalConfigRef.json();
+    const globalConfig = await getConfig(globalConfigRef);
     const isPowerupInGlobalConfig = getIsPowerupInConfig({ config: globalConfig, powerupName });
 
     if (!isPowerupInGlobalConfig) {
       throw use_errors.not_installed(powerupName!);
     }
   } else {
-    const localConfig: PowerupConfig =
-      await localConfigRef.json();
-    const globalConfig: PowerupConfig =
-      await globalConfigRef.json();
+    const localConfig = await getConfig(localConfigRef);
+    const globalConfig = await getConfig(globalConfigRef);
 
     const isPowerupInLocalConfig = getIsPowerupInConfig({ config: localConfig, powerupName });
     const isPowerupInGlobalConfig = getIsPowerupInConfig({ config: globalConfig, powerupName });

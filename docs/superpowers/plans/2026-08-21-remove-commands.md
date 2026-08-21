@@ -105,20 +105,18 @@ with:
   examples: [
     `$ ${CLI_CMD} install npm:my-package`,
     `$ ${CLI_CMD} install npm:my-package -l`,
-    `$ ${CLI_CMD} create my-powerup`,
-    `$ ${CLI_CMD} create my-powerup --working-dir`,
-    `$ ${CLI_CMD} use my-powerup --var name=foo`,
+    `$ ${CLI_CMD} install git:<source>`,
+    `$ ${CLI_CMD} install git:<source> -l`,
+    `$ ${CLI_CMD} create <powerup-name>`,
+    `$ ${CLI_CMD} create <powerup-name> --capture=all`,
+    `$ ${CLI_CMD} create <powerup-name> --capture=workingDir`,
+    `$ ${CLI_CMD} use <powerup-name> --var name=foo`,
   ],
 ```
 
 This removes examples for `project init`, `update`, `pack create`, `pack move`, `find`, and the non-existent `info` command, keeping `install`, `create`, and `use`.
 
-- [ ] **Step 2: Verify the build still passes**
-
-Run: `cd packages/cli && npx tsgo`
-Expected: compiles with no errors.
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
 git add packages/cli/src/bin.ts
@@ -230,22 +228,12 @@ git rm \
   packages/cli/src/private/utils/validate-output.ts
 ```
 
-- [ ] **Step 6: Verify the build passes**
-
-Run: `cd packages/cli && npx tsgo`
-Expected: compiles with no errors. This confirms no kept production code references any deleted file.
-
-- [ ] **Step 7: Verify lint passes**
-
-Run: `cd packages/cli && npm run lint`
-Expected: no errors. (If eslint reports deleted files it had cached, run `npx eslint . --cache --cache-strategy content` or clear `.eslintcache`.)
-
-- [ ] **Step 8: Verify the test suite passes**
+- [ ] **Step 6: Verify the test suite passes**
 
 Run: `cd packages/cli && npm test`
 Expected: all kept-command and kept-util specs pass; no spec references deleted code. (The `use/run-powerup/**`, `build/**`, `create/**`, `install/**` specs and their `test-utils` — including `capture-stdout.ts`, `git.ts`, `install-new.ts`, `copy-templates-to-dist-folder.ts` — all remain and pass.)
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add -A packages/cli
@@ -261,12 +249,7 @@ git commit -m "refactor: remove add/find/list/metrics/pack/project/update comman
 Run: `git status -- packages/cli/src/private/scaffold && ls packages/cli/src/private/scaffold`
 Expected: no changes; the folder still contains `agents.ts`, `detect.ts`, `index.ts`, `write.ts`, their specs, and `templates/`.
 
-- [ ] **Step 2: Confirm the four kept commands still resolve**
-
-Run: `cd packages/cli && npx tsgo && npm test`
-Expected: build and tests pass.
-
-- [ ] **Step 3: Show the resulting diff summary**
+- [ ] **Step 2: Show the resulting diff summary**
 
 Run: `git log --oneline -3 && git diff --stat HEAD~3 HEAD -- packages/cli`
 Expected: 3 commits; the diff stat shows `commands/index.ts` and `bin.ts` modified, 81 files deleted, scaffold untouched.

@@ -41,6 +41,12 @@ const install_errors = error.coded({
     const errorText = `${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first.`;
     return t`${errorBGText}${errorText}`;
   },
+
+  global_internal_not_installable: () => {
+    const errorText =
+      `Global internal packages are not installable as they are already available!`;
+    return t`${errorBGText}${errorText}`;
+  },
 });
 
 export type InstallErrorCode = keyof typeof install_errors;

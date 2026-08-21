@@ -52,6 +52,10 @@ export const GLOBAL_CONFIG_PATH = path.join(GLOBAL_ROOT, CONFIG_FILE_NAME);
 
 export const GLOBAL_INTERNAL_PATH = path.join(GLOBAL_ROOT, INSTALLED_FOLDER.internal);
 
+export const GLOBAL_NPM_PATH = path.join(GLOBAL_ROOT, INSTALLED_FOLDER.npm);
+
+export const GLOBAL_GIT_PATH = path.join(GLOBAL_ROOT, INSTALLED_FOLDER.git);
+
 export const FOLDER_FOR_NPM_INSTALLED_PACKAGES = "npm";
 
 export const FOLDER_FOR_GIT_INSTALLED_PACKAGES = "git";

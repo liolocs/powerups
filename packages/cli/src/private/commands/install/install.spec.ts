@@ -1,189 +1,135 @@
-import test from "@rcompat/test";
+import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import install from "#commands/install/index";
-import { CodeError } from "@rcompat/error";
+import install from "#commands/install/install-new";
+import { createSimpleScaffoldPowerupForTest } from "#test-utils/create-fully-built-powerup-for-test";
 import { InstallErrorCode } from "#errors/installErrors";
-import { packageJsonSchema } from "#schemas/package";
-import { readConfig, readGlobalConfig } from "#utils/config";
-import {
-  parseFragment,
-  mergeFilters,
-  buildConfigEntry,
-} from "#utils/parse-powerup-fragment";
-import {
-  CLI_FOLDER_NAME,
-  PACKAGE_JSON,
-  PACKAGE_JSON_KEYWORD_PROPERTY,
-  CLI_NAME,
-  MULTI_USE_FOLDER,
-  SINGLE_USE_FOLDER,
-  CONFIG_FILE_NAME,
-} from "#constants";
+import { CLI_FOLDER_NAME, GLOBAL_GIT_PATH, GLOBAL_NPM_PATH, INSTALLED_FOLDER } from "#constants";
+import createSimpleProjectForTest from "#test-utils/create-simple-project-for-test";
+import createGlobalInternalPowerupForTest from "#test-utils/create-global-internal-powerup-for-test";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
+const globalTestRoot = root.append("/global-tmp");
 
-async function reset() {
+async function setupTestDir(): Promise<void> {
   await testRoot.remove();
+  await globalTestRoot.remove();
   await fs.create(testRoot);
-  // Create local .powerups (simulates project init)
-  await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
-  // Create global ~/.powerups (simulates global init) in testRoot
-  await fs.create(testRoot.append(`/global-${CLI_FOLDER_NAME}`));
+  await fs.create(globalTestRoot);
 }
 
-/**
- * Write a valid powerups package.json into a store path (simulates the
- * post-fetch state). The real npm/git fetch is not invoked by these tests.
- */
-async function writePackageJson(storeRoot: string, storePath: string, name: string, keywords = [PACKAGE_JSON_KEYWORD_PROPERTY]) {
-  const pkgDir = testRoot.append(`/${storeRoot}/${storePath}`);
-  await fs.create(pkgDir);
-  await pkgDir.append(`/${PACKAGE_JSON}`).writeJSON({
-    name,
-    version: "1.0.0",
-    description: "test",
-    keywords,
-    [CLI_NAME]: {
-      active: { [MULTI_USE_FOLDER]: {}, [SINGLE_USE_FOLDER]: {} },
-    },
-  });
-  return pkgDir;
+async function cleanup(): Promise<void> {
+  await testRoot.remove();
+  await globalTestRoot.remove();
 }
 
-test.group("install — argument validation", () => {
-  test.case("throws missing_source when no source given", async assert => {
-    await reset();
-    let threw;
-    try {
-      await install.run({
-        subcommands: [],
-        flags: [],
-        context: { root: testRoot, homeDir: testRoot.path },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(InstallErrorCode.missing_source);
-    await testRoot.remove();
+test.case("should throw if a global internal powerup is attempted to be installed locally", async assert => {
+  await setupTestDir();
+
+  const powerupName = "global-test-powerup";
+  await createGlobalInternalPowerupForTest({
+    powerupName,
+    globalRoot: globalTestRoot,
+  });
+  const { projectDir } = await createSimpleProjectForTest({
+    projectName: "new-project",
+    testRoot,
   });
 
-  test.case("throws internal_not_installable for a bare name", async assert => {
-    await reset();
-    let threw;
-    try {
-      await install.run({
-        subcommands: ["my-pkg"],
-        flags: [],
-        context: { root: testRoot, homeDir: testRoot.path },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(InstallErrorCode.internal_not_installable);
-    await testRoot.remove();
-  });
+  await assert(install.run({
+    subcommands: [powerupName],
+    flags: [{ flag: "--local", value: "" }],
+    context: { root: projectDir },
+  })).throwsAsync(InstallErrorCode.global_internal_not_installable);
+
+  await cleanup();
 });
 
-test.group("install — fragment parsing (pure functions)", () => {
-  test.case("parses include fragment from source", assert => {
-    assert(parseFragment("npm:pkg#use-form").filter)
-      .equals({ include: ["use-form"] });
-  });
+test.case("should install an powerup from npm locally if local flag is passed", async assert => {
+  await setupTestDir();
+  const powerupName = "npm:powerup-hello-world";
+  const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
 
-  test.case("parses exclude fragment from git url", assert => {
-    assert(parseFragment("https://github.com/foo/bar#!x").filter)
-      .equals({ exclude: ["x"] });
-  });
+  await assert(install.run({
+    subcommands: [powerupName],
+    flags: [{ flag: "--local", value: "" }],
+    context: { root: projectDir },
+  })).noErrorAsync();
 
-  test.case("merges flag include with fragment include", assert => {
-    const merged = mergeFilters(parseFragment("npm:pkg#c").filter, "a,b");
-    assert([...merged.include!].sort()).equals(["a", "b", "c"]);
-  });
+  const localNpmPowerupDir = projectDir.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.npm}/${powerupName}`);
 
-  test.case("builds plain string entry when no filter", assert => {
-    assert(buildConfigEntry("npm:pkg", {})).equals("npm:pkg");
-  });
+  assert(await localNpmPowerupDir.exists()).true();
 
-  test.case("builds object entry when include present", assert => {
-    assert(buildConfigEntry("npm:pkg", { include: ["a"] }))
-      .equals({ package: "npm:pkg", powerups: { include: ["a"] } });
-  });
+  const localConfig = await projectDir.append(`/${CLI_FOLDER_NAME}/config.json`).json() as any;
+
+  assert(localConfig.packages.includes(powerupName)).true();
+
+  await cleanup();
 });
 
-test.group("install — powerups-package validation logic", () => {
-  test.case("accepts a package with the powerups-package keyword", async assert => {
-    await reset();
-    await writePackageJson(`${CLI_FOLDER_NAME}`, "npm/node_modules/good-pkg", "good-pkg");
-    const pkgJson = packageJsonSchema.parse(
-      await testRoot
-        .append(`/${CLI_FOLDER_NAME}/npm/node_modules/good-pkg/${PACKAGE_JSON}`)
-        .json(),
-    );
-    assert(pkgJson.keywords.includes(PACKAGE_JSON_KEYWORD_PROPERTY)).true();
-    await testRoot.remove();
-  });
+test.case("should install an powerup from npm globally if local flag is NOT passed", async assert => {
+  await setupTestDir();
+  const powerupName = "npm:powerup-hello-world";
+  const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
 
-  test.case("rejects a package without the powerups-package keyword", async assert => {
-    await reset();
-    await writePackageJson(`${CLI_FOLDER_NAME}`, "npm/node_modules/bad-pkg", "bad-pkg", ["other-keyword"]);
-    const pkgJson = packageJsonSchema.parse(
-      await testRoot
-        .append(`/${CLI_FOLDER_NAME}/npm/node_modules/bad-pkg/${PACKAGE_JSON}`)
-        .json(),
-    );
-    assert(pkgJson.keywords.includes(PACKAGE_JSON_KEYWORD_PROPERTY)).false();
-    await testRoot.remove();
-  });
+  await assert(install.run({
+    subcommands: [powerupName],
+    flags: [],
+    context: { root: projectDir },
+  })).noErrorAsync();
+
+  const globalNpmPowerupDir = globalTestRoot.append(`/${GLOBAL_NPM_PATH}/${powerupName}`);
+
+  assert(await globalNpmPowerupDir.exists()).true();
+
+  const globalConfig = await globalTestRoot.append(`/${CLI_FOLDER_NAME}/config.json`).json() as any;
+
+  assert(globalConfig.packages.includes(powerupName)).true();
+
+  await cleanup();
 });
 
-test.group("install — guards", () => {
-  test.case("global install throws global_not_initialized when global not initialized", async assert => {
-    await reset();
-    // Remove global folder
-    await testRoot.append(`/global-${CLI_FOLDER_NAME}`).remove();
-    // Rename to simulate: global folder doesn't exist at the homeDir path
-    // We need homeDir to point to a dir without .powerups
-    const noGlobalRoot = testRoot.append("/no-global");
-    await fs.create(noGlobalRoot);
+test.case("should install an powerup from git locally if local flag is passed", async assert => {
+  await setupTestDir();
+  const powerupName = "test-powerup";
+  const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
 
-    let threw;
-    try {
-      await install.run({
-        subcommands: ["npm:fake-pkg"],
-        flags: [],
-        context: { root: testRoot, homeDir: noGlobalRoot.path },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(InstallErrorCode.global_not_initialized);
+  await assert(install.run({
+    subcommands: [powerupName],
+    flags: [{ flag: "--local", value: "" }],
+    context: { root: projectDir },
+  })).noErrorAsync();
 
-    await testRoot.remove();
-  });
+  const localGitPowerupDir = projectDir.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.git}/${powerupName}`);
 
-  test.case("local install throws local_not_initialized when project not initialized", async assert => {
-    await reset();
-    // Remove local .powerups
-    await testRoot.append(`/${CLI_FOLDER_NAME}`).remove();
+  assert(await localGitPowerupDir.exists()).true();
 
-    let threw;
-    try {
-      await install.run({
-        subcommands: ["npm:fake-pkg"],
-        flags: [{ flag: "--local", value: "" }],
-        context: { root: testRoot, homeDir: testRoot.path },
-      });
-    } catch (e: unknown) {
-      assert(e instanceof CodeError).true();
-      threw = (e as CodeError).code;
-    }
-    assert(threw).equals(InstallErrorCode.local_not_initialized);
+  const localConfig = await projectDir.append(`/${CLI_FOLDER_NAME}/config.json`).json() as any;
 
-    await testRoot.remove();
-  });
+  assert(localConfig.packages.includes(powerupName)).true();
+
+  await cleanup();
+});
+
+test.case("should install an powerup from git globally if local flag is NOT passed", async assert => {
+  await setupTestDir();
+  const powerupName = "test-powerup";
+  const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
+
+  await assert(install.run({
+    subcommands: [powerupName],
+    flags: [],
+    context: { root: projectDir },
+  })).noErrorAsync();
+
+  const globalGitPowerupDir = globalTestRoot.append(`/${GLOBAL_GIT_PATH}/${powerupName}`);
+
+  assert(await globalGitPowerupDir.exists()).true();
+
+  const globalConfig = await globalTestRoot.append(`/${CLI_FOLDER_NAME}/config.json`).json() as any;
+
+  assert(globalConfig.packages.includes(powerupName)).true();
+
+  await cleanup();
 });

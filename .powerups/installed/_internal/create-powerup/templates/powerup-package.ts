@@ -6,18 +6,17 @@ export default function(variables: Record<string, string>): string {
     version: "1.0.0",
     description,
     type: "module",
-    scripts: { build: "pup build" },
+    scripts: {},
     keywords: ["powerups-package"],
     powerup: { instructions: "index.ts", compatibility: {} },
     files: ["dist"],
+    release: "commit-and-tag-version --preset conventionalcommits --path .",
+    "release:dry-run": "commit-and-tag-version --preset conventionalcommits --path . --dry-run",
     exports: {
       ".": {
         import: "./dist/index.js",
         types: "./dist/index.d.ts",
       },
-    },
-    dependencies: {
-      "@liolocs/powerups-sdk": "link:../../packages/sdk",
     },
   };
 

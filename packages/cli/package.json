@@ -56,7 +56,6 @@
     "@types/nunjucks": "^3.2.6"
   },
   "bin": {
-    "pup": "./lib/bin.js",
-    "commit-and-tag-version": "^13.1.2"
+    "pup": "./lib/bin.js"
   }
 }

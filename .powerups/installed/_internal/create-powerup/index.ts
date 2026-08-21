@@ -42,6 +42,13 @@ const instructions: Instructions = {
       template: "templates/gitignore.ts",
       outputPath: "{{outputPath}}/{{name}}/.gitignore",
     },
+    {
+      type: "install",
+      name: "deps",
+      dependencies: ["@liolocs/powerups-sdk"],
+      devDependencies: ["commit-and-tag-version"],
+      packageManager: "auto",
+    },
   ],
 };
 

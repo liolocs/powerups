@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "Scaffold a new powerup package",
   "type": "module",
-  "scripts": {
-    "build": "pup build"
-  },
+  "scripts": {},
   "keywords": [
     "powerups-package"
   ],

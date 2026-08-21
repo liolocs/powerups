@@ -59,34 +59,46 @@ function printStepSummary({
     manifest: ManifestEntry;
 }): void {
   const { stepName, status, output } = manifest;
+  const dim = cli.fg.dim;
 
   if (status === "skipped-warning") {
-    cli.print(`Skipped: ${stepName}\n`);
+    cli.print(dim(`Skipped: ${stepName}\n`));
     return;
   }
 
   if (output.type === "create") {
-    cli.print(`Created: ${output.path}\n`);
+    cli.print(dim(`Created: ${output.path}\n`));
     return;
   }
 
   if (output.type === "modify") {
-    cli.print(`Modified: ${output.path}\n`);
+    cli.print(dim(`Modified: ${output.path}\n`));
     return;
   }
 
   if (output.type === "read") {
-    cli.print(`Read: ${output.variable}\n`);
+    cli.print(dim(`Read: ${output.variable}\n`));
     return;
   }
 
   if (output.type === "delete") {
-    cli.print(`Deleted: ${output.path}\n`);
+    cli.print(dim(`Deleted: ${output.path}\n`));
     return;
   }
 
   if (output.type === "install") {
-    cli.print(`Installed dependencies\n`);
+    const allDeps = [];
+    if (is.defined(output.dependencies) && output.dependencies.length > 0) {
+      allDeps.push(...output.dependencies);
+    }
+    if (is.defined(output.devDependencies) && output.devDependencies.length > 0) {
+      allDeps.push(...output.devDependencies);
+    }
+    if (is.defined(output.peerDependencies) && output.peerDependencies.length > 0) {
+      allDeps.push(...output.peerDependencies);
+    }
+
+    cli.print(dim(`Installed dependencies: ${allDeps.join(", ")}\n`));
     return;
   }
 }

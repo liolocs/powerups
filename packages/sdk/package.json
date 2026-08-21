@@ -13,8 +13,8 @@
     "lint:fix": "eslint . --fix",
     "prepublishOnly": "npm run build",
     "test": "npx proby",
-    "release": "commit-and-tag-version --preset conventionalcommits",
-    "release:dry-run": "commit-and-tag-version --preset conventionalcommits --dry-run"
+    "release": "commit-and-tag-version --preset conventionalcommits --path .",
+    "release:dry-run": "commit-and-tag-version --preset conventionalcommits --path . --dry-run"
   },
   "type": "module",
   "files": [

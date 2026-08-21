@@ -45,6 +45,7 @@ const instructions: Instructions = {
     {
       type: "install",
       name: "deps",
+      target: "{{outputPath}}/{{name}}",
       dependencies: ["@liolocs/powerups-sdk"],
       devDependencies: ["commit-and-tag-version"],
       packageManager: "auto",

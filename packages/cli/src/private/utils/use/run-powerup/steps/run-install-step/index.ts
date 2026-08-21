@@ -4,20 +4,29 @@ import { type FileRef } from "@rcompat/fs";
 import io from "@rcompat/io";
 import is from "@rcompat/is";
 import { type BaseManifestProperties } from "#utils/use/run-powerup/run-step";
+import type { ResolvedVariable } from "#utils/variables";
+import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
 
 export default async function runInstallStep({
   step,
   isDryRun,
   destination,
+  variables,
 }: {
   step: InstallStep;
   isDryRun: boolean;
   destination: FileRef;
+  variables: ResolvedVariable;
 }): Promise<{ manifest: Omit<InstallManifestEntry, BaseManifestProperties> }> {
-  const { packageManager } = step;
+  const { packageManager, target } = step;
+
+  const installDir = is.defined(target)
+    ? destination.append(`/${applyVariablesToTemplateString({ templateString: target, variables })}`)
+    : destination;
+
   const packageManagerToUse = await getPackageManagerToUse({
     packageManager,
-    destination,
+    destination: installDir,
   });
 
   let installedDependencies: { dependencies: string[]; devDependencies: string[]; peerDependencies: string[] };
@@ -28,7 +37,7 @@ export default async function runInstallStep({
       devDependencies: step.devDependencies ?? [],
       peerDependencies: step.peerDependencies ?? [],
       packageManager: packageManagerToUse,
-      cwd: destination,
+      cwd: installDir,
     });
   } else {
     installedDependencies = {

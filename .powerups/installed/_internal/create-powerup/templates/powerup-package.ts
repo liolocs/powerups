@@ -6,12 +6,14 @@ export default function(variables: Record<string, string>): string {
     version: "1.0.0",
     description,
     type: "module",
-    scripts: {},
+    scripts: {
+      build: "npx @liolocs/powerups-cli build",
+      release: "commit-and-tag-version --preset conventionalcommits --path .",
+      "release:dry-run": "commit-and-tag-version --preset conventionalcommits --path . --dry-run",
+    },
     keywords: ["powerups-package"],
     powerup: { instructions: "index.ts", compatibility: {} },
     files: ["dist"],
-    release: "commit-and-tag-version --preset conventionalcommits --path .",
-    "release:dry-run": "commit-and-tag-version --preset conventionalcommits --path . --dry-run",
     exports: {
       ".": {
         import: "./dist/index.js",

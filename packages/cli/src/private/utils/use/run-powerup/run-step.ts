@@ -86,7 +86,7 @@ export default async function runStep({
     }
     case "install": {
       const result = await runInstallStep({
-        step, isDryRun, destination,
+        step, isDryRun, destination, variables: stepVariables,
       });
 
       return {

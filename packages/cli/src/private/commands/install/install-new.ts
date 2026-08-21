@@ -3,7 +3,7 @@ import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
 import { InstallErrorCode } from "#errors/installErrors";
 import { SINGULAR_NAME_FOR_CLI } from "#constants";
-import { Command, Flag } from "@liolocs/program";
+import { Command, type Flag } from "@liolocs/program";
 
 const dryRunFlag: Flag = {
   name: "dryRun",

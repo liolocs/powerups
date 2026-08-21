@@ -3,7 +3,7 @@
 
 import test from "#test-utils/test/index";
 import { type Instructions } from "@liolocs/powerups-sdk";
-import checkCompiledInstructionsForErrors from "#utils/build/check-compiled-instructions-for-errors/index";
+import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
 import { BuildErrorCode } from "#errors/buildErrors";
 
 test.case("should not have any issues with valid instructions", async assert => {

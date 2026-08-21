@@ -1,4 +1,4 @@
-import { CLI_FOLDER_NAME, INSTALLED_FOLDER, INTERNAL_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
 import fs from "@rcompat/fs";
 import { type Instructions } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";

@@ -1,9 +1,6 @@
 import test from "#test-utils/test/index";
 import { type Instructions } from "@liolocs/powerups-sdk";
-import {
-  getListOfIssuesWithInstructions,
-  instruction_errors,
-} from "#utils/build/check-compiled-instructions-for-errors/get-list-of-issues-with-instructions";
+import { getListOfIssuesWithInstructions, instruction_errors } from "#utils/validate/check-compiled-instructions-for-errors/get-list-of-issues-with-instructions";
 
 test.case("should have no issues with valid instructions", async assert => {
   const instructions: Instructions = {

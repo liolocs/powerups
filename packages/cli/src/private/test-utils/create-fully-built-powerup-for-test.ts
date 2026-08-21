@@ -2,7 +2,7 @@ import { type Instructions } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
 import { createPowerupPackageForTest, type DefaultTemplateForTest } from "#test-utils/create-powerup-for-test";
 import build from "#commands/build/index";
-import { CLI_FOLDER_NAME, INSTALLED_FOLDER, INTERNAL_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
 import git from "#utils/git";
 
 const defaultInstructions = (powerupName: string): Instructions => ({

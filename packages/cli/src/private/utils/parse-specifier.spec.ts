@@ -1,5 +1,6 @@
 import test from "@rcompat/test";
 import { parseSpecifier, reconstructGitSource } from "#utils/parse-specifier";
+import { INSTALLED_FOLDER } from "#constants";
 
 test.group("parseSpecifier", () => {
   test.case("parses npm: specifier", assert => {
@@ -41,7 +42,7 @@ test.group("parseSpecifier", () => {
     const spec = parseSpecifier("pup-internal");
     assert(spec.type).equals("internal");
     assert(spec.name).equals("pup-internal");
-    assert(spec.storePath).equals("internal/pup-internal");
+    assert(spec.storePath).equals(`${INSTALLED_FOLDER.internal}/pup-internal`);
   });
 });
 

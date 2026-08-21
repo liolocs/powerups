@@ -1,4 +1,4 @@
-import { CLI_FOLDER_NAME, INTERNAL_FOLDER, PACKAGE_JSON } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER, PACKAGE_JSON } from "#constants";
 import { BuildErrorCode } from "#errors/buildErrors";
 import captureStdout from "#test-utils/capture-stdout";
 import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
@@ -30,7 +30,7 @@ test.case("should copy own templates referenced by steps into the dist folder", 
   const instructions = await createPowerupPackageForTest({ powerupName, testRoot });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
   const distFileRef = packageDir.append("/dist");
   await fs.create(distFileRef.path);
@@ -74,7 +74,7 @@ test.case("should throw template_not_found when an own template does not exist",
   await createPowerupPackageForTest({ powerupName, testRoot, instructions });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
   const distFileRef = packageDir.append("/dist");
   await fs.create(distFileRef.path);
@@ -124,7 +124,7 @@ test.case("should skip steps that do not declare a template", async assert => {
   await createPowerupPackageForTest({ powerupName, testRoot, instructions });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
   const distFileRef = packageDir.append("/dist");
   await fs.create(distFileRef.path);
@@ -169,7 +169,7 @@ test.case("should only copy each own template once when referenced by multiple s
   await createPowerupPackageForTest({ powerupName, testRoot, instructions });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
   const distFileRef = packageDir.append("/dist");
   await fs.create(distFileRef.path);
@@ -204,7 +204,7 @@ test.case("should copy internal templates from a built child package's dist fold
 
   // Simulate a built child package: package.json + dist/templates/component.ts
   const childPackageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${childName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${childName}`,
   );
   await fs.create(childPackageDir.append("/dist/templates"));
   await childPackageDir.append(`/${PACKAGE_JSON}`).writeJSON({
@@ -216,7 +216,7 @@ test.case("should copy internal templates from a built child package's dist fold
   await childPackageDir.append("/dist/templates/component.ts").write(childTemplateContent);
 
   const parentPackageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${parentName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${parentName}`,
   );
   const distFileRef = parentPackageDir.append("/dist");
   await fs.create(distFileRef.path);
@@ -255,7 +255,7 @@ test.case("should resolve the child source from sourceFromCompiledInstructions w
   await createPowerupPackageForTest({ powerupName: parentName, testRoot });
 
   const childPackageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${childName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${childName}`,
   );
   await fs.create(childPackageDir.append("/dist/templates"));
   await childPackageDir.append(`/${PACKAGE_JSON}`).writeJSON({
@@ -267,7 +267,7 @@ test.case("should resolve the child source from sourceFromCompiledInstructions w
   await childPackageDir.append("/dist/templates/component.ts").write(childTemplateContent);
 
   const parentPackageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${parentName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${parentName}`,
   );
   const distFileRef = parentPackageDir.append("/dist");
   await fs.create(distFileRef.path);
@@ -306,7 +306,7 @@ test.case("should throw child_not_built when the child package dist template is 
 
   // Child package exists with a package.json but its dist template was never built.
   const childPackageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${childName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${childName}`,
   );
   await fs.create(childPackageDir.append("/dist"));
   await childPackageDir.append(`/${PACKAGE_JSON}`).writeJSON({
@@ -316,7 +316,7 @@ test.case("should throw child_not_built when the child package dist template is 
   });
 
   const parentPackageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${parentName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${parentName}`,
   );
   const distFileRef = parentPackageDir.append("/dist");
   await fs.create(distFileRef.path);
@@ -352,7 +352,7 @@ test.case("should only copy each internal template once when referenced by multi
   await createPowerupPackageForTest({ powerupName: parentName, testRoot });
 
   const childPackageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${childName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${childName}`,
   );
   await fs.create(childPackageDir.append("/dist/templates"));
   await childPackageDir.append(`/${PACKAGE_JSON}`).writeJSON({
@@ -364,7 +364,7 @@ test.case("should only copy each internal template once when referenced by multi
   await childPackageDir.append("/dist/templates/component.ts").write(childTemplateContent);
 
   const parentPackageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${parentName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${parentName}`,
   );
   const distFileRef = parentPackageDir.append("/dist");
   await fs.create(distFileRef.path);
@@ -408,7 +408,7 @@ test.case("should print the powerup name in the success message", async assert =
   await createPowerupPackageForTest({ powerupName, testRoot });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
   const distFileRef = packageDir.append("/dist");
   await fs.create(distFileRef.path);

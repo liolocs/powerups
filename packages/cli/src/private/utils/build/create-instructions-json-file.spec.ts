@@ -1,12 +1,10 @@
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
+import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
 import test from "#test-utils/test/index";
+import createInstructionsJSONFile from "#utils/build/create-instructions-json-file";
+import { type Instructions } from "@liolocs/powerups-sdk";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import { getPackageJson } from "#utils/build/getPackageJson";
-import { CLI_FOLDER_NAME, INTERNAL_FOLDER, PACKAGE_JSON } from "#constants";
-import { BuildErrorCode } from "#errors/buildErrors";
-import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
-import { type Instructions } from "@liolocs/powerups-sdk";
-import createInstructionsJSONFile from "#utils/build/create-instructions-json-file";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -46,7 +44,7 @@ test.case("should create instructions.json based on the compiled index file", as
   await createPowerupPackageForTest({ testRoot, instructions });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
 
    const distDirRef = packageDir.append("/dist");

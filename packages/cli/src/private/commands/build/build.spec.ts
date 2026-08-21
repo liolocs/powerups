@@ -1,5 +1,5 @@
 import build from "#commands/build/index";
-import { CLI_FOLDER_NAME, INTERNAL_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
 import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
@@ -23,7 +23,7 @@ test.case("should build the dist folder if the index.ts is valid", async assert 
   await createPowerupPackageForTest({ powerupName, testRoot });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
 
   await assert(build.run({
@@ -32,7 +32,7 @@ test.case("should build the dist folder if the index.ts is valid", async assert 
     context: { root: packageDir },
   })).noErrorAsync();
 
-  const distFolder = testRoot.append(`/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/${powerupName}/dist`);
+  const distFolder = testRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}/dist`);
 
   assert(await fs.exists(distFolder)).true();
   assert(await fs.exists(distFolder.append("/index.js"))).true();

@@ -1,4 +1,4 @@
-import { INTERNAL_FOLDER, FOLDER_FOR_NPM_INSTALLED_PACKAGES, FOLDER_FOR_GIT_INSTALLED_PACKAGES } from "#constants";
+import { FOLDER_FOR_NPM_INSTALLED_PACKAGES, FOLDER_FOR_GIT_INSTALLED_PACKAGES, INSTALLED_FOLDER } from "#constants";
 
 export type SourceType = "internal" | "npm" | "git";
 
@@ -55,7 +55,7 @@ export function parseSpecifier(source: string): PackageSpecifier {
     type: "internal",
     source,
     name: source,
-    storePath: `${INTERNAL_FOLDER}/${source}`,
+    storePath: `${INSTALLED_FOLDER.internal}/${source}`,
   };
 }
 

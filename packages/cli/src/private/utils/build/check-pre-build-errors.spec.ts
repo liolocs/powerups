@@ -1,6 +1,6 @@
 import runtime from "@rcompat/runtime";
 import fs from "@rcompat/fs";
-import { CLI_FOLDER_NAME, INTERNAL_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
 import test from "#test-utils/test/index";
 import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
 import checkForPreBuildErrors from "#utils/build/check-pre-build-errors";
@@ -23,7 +23,7 @@ test.case("should flag when package.json is missing", async assert => {
   await createPowerupPackageForTest({ testRoot });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/test-powerup`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/test-powerup`,
   );
   await packageDir.append("/package.json").remove();
 
@@ -37,7 +37,7 @@ test.case("should flag when package.json is missing powerups keyword", async ass
   await createPowerupPackageForTest({ testRoot });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/test-powerup`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/test-powerup`,
   );
   await packageDir.append("/package.json").writeJSON({
     name: "test-powerup",
@@ -69,7 +69,7 @@ test.case("should flag when powerups shape is invalid", async assert => {
   await createPowerupPackageForTest({ testRoot });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/test-powerup`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/test-powerup`,
   );
   await packageDir.append("/package.json").writeJSON({
     name: "test-powerup",
@@ -106,7 +106,7 @@ test.case("should have no errors when everything is valid", async assert => {
   await createPowerupPackageForTest({ testRoot });
 
   const packageDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INTERNAL_FOLDER}/test-powerup`,
+    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/test-powerup`,
   );
 
   await assert(checkForPreBuildErrors(packageDir)).noErrorAsync();

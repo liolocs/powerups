@@ -5,7 +5,14 @@
   "description": "SDK for powerups system",
   "license": "MIT",
   "packageManager": "pnpm@10.33.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/liolocs/powerups",
+    "directory": "packages/sdk"
+  },
   "scripts": {
     "build": "npm run clean && tsgo",
     "clean": "rm -rf ./lib",

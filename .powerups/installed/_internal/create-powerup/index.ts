@@ -26,6 +26,12 @@ const instructions: Instructions = {
     },
     {
       type: "create",
+      name: "create-repo-sh",
+      template: "templates/create-repo-sh.ts",
+      outputPath: "{{outputPath}}/{{name}}/scripts/create-github-repo.sh",
+    },
+    {
+      type: "create",
       name: "package",
       template: "templates/powerup-package.ts",
       outputPath: "{{outputPath}}/{{name}}/package.json",

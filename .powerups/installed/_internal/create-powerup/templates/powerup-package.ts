@@ -6,6 +6,15 @@ export default function(variables: Record<string, string>): string {
     version: "1.0.0",
     description,
     type: "module",
+    license: "MIT",
+    publishConfig: {
+      "access": "public",
+    },
+    "repository": {
+      "type": "git",
+      "url": `https://github.com/<your-username>/${name}`,
+      "directory": "",
+    },
     scripts: {
       build: "npx @liolocs/powerups-cli build",
       release: "commit-and-tag-version --preset conventionalcommits --path .",

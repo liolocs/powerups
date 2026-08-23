@@ -50,6 +50,13 @@ export default async function runPowerup({
         manifest,
       });
     }
+
+  }
+
+  if (!isDryRun) {
+    const green = cli.fg.green;
+    const blue = cli.fg.cyan;
+    cli.print(`\n${green("✓")} Powerup ${instructions.name} was successfully used in ${blue(destination.path)}\n`);
   }
 }
 

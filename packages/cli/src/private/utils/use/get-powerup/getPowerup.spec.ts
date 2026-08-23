@@ -28,7 +28,7 @@ test.case("should return an error if the package.json is missing from the poweru
   const { packageDir, targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
   await packageDir.append(`/${PACKAGE_JSON}`).remove();
 
-  await assert(getPowerup({ root: targetDir, name: powerupName, globalRoot })).throwsAsync(UseErrorCode.package_json_error);
+  await assert(getPowerup({ cwd: targetDir, name: powerupName, globalPowerupsDir: globalRoot.append(`/${CLI_FOLDER_NAME}`) })).throwsAsync(UseErrorCode.package_json_error);
 
   await cleanup();
 });
@@ -38,9 +38,9 @@ test.case("should return an error if the config file is missing both locally and
   const powerupName = "test-powerup";
   const { targetDir } = await createSimpleGlobalScaffoldPowerupForTest({ powerupName, testRoot, globalRoot });
   await targetDir.append(`/${CLI_FOLDER_NAME}/config.json`).remove();
-  await globalRoot.append("/config.json").remove();
+  await globalRoot.append(`/${CLI_FOLDER_NAME}/config.json`).remove();
 
-  await assert(getPowerup({ root: targetDir, name: powerupName, globalRoot })).throwsAsync(UseErrorCode.not_installed);
+  await assert(getPowerup({ cwd: targetDir, name: powerupName, globalPowerupsDir: globalRoot.append(`/${CLI_FOLDER_NAME}`) })).throwsAsync(UseErrorCode.not_installed);
 
   await cleanup();
 });
@@ -50,8 +50,8 @@ test.case("should not return an error if the powerup is local and mentioned in t
   const powerupName = "test-powerup";
   const { targetDir } = await createSimpleScaffoldPowerupForTest({ powerupName, testRoot });
 
-  await assert(getPowerup({ root: targetDir, name: powerupName, globalRoot })).noErrorAsync()
-  assert((await getPowerup({ root: targetDir, name: powerupName, globalRoot })).instructions.name).equals(powerupName)
+  await assert(getPowerup({ cwd: targetDir, name: powerupName, globalPowerupsDir: globalRoot.append(`/${CLI_FOLDER_NAME}`) })).noErrorAsync()
+  assert((await getPowerup({ cwd: targetDir, name: powerupName, globalPowerupsDir: globalRoot.append(`/${CLI_FOLDER_NAME}`) })).instructions.name).equals(powerupName)
 
   await cleanup();
 });
@@ -60,11 +60,8 @@ test.case("should not return an error if the config file is missing locally but 
   await setupTestDir();
   const powerupName = "test-powerup";
   const { targetDir } = await createSimpleGlobalScaffoldPowerupForTest({ powerupName, testRoot, globalRoot });
-  await targetDir.append(`/${CLI_FOLDER_NAME}/config.json`).remove();
-  await globalRoot.append("/config.json").writeJSON({ packages: ["internal:" + powerupName] });
 
-  await assert(getPowerup({ root: targetDir, name: powerupName, globalRoot })).noErrorAsync()
-  assert((await getPowerup({ root: targetDir, name: powerupName, globalRoot })).instructions.name).equals(powerupName)
+  await assert(getPowerup({ cwd: targetDir, name: powerupName, globalPowerupsDir: globalRoot.append(`/${CLI_FOLDER_NAME}`) })).noErrorAsync()
 
   await cleanup();
 });
@@ -76,7 +73,7 @@ test.case("should return the found powerup if it is present locally", async asse
 
   let threw = false;
   try {
-    const powerup = await getPowerup({ root: targetDir, name: powerupName, globalRoot });
+    const powerup = await getPowerup({ cwd: targetDir, name: powerupName, globalPowerupsDir: globalRoot.append(`/${CLI_FOLDER_NAME}`) });
 
     assert(powerup.instructions.name).equals("test-powerup");
   } catch {
@@ -94,7 +91,7 @@ test.case("should return the found powerup if it is not present locally but pres
 
   let threw = false;
   try {
-    const powerup = await getPowerup({ root: targetDir, globalRoot, name: powerupName });
+    const powerup = await getPowerup({ cwd: targetDir, globalPowerupsDir: globalRoot.append(`/${CLI_FOLDER_NAME}`), name: powerupName });
 
     assert(powerup.instructions.name).equals("test-powerup");
   } catch {

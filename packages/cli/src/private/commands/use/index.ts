@@ -10,6 +10,8 @@ import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-i
 // import checkForUsePreflightErrors from "#utils/use/check-for-use-preflight-errors/index";
 import runPowerup from "#utils/use/run-powerup/index";
 import extractVariables from "#utils/use/extract-variables";
+import getRoot from "#utils/use/setupRoot/getRoot";
+import setupRoot from "#utils/use/setupRoot/index";
 
 const EXCLUDE_FLAGS = ["--dry-run", "-d", "--help", "-h"];
 
@@ -20,6 +22,13 @@ const dryRunFlag: Flag = {
   description: "Print output to stdout instead of writing files",
 };
 
+const targetDirFlag: Flag = {
+  name: "targetDir",
+  long: "target-dir",
+  short: "td",
+  description: "Target directory for the use command",
+};
+
 const use = new Command({
   name: "use",
 
@@ -27,16 +36,22 @@ const use = new Command({
 
   flags: [
     dryRunFlag,
+    targetDirFlag,
   ],
 
   subcommands: [],
 
   action: async ({ context, subcommands, flags, rawFlags }) => {
-    const root: FileRef = context?.root ?? await runtime.projectRoot();
+    const root = await setupRoot({
+      contextRoot: context?.root,
+      cwd: runtime.cwd(),
+      targetDir: flags.targetDir,
+    });
 
     const isDryRun = is.defined(flags.dryRun);
 
     const powerupName = subcommands?.[0];
+
 
     /**
      Check:
@@ -45,7 +60,6 @@ const use = new Command({
      * Clean git state
      */
     await checkForPreUseErrors({ cwd: root, powerupName });
-
     /**
      * Should get the powerup from the local store or global store
      * Should look first in local store, then global store
@@ -54,9 +68,9 @@ const use = new Command({
      * The config.json is the same type of file as settings.json for pi.dev except that we record powerups instead of pi extensions
      */
     const powerup = await getPowerup({
-      root,
+      cwd: root,
       name: powerupName!,
-      globalRoot: fs.ref(GLOBAL_ROOT),
+      globalPowerupsDir: fs.ref(GLOBAL_ROOT),
     });
 
     const {

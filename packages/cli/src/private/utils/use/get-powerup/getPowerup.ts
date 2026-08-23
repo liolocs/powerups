@@ -6,16 +6,16 @@ import is from "@rcompat/is";
 import use_errors from "#errors/useErrors";
 
 export default async function getPowerup({
-  root,
-  globalRoot,
+  cwd,
+  globalPowerupsDir,
   name: powerupName,
 }: {
-  root: FileRef;
-  globalRoot: FileRef;
+    cwd: FileRef;
+    globalPowerupsDir: FileRef;
   name: string;
   }): Promise<{ instructions: Instructions, location: FileRef, version: string }> {
-  const localConfigRef = root.append(`/${CLI_FOLDER_NAME}/config.json`);
-  const globalConfigRef = globalRoot.append("/config.json");
+  const localConfigRef = cwd.append(`/${CLI_FOLDER_NAME}/config.json`);
+  const globalConfigRef = globalPowerupsDir.append("/config.json");
 
   let localConfig: Awaited<ReturnType<typeof getPowerupInstallFromConfig>>;
   let globalConfig: Awaited<ReturnType<typeof getPowerupInstallFromConfig>>;;
@@ -34,28 +34,26 @@ export default async function getPowerup({
 
   // @ts-expect-error it is fine to use before its defined in this case
   if (is.defined(localConfig)) {
-    // get it from the local config
-    return fetchPowerup({ root, installationType: localConfig.where, powerupName });
+    const powerupDir = cwd.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER[localConfig.where]}/${powerupName}`);
+
+    return fetchPowerup({ powerupDir, powerupName });
     // @ts-expect-error it is fine to use before its defined in this case
   } else if (is.defined(globalConfig)) {
-    // get it from the global config
-    return fetchPowerup({ root: globalRoot, installationType: globalConfig.where, powerupName });
+    const powerupDir = globalPowerupsDir.append(`/${INSTALLED_FOLDER[globalConfig.where]}/${powerupName}`);
+
+    return fetchPowerup({ powerupDir, powerupName });
   } else {
     throw use_errors.not_installed(powerupName);
   }
 }
 
 async function fetchPowerup({
-  root,
-  installationType,
   powerupName,
+  powerupDir,
 }: {
-  root: FileRef;
-  installationType: "internal" | "npm" | "git";
-  powerupName: string;
-}) {
-  const powerupDir = root.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER[installationType]}/${powerupName}`);
-
+    powerupName: string;
+    powerupDir: FileRef;
+  }) {
   if (await powerupDir.exists() === false) {
     throw use_errors.powerup_missing(powerupName);
   }

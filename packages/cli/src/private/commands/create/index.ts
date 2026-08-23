@@ -83,9 +83,9 @@ const create = new Command({
     });
 
     const powerup = await getPowerup({
-      root: projectRoot,
+      cwd: projectRoot,
       name: "create-powerup",
-      globalRoot: fs.ref(GLOBAL_ROOT),
+      globalPowerupsDir: fs.ref(GLOBAL_ROOT),
     });
 
     const { validatedCompiledInstructions } = await checkCompiledInstructionsForErrors(

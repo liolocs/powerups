@@ -1,3 +1,4 @@
+import { CLI_FOLDER_NAME } from "#constants";
 import { type ManifestEntry } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
 import fs from "@rcompat/fs";
@@ -9,7 +10,7 @@ export default async function saveManifest({
   destination: FileRef;
   manifest: ManifestEntry;
 }): Promise<void> {
-  const ref = destination.append("/manifest.jsonl");
+  const ref = destination.append(`/${CLI_FOLDER_NAME}/manifest.jsonl`);
 
   const fileExists = await fs.exists(ref);
 

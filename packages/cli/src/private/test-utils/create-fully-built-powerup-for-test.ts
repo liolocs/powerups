@@ -243,7 +243,7 @@ export async function createSimpleGlobalScaffoldPowerupForTest({
   });
 
   await targetDir.append("/.powerups/config.json").writeJSON({ packages: [] });
-  await globalRoot.append("/config.json").writeJSON({ packages: ["internal:" + powerupName] });
+  await globalRoot.append("/.powerups/config.json").writeJSON({ packages: ["internal:" + powerupName] });
 
   try {
     await git.commitAll({ cwd: targetDir, message: "initial commit" });

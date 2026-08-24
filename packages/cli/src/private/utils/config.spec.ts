@@ -58,7 +58,7 @@ test.group("readConfig", () => {
   test.case("should read packages array with object entries from config file", async assert => {
     await reset();
     await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
-    const entry: PackageEntry = { package: "npm:other", powerups: { include: ["a"] } };
+    const entry: PackageEntry = { package: "npm:other", name: "test-powerup" };
     await testRoot
       .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .write(JSON.stringify({ packages: ["my-pkg", entry] }));
@@ -149,19 +149,19 @@ test.group("normalizePackageEntry", () => {
     assert(normalizePackageEntry("npm:pkg")).equals({ package: "npm:pkg" });
   });
 
-  test.case("passes through an object entry with a shallow powerups copy", assert => {
+  test.case("passes through an object entry with a name field", assert => {
     const entry: PackageEntry = {
       package: "npm:pkg",
-      powerups: { include: ["a"], exclude: ["b"] },
+      name: "test-powerup",
     };
     const normalized = normalizePackageEntry(entry);
     assert(normalized).equals({
       package: "npm:pkg",
-      powerups: { include: ["a"], exclude: ["b"] },
+      name: "test-powerup",
     });
   });
 
-  test.case("normalizes an object without powerups", assert => {
+  test.case("normalizes an object without name", assert => {
     assert(normalizePackageEntry({ package: "npm:pkg" })).equals({ package: "npm:pkg" });
   });
 });
@@ -172,7 +172,7 @@ test.group("getPackageSource", () => {
   });
 
   test.case("returns .package for an object entry", assert => {
-    assert(getPackageSource({ package: "npm:pkg", powerups: { include: ["a"] } }))
+    assert(getPackageSource({ package: "npm:pkg", name: "test-powerup" }))
       .equals("npm:pkg");
   });
 });
@@ -192,14 +192,14 @@ test.group("addPackageToConfig", () => {
     await testRoot.remove();
   });
 
-  test.case("adds an object entry with a powerups filter", async assert => {
+  test.case("adds an object entry with a name field", async assert => {
     await reset();
     await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
     await testRoot
       .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .writeJSON({ packages: [] });
 
-    const entry: PackageEntry = { package: "npm:pkg", powerups: { include: ["a"] } };
+    const entry: PackageEntry = { package: "npm:pkg", name: "test-powerup" };
     await addPackageToConfig(testRoot, entry);
     const config = await readConfig(testRoot);
     assert(getPackageSource(config!.packages[0])).equals("npm:pkg");
@@ -215,7 +215,7 @@ test.group("addPackageToConfig", () => {
       .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .writeJSON({ packages: ["npm:pkg"] });
 
-    const entry: PackageEntry = { package: "npm:pkg", powerups: { include: ["a"] } };
+    const entry: PackageEntry = { package: "npm:pkg", name: "test-powerup" };
     await addPackageToConfig(testRoot, entry);
     const config = await readConfig(testRoot);
     assert(config?.packages.length).equals(1);
@@ -243,7 +243,7 @@ test.group("removePackageFromConfig", () => {
   test.case("removes an object entry by matching source", async assert => {
     await reset();
     await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
-    const entry: PackageEntry = { package: "npm:pkg", powerups: { include: ["a"] } };
+    const entry: PackageEntry = { package: "npm:pkg", name: "test-powerup" };
     await testRoot
       .append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       .writeJSON({ packages: [entry, "other"] });

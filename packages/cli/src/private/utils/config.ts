@@ -6,15 +6,13 @@ import { CLI_FOLDER_NAME, CONFIG_FILE_NAME, CONFIG_POWERUPS_KEY, GLOBAL_CONFIG_P
 /**
  * A config `packages` entry.
  *
- * A plain string means "use all powerups from this source". An object allows
- * scoping which powerups are active via `powerups.include` / `powerups.exclude`.
+ * A plain string means an internal powerup (e.g. "internal:my-powerup").
+ * An object stores the source plus the powerup's actual name for npm/git
+ * packages, enabling lookup by powerup name.
  */
 export type PackageEntry = string | {
   package: string;
-  powerups?: {
-    include?: string[];
-    exclude?: string[];
-  };
+  name?: string;
 };
 
 /**
@@ -23,10 +21,7 @@ export type PackageEntry = string | {
  */
 export type NormalizedPackageEntry = {
   package: string;
-  powerups?: {
-    include?: string[];
-    exclude?: string[];
-  };
+  name?: string;
 };
 
 const configSchema = p({
@@ -47,8 +42,8 @@ export function normalizePackageEntry(entry: PackageEntry): NormalizedPackageEnt
     return { package: entry };
   }
   const result: NormalizedPackageEntry = { package: entry.package };
-  if (entry.powerups) {
-    result.powerups = { ...entry.powerups };
+  if (entry.name !== undefined) {
+    result.name = entry.name;
   }
   return result;
 }

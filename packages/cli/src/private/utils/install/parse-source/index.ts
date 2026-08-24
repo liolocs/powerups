@@ -56,9 +56,12 @@ export default function parseSource(source: string): ParsedSource {
     };
   }
 
+  const internalName = source.startsWith("internal:")
+    ? source.slice("internal:".length)
+    : source;
   return {
     type: "internal",
     configEntry: source,
-    storePath: source,
+    storePath: `${INSTALLED_FOLDER.internal}/${internalName}`,
   };
 }

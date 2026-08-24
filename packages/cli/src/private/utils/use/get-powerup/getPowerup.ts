@@ -1,7 +1,8 @@
-import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME } from "#constants";
 import type { Instructions } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import getPowerupInstallFromConfig from "#utils/use/get-powerup/getPowerupInstallFromConfig";
+import parseSource from "#utils/install/parse-source/index";
 import is from "@rcompat/is";
 import use_errors from "#errors/useErrors";
 
@@ -34,18 +35,16 @@ export default async function getPowerup({
 
   // @ts-expect-error it is fine to use before its defined in this case
   if (is.defined(localConfig)) {
-    const pathSuffix = localConfig.where === "npm"
-      ? `node_modules/${powerupName}`
-      : powerupName;
-    const powerupDir = cwd.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER[localConfig.where]}/${pathSuffix}`);
+    const parsedSource = parseSource(localConfig.source);
+    const powerupDir = cwd.append(`/${CLI_FOLDER_NAME}/${parsedSource.storePath}`);
 
     return fetchPowerup({ powerupDir, powerupName });
     // @ts-expect-error it is fine to use before its defined in this case
   } else if (is.defined(globalConfig)) {
-    const pathSuffix = globalConfig.where === "npm"
-      ? `node_modules/${powerupName}`
-      : powerupName;
-    const powerupDir = globalPowerupsDir.append(`/${INSTALLED_FOLDER[globalConfig.where]}/${pathSuffix}`);
+    const parsedSource = parseSource(globalConfig.source);
+    const powerupDir = globalPowerupsDir.append(`/${parsedSource.storePath}`);
+
+    return fetchPowerup({ powerupDir, powerupName });
 
     return fetchPowerup({ powerupDir, powerupName });
   } else {

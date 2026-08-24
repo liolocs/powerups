@@ -87,6 +87,38 @@ test.case("should not duplicate the entry if already registered", async assert =
   await cleanup();
 });
 
+test.case("should store an object entry with name when powerupName is provided for npm", async assert => {
+  await setupLocalTestDir();
+
+  await registerPowerup({
+    configEntry: "npm:@liolocs/pkg",
+    powerupName: "my-powerup",
+    isLocal: true,
+    projectRoot: testRoot,
+  });
+
+  const config = await readConfig(testRoot);
+  assert(config!.packages[0]).equals({ package: "npm:@liolocs/pkg", name: "my-powerup" });
+
+  await cleanup();
+});
+
+test.case("should store an object entry with name when powerupName is provided for git", async assert => {
+  await setupLocalTestDir();
+
+  await registerPowerup({
+    configEntry: "git:github.com/owner/repo",
+    powerupName: "my-powerup",
+    isLocal: true,
+    projectRoot: testRoot,
+  });
+
+  const config = await readConfig(testRoot);
+  assert(config!.packages[0]).equals({ package: "git:github.com/owner/repo", name: "my-powerup" });
+
+  await cleanup();
+});
+
 test.case("should do nothing if the local config.json does not exist", async assert => {
   await setupLocalTestDir();
 

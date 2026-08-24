@@ -4,10 +4,7 @@ const packageEntrySchema = zod.union([
   zod.string(),
   zod.object({
     package: zod.string(),
-    powerups: zod.object({
-      include: zod.array(zod.string()).optional(),
-      exclude: zod.array(zod.string()).optional(),
-    }).optional(),
+    name: zod.string().optional(),
   }),
 ]);
 

@@ -65,3 +65,16 @@ test.case("should include the source and reason in not_a_powerups_package error"
     assert(error.message).includes("Missing powerups-package keyword");
   }
 });
+
+test.case("should include the powerup name in already_installed error", async assert => {
+  try {
+    throw install_errors.already_installed("my-powerup");
+  } catch (error) {
+    // @ts-expect-error error.code is not typed on unknown
+    assert(error.code).equals(InstallErrorCode.already_installed);
+    // @ts-expect-error error.message is not typed on unknown
+    assert(error.message).includes("my-powerup");
+    // @ts-expect-error error.message is not typed on unknown
+    assert(error.message).includes("pup use");
+  }
+});

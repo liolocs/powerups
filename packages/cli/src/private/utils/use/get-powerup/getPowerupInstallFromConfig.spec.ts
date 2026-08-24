@@ -38,35 +38,42 @@ test.case("should give an invalid config file if the config is invalid", async a
   await cleanup();
 });
 
-test.case("should return an error if the installation type is not supported", async assert => {
+test.case("should return the source for an internal package", async assert => {
+  await setupTestDir();
+  const configRef = testRoot.append("/config.json");
+  const config: PowerupConfig = { packages: ["internal:test-powerup"] };
+  await configRef.writeJSON(config);
+
+  const result = await getPowerupInstallFromConfig({ powerupName: "test-powerup", configRef });
+  assert(result.source).equals("internal:test-powerup");
+
+  await cleanup();
+});
+
+test.case("should return the source for an npm package with object entry", async assert => {
   await setupTestDir();
   const configRef = testRoot.append("/config.json");
   const config: PowerupConfig = {
-    packages: ["random:test-powerup"],
+    packages: [{ package: "npm:@liolocs/pkg", name: "test-powerup" }],
   };
   await configRef.writeJSON(config);
 
-  await assert(getPowerupInstallFromConfig({ powerupName: "test-powerup", configRef })).throwsAsync(UseErrorCode.unsupported_package_type);
+  const result = await getPowerupInstallFromConfig({ powerupName: "test-powerup", configRef });
+  assert(result.source).equals("npm:@liolocs/pkg");
 
   await cleanup();
 });
 
-test.case("should return the appropriate installation type for an internal package", async assert => {
+test.case("should return the source for a git package with object entry", async assert => {
   await setupTestDir();
-  const installationTypes = ["internal", "npm", "git"];
+  const configRef = testRoot.append("/config.json");
+  const config: PowerupConfig = {
+    packages: [{ package: "git:github.com/owner/repo", name: "test-powerup" }],
+  };
+  await configRef.writeJSON(config);
 
-  for (const type of installationTypes) {
-    const configRef = testRoot.append(`/config.json`);
-    const config: PowerupConfig = {
-      packages: [`${type}:test-powerup`],
-    };
-    await configRef.writeJSON(config);
-
-    await assert(getPowerupInstallFromConfig({ powerupName: "test-powerup", configRef })).noErrorAsync();
-    const powerup = await getPowerupInstallFromConfig({ powerupName: "test-powerup", configRef })
-    assert(powerup.where).equals(type);
-  }
+  const result = await getPowerupInstallFromConfig({ powerupName: "test-powerup", configRef });
+  assert(result.source).equals("git:github.com/owner/repo");
 
   await cleanup();
 });
-

@@ -58,7 +58,16 @@ test.case("should parse a bare name as internal type", async assert => {
 
   assert(result.type).equals("internal");
   assert(result.configEntry).equals("my-powerup");
-  assert(result.storePath).equals("my-powerup");
+  assert(result.storePath).equals("installed/_internal/my-powerup");
+  assert(result.cloneUrl).undefined();
+});
+
+test.case("should parse an internal: prefixed source and strip the prefix from storePath", async assert => {
+  const result = parseSource("internal:my-powerup");
+
+  assert(result.type).equals("internal");
+  assert(result.configEntry).equals("internal:my-powerup");
+  assert(result.storePath).equals("installed/_internal/my-powerup");
   assert(result.cloneUrl).undefined();
 });
 

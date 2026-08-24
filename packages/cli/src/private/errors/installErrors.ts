@@ -38,6 +38,13 @@ const install_errors = error.coded({
       `${reason}`;
     return t`${errorBGText}${errorText}`;
   },
+
+  already_installed: (name: string) => {
+    const errorText =
+      `A powerup named "${name}" is already installed.\n` +
+      `Use "${CLI_CMD} use ${name}" to use it, or uninstall it first.`;
+    return t`${errorBGText}${errorText}`;
+  },
 });
 
 export type InstallErrorCode = keyof typeof install_errors;

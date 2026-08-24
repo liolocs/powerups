@@ -1,6 +1,6 @@
 import is from "@rcompat/is";
 import type { Instructions } from "@liolocs/powerups-sdk";
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import use_errors from "#errors/useErrors";
 
 export default function extractVariables({

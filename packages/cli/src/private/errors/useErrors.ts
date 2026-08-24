@@ -2,7 +2,7 @@ import error from "@rcompat/error";
 import cli from "@rcompat/cli";
 import type { FileRef } from "@rcompat/fs";
 import { CAPITALIZED_SINGLULAR_CLI_NAME, CLI_CMD, CLI_FOLDER_NAME } from "#constants";
-import { toKebabCase } from "#utils/variables";
+import string from "@rcompat/string";
 
 const t = error.template;
 
@@ -79,10 +79,10 @@ const use_errors = error.coded({
   ) => {
     const missingList = missing.join(", ");
     const requiredList = required
-      .map(v => `  --${toKebabCase(v)}=<value>`)
+      .map(v => `  --${string.toSlug(v)}=<value>`)
       .join("\n");
     const example = `${CLI_CMD} use ${name} ${
-      required.map(v => `--${toKebabCase(v)}=<value>`).join(" ")
+      required.map(v => `--${string.toSlug(v)}=<value>`).join(" ")
     }`;
     const errorText =
       `Missing required variables: ${missingList}\n` +

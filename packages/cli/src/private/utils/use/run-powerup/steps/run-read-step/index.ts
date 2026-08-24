@@ -1,7 +1,7 @@
 import type { ReadManifestEntry, ReadStep } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import fs from "@rcompat/fs";
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
 import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
 import renderTemplate from "#utils/use/run-powerup/steps/run-create-step/render-template";

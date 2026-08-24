@@ -1,7 +1,7 @@
 import { type Instructions, type ManifestEntry } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import runStep from "#utils/use/run-powerup/run-step";
 import saveManifest from "#utils/use/run-powerup/save-manifest";
 import is from "@rcompat/is";

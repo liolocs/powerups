@@ -3,7 +3,7 @@ import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import runInstallStep from "#utils/use/run-powerup/steps/run-install-step/index";
 import { type Step } from "@liolocs/powerups-sdk";
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");

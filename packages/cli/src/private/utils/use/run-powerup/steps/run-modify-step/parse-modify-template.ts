@@ -1,5 +1,5 @@
 import type { FileRef } from "@rcompat/fs";
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import { runTemplate } from "#template-runners/index";
 import { modificationArraySchema, type Modification } from "#schemas/modification";
 import use_errors from "#errors/useErrors";

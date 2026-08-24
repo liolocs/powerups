@@ -1,4 +1,4 @@
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 
 export default function applyVariablesToTemplateString({
   templateString,

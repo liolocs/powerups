@@ -1,6 +1,6 @@
 import is from "@rcompat/is";
 import type { FileRef } from "@rcompat/fs";
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import runnerErrors from "#errors/runnerErrors";
 import tsRunner from "#template-runners/ts";
 import njkRunner from "#template-runners/njk";

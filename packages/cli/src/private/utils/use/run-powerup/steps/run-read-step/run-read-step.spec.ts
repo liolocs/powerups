@@ -2,7 +2,7 @@ import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { UseErrorCode } from "#errors/useErrors";
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import runReadStep from "#utils/use/run-powerup/steps/run-read-step/index";
 import type { ReadStep } from "@liolocs/powerups-sdk";
 

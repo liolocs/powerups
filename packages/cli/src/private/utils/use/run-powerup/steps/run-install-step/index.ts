@@ -4,7 +4,7 @@ import { type FileRef } from "@rcompat/fs";
 import io from "@rcompat/io";
 import is from "@rcompat/is";
 import { type BaseManifestProperties } from "#utils/use/run-powerup/run-step";
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
 
 export default async function runInstallStep({

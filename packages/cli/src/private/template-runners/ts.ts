@@ -58,11 +58,13 @@ async function childProcessImport(
 ): Promise<string> {
   const os = await import("node:os");
 
-  // Write temp runner .mjs
-  const tmpFile = fs.ref(
-    `${os.tmpdir()}/powerups-runner-${Date.now()}.mjs`,
-  );
+  const tmpDir = fs.ref(`${os.tmpdir()}/powerups-template-${Date.now()}`);
+  await fs.create(tmpDir);
 
+  const tmpTemplate = tmpDir.append(`/${templatePath.name}`);
+  await templatePath.copy(tmpTemplate);
+
+  const tmpRunner = tmpDir.append("/runner.mjs");
   const runnerContent = [
     `const mod = await import(process.env.powerups_TEMPLATE);`,
     `if (typeof mod.default !== "function") {`,
@@ -72,16 +74,15 @@ async function childProcessImport(
     `const vars = JSON.parse(process.env.powerups_VARS);`,
     `process.stdout.write(String(mod.default(vars)));`,
   ].join("\n");
-
-  await tmpFile.write(runnerContent);
+  await tmpRunner.write(runnerContent);
 
   try {
     const stdout = await io.run(
-      `${runtime.bin} --experimental-strip-types "${tmpFile.path}"`,
+      `${runtime.bin} --experimental-strip-types "${tmpRunner.path}"`,
       {
         env: {
           ...process.env,
-          powerups_TEMPLATE: templatePath.path,
+          powerups_TEMPLATE: tmpTemplate.path,
           powerups_VARS: JSON.stringify(variables),
         },
       },
@@ -94,6 +95,6 @@ async function childProcessImport(
       stderr,
     );
   } finally {
-    await tmpFile.remove();
+    await tmpDir.remove();
   }
 }

@@ -1,4 +1,4 @@
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import applyVariablesToTemplateString from "#utils/use/apply-variables-to-template-string";
 
 export default function resolveOutputPath({

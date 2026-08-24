@@ -5,7 +5,7 @@ import runModifyStep from "#utils/use/run-powerup/steps/run-modify-step/index";
 import runReadStep from "#utils/use/run-powerup/steps/run-read-step/index";
 import runDeleteStep from "#utils/use/run-powerup/steps/run-delete-step/index";
 import { type FileRef } from "@rcompat/fs";
-import type { ResolvedVariable } from "#utils/variables";
+import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import use_errors from "#errors/useErrors";
 import { resolveStepVariables } from "#utils/use/run-powerup/resolve-step-variables";
 

@@ -189,6 +189,27 @@ export async function removePackageFromConfig(
 }
 
 /**
+ * Remove a package from the global config's packages array, matching by
+ * source specifier. Does nothing if the package is not listed or the global
+ * config doesn't exist.
+ * Accepts an optional `homeDir` for testability.
+ */
+export async function removePackageFromGlobalConfig(
+  source: string,
+  homeDir?: string,
+): Promise<void> {
+  const config = await readGlobalConfig(homeDir);
+
+  if (config === null) {
+    return;
+  }
+
+  config.packages = config.packages.filter(pkg => getPackageSource(pkg) !== source);
+
+  await writeGlobalConfig(config, homeDir);
+}
+
+/**
  * Add a package entry to the global config's packages array.
  * If an entry with the same source already exists, it is replaced (update).
  * Accepts an optional `homeDir` for testability.

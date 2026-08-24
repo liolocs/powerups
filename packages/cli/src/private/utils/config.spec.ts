@@ -9,6 +9,7 @@ import {
   getPackageSource,
   addPackageToConfig,
   removePackageFromConfig,
+  removePackageFromGlobalConfig,
   ensureGlobalInit,
   type PackageEntry,
 } from "#utils/config";
@@ -251,6 +252,31 @@ test.group("removePackageFromConfig", () => {
     await removePackageFromConfig(testRoot, "npm:pkg");
     const config = await readConfig(testRoot);
     assert(config?.packages).equals(["other"]);
+
+    await testRoot.remove();
+  });
+});
+
+test.group("removePackageFromGlobalConfig", () => {
+  test.case("should remove a package from global config by source", async assert => {
+    await reset();
+    const globalDir = testRoot.append(`/${CLI_FOLDER_NAME}`);
+    await fs.create(globalDir);
+    await globalDir.append(`/${CONFIG_FILE_NAME}`).writeJSON({ packages: ["npm:pkg", "other"] });
+
+    await removePackageFromGlobalConfig("npm:pkg", testRoot.path);
+    const config = await readGlobalConfig(testRoot.path);
+    assert(config?.packages).equals(["other"]);
+
+    await testRoot.remove();
+  });
+
+  test.case("should do nothing if the global config does not exist", async assert => {
+    await reset();
+
+    await removePackageFromGlobalConfig("npm:pkg", testRoot.path);
+
+    assert(await fs.exists(testRoot.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`))).false();
 
     await testRoot.remove();
   });

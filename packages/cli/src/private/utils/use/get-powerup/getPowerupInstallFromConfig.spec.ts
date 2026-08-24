@@ -28,12 +28,12 @@ test.case("should give not in config error if powername is not in config", async
   await cleanup();
 });
 
-test.case("should give an invalid config file if the config is invalid", async assert => {
+test.case("should give not in config error when the config is invalid", async assert => {
   await setupTestDir();
   const configRef = testRoot.append("/config.json");
   await configRef.write("not a valid config");
 
-  await assert(getPowerupInstallFromConfig({ powerupName: "not-in-config", configRef })).throwsAsync(UseErrorCode.config_invalid_file);
+  await assert(getPowerupInstallFromConfig({ powerupName: "not-in-config", configRef })).throwsAsync(UseErrorCode.not_in_config);
 
   await cleanup();
 });

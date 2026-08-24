@@ -1,13 +1,7 @@
 import use_errors from "#errors/useErrors";
-import { type PackageEntry } from "@liolocs/powerups-sdk";
 import { type FileRef } from "@rcompat/fs";
-import { getConfig } from "#utils/use/get-powerup/getConfig";
-import matchesPowerupName from "#utils/shared/matches-powerup-name";
-import is from "@rcompat/is";
-
-function getPackageSource(entry: PackageEntry): string {
-  return typeof entry === "string" ? entry : entry.package;
-}
+import { getPackageSource } from "#utils/config";
+import findPowerupInConfig from "#utils/shared/find-powerup-in-config";
 
 export default async function getPowerupInstallFromConfig({
   powerupName,
@@ -16,15 +10,11 @@ export default async function getPowerupInstallFromConfig({
   powerupName: string;
   configRef: FileRef;
 }): Promise<{ source: string }> {
-  const config = await getConfig(configRef);
+  const entry = await findPowerupInConfig({ configRef, powerupName });
 
-  const found = config.packages.find(pkg =>
-    matchesPowerupName(pkg, powerupName),
-  );
-
-  if (is.falsy(found)) {
+  if (entry === null) {
     throw use_errors.not_in_config(powerupName);
   }
 
-  return { source: getPackageSource(found!) };
+  return { source: getPackageSource(entry) };
 }

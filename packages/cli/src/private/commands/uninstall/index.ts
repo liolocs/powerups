@@ -29,8 +29,11 @@ const localFlag = {
 
 const uninstall = new Command({
   name: "uninstall",
+
   description: `Uninstall a ${SINGULAR_NAME_FOR_CLI}`,
+
   flags: [dryRunFlag, localFlag],
+
   subcommands: [],
 
   action: async ({ context, subcommands, flags }) => {

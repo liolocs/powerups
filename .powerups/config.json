@@ -1,7 +1,0 @@
-{
-  "packages": [
-    "internal:cli-command",
-    "internal:cli-sub-command",
-    "internal:cli-with-sub-commands"
-  ]
-}

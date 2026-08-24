@@ -11,6 +11,7 @@ const testPowerupDir = testRoot.append("/render-template-test-powerup");
 async function setupTestDir(): Promise<void> {
   await testPowerupDir.remove();
   await fs.create(testPowerupDir);
+  await fs.create(testPowerupDir.append("/dist"));
 }
 
 async function cleanup(): Promise<void> {
@@ -20,7 +21,7 @@ async function cleanup(): Promise<void> {
 test.case("renders a .ts template with variables successfully", async assert => {
   await setupTestDir();
 
-  const templateFile = testPowerupDir.append("/component.ts");
+  const templateFile = testPowerupDir.append("/dist/component.ts");
   await fs.write(templateFile, `export default (vars: Record<string, string>) => \`export const \${vars.name} = "hello";\`;`);
 
   const result = await renderTemplate({

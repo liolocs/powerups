@@ -39,7 +39,7 @@ export default async function runModifyStep({
     },
   };
 
-  const templatePath = powerupDirectory.append(`/${step.template}`);
+  const templatePath = powerupDirectory.append(`/dist/${step.template}`);
   const targetPath = destination.append(`/${resolvedOutputPath}`);
 
   try {

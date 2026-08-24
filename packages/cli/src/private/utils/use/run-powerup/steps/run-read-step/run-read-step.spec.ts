@@ -15,6 +15,7 @@ async function setupTestDir(): Promise<void> {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(testPowerupDir);
+  await fs.create(testPowerupDir.append("/dist"));
   await fs.create(testDestinationDir);
 }
 
@@ -156,7 +157,7 @@ test.case("template mode reads file content and passes it as __content to the te
   await setupTestDir();
   await fs.write(testDestinationDir.append("/data.txt"), "hello world");
   await fs.write(
-    testPowerupDir.append("/transform.ts"),
+    testPowerupDir.append("/dist/transform.ts"),
     `export default (vars: Record<string, string>) => vars.__content.toUpperCase();`,
   );
 

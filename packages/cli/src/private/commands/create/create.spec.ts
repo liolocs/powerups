@@ -40,7 +40,7 @@ async function copyCreatePowerupAssets(targetDir: import("@rcompat/fs").FileRef)
   const packageJson = await realCreatePowerupDir.append("/package.json").json();
   await fs.writeJSON(targetDir.append("/package.json"), packageJson);
 
-  const templatesDir = targetDir.append("/templates");
+  const templatesDir = distDir.append("/templates");
   await fs.create(templatesDir);
 
   const templateFiles = [

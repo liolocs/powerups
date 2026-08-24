@@ -13,7 +13,7 @@ export default async function renderTemplate({
   powerupDirectory: FileRef;
   variables: ResolvedVariable;
 }): Promise<string> {
-  const templatePath = powerupDirectory.append(`/${template}`);
+  const templatePath = powerupDirectory.append(`/dist/${template}`);
 
   if (!(await fs.exists(templatePath))) {
     throw use_errors.template_not_found(template);

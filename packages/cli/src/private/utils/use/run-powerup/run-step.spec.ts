@@ -14,6 +14,7 @@ async function setupTestDir(): Promise<void> {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(testPowerupDir);
+  await fs.create(testPowerupDir.append("/dist"));
   await fs.create(testDestinationDir);
 }
 
@@ -23,7 +24,7 @@ async function cleanup(): Promise<void> {
 
 async function createTemplateFile(): Promise<void> {
   await fs.write(
-    testPowerupDir.append("/component.ts"),
+    testPowerupDir.append("/dist/component.ts"),
     `export default (vars: Record<string, string>) => \`export const \${vars.name} = "hello";\`;`,
   );
 }

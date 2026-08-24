@@ -13,6 +13,7 @@ async function setupTestDir(): Promise<void> {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(testPowerupDir);
+  await fs.create(testPowerupDir.append("/dist"));
   await fs.create(testDestinationDir);
 }
 
@@ -22,7 +23,7 @@ async function cleanup(): Promise<void> {
 
 function createTemplateFile(): Promise<void> {
   return fs.write(
-    testPowerupDir.append("/mod.json"),
+    testPowerupDir.append("/dist/mod.json"),
     `[{"where":"top","content":"// header\\n"}]`,
   );
 }
@@ -93,7 +94,7 @@ test.case("returns skipped-warning and NoneOutput when an anchor is not found in
 
   // Override template with one that uses an anchor not present in the target
   await fs.write(
-    testPowerupDir.append("/mod.json"),
+    testPowerupDir.append("/dist/mod.json"),
     `[{"where":{"after":"NONEXISTENT_ANCHOR"},"content":"inserted"}]`,
   );
 
@@ -139,7 +140,7 @@ test.case("returns skipped-warning and NoneOutput when template does not exist",
 
 test.case("returns skipped-warning and NoneOutput when template produces invalid JSON", async assert => {
   await setupTestDir();
-  await fs.write(testPowerupDir.append("/mod.json"), `{not valid json}`);
+  await fs.write(testPowerupDir.append("/dist/mod.json"), `{not valid json}`);
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
   const { manifest } = await runModifyStep({

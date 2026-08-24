@@ -14,6 +14,7 @@ async function setupTestDir(): Promise<void> {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(testPowerupDir);
+  await fs.create(testPowerupDir.append("/dist"));
   await fs.create(testDestinationDir);
 }
 
@@ -27,7 +28,7 @@ test.case("read then create flow with variable threading writes file and manifes
   await fs.write(testDestinationDir.append("/config.json"), JSON.stringify({ port: 3000 }));
 
   await fs.write(
-    testPowerupDir.append("/server-template.ts"),
+    testPowerupDir.append("/dist/server-template.ts"),
     `export default (props: Record<string, string>) => \`const port = \${props.serverPort};\`;`,
   );
 
@@ -87,7 +88,7 @@ test.case("dry-run does not create manifest or write files to destination", asyn
   await fs.write(testDestinationDir.append("/config.json"), JSON.stringify({ port: 3000 }));
 
   await fs.write(
-    testPowerupDir.append("/server-template.ts"),
+    testPowerupDir.append("/dist/server-template.ts"),
     `export default (props: Record<string, string>) => \`const port = \${props.serverPort};\`;`,
   );
 
@@ -135,7 +136,7 @@ test.case("create then delete flow removes file and writes manifest with both en
   await setupTestDir();
 
   await fs.write(
-    testPowerupDir.append("/component-template.ts"),
+    testPowerupDir.append("/dist/component-template.ts"),
     `export default (props: Record<string, string>) => \`export const \${props.name} = "hello";\`;`,
   );
 

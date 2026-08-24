@@ -1,3 +1,3 @@
 export default function(): string {
-  return "node_modules\ndist\n";
+  return "node_modules\n";
 }

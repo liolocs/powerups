@@ -2,7 +2,6 @@ import { SINGULAR_NAME_FOR_CLI } from "#constants";
 import { type Instructions, powerupPropertySchema, type PowerupProperty } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
-import fs from "@rcompat/fs";
 import tsup from "tsup";
 import path from "node:path";
 import build_errors from "#errors/buildErrors";

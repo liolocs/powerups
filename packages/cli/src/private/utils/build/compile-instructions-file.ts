@@ -1,10 +1,10 @@
-import { SINGULAR_NAME_FOR_CLI } from "#constants";
-import { type Instructions, powerupPropertySchema, type PowerupProperty } from "@liolocs/powerups-sdk";
+import { type Instructions, type PowerupProperty } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import tsup from "tsup";
 import path from "node:path";
 import build_errors from "#errors/buildErrors";
+import getValidatedPowerupProperty from "#utils/validate/get-validated-powerup-property";
 
 type CompiledInstructionsFile = {
   default: {
@@ -27,7 +27,7 @@ export default async function compileIndexFile({
     validatedPowerup: PowerupProperty;
     outputFolder: FileRef;
   }> {
-  const validatedPowerup = await getValidatedPowerupProperty(pkgJson);
+  const validatedPowerup = getValidatedPowerupProperty(pkgJson);
   const distFolderRef = root.append("/dist");
 
   await cleanUpDistFolder(distFolderRef);
@@ -100,21 +100,6 @@ async function cleanUpDistFolder(distFolderRef: FileRef): Promise<void> {
   }
 
   await distFolderRef.create();
-}
-
-async function getValidatedPowerupProperty(
-  pkgJson: Record<string, unknown>,
-): Promise<PowerupProperty> {
-  const validatedPowerup = powerupPropertySchema
-    .safeParse(pkgJson[SINGULAR_NAME_FOR_CLI]);
-
-  if (!validatedPowerup.success) {
-    const error = "Something went wrong, this was not validated previously";
-
-    throw new Error(error);
-  }
-
-  return validatedPowerup.data;
 }
 
 function checkCompiledIndexFileForValidExports({

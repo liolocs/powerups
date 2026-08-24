@@ -8,7 +8,7 @@ import fs from "@rcompat/fs";
 import checkForPreCreateErrors from "#utils/create/check-for-pre-create-errors/index";
 import buildVariables from "#utils/create/build-variables";
 import captureFiles from "#utils/create/capture-files/index";
-import registerPowerup from "#utils/create/register-powerup";
+import registerPowerup from "#utils/shared/register-powerup";
 import printCreateSummary from "#utils/create/print-create-summary";
 
 import getPowerup from "#utils/use/get-powerup/getPowerup";
@@ -129,7 +129,7 @@ const create = new Command({
     }
 
     if (!isDryRun) {
-      await registerPowerup({ name: powerupName!, isLocal, projectRoot });
+      await registerPowerup({ configEntry: `internal:${powerupName!}`, isLocal, projectRoot });
     }
 
     printCreateSummary({

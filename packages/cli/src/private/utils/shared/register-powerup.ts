@@ -2,19 +2,19 @@ import type { FileRef } from "@rcompat/fs";
 import { addPackageToConfig, addPackageToGlobalConfig } from "#utils/config";
 
 export default async function registerPowerup({
-  name,
+  configEntry,
   isLocal,
   projectRoot,
+  homeDir,
 }: {
-  name: string;
+  configEntry: string;
   isLocal: boolean;
   projectRoot: FileRef;
+  homeDir?: string;
 }): Promise<void> {
-  const entry = `internal:${name}`;
-
   if (isLocal) {
-    await addPackageToConfig(projectRoot, entry);
+    await addPackageToConfig(projectRoot, configEntry);
   } else {
-    await addPackageToGlobalConfig(entry);
+    await addPackageToGlobalConfig(configEntry, homeDir);
   }
 }

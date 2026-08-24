@@ -2,11 +2,9 @@ import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import install from "#commands/install/install-new";
-import { createSimpleScaffoldPowerupForTest } from "#test-utils/create-fully-built-powerup-for-test";
 import { InstallErrorCode } from "#errors/installErrors";
-import { CLI_FOLDER_NAME, GLOBAL_GIT_PATH, GLOBAL_NPM_PATH, INSTALLED_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, FOLDER_FOR_NPM_INSTALLED_PACKAGES, FOLDER_FOR_GIT_INSTALLED_PACKAGES } from "#constants";
 import createSimpleProjectForTest from "#test-utils/create-simple-project-for-test";
-import createGlobalInternalPowerupForTest from "#test-utils/create-global-internal-powerup-for-test";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -24,29 +22,30 @@ async function cleanup(): Promise<void> {
   await globalTestRoot.remove();
 }
 
-test.case("should throw if a global internal powerup is attempted to be installed locally", async assert => {
+test.case("should throw global_internal_not_installable when installing a global internal powerup", async assert => {
   await setupTestDir();
 
-  const powerupName = "global-test-powerup";
-  await createGlobalInternalPowerupForTest({
-    powerupName,
-    globalRoot: globalTestRoot,
-  });
+  await fs.create(globalTestRoot.append(`/${CLI_FOLDER_NAME}`));
+  await fs.write(
+    globalTestRoot.append(`/${CLI_FOLDER_NAME}/config.json`),
+    JSON.stringify({ packages: ["internal:global-test-powerup"] }) + "\n",
+  );
+
   const { projectDir } = await createSimpleProjectForTest({
     projectName: "new-project",
     testRoot,
   });
 
   await assert(install.run({
-    subcommands: [powerupName],
+    subcommands: ["global-test-powerup"],
     flags: [{ flag: "--local", value: "" }],
-    context: { root: projectDir },
+    context: { root: projectDir, homeDir: globalTestRoot.path },
   })).throwsAsync(InstallErrorCode.global_internal_not_installable);
 
   await cleanup();
 });
 
-test.case("should install an powerup from npm locally if local flag is passed", async assert => {
+test.case("should install a powerup from npm locally without errors", async assert => {
   await setupTestDir();
   const powerupName = "npm:@liolocs/powerup-hello-world";
   const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
@@ -57,9 +56,11 @@ test.case("should install an powerup from npm locally if local flag is passed", 
     context: { root: projectDir },
   })).noErrorAsync();
 
-  const localNpmPowerupDir = projectDir.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.npm}/${powerupName}`);
+  const localNpmPowerupDir = projectDir.append(
+    `/${CLI_FOLDER_NAME}/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/@liolocs/powerup-hello-world`,
+  );
 
-  assert(await localNpmPowerupDir.exists()).true();
+  assert(await fs.exists(localNpmPowerupDir)).true();
 
   const localConfig = await projectDir.append(`/${CLI_FOLDER_NAME}/config.json`).json() as any;
 
@@ -68,7 +69,7 @@ test.case("should install an powerup from npm locally if local flag is passed", 
   await cleanup();
 });
 
-test.case("should install an powerup from npm globally if local flag is NOT passed", async assert => {
+test.case("should install a powerup from npm globally without errors", async assert => {
   await setupTestDir();
   const powerupName = "npm:@liolocs/powerup-hello-world";
   const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
@@ -76,12 +77,14 @@ test.case("should install an powerup from npm globally if local flag is NOT pass
   await assert(install.run({
     subcommands: [powerupName],
     flags: [],
-    context: { root: projectDir },
+    context: { root: projectDir, homeDir: globalTestRoot.path },
   })).noErrorAsync();
 
-  const globalNpmPowerupDir = globalTestRoot.append(`/${GLOBAL_NPM_PATH}/${powerupName}`);
+  const globalNpmPowerupDir = globalTestRoot.append(
+    `/${CLI_FOLDER_NAME}/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/@liolocs/powerup-hello-world`,
+  );
 
-  assert(await globalNpmPowerupDir.exists()).true();
+  assert(await fs.exists(globalNpmPowerupDir)).true();
 
   const globalConfig = await globalTestRoot.append(`/${CLI_FOLDER_NAME}/config.json`).json() as any;
 
@@ -90,7 +93,7 @@ test.case("should install an powerup from npm globally if local flag is NOT pass
   await cleanup();
 });
 
-test.case("should install an powerup from git locally if local flag is passed", async assert => {
+test.case("should install a powerup from git locally without errors", async assert => {
   await setupTestDir();
   const powerupName = "git:github.com/liolocs/powerup-hello-world";
   const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
@@ -101,9 +104,11 @@ test.case("should install an powerup from git locally if local flag is passed", 
     context: { root: projectDir },
   })).noErrorAsync();
 
-  const localGitPowerupDir = projectDir.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.git}/${powerupName}`);
+  const localGitPowerupDir = projectDir.append(
+    `/${CLI_FOLDER_NAME}/${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/github.com/liolocs/powerup-hello-world`,
+  );
 
-  assert(await localGitPowerupDir.exists()).true();
+  assert(await fs.exists(localGitPowerupDir)).true();
 
   const localConfig = await projectDir.append(`/${CLI_FOLDER_NAME}/config.json`).json() as any;
 
@@ -112,7 +117,7 @@ test.case("should install an powerup from git locally if local flag is passed", 
   await cleanup();
 });
 
-test.case("should install an powerup from git globally if local flag is NOT passed", async assert => {
+test.case("should install a powerup from git globally without errors", async assert => {
   await setupTestDir();
   const powerupName = "git:github.com/liolocs/powerup-hello-world";
   const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
@@ -120,12 +125,14 @@ test.case("should install an powerup from git globally if local flag is NOT pass
   await assert(install.run({
     subcommands: [powerupName],
     flags: [],
-    context: { root: projectDir },
+    context: { root: projectDir, homeDir: globalTestRoot.path },
   })).noErrorAsync();
 
-  const globalGitPowerupDir = globalTestRoot.append(`/${GLOBAL_GIT_PATH}/${powerupName}`);
+  const globalGitPowerupDir = globalTestRoot.append(
+    `/${CLI_FOLDER_NAME}/${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/github.com/liolocs/powerup-hello-world`,
+  );
 
-  assert(await globalGitPowerupDir.exists()).true();
+  assert(await fs.exists(globalGitPowerupDir)).true();
 
   const globalConfig = await globalTestRoot.append(`/${CLI_FOLDER_NAME}/config.json`).json() as any;
 
@@ -134,14 +141,50 @@ test.case("should install an powerup from git globally if local flag is NOT pass
   await cleanup();
 });
 
-test.case("should throw if user is trying to install a non powerup dir from npm locally", async assert => {
+test.case("should not fetch or register anything in dry-run mode", async assert => {
+  await setupTestDir();
+  const powerupName = "npm:@liolocs/powerup-hello-world";
+  const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
+
+  await assert(install.run({
+    subcommands: [powerupName],
+    flags: [{ flag: "--dry-run", value: "" }],
+    context: { root: projectDir, homeDir: globalTestRoot.path },
+  })).noErrorAsync();
+
+  const localNpmPowerupDir = projectDir.append(
+    `/${CLI_FOLDER_NAME}/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/@liolocs/powerup-hello-world`,
+  );
+
+  assert(await fs.exists(localNpmPowerupDir)).false();
+
+  assert(await fs.exists(projectDir.append(`/${CLI_FOLDER_NAME}/config.json`))).false();
+
+  await cleanup();
 });
 
-test.case("should throw if user is trying to install a non powerup dir from npm globally", async assert => {
+test.case("should throw missing_source when no source is passed", async assert => {
+  await setupTestDir();
+  const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
+
+  await assert(install.run({
+    subcommands: [],
+    flags: [],
+    context: { root: projectDir, homeDir: globalTestRoot.path },
+  })).throwsAsync(InstallErrorCode.missing_source);
+
+  await cleanup();
 });
 
-test.case("should throw if user is trying to install a non powerup dir from git locally", async assert => {
-});
+test.case("should throw not_a_powerups_package when installing a non-powerups npm package", async assert => {
+  await setupTestDir();
+  const { projectDir } = await createSimpleProjectForTest({ projectName: "new-project", testRoot });
 
-test.case("should throw if user is trying to install a non powerup dir from git globally", async assert => {
+  await assert(install.run({
+    subcommands: ["npm:lodash"],
+    flags: [{ flag: "--local", value: "" }],
+    context: { root: projectDir },
+  })).throwsAsync(InstallErrorCode.not_a_powerups_package);
+
+  await cleanup();
 });

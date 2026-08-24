@@ -1,6 +1,6 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
-import { CLI_CMD, CLI_NAME, PACKAGE_JSON_KEYWORD_PROPERTY, CLI_FOLDER_NAME } from "#constants";
+import { CLI_CMD, PACKAGE_JSON_KEYWORD_PROPERTY } from "#constants";
 
 const t = error.template;
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
@@ -8,8 +8,22 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 const install_errors = error.coded({
   missing_source: () => {
     const errorText =
-      `Package source required.\n\nUsage: ${CLI_CMD} install <source>[#<powerups>] [flags]\n\n` +
-      `Sources: npm:<package> | <git-url>`;
+      `Package source required.\n\nUsage: ${CLI_CMD} install <source> [flags]\n\n` +
+      `Sources: npm:<package> | git:<url> | <https-url>.git`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  internal_not_installable: (name: string) => {
+    const errorText =
+      `"${name}" is an internal package name. Internal packages are created with "${CLI_CMD} create", not installed.\n` +
+      `Use npm:<name> or git:<url> to install from a remote source.`;
+    return t`${errorBGText}${errorText}`;
+  },
+
+  global_internal_not_installable: (name: string) => {
+    const errorText =
+      `"${name}" is already available as a global internal package.\n` +
+      `There is no need to install it.`;
     return t`${errorBGText}${errorText}`;
   },
 
@@ -18,33 +32,10 @@ const install_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
-  not_a_powerups_package: (source: string) => {
+  not_a_powerups_package: (source: string, reason: string) => {
     const errorText =
       `${source} is not a valid powerups package.\n` +
-      `Package must have the "${PACKAGE_JSON_KEYWORD_PROPERTY}" keyword and a "powerups" property in its package.json.`;
-    return t`${errorBGText}${errorText}`;
-  },
-
-  internal_not_installable: (name: string) => {
-    const errorText =
-      `"${name}" is an internal package name. Internal packages are created with "${CLI_CMD} pack", not installed.\n` +
-      `Use npm:<name> or <git-url> to install from a remote source.`;
-    return t`${errorBGText}${errorText}`;
-  },
-
-  global_not_initialized: () => {
-    const errorText = `${CLI_NAME} is not initialized globally. Run "${CLI_CMD} init" first.`;
-    return t`${errorBGText}${errorText}`;
-  },
-
-  local_not_initialized: () => {
-    const errorText = `${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first.`;
-    return t`${errorBGText}${errorText}`;
-  },
-
-  global_internal_not_installable: () => {
-    const errorText =
-      `Global internal packages are not installable as they are already available!`;
+      `${reason}`;
     return t`${errorBGText}${errorText}`;
   },
 });

@@ -22,8 +22,8 @@ const install_errors = error.coded({
 
   global_internal_not_installable: (name: string) => {
     const errorText =
-      `"${name}" is already available as a global internal package.\n` +
-      `There is no need to install it.`;
+      `"${name}" is already available as a global internal package.\n\n` +
+      `Use it with: ${CLI_CMD} use ${name}\n\n`;
     return t`${errorBGText}${errorText}`;
   },
 

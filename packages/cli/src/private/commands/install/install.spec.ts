@@ -1,7 +1,7 @@
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import install from "#commands/install/install-new";
+import install from "#commands/install/index";
 import { InstallErrorCode } from "#errors/installErrors";
 import { CLI_FOLDER_NAME, FOLDER_FOR_NPM_INSTALLED_PACKAGES, FOLDER_FOR_GIT_INSTALLED_PACKAGES } from "#constants";
 import createSimpleProjectForTest from "#test-utils/create-simple-project-for-test";

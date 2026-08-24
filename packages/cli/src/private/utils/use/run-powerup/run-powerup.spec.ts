@@ -3,6 +3,7 @@ import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import runPowerup from "#utils/use/run-powerup/index";
 import type { Instructions, ManifestEntry } from "@liolocs/powerups-sdk";
+import { CLI_FOLDER_NAME } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -67,7 +68,7 @@ test.case("read then create flow with variable threading writes file and manifes
   const content = (await testDestinationDir.append("/server.ts").text()).trim();
   assert(content).equals("const port = 3000;");
 
-  const manifestPath = testDestinationDir.append("/manifest.jsonl");
+  const manifestPath = testDestinationDir.append(`/${CLI_FOLDER_NAME}/manifest.jsonl`);
   assert(await fs.exists(manifestPath)).true();
 
   const entries = await manifestPath.json() as unknown as ManifestEntry[];
@@ -123,7 +124,7 @@ test.case("dry-run does not create manifest or write files to destination", asyn
     powerupLocation: "test-location",
   });
 
-  assert(await fs.exists(testDestinationDir.append("/manifest.jsonl"))).false();
+  assert(await fs.exists(testDestinationDir.append(`/${CLI_FOLDER_NAME}/manifest.jsonl`))).false();
   assert(await testDestinationDir.append("/server.ts").exists()).false();
   assert(await testDestinationDir.append("/config.json").exists()).true();
 
@@ -171,7 +172,7 @@ test.case("create then delete flow removes file and writes manifest with both en
 
   assert(await testDestinationDir.append("/component.ts").exists()).false();
 
-  const manifestPath = testDestinationDir.append("/manifest.jsonl");
+  const manifestPath = testDestinationDir.append(`/${CLI_FOLDER_NAME}/manifest.jsonl`);
   assert(await fs.exists(manifestPath)).true();
 
   const entries = await manifestPath.json() as unknown as ManifestEntry[];

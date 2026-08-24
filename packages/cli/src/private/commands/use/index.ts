@@ -10,7 +10,6 @@ import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-i
 // import checkForUsePreflightErrors from "#utils/use/check-for-use-preflight-errors/index";
 import runPowerup from "#utils/use/run-powerup/index";
 import extractVariables from "#utils/use/extract-variables";
-import getRoot from "#utils/use/setupRoot/getRoot";
 import setupRoot from "#utils/use/setupRoot/index";
 
 const EXCLUDE_FLAGS = ["--dry-run", "-d", "--help", "-h"];

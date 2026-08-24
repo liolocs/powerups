@@ -3,6 +3,7 @@ import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import saveManifest from "#utils/use/run-powerup/save-manifest";
 import { type ManifestEntry } from "@liolocs/powerups-sdk";
+import { CLI_FOLDER_NAME } from "#constants";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -36,7 +37,7 @@ test.case("should successfully save the manifest", async assert => {
     },
   };
   await assert(saveManifest({ destination: testRoot, manifest })).noErrorAsync();
-  const manifestRef = testRoot.append("/manifest.jsonl");
+  const manifestRef = testRoot.append(`/${CLI_FOLDER_NAME}/manifest.jsonl`);
   assert(await manifestRef.exists()).true();
 
   const entries = await manifestRef.json() as unknown as ManifestEntry[];

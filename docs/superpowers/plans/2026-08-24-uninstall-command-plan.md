@@ -100,9 +100,13 @@ export async function removePackageFromGlobalConfig(
   homeDir?: string,
 ): Promise<void> {
   const config = await readGlobalConfig(homeDir);
-  if (config === null) return;
 
-  config.packages = config.packages.filter(p => getPackageSource(p) !== source);
+  if (config === null){
+    return;
+  }
+
+  config.packages = config.packages.filter(pkg => getPackageSource(pkg) !== source);
+
   await writeGlobalConfig(config, homeDir);
 }
 ```
@@ -151,6 +155,7 @@ const uninstall_errors = error.coded({
 });
 
 export type UninstallErrorCode = keyof typeof uninstall_errors;
+
 export const UninstallErrorCode = Object.fromEntries(
   Object.keys(uninstall_errors).map(k => [k, k]),
 ) as { [K in UninstallErrorCode]: K };
@@ -214,6 +219,7 @@ export default function checkForPreUninstallErrors({
   parsedType: "npm" | "git" | "internal";
 }): void {
   checkNameWasPassed(name);
+
   checkNotInternal({ parsedType, name: name! });
 }
 ```
@@ -272,9 +278,13 @@ async function removeNpmPackage({
   cli.print(`Running npm uninstall in ${npmDir.path}...\n`);
   try {
     const stdout = await io.run(`npm uninstall ${packageName}`, { cwd: npmDir.path });
-    if (stdout) cli.print(stdout);
-  } catch (error_) {
-    const message = typeof error_ === "string" ? error_ : String(error_);
+
+    if (stdout) {
+      cli.print(stdout);
+    }
+  } catch (error) {
+    const message = typeof error === "string" ? error : String(error);
+
     cli.print(`Warning: npm uninstall failed: ${message}\n`);
   }
 }
@@ -366,6 +376,8 @@ Note: Testing `cli.print` output requires capturing stdout. Check how other prin
 
 **New file:** `packages/cli/src/private/commands/uninstall/index.ts`
 
+`checkNameWasPassed` runs before the config lookup (no point reading config if no name was passed). `checkNotInternal` runs after the config lookup + `parseSource` (when the type is known). The individual check functions are imported directly rather than via the orchestrator, since the two checks happen at different points in the flow. The `index.ts` orchestrator exists for testing both checks together.
+
 ```ts
 import { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
@@ -375,11 +387,11 @@ import fs from "@rcompat/fs";
 import { SINGULAR_NAME_FOR_CLI, CLI_FOLDER_NAME, CONFIG_FILE_NAME } from "#constants";
 import { Command, type Flag } from "@liolocs/program";
 
-import { getPackageSource } from "#utils/config";
+import { getPackageSource, removePackageFromConfig, removePackageFromGlobalConfig } from "#utils/config";
 import parseSource from "#utils/install/parse-source/index";
 import findPowerupInConfig from "#utils/shared/find-powerup-in-config";
-import { removePackageFromConfig, removePackageFromGlobalConfig } from "#utils/config";
-import checkForPreUninstallErrors from "#utils/uninstall/check-for-pre-uninstall-errors/index";
+import checkNameWasPassed from "#utils/uninstall/check-for-pre-uninstall-errors/check-name-was-passed";
+import checkNotInternal from "#utils/uninstall/check-for-pre-uninstall-errors/check-not-internal";
 import removeInstallDirectory from "#utils/uninstall/remove-install-directory";
 import printUninstallSummary from "#utils/uninstall/print-uninstall-summary";
 import uninstall_errors from "#errors/uninstallErrors";
@@ -409,100 +421,54 @@ const uninstall = new Command({
     const homeDir = context?.homeDir ?? homedir();
 
     const powerupName = subcommands?.[0];
+    checkNameWasPassed(powerupName);
 
-    checkForPreUninstallErrors({
-      name: powerupName,
-      parsedType: "npm", // placeholder — real type determined after lookup
-    });
-```
+    const configRef = isLocal
+      ? projectRoot.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
+      : fs.ref(path.join(homeDir, CLI_FOLDER_NAME, CONFIG_FILE_NAME));
 
-Wait — there's a subtlety. The spec flow is:
-1. Check name was passed
-2. Find in config
-3. Parse source → determine type
-4. Check not internal
-5. Dry-run or proceed
+    const entry = await findPowerupInConfig({ configRef, powerupName: powerupName! });
 
-The `checkNameWasPassed` can run first (before config lookup). But `checkNotInternal` needs the `parsedType` which comes from `parseSource(source)` which comes from the config lookup. So the checks can't be bundled into one orchestrator call with both at once.
-
-Let me revise: `checkForPreUninstallErrors` should only check `checkNameWasPassed`. The `checkNotInternal` check happens after the config lookup, as a separate step in the command.
-
-Actually, re-reading the spec:
-> Pre-uninstall checks: `utils/uninstall/check-for-pre-uninstall-errors/`
-> - `check-name-was-passed.ts` — throws `missing_name` if no subcommand
-> - `check-not-internal.ts` — throws `internal_not_uninstallable` if `parsedSource.type === "internal"`
-> - `index.ts` — orchestrator calling both
-
-The spec says the orchestrator calls both. But `checkNotInternal` needs the parsed type, which requires the config lookup first. So either:
-1. The orchestrator is called twice (once for name, once for internal check after lookup)
-2. The orchestrator takes both `name` and `parsedType` and is called after the lookup
-3. The checks are called separately in the command
-
-Looking at the install command's pattern: `checkForPreInstallErrors` is called once at the start with all the info. For uninstall, the `checkNameWasPassed` should happen before the config lookup (no point reading config if no name was passed), and `checkNotInternal` should happen after the config lookup (when we know the type).
-
-The cleanest approach: call `checkNameWasPassed` first, then after the lookup + parse, call `checkNotInternal`. The `index.ts` orchestrator can still exist but would be called after the lookup with both `name` and `parsedType`. But `checkNameWasPassed` would be redundant at that point since the name was already checked.
-
-Let me simplify: keep the `index.ts` orchestrator but call it after the config lookup. It runs both checks — `checkNameWasPassed` is a quick guard that passes harmlessly if the name was already validated, and `checkNotInternal` does the real work. This matches the spec's "orchestrator calling both" while being practical.
-
-Actually, the simplest and most correct approach: call `checkNameWasPassed` early in the command (before config lookup), and call `checkNotInternal` separately after the lookup. The `index.ts` file exports both individual functions and the orchestrator. The command uses the individual functions directly for the two-phase check. The orchestrator exists for cases where both checks can run at the same point (e.g., in tests).
-
-Let me revise the command structure:
-
-```ts
-action: async ({ context, subcommands, flags }) => {
-  const projectRoot = context?.root ?? runtime.cwd();
-  const isDryRun = flags.dryRun === true;
-  const isLocal = flags.local === true;
-  const homeDir = context?.homeDir ?? homedir();
-
-  const powerupName = subcommands?.[0];
-  checkNameWasPassed(powerupName);
-
-  const configRef = isLocal
-    ? projectRoot.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
-    : fs.ref(path.join(homeDir, CLI_FOLDER_NAME, CONFIG_FILE_NAME));
-
-  const entry = await findPowerupInConfig({ configRef, powerupName: powerupName! });
-
-  if (entry === null) {
-    throw uninstall_errors.not_installed(powerupName!);
-  }
-
-  const source = getPackageSource(entry);
-  const parsedSource = parseSource(source);
-
-  checkNotInternal({ parsedType: parsedSource.type, name: powerupName! });
-
-  const powerupDir = isLocal
-    ? projectRoot.append(`/${CLI_FOLDER_NAME}`)
-    : fs.ref(path.join(homeDir, CLI_FOLDER_NAME));
-
-  const removedPath = isLocal
-    ? projectRoot.append(`/${CLI_FOLDER_NAME}/${parsedSource.storePath}`).path
-    : path.join(homeDir, CLI_FOLDER_NAME, parsedSource.storePath);
-
-  if (!isDryRun) {
-    if (isLocal) {
-      await removePackageFromConfig(projectRoot, source);
-    } else {
-      await removePackageFromGlobalConfig(source, homeDir);
+    if (entry === null) {
+      throw uninstall_errors.not_installed(powerupName!);
     }
 
-    await removeInstallDirectory({ powerupDir, parsedSource });
-  }
+    const source = getPackageSource(entry);
+    const parsedSource = parseSource(source);
 
-  printUninstallSummary({
-    powerupName: powerupName!,
-    source: parsedSource.configEntry,
-    isLocal,
-    storeType: parsedSource.type,
-    isDryRun,
-    removedPath,
-  });
-}
+    checkNotInternal({ parsedType: parsedSource.type, name: powerupName! });
+
+    const powerupDir = isLocal
+      ? projectRoot.append(`/${CLI_FOLDER_NAME}`)
+      : fs.ref(path.join(homeDir, CLI_FOLDER_NAME));
+
+    const removedPath = isLocal
+      ? projectRoot.append(`/${CLI_FOLDER_NAME}/${parsedSource.storePath}`).path
+      : path.join(homeDir, CLI_FOLDER_NAME, parsedSource.storePath);
+
+    if (!isDryRun) {
+      if (isLocal) {
+        await removePackageFromConfig(projectRoot, source);
+      } else {
+        await removePackageFromGlobalConfig(source, homeDir);
+      }
+
+      await removeInstallDirectory({ powerupDir, parsedSource });
+    }
+
+    printUninstallSummary({
+      powerupName: powerupName!,
+      source: parsedSource.configEntry,
+      isLocal,
+      storeType: parsedSource.type,
+      isDryRun,
+      removedPath,
+    });
+  },
+});
+
+export default uninstall;
 ```
-
-This is cleaner — `checkNameWasPassed` and `checkNotInternal` are called at the appropriate points in the flow. The `index.ts` orchestrator still exists but is used in tests to verify both checks together.
 
 **New file:** `packages/cli/src/commands/uninstall.ts`
 

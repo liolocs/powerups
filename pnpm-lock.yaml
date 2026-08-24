@@ -61,12 +61,6 @@ importers:
         specifier: file:../cli-sub-command
         version: link:../cli-sub-command
 
-  .powerups/installed/_internal/create-powerup:
-    devDependencies:
-      '@liolocs/powerups-sdk':
-        specifier: link:../../../../packages/sdk
-        version: link:../../../../packages/sdk
-
   packages/cli:
     dependencies:
       '@rcompat/cli':

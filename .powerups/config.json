@@ -1,6 +1,5 @@
 {
   "packages": [
-    "internal:create-powerup",
     "internal:cli-command",
     "internal:cli-sub-command",
     "internal:cli-with-sub-commands"

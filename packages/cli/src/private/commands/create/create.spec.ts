@@ -4,56 +4,24 @@ import runtime from "@rcompat/runtime";
 import create from "#commands/create/index";
 import { CreateErrorCode } from "#errors/createErrors";
 import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
-import { type Instructions } from "@liolocs/powerups-sdk";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
-const realCreatePowerupDir = root.append("/.powerups/installed/_internal/create-powerup");
 
+/**
+ * Minimal scaffold for the output dir the `create` command writes into.
+ *
+ * Note: `create` resolves `create-powerup` via getBuiltInPowerup (a built-in
+ * that ships with the CLI and is resolved relative to the CLI package, not the
+ * project), so the test no longer needs to copy create-powerup into testRoot or
+ * register it in a config.json. The built-in's dist is produced by
+ * `npm run build:builtins`.
+ */
 async function setupTestDir(): Promise<void> {
   await testRoot.remove();
   await fs.create(testRoot);
-
   await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}`));
   await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}`));
-
-  const targetCreatePowerupDir = testRoot.append(
-    `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/create-powerup`,
-  );
-  await fs.create(targetCreatePowerupDir);
-
-  await copyCreatePowerupAssets(targetCreatePowerupDir);
-
-  await fs.writeJSON(
-    testRoot.append(`/${CLI_FOLDER_NAME}/config.json`),
-    { packages: ["internal:create-powerup"] },
-  );
-}
-
-async function copyCreatePowerupAssets(targetDir: import("@rcompat/fs").FileRef): Promise<void> {
-  const distDir = targetDir.append("/dist");
-  await fs.create(distDir);
-
-  const instructionsJson = await realCreatePowerupDir.append("/dist/instructions.json").json() as Instructions;
-  await fs.writeJSON(distDir.append("/instructions.json"), instructionsJson);
-
-  const packageJson = await realCreatePowerupDir.append("/package.json").json();
-  await fs.writeJSON(targetDir.append("/package.json"), packageJson);
-
-  const templatesDir = distDir.append("/templates");
-  await fs.create(templatesDir);
-
-  const templateFiles = [
-    "powerup-index.ts",
-    "powerup-package.ts",
-    "powerup-tsconfig.ts",
-    "gitignore.ts",
-  ];
-
-  for (const templateFile of templateFiles) {
-    const content = await realCreatePowerupDir.append(`/templates/${templateFile}`).text();
-    await fs.write(templatesDir.append(`/${templateFile}`), content);
-  }
 }
 
 async function cleanup(): Promise<void> {

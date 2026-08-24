@@ -1,5 +1,4 @@
 import { type FileRef } from "@rcompat/fs";
-import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import path from "node:path";
 import { homedir } from "node:os";

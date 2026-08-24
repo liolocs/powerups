@@ -19,7 +19,7 @@ const build = new Command({
   subcommands: [],
 
   action: async ({ context }) => {
-    const root: FileRef = context?.root ?? await runtime.projectRoot();
+    const root: FileRef = context?.root ?? runtime.cwd();
 
     await checkForPreBuildErrors(root);
 

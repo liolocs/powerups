@@ -14,13 +14,14 @@
   },
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "build": "npm run clean && tsgo && tsup && cp src/app.tsconfig.json lib && mkdir -p lib/private/scaffold/templates && cp src/private/scaffold/templates/*.njk lib/private/scaffold/templates/",
+    "build": "npm run clean && tsgo && tsup && cp src/app.tsconfig.json lib && mkdir -p lib/private/scaffold/templates && cp src/private/scaffold/templates/*.njk lib/private/scaffold/templates/ && npm run build:builtins",
     "clean": "rm -rf ./lib",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepublishOnly": "npm run build",
     "test": "npx proby",
     "b:link": "bun run scripts/link.ts",
+    "build:builtins": "bun run scripts/build-builtin-powerups.ts",
     "release": "commit-and-tag-version --preset conventionalcommits",
     "release:dry-run": "commit-and-tag-version --preset conventionalcommits --dry-run"
   },
@@ -29,6 +30,7 @@
     "/lib/bin.js",
     "/lib/bin.js.map",
     "/lib/private/scaffold/**/*.njk",
+    "/lib/private/builtin/create-powerup/**",
     "!/**/*.spec.*"
   ],
   "imports": {

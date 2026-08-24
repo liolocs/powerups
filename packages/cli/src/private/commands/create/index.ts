@@ -10,7 +10,7 @@ import captureFiles from "#utils/create/capture-files/index";
 import registerPowerup from "#utils/shared/register-powerup";
 import printCreateSummary from "#utils/create/print-create-summary";
 
-import getPowerup from "#utils/use/get-powerup/getPowerup";
+import getBuiltInPowerup from "#utils/use/get-powerup/getBuiltInPowerup";
 import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
 import runPowerup from "#utils/use/run-powerup/index";
 
@@ -63,7 +63,7 @@ const create = new Command({
   subcommands: [],
 
   action: async ({ context, subcommands, flags }) => {
-    const projectRoot: FileRef = context?.root ?? await runtime.projectRoot();
+    const projectRoot: FileRef = context?.root ?? runtime.cwd();
     const isDryRun = flags.dryRun === true;
     const isLocal = flags.local === true;
     const powerupName = subcommands?.[0];
@@ -83,11 +83,7 @@ const create = new Command({
       globalRoot: fs.ref(GLOBAL_ROOT),
     });
 
-    const powerup = await getPowerup({
-      cwd: projectRoot,
-      name: "create-powerup",
-      globalPowerupsDir: fs.ref(GLOBAL_ROOT),
-    });
+    const powerup = await getBuiltInPowerup({ name: "create-powerup" });
 
     const { validatedCompiledInstructions } = await checkCompiledInstructionsForErrors(
       powerup.instructions,

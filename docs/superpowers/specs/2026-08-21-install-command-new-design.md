@@ -37,7 +37,7 @@ interface ParsedSource {
 ```
 utils/install/
 ├── parse-source/
-│   └── parse-source.ts          (+ spec)
+│   └── index.ts                 (+ spec)
 ├── check-for-pre-install-errors/
 │   ├── check-source-was-passed.ts
 │   ├── check-not-internal.ts

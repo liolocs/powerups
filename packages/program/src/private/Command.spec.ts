@@ -207,7 +207,7 @@ test.case("Command passes rawFlags including undeclared flags", async assert => 
     description: "Project name",
   } as const;
 
-  let receivedRawFlags: { flag: string; value: string }[] | undefined;
+  let receivedRawFlags: { flag: string; value?: string }[] | undefined;
 
   const command = new Command({
     name: "test",
@@ -231,4 +231,164 @@ test.case("Command passes rawFlags including undeclared flags", async assert => 
   assert(receivedRawFlags!).defined();
   assert(receivedRawFlags!.length).equals(2);
   assert(receivedRawFlags![1].flag).equals("--extra-flag");
+});
+
+test.case("Boolean flag passed without value returns true", async assert => {
+  const flag = {
+    name: "verbose",
+    long: "verbose",
+    short: "v",
+    description: "Verbose output",
+    type: "boolean",
+  } as const;
+
+  let receivedValue: boolean | undefined;
+
+  const command = new Command({
+    name: "test",
+    description: "test description",
+    flags: [flag],
+    subcommands: [],
+    action: (props) => {
+      receivedValue = props.flags.verbose;
+      return "ok";
+    },
+  });
+
+  await command.run({
+    subcommands: [],
+    flags: [{ flag: "--verbose" }],
+  });
+
+  assert(receivedValue).equals(true);
+});
+
+test.case("Boolean flag not passed returns false", async assert => {
+  const flag = {
+    name: "verbose",
+    long: "verbose",
+    short: "v",
+    description: "Verbose output",
+    type: "boolean",
+  } as const;
+
+  let receivedValue: boolean | undefined;
+
+  const command = new Command({
+    name: "test",
+    description: "test description",
+    flags: [flag],
+    subcommands: [],
+    action: (props) => {
+      receivedValue = props.flags.verbose;
+      return "ok";
+    },
+  });
+
+  await command.run({
+    subcommands: [],
+    flags: [],
+  });
+
+  assert(receivedValue).equals(false);
+});
+
+test.case("Boolean flag passed with short form returns true", async assert => {
+  const flag = {
+    name: "verbose",
+    long: "verbose",
+    short: "v",
+    description: "Verbose output",
+    type: "boolean",
+  } as const;
+
+  let receivedValue: boolean | undefined;
+
+  const command = new Command({
+    name: "test",
+    description: "test description",
+    flags: [flag],
+    subcommands: [],
+    action: (props) => {
+      receivedValue = props.flags.verbose;
+      return "ok";
+    },
+  });
+
+  await command.run({
+    subcommands: [],
+    flags: [{ flag: "-v" }],
+  });
+
+  assert(receivedValue).equals(true);
+});
+
+test.case("Boolean flag passed with value throws error", async assert => {
+  const flag = {
+    name: "verbose",
+    long: "verbose",
+    short: "v",
+    description: "Verbose output",
+    type: "boolean",
+  } as const;
+
+  const command = new Command({
+    name: "test",
+    description: "test description",
+    flags: [flag],
+    subcommands: [],
+    action: () => "ok",
+  });
+
+  try {
+    await command.run({
+      subcommands: [],
+      flags: [{ flag: "--verbose", value: "something" }],
+    });
+  } catch (e) {
+    assert((e as CodeError).code)
+      .equals(CommandErrorCode.invalid_boolean_flag_value);
+  }
+});
+
+test.case("Boolean and string flags work together", async assert => {
+  const verboseFlag = {
+    name: "verbose",
+    long: "verbose",
+    short: "v",
+    description: "Verbose output",
+    type: "boolean",
+  } as const;
+  const nameFlag = {
+    name: "name",
+    long: "name",
+    short: "n",
+    description: "Project name",
+  } as const;
+
+  let receivedVerbose: boolean | undefined;
+  let receivedName: string | undefined;
+
+  const command = new Command({
+    name: "test",
+    description: "test description",
+    flags: [verboseFlag, nameFlag],
+    subcommands: [],
+    action: (props) => {
+      receivedVerbose = props.flags.verbose;
+      receivedName = props.flags.name;
+      return "ok";
+    },
+  });
+
+  await command.run({
+    subcommands: [],
+    flags: [
+      { flag: "--verbose" },
+      { flag: "--name", value: "myproject" },
+    ],
+  });
+
+  assert(receivedVerbose).equals(true);
+  assert(receivedName).equals("myproject");
 });

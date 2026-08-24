@@ -9,7 +9,7 @@ export default function extractVariables({
   excludeFlags,
   powerupName,
 }: {
-  rawFlags: { flag: string; value: string }[];
+  rawFlags: { flag: string; value?: string }[];
   variables: Instructions["variables"];
   excludeFlags: string[];
   powerupName: string;
@@ -44,9 +44,9 @@ function getVariableFlags({
   rawFlags,
   excludeFlags,
 }: {
-  rawFlags: { flag: string; value: string }[];
+  rawFlags: { flag: string; value?: string }[];
   excludeFlags: string[];
-}): { flag: string; value: string }[] {
+}): { flag: string; value?: string }[] {
   return rawFlags.filter(
     flag => !excludeFlags.includes(flag.flag),
   );
@@ -55,13 +55,13 @@ function getVariableFlags({
 function getExtractedVariables({
   variableFlags,
 }: {
-  variableFlags: { flag: string; value: string }[];
+  variableFlags: { flag: string; value?: string }[];
 }): ResolvedVariable {
   const variables: ResolvedVariable = {};
 
   for (const flag of variableFlags) {
     const key = normalizeFlagName(flag.flag);
-    variables[key] = flag.value;
+    variables[key] = flag.value ?? "";
   }
 
   return variables;

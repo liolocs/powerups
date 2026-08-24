@@ -1,8 +1,9 @@
 import { type FileRef } from "@rcompat/fs";
+import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import is from "@rcompat/is";
+import path from "node:path";
 import { homedir } from "node:os";
-import { SINGULAR_NAME_FOR_CLI } from "#constants";
+import { SINGULAR_NAME_FOR_CLI, CLI_FOLDER_NAME } from "#constants";
 import { Command, type Flag } from "@liolocs/program";
 
 import parseSource from "#utils/install/parse-source/index";
@@ -14,19 +15,21 @@ import validateInstalledPackage from "#utils/install/validate-installed-package"
 import registerPowerup from "#utils/shared/register-powerup";
 import printInstallSummary from "#utils/install/print-install-summary";
 
-const dryRunFlag: Flag = {
+const dryRunFlag = {
   name: "dryRun",
   long: "dry-run",
   short: "dr",
   description: "Print output to stdout instead of writing files",
-};
+  type: "boolean",
+} as const satisfies Flag;
 
-const localFlag: Flag = {
+const localFlag = {
   name: "local",
   long: "local",
   short: "l",
   description: "Install to local project store instead of global",
-};
+  type: "boolean",
+} as const satisfies Flag;
 
 const install = new Command({
   name: "install",
@@ -36,9 +39,8 @@ const install = new Command({
 
   action: async ({ context, subcommands, flags }) => {
     const projectRoot: FileRef = context?.root ?? runtime.cwd();
-    const isDryRun = is.defined(flags.dryRun);
-    const isLocal = is.defined(flags.local);
-
+    const isDryRun = flags.dryRun === true;
+    const isLocal = flags.local === true;
     const homeDir = context?.homeDir ?? homedir();
 
     const source = subcommands?.[0];
@@ -74,11 +76,16 @@ const install = new Command({
       });
     }
 
+    const installedPath = isLocal
+      ? projectRoot.append(`/${CLI_FOLDER_NAME}/${parsedSource.storePath}`).path
+      : path.join(homeDir, CLI_FOLDER_NAME, parsedSource.storePath);
+
     printInstallSummary({
       source: parsedSource.configEntry,
       isLocal,
       storeType: parsedSource.type,
       isDryRun,
+      installedPath,
     });
   },
 });

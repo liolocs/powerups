@@ -2,7 +2,7 @@ import fs, { type FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import io from "@rcompat/io";
 import {
-  FOLDER_FOR_NPM_INSTALLED_PACKAGES,
+  INSTALLED_FOLDER,
   NAME_FOR_NPM_PACKAGE_GLOBAL_GROUP,
   PACKAGE_JSON,
 } from "#constants";
@@ -10,7 +10,7 @@ import install_errors from "#errors/installErrors";
 import type { ParsedSource } from "#utils/install/parse-source/index";
 
 async function ensureNpmStore(powerupDir: FileRef): Promise<FileRef> {
-  const npmDir = powerupDir.append(`/${FOLDER_FOR_NPM_INSTALLED_PACKAGES}`);
+  const npmDir = powerupDir.append(`/${INSTALLED_FOLDER.npm}`);
   await fs.create(npmDir);
 
   const pkgJsonPath = npmDir.append(`/${PACKAGE_JSON}`);

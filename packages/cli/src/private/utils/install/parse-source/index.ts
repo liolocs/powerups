@@ -1,4 +1,4 @@
-import { FOLDER_FOR_NPM_INSTALLED_PACKAGES, FOLDER_FOR_GIT_INSTALLED_PACKAGES } from "#constants";
+import { INSTALLED_FOLDER } from "#constants";
 
 export interface ParsedSource {
   type: "npm" | "git" | "internal";
@@ -13,7 +13,7 @@ export default function parseSource(source: string): ParsedSource {
     return {
       type: "npm",
       configEntry: source,
-      storePath: `${FOLDER_FOR_NPM_INSTALLED_PACKAGES}/node_modules/${packageName}`,
+      storePath: `${INSTALLED_FOLDER.npm}/node_modules/${packageName}`,
     };
   }
 
@@ -22,8 +22,22 @@ export default function parseSource(source: string): ParsedSource {
     return {
       type: "git",
       configEntry: source,
-      storePath: `${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/${rest}`,
+      storePath: `${INSTALLED_FOLDER.git}/${rest}`,
       cloneUrl: `https://${rest}`,
+    };
+  }
+
+  if (source.startsWith("git@")) {
+    const atIndex = source.indexOf("@");
+    const colonIndex = source.indexOf(":", atIndex);
+    const domain = source.slice(atIndex + 1, colonIndex);
+    const rest = source.slice(colonIndex + 1);
+    const repoPath = rest.endsWith(".git") ? rest.slice(0, -4) : rest;
+    return {
+      type: "git",
+      configEntry: source,
+      storePath: `${INSTALLED_FOLDER.git}/${domain}/${repoPath}`,
+      cloneUrl: source,
     };
   }
 
@@ -37,7 +51,7 @@ export default function parseSource(source: string): ParsedSource {
     return {
       type: "git",
       configEntry: source,
-      storePath: `${FOLDER_FOR_GIT_INSTALLED_PACKAGES}/${domain}/${owner}/${repo}`,
+      storePath: `${INSTALLED_FOLDER.git}/${domain}/${owner}/${repo}`,
       cloneUrl: source,
     };
   }

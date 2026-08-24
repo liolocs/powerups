@@ -34,12 +34,18 @@ export default async function getPowerup({
 
   // @ts-expect-error it is fine to use before its defined in this case
   if (is.defined(localConfig)) {
-    const powerupDir = cwd.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER[localConfig.where]}/${powerupName}`);
+    const pathSuffix = localConfig.where === "npm"
+      ? `node_modules/${powerupName}`
+      : powerupName;
+    const powerupDir = cwd.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER[localConfig.where]}/${pathSuffix}`);
 
     return fetchPowerup({ powerupDir, powerupName });
     // @ts-expect-error it is fine to use before its defined in this case
   } else if (is.defined(globalConfig)) {
-    const powerupDir = globalPowerupsDir.append(`/${INSTALLED_FOLDER[globalConfig.where]}/${powerupName}`);
+    const pathSuffix = globalConfig.where === "npm"
+      ? `node_modules/${powerupName}`
+      : powerupName;
+    const powerupDir = globalPowerupsDir.append(`/${INSTALLED_FOLDER[globalConfig.where]}/${pathSuffix}`);
 
     return fetchPowerup({ powerupDir, powerupName });
   } else {

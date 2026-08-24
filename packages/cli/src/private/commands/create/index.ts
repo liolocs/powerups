@@ -2,7 +2,6 @@ import { GLOBAL_ROOT, SINGULAR_NAME_FOR_CLI, CLI_FOLDER_NAME, INSTALLED_FOLDER }
 import { Command, type Flag } from "@liolocs/program";
 import type { FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import is from "@rcompat/is";
 import fs from "@rcompat/fs";
 
 import checkForPreCreateErrors from "#utils/create/check-for-pre-create-errors/index";
@@ -15,45 +14,47 @@ import getPowerup from "#utils/use/get-powerup/getPowerup";
 import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
 import runPowerup from "#utils/use/run-powerup/index";
 
-const dryRunFlag: Flag = {
+const dryRunFlag = {
   name: "dryRun", long: "dry-run", short: "dr",
   description: "Print output to stdout instead of writing files",
-};
+  type: "boolean",
+} as const satisfies Flag;
 
-const captureFlag: Flag = {
+const captureFlag = {
   name: "capture", long: "capture", short: "c",
   description: `Capture files into the new ${SINGULAR_NAME_FOR_CLI}: "all" or "workingDir"`,
-};
+} as const satisfies Flag;
 
-const localFlag: Flag = {
+const localFlag = {
   name: "local", long: "local", short: "l",
   description: "Create locally (default: global)",
-};
+  type: "boolean",
+} as const satisfies Flag;
 
-const descriptionFlag: Flag = {
+const descriptionFlag = {
   name: "description", long: "description", short: "d",
   description: "Human-readable description (required)",
-};
+} as const satisfies Flag;
 
-const intentFlag: Flag = {
+const intentFlag = {
   name: "intent", long: "intent", short: "i",
   description: "Comma-separated intent keywords",
-};
+} as const satisfies Flag;
 
-const variablesFlag: Flag = {
+const variablesFlag = {
   name: "variables", long: "variables", short: "v",
   description: "Comma-separated required variable names",
-};
+} as const satisfies Flag;
 
-const optionalVariablesFlag: Flag = {
+const optionalVariablesFlag = {
   name: "optionalVariables", long: "optional-variables", short: "ov",
   description: "Comma-separated optional variable names",
-};
+} as const satisfies Flag;
 
-const typeFlag: Flag = {
+const typeFlag = {
   name: "type", long: "type", short: "t",
   description: `Powerup type: multi-use or single-use (defaults to single-use)`,
-};
+} as const satisfies Flag;
 
 const create = new Command({
   name: "create",
@@ -63,8 +64,8 @@ const create = new Command({
 
   action: async ({ context, subcommands, flags }) => {
     const projectRoot: FileRef = context?.root ?? await runtime.projectRoot();
-    const isDryRun = is.defined(flags.dryRun);
-    const isLocal = is.defined(flags.local);
+    const isDryRun = flags.dryRun === true;
+    const isLocal = flags.local === true;
     const powerupName = subcommands?.[0];
 
     const cwd = isLocal ? projectRoot : fs.ref(GLOBAL_ROOT);
@@ -114,7 +115,7 @@ const create = new Command({
 
     let captureResult;
 
-    if (is.defined(flags.capture)) {
+    if (flags.capture !== undefined) {
       const newPowerupDirectory = cwd.append(`/${outputPath}/${powerupName}`);
       const indexFilePath = newPowerupDirectory.append("/index.ts");
 

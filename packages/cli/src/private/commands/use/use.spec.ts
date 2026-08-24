@@ -40,7 +40,7 @@ test.case("should not create any files anything with dry run flag", async assert
   await assert(use.run({
     subcommands: [powerupName],
     flags: [
-      { flag: "-dr", value: "" },
+      { flag: "-dr" },
       { flag: "--name", value: "name-value-required-from-powerup" },
     ],
     context: { root: targetDir },

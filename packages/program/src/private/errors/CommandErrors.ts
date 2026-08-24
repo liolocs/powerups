@@ -34,6 +34,12 @@ const command_errors = error.coded({
     }
     return t`${errorBGText}${errorText}`;
   },
+  invalid_boolean_flag_value: (name: string, value: string) => {
+    const nameText = cli.bg.yellow(" --" + name + " ");
+    const errorText =
+      `Flag ${nameText} is a boolean flag and does not accept a value, but got "${value}".\n`;
+    return t`${errorBGText}${errorText}`;
+  },
 });
 
 export type CommandErrorCode = keyof typeof command_errors;

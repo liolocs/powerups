@@ -67,7 +67,7 @@ test.case("should create a new local powerup without errors", async assert => {
     subcommands: ["test-pup"],
     flags: [
       { flag: "--description", value: "test description" },
-      { flag: "--local", value: "" },
+      { flag: "--local" },
     ],
     context: { root: testRoot },
   })).noErrorAsync();
@@ -91,8 +91,8 @@ test.case("should not create any files in dry-run mode", async assert => {
     subcommands: ["test-pup"],
     flags: [
       { flag: "--description", value: "test description" },
-      { flag: "--local", value: "" },
-      { flag: "--dry-run", value: "" },
+      { flag: "--local" },
+      { flag: "--dry-run" },
     ],
     context: { root: testRoot },
   })).noErrorAsync();
@@ -113,7 +113,7 @@ test.case("should throw missing_name when no powerup name is passed as subcomman
     subcommands: [],
     flags: [
       { flag: "--description", value: "test description" },
-      { flag: "--local", value: "" },
+      { flag: "--local" },
     ],
     context: { root: testRoot },
   })).throwsAsync(CreateErrorCode.missing_name);
@@ -127,7 +127,7 @@ test.case("should throw missing_description when description flag is not passed"
   await assert(create.run({
     subcommands: ["test-pup"],
     flags: [
-      { flag: "--local", value: "" },
+      { flag: "--local" },
     ],
     context: { root: testRoot },
   })).throwsAsync(CreateErrorCode.missing_description);
@@ -142,7 +142,7 @@ test.case("should throw invalid_capture when an invalid capture value is passed"
     subcommands: ["test-pup"],
     flags: [
       { flag: "--description", value: "test description" },
-      { flag: "--local", value: "" },
+      { flag: "--local" },
       { flag: "--capture", value: "bad-value" },
     ],
     context: { root: testRoot },
@@ -163,7 +163,7 @@ test.case("should throw already_exists when the powerup directory already exists
     subcommands: ["test-pup"],
     flags: [
       { flag: "--description", value: "test description" },
-      { flag: "--local", value: "" },
+      { flag: "--local" },
     ],
     context: { root: testRoot },
   })).throwsAsync(CreateErrorCode.already_exists);
@@ -178,7 +178,7 @@ test.case("should create a powerup with type multi-use when --type flag is passe
     subcommands: ["test-pup"],
     flags: [
       { flag: "--description", value: "test description" },
-      { flag: "--local", value: "" },
+      { flag: "--local" },
       { flag: "--type", value: "multi-use" },
     ],
     context: { root: testRoot },

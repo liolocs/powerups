@@ -8,18 +8,24 @@ export interface Flag {
   short: string;
   description: string;
   required?: boolean;
+  type?: "boolean" | "string";
 }
 
 type FlagNames<T extends readonly Flag[]> = T[number]["name"];
 
+type FlagValue<F extends Flag> =
+  F extends { type: "boolean" } ? boolean : string | undefined;
+
 type FlagRecord<T extends readonly Flag[]> = {
-  [K in FlagNames<T>]: string | undefined;
+  [K in FlagNames<T>]: FlagValue<Extract<T[number], { name: K }>>;
 };
+
+type PassedFlag = { flag: string; value?: string };
 
 type ActionProps<T extends readonly Flag[]> = (props: {
   flags: FlagRecord<T>;
   subcommands?: string[];
-  rawFlags?: { flag: string; value: string }[];
+  rawFlags?: PassedFlag[];
   context?: { root?: any; homeDir?: string; globalRoot?: string };
 }) => any | Promise<any>;
 
@@ -56,11 +62,9 @@ export default class Command<T extends readonly Flag[]> {
 
   async run(args?: {
     subcommands: string[];
-    flags: { flag: string; value: string }[];
+    flags: PassedFlag[];
     context?: { root?: any; homeDir?: string; globalRoot?: string };
   }): Promise<void> {
-    // Delegate to a matching subcommand first, so that `<cmd> <sub> --help`
-    // reaches the subcommand's own help rather than this command's.
     if (is.truthy(args?.subcommands.length)) {
       const [head, ...tail] = args!.subcommands;
       const sub = this.subcommands.get(head);
@@ -111,7 +115,6 @@ export default class Command<T extends readonly Flag[]> {
   public buildHelp(): string {
     const lines: string[] = [];
 
-    // Header
     lines.push(`${this.name} — ${this.description}`);
     lines.push("");
 
@@ -133,7 +136,6 @@ export default class Command<T extends readonly Flag[]> {
       lines.push("");
     }
 
-    // Flags (always includes the implicit help flag)
     const flagEntries: { label: string; desc: string }[] =
       this.flags.map(flag => {
         const short = is.defined(flag.short) ? `-${flag.short}` : "";
@@ -159,7 +161,7 @@ export default class Command<T extends readonly Flag[]> {
   private _getMatchedFlags({
     passedFlags,
   }: {
-    passedFlags: { flag: string; value: string }[];
+    passedFlags: PassedFlag[];
   }): FlagRecord<T> {
     const result = {} as FlagRecord<T>;
 
@@ -169,14 +171,20 @@ export default class Command<T extends readonly Flag[]> {
           || f.flag === `--${flag.long}` || f.flag === `-${flag.short}`,
       );
 
-      (result as Record<string, string | undefined>)[flag.name] =
-        matched?.value;
+      if (flag.type === "boolean") {
+        if (matched && matched.value !== undefined) {
+          throw command_errors.invalid_boolean_flag_value(flag.name, matched.value);
+        }
+        (result as Record<string, any>)[flag.name] = matched !== undefined;
+      } else {
+        (result as Record<string, string | undefined>)[flag.name] = matched?.value;
+      }
     }
 
     return result;
   }
 
-  private _hasMissingRequiredFlags(flags: { flag: string; value: string }[]) {
+  private _hasMissingRequiredFlags(flags: PassedFlag[]) {
     const hasNoFlagsInCommandSetup =
       flags.length === 0 && this.flags.length === 0;
 

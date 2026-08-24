@@ -2,31 +2,30 @@ import { GLOBAL_ROOT, SINGULAR_NAME_FOR_CLI } from "#constants";
 import { Command, type Flag } from "@liolocs/program";
 import type { FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import is from "@rcompat/is";
 import fs from "@rcompat/fs";
 import checkForPreUseErrors from "#utils/use/check-for-pre-use-errors/index";
 import getPowerup from "#utils/use/get-powerup/getPowerup";
 import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
-// import checkForUsePreflightErrors from "#utils/use/check-for-use-preflight-errors/index";
 import runPowerup from "#utils/use/run-powerup/index";
 import extractVariables from "#utils/use/extract-variables";
 import setupRoot from "#utils/use/setupRoot/index";
 
-const EXCLUDE_FLAGS = ["--dry-run", "-d", "--help", "-h"];
+const EXCLUDE_FLAGS = ["--dry-run", "-dr", "--help", "-h"];
 
-const dryRunFlag: Flag = {
+const dryRunFlag = {
   name: "dryRun",
   long: "dry-run",
   short: "dr",
   description: "Print output to stdout instead of writing files",
-};
+  type: "boolean",
+} as const satisfies Flag;
 
-const targetDirFlag: Flag = {
+const targetDirFlag = {
   name: "targetDir",
   long: "target-dir",
   short: "td",
   description: "Target directory for the use command",
-};
+} as const satisfies Flag;
 
 const use = new Command({
   name: "use",
@@ -47,25 +46,12 @@ const use = new Command({
       targetDir: flags.targetDir,
     });
 
-    const isDryRun = is.defined(flags.dryRun);
+    const isDryRun = flags.dryRun === true;
 
     const powerupName = subcommands?.[0];
 
-
-    /**
-     Check:
-     * Powerup was passed
-     * Powerup is in config
-     * Clean git state
-     */
     await checkForPreUseErrors({ cwd: root, powerupName });
-    /**
-     * Should get the powerup from the local store or global store
-     * Should look first in local store, then global store
-     * Should give an error if the powerup is not found
-     * Should use the config.json locally and the global config.json to get the powerup (installed powerups are registered in the local or global config.json based on where they are installed)
-     * The config.json is the same type of file as settings.json for pi.dev except that we record powerups instead of pi extensions
-     */
+
     const powerup = await getPowerup({
       cwd: root,
       name: powerupName!,
@@ -78,12 +64,6 @@ const use = new Command({
       powerup.instructions,
     );
 
-    // /**
-    //  * Should check for
-    //  * 1. Should check for previous manifest entries for the same powerup to ensure a single-use powerup is not applied more than once
-    //  */
-    // await checkForUsePreflightErrors({ cwd: root, instructions: powerup.instructions });
-
     const variables = extractVariables({
       rawFlags: rawFlags ?? [],
       variables: validatedCompiledInstructions.variables,
@@ -91,11 +71,6 @@ const use = new Command({
       powerupName: powerupName!,
     });
 
-    /**
-     * Should execute the steps one by one
-     * Should skip steps that have already applied
-     * Manifest file is created when runStep is called but we also want to create a commit after all steps are run and then add the manifest entries afterwards so that we can mark the commit that was used to run the step
-     */
     await runPowerup({
       destination: root,
       powerupDirectory: powerup.location,

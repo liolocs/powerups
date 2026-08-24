@@ -5,11 +5,13 @@ export default function printInstallSummary({
   isLocal,
   storeType,
   isDryRun,
+  installedPath,
 }: {
   source: string;
   isLocal: boolean;
   storeType: "npm" | "git" | "internal";
   isDryRun: boolean;
+  installedPath: string;
 }): void {
   const green = cli.fg.green;
   const dim = cli.fg.dim;
@@ -23,4 +25,8 @@ export default function printInstallSummary({
 
   cli.print(`  ${dim("location:")} ${location}\n`);
   cli.print(`  ${dim("store:")} ${storeType}\n`);
+
+  if (!isDryRun) {
+    cli.print(`  ${dim("path:")} ${installedPath}\n`);
+  }
 }

@@ -3,7 +3,7 @@ import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import fetchNpmPackage from "#utils/install/fetch-package/fetch-npm-package";
 import { InstallErrorCode } from "#errors/installErrors";
-import { CLI_FOLDER_NAME, PACKAGE_JSON } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER, PACKAGE_JSON } from "#constants";
 import type { ParsedSource } from "#utils/install/parse-source/index";
 
 const root = await runtime.projectRoot();
@@ -27,12 +27,12 @@ test.case("should create the npm store directory with package.json if it does no
   const parsedSource: ParsedSource = {
     type: "npm",
     configEntry: "npm:@liolocs/powerup-hello-world",
-    storePath: "npm/node_modules/@liolocs/powerup-hello-world",
+    storePath: `${INSTALLED_FOLDER.npm}/node_modules/@liolocs/powerup-hello-world`,
   };
 
   await assert(fetchNpmPackage({ powerupDir, parsedSource })).noErrorAsync();
 
-  const npmDir = powerupDir.append("/npm");
+  const npmDir = powerupDir.append(`/${INSTALLED_FOLDER.npm}`);
   const pkgJson = await npmDir.append(`/${PACKAGE_JSON}`).json() as Record<string, any>;
 
   assert(pkgJson.name).equals("powerups");
@@ -51,12 +51,12 @@ test.case("should create a .gitignore in the npm store directory", async assert 
   const parsedSource: ParsedSource = {
     type: "npm",
     configEntry: "npm:@liolocs/powerup-hello-world",
-    storePath: "npm/node_modules/@liolocs/powerup-hello-world",
+    storePath: `${INSTALLED_FOLDER.npm}/node_modules/@liolocs/powerup-hello-world`,
   };
 
   await assert(fetchNpmPackage({ powerupDir, parsedSource })).noErrorAsync();
 
-  const gitignoreContent = await powerupDir.append("/npm/.gitignore").text();
+  const gitignoreContent = await powerupDir.append(`/${INSTALLED_FOLDER.npm}/.gitignore`).text();
   assert(gitignoreContent).includes("*\n!.gitignore\n");
 
   await cleanup();
@@ -67,7 +67,7 @@ test.case("should not overwrite an existing package.json in the npm store", asyn
 
   const powerupDir = testRoot.append(`/${CLI_FOLDER_NAME}`);
   await fs.create(powerupDir);
-  const npmDir = powerupDir.append("/npm");
+  const npmDir = powerupDir.append(`/${INSTALLED_FOLDER.npm}`);
   await fs.create(npmDir);
 
   await npmDir.append(`/${PACKAGE_JSON}`).writeJSON({
@@ -79,7 +79,7 @@ test.case("should not overwrite an existing package.json in the npm store", asyn
   const parsedSource: ParsedSource = {
     type: "npm",
     configEntry: "npm:@liolocs/powerup-hello-world",
-    storePath: "npm/node_modules/@liolocs/powerup-hello-world",
+    storePath: `${INSTALLED_FOLDER.npm}/node_modules/@liolocs/powerup-hello-world`,
   };
 
   await assert(fetchNpmPackage({ powerupDir, parsedSource })).noErrorAsync();

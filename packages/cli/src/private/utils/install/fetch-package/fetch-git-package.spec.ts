@@ -4,7 +4,7 @@ import runtime from "@rcompat/runtime";
 import io from "@rcompat/io";
 import fetchGitPackage from "#utils/install/fetch-package/fetch-git-package";
 import { InstallErrorCode } from "#errors/installErrors";
-import { CLI_FOLDER_NAME } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
 import type { ParsedSource } from "#utils/install/parse-source/index";
 
 const root = await runtime.projectRoot();
@@ -39,13 +39,13 @@ test.case("should clone a git repository into the store path when the directory 
   const parsedSource: ParsedSource = {
     type: "git",
     configEntry: `git:${sourceRepoPath}`,
-    storePath: "git/localhost/source-repo",
+    storePath: `${INSTALLED_FOLDER.git}/localhost/source-repo`,
     cloneUrl: `file://${sourceRepoPath}`,
   };
 
   await assert(fetchGitPackage({ powerupDir, parsedSource })).noErrorAsync();
 
-  const targetDir = powerupDir.append("/git/localhost/source-repo");
+  const targetDir = powerupDir.append(`/${INSTALLED_FOLDER.git}/localhost/source-repo`);
   assert(await fs.exists(targetDir.append("/README.md"))).true();
 
   await cleanup();
@@ -61,7 +61,7 @@ test.case("should run git pull when the target directory already exists", async 
   const parsedSource: ParsedSource = {
     type: "git",
     configEntry: `git:${sourceRepoPath}`,
-    storePath: "git/localhost/source-repo",
+    storePath: `${INSTALLED_FOLDER.git}/localhost/source-repo`,
     cloneUrl: `file://${sourceRepoPath}`,
   };
 
@@ -73,7 +73,7 @@ test.case("should run git pull when the target directory already exists", async 
 
   await assert(fetchGitPackage({ powerupDir, parsedSource })).noErrorAsync();
 
-  const targetDir = powerupDir.append("/git/localhost/source-repo");
+  const targetDir = powerupDir.append(`/${INSTALLED_FOLDER.git}/localhost/source-repo`);
   assert(await fs.exists(targetDir.append("/NEW-FILE.md"))).true();
 
   await cleanup();
@@ -88,7 +88,7 @@ test.case("should throw fetch_failed when the git clone fails", async assert => 
   const parsedSource: ParsedSource = {
     type: "git",
     configEntry: "git:nonexistent.host/owner/repo",
-    storePath: "git/nonexistent.host/owner/repo",
+    storePath: `${INSTALLED_FOLDER.git}/nonexistent.host/owner/repo`,
     cloneUrl: "https://nonexistent.host/owner/repo",
   };
 

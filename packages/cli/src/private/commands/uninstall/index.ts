@@ -49,13 +49,13 @@ const uninstall = new Command({
       ? projectRoot.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       : fs.ref(path.join(homeDir, CLI_FOLDER_NAME, CONFIG_FILE_NAME));
 
-    const entry = await findPowerupInConfig({ configRef, powerupName: powerupName! });
+    const powerupPackageEntry = await findPowerupInConfig({ configRef, powerupName: powerupName! });
 
-    if (entry === null) {
+    if (powerupPackageEntry === null) {
       throw uninstall_errors.not_installed(powerupName!);
     }
 
-    const source = getPackageSource(entry);
+    const source = getPackageSource(powerupPackageEntry);
     const parsedSource = parseSource(source);
 
     checkNotInternal({ parsedType: parsedSource.type, name: powerupName! });

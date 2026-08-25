@@ -37,30 +37,6 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  .powerups/installed/_internal/cli-command:
-    devDependencies:
-      '@liolocs/powerups-sdk':
-        specifier: link:../../../../packages/sdk
-        version: link:../../../../packages/sdk
-
-  .powerups/installed/_internal/cli-sub-command:
-    devDependencies:
-      '@liolocs/powerups-sdk':
-        specifier: link:../../../../packages/sdk
-        version: link:../../../../packages/sdk
-
-  .powerups/installed/_internal/cli-with-sub-commands:
-    devDependencies:
-      '@liolocs/powerups-sdk':
-        specifier: link:../../../../packages/sdk
-        version: link:../../../../packages/sdk
-      cli-command:
-        specifier: file:../cli-command
-        version: link:../cli-command
-      cli-sub-command:
-        specifier: file:../cli-sub-command
-        version: link:../cli-sub-command
-
   packages/cli:
     dependencies:
       '@rcompat/cli':
@@ -106,6 +82,9 @@ importers:
       '@types/nunjucks':
         specifier: ^3.2.6
         version: 3.2.6
+      commit-and-tag-version:
+        specifier: ^13.1.2
+        version: 13.1.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.1)
 
   packages/program:
     dependencies:

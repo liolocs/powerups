@@ -13,7 +13,7 @@ const EXCLUDED_BASENAMES = new Set([
   "bun.lockb",
 ]);
 
-const EXCLUDED_DIR_PREFIXES = ["node_modules/", "dist/"];
+const EXCLUDED_DIR_PREFIXES = ["node_modules/", "dist/", ".git/"];
 
 export default async function captureAllFiles({
   projectRoot,

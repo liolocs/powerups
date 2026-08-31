@@ -5,3 +5,6 @@ packages:
 minimumReleaseAge: 0
 overrides:
   '@liolocs/powerups-sdk': link:packages/sdk
+allowBuilds:
+  esbuild: true
+  sharp: true

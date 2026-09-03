@@ -10,9 +10,9 @@ on, and the SDK powerup authors use to define powerups.
 
 | Package | Path | Description | Published | Docs |
 | ------- | ---- | ----------- | :-------: | ---- |
-| [`@liolocs/powerups-cli`](./packages/cli) | `packages/cli` | A system for AI to use existing code rather than come up with it from scratch | ✅ | [README](./packages/cli/README.md) |
-| [`@liolocs/program`](./packages/program) | `packages/program` | Program for creating a cli | ❌ (private) | [README](./packages/program/README.md) |
-| [`@liolocs/powerups-sdk`](./packages/sdk) | `packages/sdk` | SDK for powerups system | ✅ | [README](./packages/sdk/README.md) |
+{% for package in packages -%}
+| [`{{ package.name }}`](./{{ package.path }}) | `{{ package.path }}` | {{ package.description }} | {{ "✅" if not package.isPrivate else "❌ (private)" }} | [README]({{ package.readmeHref }}) |
+{% endfor %}
 
 ## How the packages relate
 

@@ -22,6 +22,7 @@
     "test": "npx proby",
     "b:link": "bun run scripts/link.ts",
     "build:builtins": "bun run scripts/build-builtin-powerups.ts",
+    "readme": "bun run scripts/generate-readme.ts",
     "release": "commit-and-tag-version --preset conventionalcommits",
     "release:dry-run": "commit-and-tag-version --preset conventionalcommits --dry-run"
   },

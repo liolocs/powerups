@@ -65,6 +65,27 @@ lib/                             # build output (gitignored)
 Each command lives in `src/private/commands/<name>/`. When adding a command,
 follow the existing layout (an `index.ts` plus any helpers alongside it).
 
+## Generated readmes
+
+Two READMEs are generated from templates and committed — don't hand-edit
+them:
+
+- `packages/cli/README.md` — rendered from
+  `packages/cli/scripts/templates/readme.njk` plus the command metadata in
+  `src/private/commands/<name>/index.ts` (consumed via the built
+  `lib/commands/index.js`).
+- `README.md` (repo root) — rendered from `scripts/templates/root-readme.njk`
+  plus each package's `package.json` under `packages/`.
+
+After changing a command's `name`, `description`, or `flags` — or a package's
+`description` — rebuild and regenerate both:
+
+```sh
+pnpm --filter @liolocs/powerups-cli build
+pnpm --filter @liolocs/powerups-cli readme
+pnpm readme
+```
+
 ## Code style
 
 - TypeScript, ESM, strict mode.

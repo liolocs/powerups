@@ -1,6 +1,6 @@
 ---
 title: Install the CLI
-description: Install the pup CLI globally with npm and verify your setup.
+description: Install the pup CLI globally with npm and run your first powerup.
 sidebar:
   order: 1
 ---

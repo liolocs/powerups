@@ -6,6 +6,7 @@ node_modules
 tmp/
 lib
 docs/.pi-subagents/
-docs/
+/docs/
 pi-subagents/
 **/lib/
+.pnpm-store

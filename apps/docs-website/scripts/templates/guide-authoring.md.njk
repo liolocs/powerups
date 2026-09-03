@@ -1,0 +1,67 @@
+---
+title: Authoring powerups
+description: Define, build, and use your own powerups with the SDK.
+sidebar:
+  order: 3
+---
+
+A powerup is a small package that, when applied with `pup use`, runs a
+sequence of steps against a target project to scaffold or transform code.
+Authoring one takes three things: an **instructions** file, **templates**,
+and a `pup build`.
+
+## 1. Define instructions
+
+A powerup's `index.ts` declares its metadata and steps, wrapped with
+`defineInstructions` from the SDK:
+
+```ts
+import { defineInstructions } from "@liolocs/powerups-sdk";
+
+const instructions = {
+  name: "my-powerup",
+  type: "multi-use" as const,
+  description: "Scaffolds a svelte component",
+  variables: { required: ["componentName", "theme"] },
+  intent: ["new svelte component"],
+  steps: [
+    {
+      type: "create",
+      name: "component",
+      template: "templates/component.ts",
+      outputPath: "src/lib/components/{{componentName}}.svelte",
+    },
+  ],
+} satisfies Instructions;
+
+export default defineInstructions(instructions, import.meta.url);
+```
+
+Templates are `.ts` files that receive the powerup's variables and return
+the full file contents as a string:
+
+```ts
+export default ({ componentName, theme }: Record<string, string>) =>
+  `<button class="${theme}">${componentName}</button>`;
+```
+
+## 2. Build
+
+```sh
+pup build
+```
+
+The build validates the instructions against the SDK schema and writes a
+self-contained `dist/` with `instructions.json` and the templates.
+
+## 3. Use and share
+
+`pup use my-powerup --componentName=Button` applies the powerup. Powerups
+compose: `includePowerup` flattens another powerup's steps into the current
+one at author time, so a parent ships as a single self-contained unit.
+
+## Learn more
+
+The [SDK reference](/reference/sdk/) documents every schema, type, and
+helper — including the five step kinds (`create`, `modify`, `delete`,
+`read`, `install`) and how `includePowerup` composes children.

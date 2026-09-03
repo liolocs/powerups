@@ -86,6 +86,25 @@ pnpm --filter @liolocs/powerups-cli readme
 pnpm readme
 ```
 
+## Generated docs website
+
+The content of `apps/docs-website` is also generated and committed — don't
+hand-edit the pages under `apps/docs-website/src/content/docs/`:
+
+- `reference/cli/<name>.md` — one page per `pup` command, from the same built
+  command registry as the readmes.
+- `reference/sdk.md` — rendered from `packages/sdk/README.md` (the SDK API's
+  source of truth).
+- `index.mdx` and `guides/*.md` — prose carried by njk templates in
+  `apps/docs-website/scripts/templates/`.
+
+`pnpm --filter powerup-agents-docs dev` and `build` regenerate the content
+first automatically. To regenerate on its own:
+
+```sh
+pnpm --filter powerup-agents-docs docs
+```
+
 ## Code style
 
 - TypeScript, ESM, strict mode.

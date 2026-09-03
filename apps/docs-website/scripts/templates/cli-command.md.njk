@@ -1,0 +1,30 @@
+---
+title: 'pup {{ command.name }}'
+description: '{{ command.description }}'
+sidebar:
+  order: {{ order }}
+---
+
+{{ command.description }}
+
+```sh
+{{ cliCmd }} {{ command.name }} [flags]
+```
+{%- if command.flags.length > 0 %}
+
+## Flags
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+{% for flag in command.flags -%}
+| `--{{ flag.long }}` | `-{{ flag.short }}` | {{ flag.type or "string" }} | {{ flag.description }} |
+{% endfor -%}
+{%- endif %}
+{%- if command.subcommandNames.length > 0 %}
+
+## Subcommands
+
+{% for subcommandName in command.subcommandNames -%}
+- `{{ cliCmd }} {{ command.name }} {{ subcommandName }}`
+{% endfor -%}
+{%- endif %}

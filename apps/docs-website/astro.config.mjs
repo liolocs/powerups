@@ -7,27 +7,29 @@ import lucode from 'lucode-starlight';
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: 'My Docs',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
-      plugins: [
-        lucode({
-          navLinks: [
-            { label: 'Docs', link: '/guides/getting-started/' },
-            { label: 'API', link: '/reference/plugin-api/' },
-          ],
-        }),
-      ],
+			title: 'powerups',
+			description:
+				'Guardrails for AI output — reusable powerups your AI agent can use instead of inventing code from scratch.',
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/liolocs/powerups' }],
+			plugins: [
+				lucode({
+					navLinks: [
+						{ label: 'Guides', link: '/guides/install/' },
+						{ label: 'Reference', link: '/reference/cli/build/' },
+					],
+				}),
+			],
 			sidebar: [
 				{
 					label: 'Guides',
-					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', slug: 'guides/example' },
-					],
+					items: [{ autogenerate: { directory: 'guides' } }],
 				},
 				{
 					label: 'Reference',
-					items: [{ autogenerate: { directory: 'reference' } }],
+					items: [
+						{ label: 'CLI', items: [{ autogenerate: { directory: 'reference/cli' } }] },
+						{ slug: 'reference/sdk' },
+					],
 				},
 			],
 		}),

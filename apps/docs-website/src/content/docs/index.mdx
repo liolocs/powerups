@@ -1,0 +1,52 @@
+---
+title: powerups
+description: Guardrails for AI output — reusable powerups your AI agent can use instead of inventing code from scratch.
+template: splash
+hero:
+  tagline: Guardrails for AI output — reusable powerups your AI agent can use instead of inventing code from scratch.
+  actions:
+    - text: Install the CLI
+      link: /guides/install/
+      icon: right-arrow
+    - text: CLI reference
+      link: /reference/cli/build/
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import { ContainerSection } from 'lucode-starlight/components';
+
+<ContainerSection>
+
+## What is pup?
+
+`pup` helps you manage reusable **powerups** — bits of existing code and
+patterns — and make them available to AI agents working in your project.
+Instead of letting an AI generate a solution from scratch, you point it at
+powerups you've already written, so its output is grounded in code you trust.
+
+<CardGrid>
+  <Card title="Install the CLI" icon="setting">
+    Install `pup` globally with npm and verify your setup.
+    <br />[Install the CLI](/guides/install/)
+  </Card>
+  <Card title="Use a powerup" icon="right-arrow">
+    Install a powerup pack, then apply powerups to your project with
+    variables. <br />[Quick start](/guides/quick-start/)
+  </Card>
+  <Card title="Author powerups" icon="pencil">
+    Define instructions and templates with the SDK, build them, and share
+    them. <br />[Authoring guide](/guides/authoring-powerups/)
+  </Card>
+  <Card title="Command reference" icon="document">
+    Every `pup` command with its flags, generated from the CLI source.
+    <br />[CLI reference](/reference/cli/build/)
+  </Card>
+  <Card title="SDK reference" icon="open-book">
+    Schemas, types, and helpers for authoring powerups.
+    <br />[SDK reference](/reference/sdk/)
+  </Card>
+</CardGrid>
+
+</ContainerSection>

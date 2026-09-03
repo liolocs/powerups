@@ -12,6 +12,7 @@
     "build:packages": "pnpm -r --filter='./packages/**' build",
     "build:apps": "pnpm -r --filter='./apps/**' build",
     "readme": "bun run scripts/generate-root-readme.ts",
+    "test:cli": "CI=true npx proby packages/cli",
     "knip": "knip",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

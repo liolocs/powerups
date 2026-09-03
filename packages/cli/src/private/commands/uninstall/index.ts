@@ -3,7 +3,7 @@ import runtime from "@rcompat/runtime";
 import path from "node:path";
 import { homedir } from "node:os";
 import fs from "@rcompat/fs";
-import { SINGULAR_NAME_FOR_CLI, CLI_FOLDER_NAME, CONFIG_FILE_NAME, INSTALLED_FOLDER, PACKAGE_JSON } from "#constants";
+import { SINGULAR_NAME_FOR_CLI, CLI_FOLDER_NAME, CONFIG_FILE_NAME } from "#constants";
 import { Command, type Flag } from "@liolocs/program";
 
 import { getPackageSource, removePackageFromConfig, removePackageFromGlobalConfig } from "#utils/config";
@@ -13,8 +13,9 @@ import checkNameWasPassed from "#utils/uninstall/check-for-pre-uninstall-errors/
 import checkNotInternal from "#utils/uninstall/check-for-pre-uninstall-errors/check-not-internal";
 import removeInstallDirectory from "#utils/uninstall/remove-install-directory";
 import printUninstallSummary from "#utils/uninstall/print-uninstall-summary";
+import isStaleNpmPackage from "#utils/uninstall/is-stale-npm-package";
+import removeStaleNpmPackage from "#utils/uninstall/remove-stale-npm-package";
 import uninstall_errors from "#errors/uninstallErrors";
-import type { ParsedSource } from "#utils/install/parse-source/index";
 
 const dryRunFlag = {
   name: "dryRun", long: "dry-run", short: "dr",
@@ -50,36 +51,20 @@ const uninstall = new Command({
       ? projectRoot.append(`/${CLI_FOLDER_NAME}/${CONFIG_FILE_NAME}`)
       : fs.ref(path.join(homeDir, CLI_FOLDER_NAME, CONFIG_FILE_NAME));
 
-    const powerupPackageEntry = await findPowerupInConfig({ configRef, powerupName: powerupName! });
-
     const powerupDir = isLocal
       ? projectRoot.append(`/${CLI_FOLDER_NAME}`)
       : fs.ref(path.join(homeDir, CLI_FOLDER_NAME));
 
-    // Not registered in config. If the user passed an npm source, it may be a
-    // stale package left in the npm store from a previous failed install (a
-    // failed `npm install` records the dependency before resolving it, and a
-    // 404'd entry is never registered in config). Let the user purge it.
+    const powerupPackageEntry = await findPowerupInConfig({ configRef, powerupName: powerupName! });
+
+    // Not registered in config: it may be a stale npm package left in the store
+    // from a previous failed install. Let the user purge it.
     if (powerupPackageEntry === null) {
       const parsedSource = parseSource(powerupName!);
 
-      if (parsedSource.type === "npm" && await isStaleNpmPackage(powerupDir, parsedSource)) {
-        const packageName = parsedSource.configEntry.slice(4);
-        const removedPath = isLocal
-          ? projectRoot.append(`/${CLI_FOLDER_NAME}/${parsedSource.storePath}`).path
-          : path.join(homeDir, CLI_FOLDER_NAME, parsedSource.storePath);
-
-        if (!isDryRun) {
-          await removeInstallDirectory({ powerupDir, parsedSource });
-        }
-
-        printUninstallSummary({
-          powerupName: packageName,
-          source: parsedSource.configEntry,
-          isLocal,
-          storeType: parsedSource.type,
-          isDryRun,
-          removedPath,
+      if (await isStaleNpmPackage(powerupDir, parsedSource)) {
+        await removeStaleNpmPackage({
+          powerupDir, parsedSource, isLocal, isDryRun, projectRoot, homeDir,
         });
         return;
       }
@@ -116,25 +101,5 @@ const uninstall = new Command({
     });
   },
 });
-
-/**
- * Whether an npm source refers to a package present in the npm store's shared
- * `package.json` but not registered in the powerups config — i.e. a stale
- * dependency left behind by a previous failed install.
- */
-async function isStaleNpmPackage(
-  powerupDir: FileRef,
-  parsedSource: ParsedSource,
-): Promise<boolean> {
-  const packageName = parsedSource.configEntry.slice(4);
-  const pkgJsonPath = powerupDir.append(`/${INSTALLED_FOLDER.npm}/${PACKAGE_JSON}`);
-
-  if (!(await fs.exists(pkgJsonPath))) {
-    return false;
-  }
-
-  const pkgJson = await pkgJsonPath.json() as Record<string, any>;
-  return pkgJson.dependencies?.[packageName] !== undefined;
-}
 
 export default uninstall;

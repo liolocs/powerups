@@ -151,6 +151,25 @@ importers:
         specifier: ^13.1.2
         version: 13.1.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.1)
 
+  tmp/tmp-monorepo/packages/my-powerup:
+    dependencies:
+      lodash:
+        specifier: ^4.18.1
+        version: 4.18.1
+
+  tmp/tmp-repo-for-install-step-test:
+    dependencies:
+      lodash:
+        specifier: ^4.18.1
+        version: 4.18.1
+    devDependencies:
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@25.9.4)(vite@8.2.2(@types/node@25.9.4)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+      vue:
+        specifier: ^3.5.42
+        version: 3.5.42(typescript@6.0.3)
+
 packages:
 
   '@astrojs/compiler-binding-darwin-arm64@0.4.0':

@@ -53,6 +53,21 @@ test.case("should include the source and message in fetch_failed error", async a
   }
 });
 
+test.case("should include the source, stale package and uninstall hint in stale_npm_package error", async assert => {
+  try {
+    throw install_errors.stale_npm_package({ source: "npm:@liolocs/foo", stalePackage: "powerup-hello-world" });
+  } catch (error) {
+    // @ts-expect-error error.code is not typed on unknown
+    assert(error.code).equals(InstallErrorCode.stale_npm_package);
+    // @ts-expect-error error.message is not typed on unknown
+    assert(error.message).includes("npm:@liolocs/foo");
+    // @ts-expect-error error.message is not typed on unknown
+    assert(error.message).includes("powerup-hello-world");
+    // @ts-expect-error error.message is not typed on unknown
+    assert(error.message).includes("pup uninstall npm:powerup-hello-world");
+  }
+});
+
 test.case("should include the source and reason in not_a_powerups_package error", async assert => {
   try {
     throw install_errors.not_a_powerups_package("npm:bad-package", "Missing powerups-package keyword");

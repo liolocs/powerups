@@ -2,8 +2,6 @@ import zod from "zod";
 
 const powerupTypeSchema = zod.enum(["multi-use", "single-use"]);
 
-const stepTypeSchema = zod.enum(["create", "modify", "delete", "read", "install"]);
-
 const stepStatusSchema = zod.enum([
   "applied",
   "skipped-warning",

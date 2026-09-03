@@ -3,7 +3,7 @@ import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import uninstall from "#commands/uninstall/index";
 import { UninstallErrorCode } from "#errors/uninstallErrors";
-import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
+import { CLI_FOLDER_NAME, INSTALLED_FOLDER, PACKAGE_JSON } from "#constants";
 import createSimpleProjectForTest from "#test-utils/create-simple-project-for-test";
 
 const root = await runtime.projectRoot();
@@ -192,6 +192,106 @@ test.case("should throw missing_name when no powerup name is passed", async asse
     flags: [],
     context: { root: projectDir, homeDir: globalTestRoot.path },
   })).throwsAsync(UninstallErrorCode.missing_name);
+
+  await cleanup();
+});
+
+test.case("should uninstall an npm powerup from global config by its full source", async assert => {
+  await setupTestDir();
+
+  const source = "npm:@liolocs/powerup-hello-world";
+  const powerupName = "hello-world";
+
+  await fs.create(globalTestRoot.append(`/${CLI_FOLDER_NAME}`));
+  await fs.write(
+    globalTestRoot.append(`/${CLI_FOLDER_NAME}/config.json`),
+    JSON.stringify({ packages: [{ package: source, name: powerupName }] }) + "\n",
+  );
+
+  const npmDir = globalTestRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.npm}`);
+  await fs.create(npmDir);
+  await npmDir.append(`/${PACKAGE_JSON}`).writeJSON({
+    name: "powerups",
+    private: true,
+    dependencies: { "@liolocs/powerup-hello-world": "latest" },
+  });
+
+  const { projectDir } = await createSimpleProjectForTest({
+    projectName: "test-project",
+    testRoot,
+  });
+
+  await assert(uninstall.run({
+    subcommands: [source],
+    flags: [],
+    context: { root: projectDir, homeDir: globalTestRoot.path },
+  })).noErrorAsync();
+
+  const globalConfig = await globalTestRoot.append(`/${CLI_FOLDER_NAME}/config.json`).json() as any;
+  assert(globalConfig.packages.some((p: any) => p.name === powerupName)).false();
+
+  const pkgJson = await npmDir.append(`/${PACKAGE_JSON}`).json() as Record<string, any>;
+  assert(pkgJson.dependencies?.["@liolocs/powerup-hello-world"]).undefined();
+
+  await cleanup();
+});
+
+test.case("should uninstall a stale npm package that is not registered in config", async assert => {
+  await setupTestDir();
+
+  const staleSource = "npm:powerup-hello-world";
+
+  await fs.create(globalTestRoot.append(`/${CLI_FOLDER_NAME}`));
+  await fs.write(
+    globalTestRoot.append(`/${CLI_FOLDER_NAME}/config.json`),
+    JSON.stringify({ packages: [] }) + "\n",
+  );
+
+  const npmDir = globalTestRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.npm}`);
+  await fs.create(npmDir);
+  await npmDir.append(`/${PACKAGE_JSON}`).writeJSON({
+    name: "powerups", private: true, dependencies: { "powerup-hello-world": "latest" } });
+
+  const { projectDir } = await createSimpleProjectForTest({
+    projectName: "test-project",
+    testRoot,
+  });
+
+  await assert(uninstall.run({
+    subcommands: [staleSource],
+    flags: [],
+    context: { root: projectDir, homeDir: globalTestRoot.path },
+  })).noErrorAsync();
+
+  const pkgJson = await npmDir.append(`/${PACKAGE_JSON}`).json() as Record<string, any>;
+  assert(pkgJson.dependencies?.["powerup-hello-world"]).undefined();
+
+  await cleanup();
+});
+
+test.case("should throw not_installed when an npm source is neither in config nor in the npm store", async assert => {
+  await setupTestDir();
+
+  await fs.create(globalTestRoot.append(`/${CLI_FOLDER_NAME}`));
+  await fs.write(
+    globalTestRoot.append(`/${CLI_FOLDER_NAME}/config.json`),
+    JSON.stringify({ packages: [] }) + "\n",
+  );
+
+  const npmDir = globalTestRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.npm}`);
+  await fs.create(npmDir);
+  await npmDir.append(`/${PACKAGE_JSON}`).writeJSON({ name: "powerups", private: true, dependencies: {} });
+
+  const { projectDir } = await createSimpleProjectForTest({
+    projectName: "test-project",
+    testRoot,
+  });
+
+  await assert(uninstall.run({
+    subcommands: ["npm:not-a-real-package"],
+    flags: [],
+    context: { root: projectDir, homeDir: globalTestRoot.path },
+  })).throwsAsync(UninstallErrorCode.not_installed);
 
   await cleanup();
 });

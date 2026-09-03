@@ -7,6 +7,7 @@ import {
   PACKAGE_JSON,
 } from "#constants";
 import install_errors from "#errors/installErrors";
+import extractFailedNpmPackage from "#utils/install/fetch-package/extract-failed-npm-package";
 import type { ParsedSource } from "#utils/install/parse-source/index";
 
 async function ensureNpmStore(powerupDir: FileRef): Promise<FileRef> {
@@ -57,7 +58,21 @@ export default async function fetchNpmPackage({
     const stdout = await io.run("npm install", { cwd: npmDir.path });
     if (stdout) cli.print(stdout);
   } catch (error_) {
-    const message = typeof error_ === "string" ? error_ : String(error_);
-    throw install_errors.fetch_failed(parsedSource.configEntry, message);
+    const stderr = typeof error_ === "string" ? error_ : String(error_);
+
+    const failedPackage = extractFailedNpmPackage(stderr);
+    const dependencies = Object.keys(pkgJson.dependencies ?? {});
+    const isStalePackage = failedPackage !== null
+      && failedPackage !== packageName
+      && dependencies.includes(failedPackage);
+
+    if (isStalePackage) {
+      throw install_errors.stale_npm_package({
+        source: parsedSource.configEntry,
+        stalePackage: failedPackage!,
+      });
+    }
+
+    throw install_errors.fetch_failed(parsedSource.configEntry, stderr);
   }
 }

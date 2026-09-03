@@ -13,7 +13,7 @@ create your own powerup, use it in a project, and remove it again.
 Powerup packs come from npm or git:
 
 ```sh
-pup install npm:powerup-hello-world
+pup install npm:@liolocs/powerup-hello-world
 ```
 
 Add `--local` to install into the project store instead of the global store,
@@ -35,8 +35,16 @@ applied manifest that powers diagnosis and repair workflows.
 
 ## 3. Remove a powerup
 
+You can remove the powerup by using just the powerup name:
+
 ```sh
 pup uninstall powerup-hello-world
+```
+
+or by using the full package source:
+
+```sh
+pup uninstall npm:@liolocs/powerup-hello-world
 ```
 
 Like `install`, it removes from the global store unless you pass `--local`.

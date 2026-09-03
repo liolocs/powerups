@@ -90,3 +90,34 @@ test.case("should not overwrite an existing package.json in the npm store", asyn
 
   await cleanup();
 });
+
+test.case("should throw stale_npm_package when a stale dependency blocks npm install", async assert => {
+  await setupTestDir();
+
+  const powerupDir = testRoot.append(`/${CLI_FOLDER_NAME}`);
+  await fs.create(powerupDir);
+  const npmDir = powerupDir.append(`/${INSTALLED_FOLDER.npm}`);
+  await fs.create(npmDir);
+
+  // Pre-seed the shared manifest with a stale, non-existent package (left over
+  // from a previous failed install) alongside the package we actually want.
+  await npmDir.append(`/${PACKAGE_JSON}`).writeJSON({
+    name: "powerups",
+    private: true,
+    dependencies: {
+      "this-package-does-not-exist-on-npm-xyz123": "latest",
+      "@liolocs/powerup-hello-world": "latest",
+    },
+  });
+
+  const parsedSource: ParsedSource = {
+    type: "npm",
+    configEntry: "npm:@liolocs/powerup-hello-world",
+    storePath: `${INSTALLED_FOLDER.npm}/node_modules/@liolocs/powerup-hello-world`,
+  };
+
+  await assert(fetchNpmPackage({ powerupDir, parsedSource }))
+    .throwsAsync(InstallErrorCode.stale_npm_package);
+
+  await cleanup();
+});

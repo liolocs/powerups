@@ -6,7 +6,7 @@ const base = {
   version: "1.2.0",
   location: "~/.powerups/stores/npm/react-setup/",
   type: "multi-use" as const,
-  timestamp: "2025-01-01T00:00:00.000Z",
+  timestamp: new Date("2025-01-01T00:00:00.000Z"),
   stepName: "create-app",
   stepType: "create" as const,
   status: "applied" as const,

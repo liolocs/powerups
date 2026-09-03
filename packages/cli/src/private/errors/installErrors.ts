@@ -32,6 +32,18 @@ const install_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  stale_npm_package: ({ source, stalePackage }: { source: string; stalePackage: string }) => {
+    const staleSource = `npm:${stalePackage}`;
+    const errorText =
+      `Failed to install ${source}.\n\n` +
+      `Another package in the npm store could not be found on the registry, which prevents the install from completing:\n` +
+      `  ${stalePackage}\n\n` +
+      `This package may be left over from a previous failed install. ` +
+      `If "${stalePackage}" is no longer in use, remove it with:\n` +
+      `  ${CLI_CMD} uninstall ${staleSource}`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   not_a_powerups_package: (source: string, reason: string) => {
     const errorText =
       `${source} is not a valid powerups package.\n` +

@@ -7,6 +7,14 @@ import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
     <a class="pups-back-link" href="/powerups/">← All powerups</a>
     <div data-view-content></div>
   </div>
+  <script>
+    import { bootstrapPackageView } from "../../scripts/powerup-view/index.ts";
+
+    const view = document.querySelector<HTMLElement>("[data-view]");
+    if (view !== null) {
+      bootstrapPackageView({ container: view });
+    }
+  </script>
 </StarlightPage>
 
 <style is:global>

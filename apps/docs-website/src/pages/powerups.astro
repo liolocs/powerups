@@ -1,0 +1,211 @@
+---
+import Select from "@astrojs/starlight/components/Select.astro";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+---
+
+<StarlightPage frontmatter={{ title: "Powerups" }}>
+  <div class="pups-directory" data-directory>
+    <div class="pups-header">
+      <h1 class="pups-title">All powerups</h1>
+      <p class="pups-count" data-result-count aria-live="polite"></p>
+    </div>
+
+    <form class="pups-toolbar" data-toolbar>
+      <label class="pups-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+        </svg>
+        <span class="sr-only">Search powerups</span>
+        <input type="search" name="query" placeholder="Search powerups…" data-search-input />
+      </label>
+
+      <Select
+        label="Sort powerups"
+        icon="down-caret"
+        width="12rem"
+        options={[
+          { value: "most-downloads", label: "Most downloads", selected: true },
+          { value: "recently-published", label: "Recently published", selected: false },
+          { value: "name-asc", label: "Ascending", selected: false },
+          { value: "name-desc", label: "Descending", selected: false },
+        ]}
+      />
+
+      <button type="submit" class="pups-button pups-button-primary">Search</button>
+      <button type="button" class="pups-button" data-clear-button>Clear</button>
+    </form>
+
+    <div class="pups-grid" data-card-grid></div>
+    <nav class="pups-pager" data-pager aria-label="Powerups pagination" hidden></nav>
+  </div>
+</StarlightPage>
+
+<style is:global>
+  .pups-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+
+  .pups-title { margin: 0; font-size: 1.75rem; }
+
+  .pups-count { margin: 0; font-size: 0.875rem; color: var(--sl-color-gray-3); }
+
+  .pups-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.25rem 0;
+  }
+
+  .pups-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1 1 14rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    background: var(--sl-color-bg);
+  }
+
+  .pups-search:focus-within { border-color: var(--sl-color-accent); }
+
+  .pups-search svg { flex-shrink: 0; color: var(--sl-color-gray-3); }
+
+  .pups-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: var(--sl-color-white);
+    font: inherit;
+  }
+
+  .pups-search input:focus { outline: none; }
+
+  .pups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .pups-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.75rem;
+    padding: 1rem 1.1rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .pups-card:hover {
+    border-color: var(--sl-color-accent);
+    box-shadow: var(--sl-shadow-sm);
+  }
+
+  .pups-card-name-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .pups-card-name {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    color: var(--sl-color-white);
+  }
+
+  .pups-card-links { display: flex; gap: 0.35rem; flex-shrink: 0; }
+
+  .pups-card-links a {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.35rem;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.7rem;
+    color: var(--sl-color-gray-3);
+    text-decoration: none;
+  }
+
+  .pups-card-links a:hover {
+    color: var(--sl-color-white);
+    border-color: var(--sl-color-accent);
+  }
+
+  .pups-card-description {
+    margin: 0;
+    color: var(--sl-color-gray-2);
+    font-size: 0.875rem;
+  }
+
+  .pups-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: auto;
+    color: var(--sl-color-gray-3);
+    font-size: 0.75rem;
+  }
+
+  .pups-card-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 999px;
+    background: var(--sl-color-accent);
+    color: var(--sl-color-bg);
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .pups-card-version {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999px;
+    padding: 0.05rem 0.5rem;
+    font-size: 0.7rem;
+    color: var(--sl-color-gray-2);
+  }
+
+  .pups-pager {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 1.5rem;
+  }
+
+  .pups-pager[hidden] { display: none; }
+
+  .pups-pager button {
+    min-width: 2rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.4rem;
+    background: var(--sl-color-bg);
+    color: var(--sl-color-gray-2);
+    padding: 0.25rem 0.5rem;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .pups-pager button[aria-current="page"] {
+    background: var(--sl-color-accent);
+    border-color: var(--sl-color-accent);
+    color: var(--sl-color-bg);
+  }
+
+  .pups-pager-gap { color: var(--sl-color-gray-3); padding: 0 0.2rem; }
+
+  @media (max-width: 767px) {
+    .pups-search { flex-basis: 100%; }
+    .pups-toolbar { row-gap: 0.75rem; }
+  }
+</style>

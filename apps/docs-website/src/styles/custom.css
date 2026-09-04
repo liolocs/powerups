@@ -7,3 +7,48 @@
 .entry-link:not(:last-child) {
   margin-bottom: 4px;
 }
+
+/* powerups pages shared primitives */
+.pups-skeleton {
+  height: 7.5rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.75rem;
+  background: linear-gradient(90deg, var(--sl-color-gray-6) 25%, var(--sl-color-gray-5) 50%, var(--sl-color-gray-6) 75%);
+  background-size: 200% 100%;
+  animation: pups-shimmer 1.2s infinite linear;
+}
+
+@keyframes pups-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.pups-panel {
+  grid-column: 1 / -1;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--sl-color-gray-2);
+}
+
+.pups-panel p { margin: 0 0 0.75rem; }
+.pups-panel p:last-child { margin-bottom: 0; }
+
+.pups-button {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  padding: 0.45rem 1rem;
+  background: var(--sl-color-bg);
+  color: var(--sl-color-white);
+  font: inherit;
+  cursor: pointer;
+}
+
+.pups-button:hover { border-color: var(--sl-color-accent); }
+
+.pups-button-primary {
+  background: var(--sl-color-accent);
+  border-color: var(--sl-color-accent);
+  color: var(--sl-color-bg);
+}

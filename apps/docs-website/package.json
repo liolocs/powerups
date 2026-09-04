@@ -9,12 +9,17 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "test": "CI=true proby",
     "astro": "astro"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.10",
     "astro": "^7.1.6",
+    "fflate": "^0.8.3",
     "lucode-starlight": "^1.0.0",
     "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@rcompat/test": "^0.20.0"
   }
 }

@@ -7,7 +7,7 @@ import lucode from 'lucode-starlight';
 export default defineConfig({
 	integrations: [
 		starlight({
-      title: 'powerup agents',
+      title: 'powerups.dev',
 			description:
 				'Guardrails for AI output — reusable powerups your AI agent can use instead of inventing code from scratch.',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/liolocs/powerups' }],

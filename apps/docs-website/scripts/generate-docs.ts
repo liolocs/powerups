@@ -90,6 +90,10 @@ const STATIC_PAGES: StaticPage[] = [
     templateName: "guide-authoring.md.njk",
     outputPath: path.join(GUIDES_DIR, "authoring-powerups.md"),
   },
+  {
+    templateName: "guide-create-from-existing.md.njk",
+    outputPath: path.join(GUIDES_DIR, "create-from-existing.md"),
+  },
 ];
 
 const nunjucksEnvironment = new nunjucks.Environment(undefined, {

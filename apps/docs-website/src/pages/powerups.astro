@@ -39,6 +39,14 @@ import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
     <div class="pups-grid" data-card-grid></div>
     <nav class="pups-pager" data-pager aria-label="Powerups pagination" hidden></nav>
   </div>
+  <script>
+    import { bootstrapDirectory } from "../scripts/powerups-directory/index.ts";
+
+    const directory = document.querySelector<HTMLElement>("[data-directory]");
+    if (directory !== null) {
+      bootstrapDirectory({ container: directory });
+    }
+  </script>
 </StarlightPage>
 
 <style is:global>

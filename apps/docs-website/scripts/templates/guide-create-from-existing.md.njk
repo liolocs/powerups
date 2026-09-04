@@ -1,0 +1,50 @@
+---
+title: Create a powerup from an existing repo
+description: 
+sidebar:
+  order: 3
+---
+
+## Creating a powerup from an existing repo
+
+You can also create a powerup from an existing repo's code instead of starting
+starting from scratch:
+
+```sh
+pup create saas-starter \ 
+  --capture=all \ 
+  --description="Scaffolds a SaaS starter" \
+  --intent="Saas, Nextjs with tailwind and auth0" \
+  --variables=theme,projectName,auth0ClientId,auth0Domain,auth0Audience \
+  --type=single-use
+```
+
+`--capture=all` turns the repo's new and modified files into the powerup's
+templates;
+
+`--capture=workingDir` limits the capture to your the current uncommitted git changes.
+
+## The index.ts file
+
+The captured files are raw copies — hand the parameterization to your AI
+agent:
+
+- convert the captured code into `.ts` templates that receive the powerup's
+  variables and return the full file contents as a string,
+- declare those variables in the powerup's `index.ts`
+  (`variables.required` / `variables.optional`),
+- add or adjust `steps` (`create`, `modify`, `delete`, `read`,
+  `install`).
+
+A template is a small function from variables to file contents:
+
+```ts
+export default ({ componentName, theme }: Record<string, string>) =>
+  `<button class="${theme}">${componentName}</button>`;
+```
+
+## Learn more
+
+The [SDK reference](/reference/sdk/) documents every schema, type, and helper
+— including the five step kinds (`create`, `modify`, `delete`, `read`,
+`install`) and how `includePowerup` composes children.

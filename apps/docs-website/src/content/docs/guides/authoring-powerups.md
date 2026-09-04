@@ -1,67 +1,141 @@
 ---
 title: Authoring powerups
-description: Define, build, and use your own powerups with the SDK.
+description: This page will guide you through the process of creating your first powerup
 sidebar:
   order: 3
 ---
 
-A powerup is a small package that, when applied with `pup use`, runs a
-sequence of steps against a target project to scaffold or transform code.
-Authoring one takes three things: an **instructions** file, **templates**,
-and a `pup build`.
+## 1. Create the powerup
 
-## 1. Define instructions
+The first step is to create the powerup package. This is done using the `pup create` command.
 
-A powerup's `index.ts` declares its metadata and steps, wrapped with
-`defineInstructions` from the SDK:
+```sh
+pup create hello-world \ 
+  --description="Creates a hello world script" \
+  --variables=name \
+  --type=single-use
+```
+
+This creates:
+```
+~/.powerups/installed/_internal/hello-world/
+├── index.ts # the instructions file
+├── package.json
+├── tsconfig.json
+├── .gitignore
+└── scripts
+    └── create-github-repo.sh
+```
+
+### A. Setup the package.json
+
+By default the instructions file is mapped to `index.ts`, this is done in the `package.json`'s powerup/instructions property.
+
+```json
+{
+  "name": "hello-world",
+  // ...
+  "powerup": {
+    "instructions": "index.ts" // <-- Here
+  }
+}
+```
+
+### B. Modify the instructions file
 
 ```ts
-import { defineInstructions } from "@liolocs/powerups-sdk";
+import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";
 
-const instructions = {
-  name: "my-powerup",
-  type: "multi-use" as const,
-  description: "Scaffolds a svelte component",
-  variables: { required: ["componentName", "theme"] },
-  intent: ["new svelte component"],
+const instructions: Instructions = {
+  name: "hello-world",
+  type: "single-use",
+  description: "Creates a hello world script",
+  variables: {
+    required: ["name"],
+    optional: [],
+  },
+  intent: [
+    "create a hello world script",
+  ],
   steps: [
     {
       type: "create",
-      name: "component",
-      template: "templates/component.ts",
-      outputPath: "src/lib/components/.svelte",
+      name: "hello-world.ts",
+      template: "templates/hello-world.ts",
+      outputPath: "hello-world.ts",
     },
   ],
-} satisfies Instructions;
+};
 
-export default defineInstructions(instructions, import.meta.url);
+export default defineInstructions(instructions, import.meta.url); // <-- Required
 ```
 
-Templates are `.ts` files that receive the powerup's variables and return
-the full file contents as a string:
+The defined steps in the file are executed when running `pup use`.
+
+E.G. Running the command `pup use hello-world --name="world"` will create a file called `hello-world.ts` in the root of the folder it is run from.
+
+### C. Create the template
+
+The template is the file that will be used to create the instructions file. It is a file that is rendered by the cli.
 
 ```ts
-export default ({ componentName, theme }: Record<string, string>) =>
-  `<button class="${theme}">${componentName}</button>`;
+// templates/hello-world.ts
+export default function(variables: Record<string, string>): string {
+  const { name } = variables;
+  return `console.log("Hello ${name}!");`;
+}
 ```
 
-## 2. Build
+## 2. Build the powerup
+
+You must build the powerup before it can be used with the command:
 
 ```sh
 pup build
 ```
 
-The build validates the instructions against the SDK schema and writes a
-self-contained `dist/` with `instructions.json` and the templates.
+This will run a verification on the instructions file and create a `dist` folder containing the necessary files for the powerup to be used. 
 
-## 3. Use and share
+## 3. Use powerup
 
-`pup use my-powerup --componentName=Button` applies the powerup. Powerups
-compose: `includePowerup` flattens another powerup's steps into the current
-one at author time, so a parent ships as a single self-contained unit.
+Once the powerup is built you can use it by running the following command:
 
-## Learn more
+```sh
+pup use hello-world --name=world
+```
 
-The [SDK reference](/reference/sdk/) documents every schema, type, and
-helper — including the five step kinds (`create`, `modify`, `delete`,
-`read`, `install`) and how `includePowerup` composes children.
+## 4. Share the powerup
+
+Once the powerup is built you can share by publishing it to npm or git.
+
+### Publishing to npm
+
+To publish the powerup to npm run:
+
+```sh
+npm publish
+```
+
+You may use the conventional commits preset to generate the changelog.
+
+Users will then be able to install the powerup by running:
+
+```sh
+pup install npm:hello-world
+```
+
+### Publishing to git
+
+To publish the powerup to git simply push the package to a git repo.
+
+You may run the following script to create a github repo using the gh cli and push the package to it.
+
+```sh
+./scripts/create-github-repo.sh
+```
+
+Users will then be able to install the powerup by running:
+
+```sh
+pup install git:github.com/owner/hello-world
+```

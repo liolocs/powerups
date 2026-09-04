@@ -1,3 +1,5 @@
+import { extractTarball } from "./extract-tarball.ts";
+
 const REGISTRY_BASE = "https://registry.npmjs.org";
 const INSTRUCTIONS_PATH = "dist/instructions.json";
 const TEMPLATE_DIR = "dist";
@@ -150,4 +152,57 @@ export function resolveTemplateContent({ templateFiles, templatePath }: {
   templatePath: string;
 }): string | null {
   return templateFiles.get(TEMPLATE_DIR + "/" + templatePath) ?? null;
+}
+
+interface PackumentVersion {
+  version?: string;
+  description?: string;
+  license?: string;
+  publisher?: { username?: string };
+  repository?: { url?: string };
+  dist?: { tarball?: string };
+}
+
+interface Packument {
+  name?: string;
+  "dist-tags"?: { latest?: string };
+  versions?: Record<string, PackumentVersion>;
+}
+
+export async function fetchPackageDetail({ packageName }: { packageName: string }): Promise<PackageDetail> {
+  const packumentResponse = await fetch(REGISTRY_BASE + "/" + encodeURIComponent(packageName));
+
+  if (!packumentResponse.ok) {
+    throw new Error(`npm registry request for ${packageName} failed with status ${packumentResponse.status}`);
+  }
+
+  const packument = (await packumentResponse.json()) as Packument;
+  const latestVersion = packument["dist-tags"]?.latest ?? "";
+  const versionManifest = packument.versions?.[latestVersion];
+
+  if (versionManifest === undefined || typeof versionManifest.dist?.tarball !== "string") {
+    throw new Error(`Package ${packageName} has no published latest version`);
+  }
+
+  const tarballResponse = await fetch(versionManifest.dist.tarball);
+
+  if (!tarballResponse.ok) {
+    throw new Error(`Tarball download for ${packageName} failed with status ${tarballResponse.status}`);
+  }
+
+  const tarballBytes = new Uint8Array(await tarballResponse.arrayBuffer());
+  const templateFiles = extractTarball({ tarballBytes });
+  const instructionsJson = templateFiles.get(INSTRUCTIONS_PATH) ?? null;
+
+  return {
+    name: packument.name ?? packageName,
+    description: versionManifest.description ?? "",
+    version: versionManifest.version ?? latestVersion,
+    license: versionManifest.license ?? "",
+    publisherUsername: versionManifest.publisher?.username ?? "",
+    npmUrl: `https://www.npmjs.com/package/${packageName}`,
+    repositoryUrl: versionManifest.repository?.url ?? null,
+    instructions: instructionsJson === null ? null : parseInstructions({ instructionsJson }),
+    templateFiles,
+  };
 }

@@ -1,0 +1,9 @@
+.entry-link {
+  height: auto !important;
+}
+.entry-link > span {
+  padding: 6px 12px;
+}
+.entry-link:not(:last-child) {
+  margin-bottom: 4px;
+}

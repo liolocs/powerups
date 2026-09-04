@@ -72,7 +72,11 @@ export default defineInstructions(instructions, import.meta.url); // <-- Require
 
 The defined steps in the file are executed when running `pup use`.
 
-E.G. Running the command `pup use hello-world --name="world"` will create a file called `hello-world.ts` in the root of the folder it is run from.
+E.G. Running the command 
+```sh
+pup use hello-world --name="world"
+```
+This will create a file called `hello-world.ts` in the root of the folder it is run from.
 
 ### C. Create the template
 
@@ -137,5 +141,5 @@ You may run the following script to create a github repo using the gh cli and pu
 Users will then be able to install the powerup by running:
 
 ```sh
-pup install git:github.com/owner/hello-world
+pup install git:github.com/<owner>/hello-world
 ```

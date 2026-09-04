@@ -1,16 +1,13 @@
 ---
-title: Use your first powerup
-description: Install a powerup pack, create your own powerup, and use it in a project.
+title: Quickstart
+description: How to install a powerup and use it.
 sidebar:
   order: 2
 ---
 
-This guide walks through the core `pup` workflow: install a powerup pack,
-create your own powerup, use it in a project, and remove it again.
+## 1. Install a powerup 
 
-## 1. Install a powerup pack
-
-Powerup packs come from npm or git:
+Powerups can be installed from either npm or git repos:
 
 ```sh
 pup install npm:@liolocs/powerup-hello-world

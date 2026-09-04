@@ -1,7 +1,16 @@
-import { extractTarball } from "./extract-tarball.ts";
+/**
+ * Fetches a powerup package's detail at build time.
+ *
+ * The previous implementation downloaded and extracted the entire npm tarball
+ * in the browser. This version fetches individual files via the unpkg CDN
+ * (https://unpkg.com/{package}/dist/{file}), which is dramatically lighter —
+ * no tarball download, no `fflate` dependency, no client-side extraction.
+ *
+ * Called from `powerups/[...package].astro` frontmatter via top-level await.
+ */
 
 const REGISTRY_BASE = "https://registry.npmjs.org";
-const INSTRUCTIONS_PATH = "dist/instructions.json";
+const UNPKG_BASE = "https://unpkg.com";
 const TEMPLATE_DIR = "dist";
 
 export type PowerupStep = CreateStep | ModifyStep | DeleteStep | ReadStep | InstallStep;
@@ -160,7 +169,6 @@ interface PackumentVersion {
   license?: string;
   publisher?: { username?: string };
   repository?: { url?: string };
-  dist?: { tarball?: string };
 }
 
 interface Packument {
@@ -169,8 +177,20 @@ interface Packument {
   versions?: Record<string, PackumentVersion>;
 }
 
+async function fetchText(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return null;
+    }
+    return await response.text();
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPackageDetail({ packageName }: { packageName: string }): Promise<PackageDetail> {
-  const packumentResponse = await fetch(REGISTRY_BASE + "/" + encodeURIComponent(packageName));
+  const packumentResponse = await fetch(`${REGISTRY_BASE}/${encodeURIComponent(packageName)}`);
 
   if (!packumentResponse.ok) {
     throw new Error(`npm registry request for ${packageName} failed with status ${packumentResponse.status}`);
@@ -180,19 +200,31 @@ export async function fetchPackageDetail({ packageName }: { packageName: string 
   const latestVersion = packument["dist-tags"]?.latest ?? "";
   const versionManifest = packument.versions?.[latestVersion];
 
-  if (versionManifest === undefined || typeof versionManifest.dist?.tarball !== "string") {
+  if (versionManifest === undefined) {
     throw new Error(`Package ${packageName} has no published latest version`);
   }
 
-  const tarballResponse = await fetch(versionManifest.dist.tarball);
+  // Fetch instructions.json from unpkg — no tarball download needed.
+  const instructionsJson = await fetchText(`${UNPKG_BASE}/${packageName}/dist/instructions.json`);
+  const instructions = instructionsJson === null ? null : parseInstructions({ instructionsJson });
 
-  if (!tarballResponse.ok) {
-    throw new Error(`Tarball download for ${packageName} failed with status ${tarballResponse.status}`);
+  // Fetch only the template files referenced in the instructions.
+  const templateFiles = new Map<string, string>();
+  if (instructions !== null) {
+    const templatePaths = collectTemplatePaths({ instructions });
+    const results = await Promise.all(
+      templatePaths.map(async (templatePath) => {
+        const content = await fetchText(`${UNPKG_BASE}/${packageName}/dist/${templatePath}`);
+        return { templatePath, content };
+      }),
+    );
+
+    for (const { templatePath, content } of results) {
+      if (content !== null) {
+        templateFiles.set(`${TEMPLATE_DIR}/${templatePath}`, content);
+      }
+    }
   }
-
-  const tarballBytes = new Uint8Array(await tarballResponse.arrayBuffer());
-  const templateFiles = extractTarball({ tarballBytes });
-  const instructionsJson = templateFiles.get(INSTRUCTIONS_PATH) ?? null;
 
   return {
     name: packument.name ?? packageName,
@@ -202,7 +234,7 @@ export async function fetchPackageDetail({ packageName }: { packageName: string 
     publisherUsername: versionManifest.publisher?.username ?? "",
     npmUrl: `https://www.npmjs.com/package/${packageName}`,
     repositoryUrl: versionManifest.repository?.url ?? null,
-    instructions: instructionsJson === null ? null : parseInstructions({ instructionsJson }),
+    instructions,
     templateFiles,
   };
 }

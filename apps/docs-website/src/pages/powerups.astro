@@ -1,219 +1,312 @@
 ---
-import Select from "@astrojs/starlight/components/Select.astro";
+export const prerender = false;
+
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import Select from "@astrojs/starlight/components/Select.astro";
+import { Badge } from "@astrojs/starlight/components";
+import { fetchPowerups } from "../scripts/powerups-directory/fetch-powerups.ts";
+
+function formatDownloads(count: number): string {
+    if (count >= 1_000_000)
+        return (count / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (count >= 1_000)
+        return (count / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+    return String(count);
+}
+
+// Build-time fetch — no client-side fetching, no caching, no skeleton loaders.
+const { powerups } = await fetchPowerups();
+
+// Pre-sort by most downloads (default order shown on page load).
+const sorted = [...powerups].sort(
+    (a, b) => b.monthlyDownloads - a.monthlyDownloads,
+);
 ---
 
 <StarlightPage frontmatter={{ title: "Powerups" }}>
-  <div class="pups-directory" data-directory>
-    <div class="pups-header">
-      <h1 class="pups-title">All powerups</h1>
-      <p class="pups-count" data-result-count aria-live="polite"></p>
+    <p>
+        Powerups are reusable packages your AI agent installs instead of writing
+        code from scratch. Browse the directory, then install with <code
+            >pup install&lt;name&gt;</code
+        >.
+    </p>
+
+    <div class="pups-directory not-content" data-directory>
+        <div class="pups-toolbar">
+            <label class="pups-search">
+                <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                >
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+                </svg>
+                <span class="sr-only">Search powerups</span>
+                <input
+                    type="search"
+                    placeholder="Search powerups…"
+                    data-search-input
+                />
+            </label>
+
+            <Select
+                label="Sort powerups"
+                icon="down-caret"
+                width="12rem"
+                options={[
+                    {
+                        value: "most-downloads",
+                        label: "Most downloads",
+                        selected: true,
+                    },
+                    {
+                        value: "recently-published",
+                        label: "Recently published",
+                        selected: false,
+                    },
+                    { value: "name-asc", label: "Name (A–Z)", selected: false },
+                    {
+                        value: "name-desc",
+                        label: "Name (Z–A)",
+                        selected: false,
+                    },
+                ]}
+            />
+        </div>
+
+        <p class="pups-count" data-result-count aria-live="polite">
+            {powerups.length} powerups
+        </p>
+
+        <div class="pups-grid" data-card-grid>
+            {
+                sorted.map((p) => (
+                    <a
+                        class="pups-card"
+                        href={`/powerups/${p.name}/`}
+                        data-search={[p.name, p.description, ...p.keywords]
+                            .join(" ")
+                            .toLowerCase()}
+                        data-downloads={p.monthlyDownloads}
+                        data-published={Date.parse(p.publishedAt) || 0}
+                        data-name={p.name}
+                    >
+                        <span class="pups-card-name">{p.name}</span>
+                        <span class="pups-card-desc">
+                            {p.description || "No description provided"}
+                        </span>
+                        <span class="pups-card-meta">
+                            <Badge text={`v${p.version}`} size="small" />
+                            <span class="pups-card-dl">
+                                {formatDownloads(p.monthlyDownloads)}{" "}
+                                downloads/mo
+                            </span>
+                        </span>
+                    </a>
+                ))
+            }
+        </div>
+
+        <p class="pups-empty" data-empty hidden>No powerups found.</p>
     </div>
 
-    <form class="pups-toolbar" data-toolbar>
-      <label class="pups-search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"></circle>
-          <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
-        </svg>
-        <span class="sr-only">Search powerups</span>
-        <input type="search" name="query" placeholder="Search powerups…" data-search-input />
-      </label>
+    <script>
+        // Lightweight client-side search + sort — no fetching, no state class, no caching.
+        // All cards are pre-rendered server-side; this just filters and reorders DOM nodes.
+        const directory =
+            document.querySelector<HTMLElement>("[data-directory]");
+        if (directory) {
+            const grid =
+                directory.querySelector<HTMLElement>("[data-card-grid]");
+            const cards = Array.from(
+                directory.querySelectorAll<HTMLElement>(".pups-card"),
+            );
+            const searchInput = directory.querySelector<HTMLInputElement>(
+                "[data-search-input]",
+            );
+            const sortSelect =
+                directory.querySelector<HTMLSelectElement>("select");
+            const countEl = directory.querySelector<HTMLElement>(
+                "[data-result-count]",
+            );
+            const emptyEl =
+                directory.querySelector<HTMLElement>("[data-empty]");
+            const total = cards.length;
 
-      <Select
-        label="Sort powerups"
-        icon="down-caret"
-        width="12rem"
-        options={[
-          { value: "most-downloads", label: "Most downloads", selected: true },
-          { value: "recently-published", label: "Recently published", selected: false },
-          { value: "name-asc", label: "Ascending", selected: false },
-          { value: "name-desc", label: "Descending", selected: false },
-        ]}
-      />
+            const query = () => (searchInput?.value ?? "").trim().toLowerCase();
+            const sort = () => sortSelect?.value ?? "most-downloads";
 
-      <button type="submit" class="pups-button pups-button-primary">Search</button>
-      <button type="button" class="pups-button" data-clear-button>Clear</button>
-    </form>
+            function render(): void {
+                const q = query();
+                const matching = cards.filter(
+                    (c) => q === "" || (c.dataset.search ?? "").includes(q),
+                );
 
-    <div class="pups-grid" data-card-grid></div>
-    <nav class="pups-pager" data-pager aria-label="Powerups pagination" hidden></nav>
-  </div>
-  <script>
-    import { bootstrapDirectory } from "../scripts/powerups-directory/index.ts";
+                const ordered = [...matching].sort((a, b) => {
+                    switch (sort()) {
+                        case "most-downloads":
+                            return (
+                                Number(b.dataset.downloads) -
+                                Number(a.dataset.downloads)
+                            );
+                        case "recently-published":
+                            return (
+                                Number(b.dataset.published) -
+                                Number(a.dataset.published)
+                            );
+                        case "name-asc":
+                            return (a.dataset.name ?? "").localeCompare(
+                                b.dataset.name ?? "",
+                            );
+                        case "name-desc":
+                            return (b.dataset.name ?? "").localeCompare(
+                                a.dataset.name ?? "",
+                            );
+                        default:
+                            return 0;
+                    }
+                });
 
-    const directory = document.querySelector<HTMLElement>("[data-directory]");
-    if (directory !== null) {
-      bootstrapDirectory({ container: directory });
-    }
-  </script>
+                for (const card of cards) {
+                    card.hidden = !matching.includes(card);
+                }
+                for (const card of ordered) {
+                    grid?.appendChild(card);
+                }
+
+                if (countEl) {
+                    countEl.textContent =
+                        q === ""
+                            ? `${total} powerups`
+                            : `${matching.length} of ${total} powerups`;
+                }
+                if (emptyEl) {
+                    emptyEl.hidden = matching.length > 0;
+                }
+            }
+
+            searchInput?.addEventListener("input", render);
+            sortSelect?.addEventListener("change", render);
+        }
+    </script>
 </StarlightPage>
 
 <style is:global>
-  .pups-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem 1rem;
-  }
+    .pups-directory {
+        margin-top: 1rem;
+    }
 
-  .pups-title { margin: 0; font-size: 1.75rem; }
+    .pups-toolbar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
 
-  .pups-count { margin: 0; font-size: 0.875rem; color: var(--sl-color-gray-3); }
+    .pups-search {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1 1 14rem;
+        border: 1px solid var(--sl-color-gray-5);
+        border-radius: 0.5rem;
+        padding: 0.45rem 0.75rem;
+        background: var(--sl-color-bg);
+    }
+    .pups-search:focus-within {
+        border-color: var(--sl-color-accent);
+    }
+    .pups-search svg {
+        flex-shrink: 0;
+        color: var(--sl-color-gray-3);
+    }
+    .pups-search input {
+        flex: 1;
+        min-width: 0;
+        border: none;
+        background: transparent;
+        color: var(--sl-color-white);
+        font: inherit;
+    }
+    .pups-search input:focus {
+        outline: none;
+    }
 
-  .pups-toolbar {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 1.25rem 0;
-  }
+    .pups-count {
+        margin: 0 0 1rem;
+        font-size: var(--sl-text-sm);
+        color: var(--sl-color-gray-3);
+    }
 
-  .pups-search {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1 1 14rem;
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 0.5rem;
-    padding: 0.45rem 0.75rem;
-    background: var(--sl-color-bg);
-  }
+    .pups-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
 
-  .pups-search:focus-within { border-color: var(--sl-color-accent); }
+    .pups-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        border: 1px solid var(--sl-color-gray-5);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        text-decoration: none;
+        box-shadow: var(--sl-shadow-sm);
+        transition:
+            border-color 0.15s ease,
+            background 0.15s ease;
+    }
+    .pups-card:hover {
+        border-color: var(--sl-color-gray-2);
+        background: var(--sl-color-gray-7, var(--sl-color-gray-6));
+    }
+    .pups-card[hidden] {
+        display: none;
+    }
 
-  .pups-search svg { flex-shrink: 0; color: var(--sl-color-gray-3); }
+    .pups-card-name {
+        font-weight: 600;
+        font-size: var(--sl-text-lg);
+        color: var(--sl-color-white);
+        line-height: var(--sl-line-height-headings);
+        overflow-wrap: anywhere;
+    }
 
-  .pups-search input {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    background: transparent;
-    color: var(--sl-color-white);
-    font: inherit;
-  }
+    .pups-card-desc {
+        font-size: var(--sl-text-sm);
+        color: var(--sl-color-gray-3);
+        line-height: 1.5;
+    }
 
-  .pups-search input:focus { outline: none; }
+    .pups-card-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: auto;
+    }
 
-  .pups-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-  }
+    .pups-card-dl {
+        font-size: var(--sl-text-xs);
+        color: var(--sl-color-gray-3);
+    }
 
-  .pups-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 0.75rem;
-    padding: 1rem 1.1rem;
-    color: inherit;
-    text-decoration: none;
-  }
+    .pups-empty {
+        color: var(--sl-color-gray-3);
+        text-align: center;
+        padding: 2rem 0;
+    }
 
-  .pups-card:hover {
-    border-color: var(--sl-color-accent);
-    box-shadow: var(--sl-shadow-sm);
-  }
-
-  .pups-card-name-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .pups-card-name {
-    font-weight: 600;
-    overflow-wrap: anywhere;
-    color: var(--sl-color-white);
-  }
-
-  .pups-card-links { display: flex; gap: 0.35rem; flex-shrink: 0; }
-
-  .pups-card-links a {
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 0.35rem;
-    padding: 0.05rem 0.4rem;
-    font-size: 0.7rem;
-    color: var(--sl-color-gray-3);
-    text-decoration: none;
-  }
-
-  .pups-card-links a:hover {
-    color: var(--sl-color-white);
-    border-color: var(--sl-color-accent);
-  }
-
-  .pups-card-description {
-    margin: 0;
-    color: var(--sl-color-gray-2);
-    font-size: 0.875rem;
-  }
-
-  .pups-card-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-top: auto;
-    color: var(--sl-color-gray-3);
-    font-size: 0.75rem;
-  }
-
-  .pups-card-avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.2rem;
-    height: 1.2rem;
-    border-radius: 999px;
-    background: var(--sl-color-accent);
-    color: var(--sl-color-bg);
-    font-size: 0.65rem;
-    font-weight: 700;
-  }
-
-  .pups-card-version {
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 999px;
-    padding: 0.05rem 0.5rem;
-    font-size: 0.7rem;
-    color: var(--sl-color-gray-2);
-  }
-
-  .pups-pager {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.3rem;
-    margin-top: 1.5rem;
-  }
-
-  .pups-pager[hidden] { display: none; }
-
-  .pups-pager button {
-    min-width: 2rem;
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 0.4rem;
-    background: var(--sl-color-bg);
-    color: var(--sl-color-gray-2);
-    padding: 0.25rem 0.5rem;
-    font: inherit;
-    cursor: pointer;
-  }
-
-  .pups-pager button[aria-current="page"] {
-    background: var(--sl-color-accent);
-    border-color: var(--sl-color-accent);
-    color: var(--sl-color-bg);
-  }
-
-  .pups-pager-gap { color: var(--sl-color-gray-3); padding: 0 0.2rem; }
-
-  @media (max-width: 767px) {
-    .pups-search { flex-basis: 100%; }
-    .pups-toolbar { row-gap: 0.75rem; }
-  }
+    @media (max-width: 767px) {
+        .pups-search {
+            flex-basis: 100%;
+        }
+    }
 </style>

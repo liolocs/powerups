@@ -10,3 +10,5 @@ docs/.pi-subagents/
 pi-subagents/
 **/lib/
 .pnpm-store
+.agents/skills/
+.superpowers/

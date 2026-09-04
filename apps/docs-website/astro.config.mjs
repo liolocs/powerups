@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import cloudflare from '@astrojs/cloudflare';
 import lucode from 'lucode-starlight';
 
 const site = process.env.NODE_ENV === "production" ? "https://powerups.dev" : "http://localhost:4321"
@@ -8,6 +9,13 @@ const site = process.env.NODE_ENV === "production" ? "https://powerups.dev" : "h
 // https://astro.build/config
 export default defineConfig({
   site,
+
+	// Cloudflare Workers adapter — docs pages stay prerendered (static),
+	// powerups pages opt into on-demand rendering with `export const prerender = false`.
+	adapter: cloudflare({
+		prerenderEnvironment: 'node',
+		imageService: 'compile',
+	}),
 
 	integrations: [
 		starlight({

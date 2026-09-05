@@ -13,18 +13,27 @@ interface Props {
 const { detail } = Astro.props;
 ---
 
-{detail.instructions === null && (
-    <Aside type="note" title="No viewable instructions">
-        This powerup hasn't published viewable instructions in its
-        package.
-    </Aside>
-)}
+{
+    detail.instructions === null && (
+        <Aside type="note" title="No viewable instructions">
+            This powerup hasn't published viewable instructions in its package.
+        </Aside>
+    )
+}
 
-{detail.instructions !== null && (
-    <>
-        <VariablesSection instructions={detail.instructions} />
-        <IntentSection instructions={detail.instructions} />
-        <StepsSection instructions={detail.instructions} />
-        <TemplateFilesSection detail={detail} />
-    </>
-)}
+{
+    detail.instructions !== null && (
+        <div class="instructions">
+            <VariablesSection instructions={detail.instructions} />
+            <IntentSection instructions={detail.instructions} />
+            <StepsSection instructions={detail.instructions} />
+            <TemplateFilesSection detail={detail} />
+        </div>
+    )
+}
+
+<style>
+    .instructions {
+        margin-top: 2rem;
+    }
+</style>

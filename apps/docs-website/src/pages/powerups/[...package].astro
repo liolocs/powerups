@@ -3,7 +3,10 @@ export const prerender = false;
 
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import { LinkButton } from "@astrojs/starlight/components";
-import { fetchPackageDetail, type PackageDetail } from "../../scripts/powerup-view/fetch-package-detail.ts";
+import {
+    fetchPackageDetail,
+    type PackageDetail,
+} from "../../scripts/powerup-view/fetch-package-detail.ts";
 import ErrorLoadingPowerupMessage from "../../components/powerups/ErrorLoadingPowerupMessage.astro";
 import PowerupDescription from "../../components/powerups/PowerupDescription.astro";
 import PowerupLinks from "../../components/powerups/PowerupLinks.astro";
@@ -33,27 +36,29 @@ const installCommand = detail ? `pup install ${detail.name}` : "";
 <StarlightPage frontmatter={{ title: detail?.name ?? "Powerup" }}>
     {fetchError && <ErrorLoadingPowerupMessage message={fetchError} />}
 
-    {detail && (
-        <div class="pups-view not-content">
-            <LinkButton
-                href="/powerups/"
-                variant="minimal"
-                icon="left-arrow"
-                iconPlacement="start"
-            >
-                All powerups
-            </LinkButton>
+    {
+        detail && (
+            <div class="pups-view not-content">
+                <LinkButton
+                    href="/powerups/"
+                    variant="minimal"
+                    icon="left-arrow"
+                    iconPlacement="start"
+                >
+                    All powerups
+                </LinkButton>
 
-            <PowerupDescription detail={detail} />
+                <PowerupDescription detail={detail} />
 
-            {/* Install command — terminal frame matching expressive-code chrome */}
-            <TerminalFrame command={installCommand} />
+                {/* Install command — terminal frame matching expressive-code chrome */}
+                <TerminalFrame command={installCommand} />
 
-            <PowerupLinks detail={detail} />
+                <PowerupLinks detail={detail} />
 
-            <PowerupInstructions detail={detail} />
-        </div>
-    )}
+                <PowerupInstructions detail={detail} />
+            </div>
+        )
+    }
 </StarlightPage>
 
 <script>
@@ -370,12 +375,6 @@ const installCommand = detail ? `pup install ${detail.name}` : "";
     }
 
     /* ── Layout sections ── */
-    .pups-view-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-    }
 
     .pups-section {
         margin-bottom: 2rem;

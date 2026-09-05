@@ -9,8 +9,8 @@ interface Props {
 const { detail } = Astro.props;
 ---
 
-<>
-    <p class="pups-view-desc">
+<div class="flex flex-col">
+    <p class="pups-view-desc mb-8!">
         {detail.description || "No description provided"}
     </p>
 
@@ -21,13 +21,21 @@ const { detail } = Astro.props;
             size="small"
             variant="note"
         />
-        {detail.instructions && (
-            <Badge text={detail.instructions.type} size="small" variant="tip" />
-        )}
-        {detail.publisherUsername && (
-            <span class="pups-view-publisher">
-                by {detail.publisherUsername}
-            </span>
-        )}
+        {
+            detail.instructions && (
+                <Badge
+                    text={detail.instructions.type}
+                    size="small"
+                    variant="tip"
+                />
+            )
+        }
+        {
+            detail.publisherUsername && (
+                <span class="pups-view-publisher">
+                    by {detail.publisherUsername}
+                </span>
+            )
+        }
     </div>
-</>
+</div>

@@ -1,5 +1,8 @@
 ---
-import { highlightCode, detectLang } from "../../scripts/powerup-view/highlight.ts";
+import {
+    highlightCode,
+    detectLang,
+} from "../../scripts/powerup-view/highlight.ts";
 
 interface Props {
     /** Raw source code to syntax-highlight. */
@@ -19,3 +22,11 @@ if (className) classes.push(className);
 ---
 
 <pre class={classes.join(" ")}><code set:html={highlighted} /></pre>
+
+<style>
+    .pups-code,
+    .pups-code-standalone {
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+</style>

@@ -93,7 +93,7 @@ const installCommand = detail ? `pup install ${detail.name}` : "";
         --pups-code-copy-fg: #e6edf3;
     }
 
-    :global([data-theme="light"]) .pups-view {
+    [data-theme="light"] .pups-view {
         --pups-code-bg: var(--gray-7);
         --pups-code-fg: #1f2328;
         --pups-code-header-bg: var(--gray-6);
@@ -151,6 +151,10 @@ const installCommand = detail ? `pup install ${detail.name}` : "";
         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' fill='none'%3E%3Ccircle cx='10' cy='10' r='7' fill='%23ff5f56'/%3E%3Ccircle cx='30' cy='10' r='7' fill='%23ffbd2e'/%3E%3Ccircle cx='50' cy='10' r='7' fill='%2327c93f'/%3E%3C/svg%3E")
             no-repeat center / contain;
         background: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="light"] .pups-terminal-dots {
+        background: rgba(0, 0, 0, 0.1);
     }
 
     .pups-code-wrap {
@@ -342,26 +346,26 @@ const installCommand = detail ? `pup install ${detail.name}` : "";
     }
 
     /* Light theme token colors */
-    :global([data-theme="light"]) .pups-code .hljs-keyword {
+    [data-theme="light"] .pups-code .hljs-keyword {
         color: #cf222e;
     }
-    :global([data-theme="light"]) .pups-code .hljs-string {
+    [data-theme="light"] .pups-code .hljs-string {
         color: #0a3069;
     }
-    :global([data-theme="light"]) .pups-code .hljs-comment {
+    [data-theme="light"] .pups-code .hljs-comment {
         color: #6e7781;
     }
-    :global([data-theme="light"]) .pups-code .hljs-title {
+    [data-theme="light"] .pups-code .hljs-title {
         color: #8250df;
     }
-    :global([data-theme="light"]) .pups-code .hljs-number {
+    [data-theme="light"] .pups-code .hljs-number {
         color: #0550ae;
     }
-    :global([data-theme="light"]) .pups-code .hljs-built_in {
+    [data-theme="light"] .pups-code .hljs-built_in {
         color: #953800;
     }
-    :global([data-theme="light"]) .pups-code .hljs-attr,
-    :global([data-theme="light"]) .pups-code .hljs-property {
+    [data-theme="light"] .pups-code .hljs-attr,
+    [data-theme="light"] .pups-code .hljs-property {
         color: #0550ae;
     }
 

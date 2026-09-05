@@ -13,15 +13,14 @@ const stepBadgeVariant: Record<
     install: "tip",
 };
 
-function stepTarget(step: PowerupStep): string {
+function stepFile(step: PowerupStep): string {
     switch (step.type) {
         case "create":
         case "modify":
-            return `${step.outputPath} (from ${step.template})`;
         case "delete":
             return step.outputPath;
         case "read":
-            return `${step.path} as "${step.as}"`;
+            return step.path;
         case "install":
             return (
                 [
@@ -29,6 +28,20 @@ function stepTarget(step: PowerupStep): string {
                     ...(step.devDependencies ?? []),
                 ].join(", ") || "no dependencies"
             );
+    }
+}
+
+function stepTemplate(step: PowerupStep): string {
+    switch (step.type) {
+        case "create":
+        case "modify":
+            return `Template: ${step.template}`;
+        case "delete":
+            return "";
+        case "read":
+            return `Variable: ${step.as}`;
+        case "install":
+            return "";
     }
 }
 
@@ -40,7 +53,19 @@ const { step } = Astro.props;
 const variant = stepBadgeVariant[step.type] ?? "note";
 ---
 
-<Badge text={step.type} variant={variant} size="small" />
-<strong>{step.name}</strong>
-<br />
-<code class="pups-step-target">{stepTarget(step)}</code>
+<div class="flex flex-col gap-2">
+    <div class="flex gap-2 justify-between">
+        <div class="flex gap-2">
+            <Badge
+                class="w-16"
+                text={step.type}
+                variant={variant}
+                size="small"
+            />
+            <span class="">{stepFile(step)}</span>
+        </div>
+        <div class="text-xs flex items-center text-gray-500">
+            {stepTemplate(step)}
+        </div>
+    </div>
+</div>

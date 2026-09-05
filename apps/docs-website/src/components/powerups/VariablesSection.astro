@@ -1,0 +1,42 @@
+---
+import type { PowerupInstructions } from "../../scripts/powerup-view/fetch-package-detail.ts";
+import TitleAndDescription from "./TitleAndDescription.astro";
+
+interface Props {
+    instructions: PowerupInstructions;
+}
+
+const { instructions } = Astro.props;
+const { required, optional, defaults } = instructions;
+const hasAny = (required?.length ?? 0) > 0 || (optional?.length ?? 0) > 0;
+---
+
+<section class="pups-section">
+    <TitleAndDescription title="Variables" />
+
+    {hasAny ? (
+        <ul class="pups-variable-list">
+            {required.map((v) => (
+                <li>
+                    <code>{v}</code>{" "}
+                    <span class="pups-muted">(required)</span>
+                </li>
+            ))}
+            {(optional ?? []).map((v) => {
+                const def = defaults?.[v];
+                return (
+                    <li>
+                        <code>{v}</code>{" "}
+                        <span class="pups-muted">
+                            (optional{def !== undefined
+                                ? `, default: ${def}`
+                                : ""})
+                        </span>
+                    </li>
+                );
+            })}
+        </ul>
+    ) : (
+        <p class="pups-muted">No variables required.</p>
+    )}
+</section>

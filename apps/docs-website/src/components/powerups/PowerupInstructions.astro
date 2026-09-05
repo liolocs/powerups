@@ -1,0 +1,30 @@
+---
+import { Aside } from "@astrojs/starlight/components";
+import type { PackageDetail } from "../../scripts/powerup-view/fetch-package-detail.ts";
+import VariablesSection from "./VariablesSection.astro";
+import IntentSection from "./IntentSection.astro";
+import StepsSection from "./StepsSection.astro";
+import TemplateFilesSection from "./TemplateFilesSection.astro";
+
+interface Props {
+    detail: PackageDetail;
+}
+
+const { detail } = Astro.props;
+---
+
+{detail.instructions === null && (
+    <Aside type="note" title="No viewable instructions">
+        This powerup hasn't published viewable instructions in its
+        package.
+    </Aside>
+)}
+
+{detail.instructions !== null && (
+    <>
+        <VariablesSection instructions={detail.instructions} />
+        <IntentSection instructions={detail.instructions} />
+        <StepsSection instructions={detail.instructions} />
+        <TemplateFilesSection detail={detail} />
+    </>
+)}

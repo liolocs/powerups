@@ -1,0 +1,23 @@
+---
+import type { PowerupInstructions } from "../../scripts/powerup-view/fetch-package-detail.ts";
+import TitleAndDescription from "./TitleAndDescription.astro";
+
+interface Props {
+    instructions: PowerupInstructions;
+}
+
+const { instructions } = Astro.props;
+const { intent } = instructions;
+const hasIntent = (intent?.length ?? 0) > 0;
+---
+
+{hasIntent && (
+    <section class="pups-section">
+        <TitleAndDescription title="Intent" />
+        <ul class="pups-variable-list">
+            {intent.map((line) => (
+                <li>{line}</li>
+            ))}
+        </ul>
+    </section>
+)}

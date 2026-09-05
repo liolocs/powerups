@@ -1,0 +1,46 @@
+---
+import { Badge } from "@astrojs/starlight/components";
+import type { PowerupStep } from "../../scripts/powerup-view/fetch-package-detail.ts";
+
+const stepBadgeVariant: Record<
+    string,
+    "success" | "caution" | "danger" | "note" | "tip"
+> = {
+    create: "success",
+    modify: "caution",
+    delete: "danger",
+    read: "note",
+    install: "tip",
+};
+
+function stepTarget(step: PowerupStep): string {
+    switch (step.type) {
+        case "create":
+        case "modify":
+            return `${step.outputPath} (from ${step.template})`;
+        case "delete":
+            return step.outputPath;
+        case "read":
+            return `${step.path} as "${step.as}"`;
+        case "install":
+            return (
+                [
+                    ...(step.dependencies ?? []),
+                    ...(step.devDependencies ?? []),
+                ].join(", ") || "no dependencies"
+            );
+    }
+}
+
+interface Props {
+    step: PowerupStep;
+}
+
+const { step } = Astro.props;
+const variant = stepBadgeVariant[step.type] ?? "note";
+---
+
+<Badge text={step.type} variant={variant} size="small" />
+<strong>{step.name}</strong>
+<br />
+<code class="pups-step-target">{stepTarget(step)}</code>

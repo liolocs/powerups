@@ -1,0 +1,25 @@
+---
+import { Steps } from "@astrojs/starlight/components";
+import type { PowerupInstructions } from "../../scripts/powerup-view/fetch-package-detail.ts";
+import TitleAndDescription from "./TitleAndDescription.astro";
+import Step from "./Step.astro";
+
+interface Props {
+    instructions: PowerupInstructions;
+}
+
+const { instructions } = Astro.props;
+---
+
+<section class="pups-section">
+    <TitleAndDescription title="Steps" />
+    <Steps>
+        <ol>
+            {instructions.steps.map((step) => (
+                <li>
+                    <Step step={step} />
+                </li>
+            ))}
+        </ol>
+    </Steps>
+</section>

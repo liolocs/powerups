@@ -2,311 +2,406 @@
 export const prerender = false;
 
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
-import {
-  LinkButton,
-  Badge,
-  Aside,
-  Steps,
-  Tabs,
-  TabItem,
-} from "@astrojs/starlight/components";
-import {
-  collectTemplatePaths,
-  fetchPackageDetail,
-  resolveTemplateContent,
-  type PackageDetail,
-  type PowerupStep,
-} from "../../scripts/powerup-view/fetch-package-detail.ts";
+import { LinkButton } from "@astrojs/starlight/components";
+import { fetchPackageDetail, type PackageDetail } from "../../scripts/powerup-view/fetch-package-detail.ts";
+import ErrorLoadingPowerupMessage from "../../components/powerups/ErrorLoadingPowerupMessage.astro";
+import PowerupDescription from "../../components/powerups/PowerupDescription.astro";
+import PowerupLinks from "../../components/powerups/PowerupLinks.astro";
+import PowerupInstructions from "../../components/powerups/PowerupInstructions.astro";
+import TerminalFrame from "../../components/powerups/TerminalFrame.astro";
 
 // On-demand rendered — the package name comes from the URL path, not getStaticPaths.
 // The npm + unpkg fetches run on every request via the Cloudflare Worker.
 const name = Astro.params.package;
 
 if (typeof name !== "string" || name.trim() === "") {
-  return Astro.redirect("/powerups/");
+    return Astro.redirect("/powerups/");
 }
 
 let detail: PackageDetail | null = null;
 let fetchError: string | null = null;
 
 try {
-  detail = await fetchPackageDetail({ packageName: name });
+    detail = await fetchPackageDetail({ packageName: name });
 } catch (e) {
-  fetchError = e instanceof Error ? e.message : "Unknown error";
+    fetchError = e instanceof Error ? e.message : "Unknown error";
 }
 
-const stepBadgeVariant: Record<string, "success" | "caution" | "danger" | "note" | "tip"> = {
-  create: "success",
-  modify: "caution",
-  delete: "danger",
-  read: "note",
-  install: "tip",
-};
-
-function stepTarget(step: PowerupStep): string {
-  switch (step.type) {
-    case "create":
-    case "modify":
-      return `${step.outputPath} (from ${step.template})`;
-    case "delete":
-      return step.outputPath;
-    case "read":
-      return `${step.path} as "${step.as}"`;
-    case "install":
-      return [...(step.dependencies ?? []), ...(step.devDependencies ?? [])].join(", ") || "no dependencies";
-  }
-}
-
-const templatePaths = detail?.instructions ? collectTemplatePaths({ instructions: detail.instructions }) : [];
 const installCommand = detail ? `pup install ${detail.name}` : "";
 ---
 
 <StarlightPage frontmatter={{ title: detail?.name ?? "Powerup" }}>
-  {fetchError ? (
-    <Aside type="danger" title="Could not load this powerup">
-      <p>{fetchError}</p>
-      <p>Check your connection and try again, or <LinkButton href="/powerups/" variant="minimal">browse the directory</LinkButton>.</p>
-    </Aside>
-  ) : detail ? (
-    <div class="pups-view not-content">
-      <LinkButton href="/powerups/" variant="minimal" icon="left-arrow" iconPlacement="start">
-        All powerups
-      </LinkButton>
+    {fetchError && <ErrorLoadingPowerupMessage message={fetchError} />}
 
-      <p class="pups-view-desc">{detail.description || "No description provided"}</p>
-
-      <div class="pups-view-badges">
-        <Badge text={`v${detail.version}`} size="small" />
-        <Badge text={detail.license || "license unknown"} size="small" variant="note" />
-        {detail.instructions && (
-          <Badge text={detail.instructions.type} size="small" variant="tip" />
-        )}
-        {detail.publisherUsername && (
-          <span class="pups-view-publisher">by {detail.publisherUsername}</span>
-        )}
-      </div>
-
-      <div class="pups-install">
-        <pre class="pups-code pups-code-install"><code>{installCommand}</code></pre>
-        <button type="button" class="pups-copy" data-copy={installCommand}>Copy</button>
-      </div>
-
-      {(detail.npmUrl || detail.repositoryUrl) && (
-        <div class="pups-view-links">
-          <LinkButton href={detail.npmUrl} variant="secondary" icon="external" iconPlacement="start">
-            npm
-          </LinkButton>
-          {detail.repositoryUrl && (
-            <LinkButton href={detail.repositoryUrl} variant="secondary" icon="external" iconPlacement="start">
-              Repository
+    {detail && (
+        <div class="pups-view not-content">
+            <LinkButton
+                href="/powerups/"
+                variant="minimal"
+                icon="left-arrow"
+                iconPlacement="start"
+            >
+                All powerups
             </LinkButton>
-          )}
+
+            <PowerupDescription detail={detail} />
+
+            {/* Install command — terminal frame matching expressive-code chrome */}
+            <TerminalFrame command={installCommand} />
+
+            <PowerupLinks detail={detail} />
+
+            <PowerupInstructions detail={detail} />
         </div>
-      )}
-
-      {detail.instructions === null ? (
-        <Aside type="note" title="No viewable instructions">
-          This powerup hasn't published viewable instructions in its package.
-        </Aside>
-      ) : (
-        <>
-          <section class="pups-section">
-            <h2>Variables</h2>
-            {(() => {
-              const { required, optional, defaults } = detail.instructions!.variables;
-              const hasAny = required.length > 0 || (optional?.length ?? 0) > 0;
-              if (!hasAny) return <p class="pups-muted">No variables required.</p>;
-              return (
-                <ul class="pups-variable-list">
-                  {required.map((v) => (
-                    <li><code>{v}</code> <span class="pups-muted">(required)</span></li>
-                  ))}
-                  {(optional ?? []).map((v) => {
-                    const def = defaults?.[v];
-                    return (
-                      <li>
-                        <code>{v}</code> <span class="pups-muted">(optional{def !== undefined ? `, default: ${def}` : ""})</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              );
-            })()}
-          </section>
-
-          {detail.instructions.intent.length > 0 && (
-            <section class="pups-section">
-              <h2>Intent</h2>
-              <ul class="pups-variable-list">
-                {detail.instructions.intent.map((line) => (
-                  <li>{line}</li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          <section class="pups-section">
-            <h2>Steps</h2>
-            <Steps>
-              <ol>
-                {detail.instructions.steps.map((step) => (
-                  <li>
-                    <Badge text={step.type} variant={stepBadgeVariant[step.type] ?? "note"} size="small" />
-                    <strong>{step.name}</strong>
-                    <br />
-                    <code class="pups-step-target">{stepTarget(step)}</code>
-                  </li>
-                ))}
-              </ol>
-            </Steps>
-          </section>
-
-          {templatePaths.length > 0 && (
-            <section class="pups-section">
-              <h2>Template files</h2>
-              <Tabs>
-                {templatePaths.map((path) => {
-                  const content = resolveTemplateContent({ templateFiles: detail!.templateFiles, templatePath: path });
-                  return (
-                    <TabItem label={path}>
-                      {content ? (
-                        <pre class="pups-code"><code>{content}</code></pre>
-                      ) : (
-                        <Aside type="caution" title="File not found">
-                          This template file was not found in the published package.
-                        </Aside>
-                      )}
-                    </TabItem>
-                  );
-                })}
-              </Tabs>
-            </section>
-          )}
-        </>
-      )}
-    </div>
-  ) : null}
+    )}
 </StarlightPage>
 
 <script>
-  // Copy-to-clipboard for the install command.
-  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const text = btn.dataset.copy ?? "";
-      try {
-        await navigator.clipboard.writeText(text);
-        btn.textContent = "Copied!";
-        setTimeout(() => { btn.textContent = "Copy"; }, 1500);
-      } catch {
-        // clipboard API may be unavailable in non-secure contexts
-      }
-    });
-  });
+    // Copy-to-clipboard for code blocks.
+    document
+        .querySelectorAll<HTMLButtonElement>(".pups-copy")
+        .forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                const text = btn.dataset.copy ?? "";
+                try {
+                    await navigator.clipboard.writeText(text);
+                    const feedback = btn.querySelector(".pups-copy-feedback");
+                    if (feedback) {
+                        feedback.classList.add("pups-copy-feedback--visible");
+                        setTimeout(
+                            () =>
+                                feedback.classList.remove(
+                                    "pups-copy-feedback--visible",
+                                ),
+                            1500,
+                        );
+                    }
+                } catch {
+                    // clipboard API may be unavailable in non-secure contexts
+                }
+            });
+        });
 </script>
 
 <style is:global>
-  .pups-view { margin-top: 1rem; }
+    .pups-view {
+        margin-top: 1rem;
+        --pups-code-bg: var(--gray-7);
+        --pups-code-fg: #e6edf3;
+        --pups-code-header-bg: var(--gray-6);
+        --pups-code-muted: var(--gray-3);
+        --pups-code-copy-fg: #e6edf3;
+    }
 
-  .pups-view-desc {
-    font-size: var(--sl-text-lg);
-    color: var(--sl-color-gray-2);
-    margin: 1rem 0 0.75rem;
-    line-height: 1.5;
-  }
+    :global([data-theme="light"]) .pups-view {
+        --pups-code-bg: var(--gray-7);
+        --pups-code-fg: #1f2328;
+        --pups-code-header-bg: var(--gray-6);
+        --pups-code-muted: var(--gray-3);
+        --pups-code-copy-fg: #1f2328;
+    }
 
-  .pups-view-badges {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 1rem;
-  }
+    .pups-view-desc {
+        font-size: var(--sl-text-lg);
+        color: var(--sl-color-gray-2);
+        margin: 1rem 0 0.75rem;
+        line-height: 1.5;
+    }
 
-  .pups-view-publisher {
-    font-size: var(--sl-text-sm);
-    color: var(--sl-color-gray-3);
-  }
+    .pups-view-badges {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
 
-  .pups-install {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    margin-bottom: 1rem;
-  }
+    .pups-view-publisher {
+        font-size: var(--sl-text-sm);
+        color: var(--sl-color-gray-3);
+    }
 
-  .pups-code {
-    margin: 0;
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 0.5rem;
-    background: var(--sl-color-gray-7, var(--sl-color-gray-6));
-    padding: 0.75rem 1rem;
-    overflow-x: auto;
-    font-family: var(--sl-font-mono);
-    font-size: var(--sl-text-sm);
-    line-height: 1.6;
-    color: var(--sl-color-gray-2);
-  }
+    /* ── Terminal frame ── */
+    .pups-frame {
+        margin: 0 0 1.25rem;
+        border-radius: calc(var(--radius) + 4px);
+        overflow: hidden;
+        background: var(--pups-code-bg);
+        box-shadow: 0 0 0 1px var(--sl-color-gray-5, rgba(139, 148, 158, 0.2));
+    }
 
-  .pups-code-install {
-    flex: 1;
-    border-radius: 0.5rem 0 0 0.5rem;
-    border-right: none;
-  }
+    .pups-frame-header {
+        display: flex;
+        align-items: center;
+        height: 2.5rem;
+        padding: 0 0.75rem;
+        background: var(--pups-code-header-bg);
+        border-bottom: 1px solid rgba(139, 148, 158, 0.15);
+    }
 
-  .pups-code code {
-    font-family: inherit;
-    color: inherit;
-    background: none;
-  }
+    .pups-terminal-dots {
+        width: 2.25rem;
+        height: 0.75rem;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center;
+        /* three-dot mask — same SVG used by expressive-code */
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' fill='none'%3E%3Ccircle cx='10' cy='10' r='7' fill='%23ff5f56'/%3E%3Ccircle cx='30' cy='10' r='7' fill='%23ffbd2e'/%3E%3Ccircle cx='50' cy='10' r='7' fill='%2327c93f'/%3E%3C/svg%3E")
+            no-repeat center / contain;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' fill='none'%3E%3Ccircle cx='10' cy='10' r='7' fill='%23ff5f56'/%3E%3Ccircle cx='30' cy='10' r='7' fill='%23ffbd2e'/%3E%3Ccircle cx='50' cy='10' r='7' fill='%2327c93f'/%3E%3C/svg%3E")
+            no-repeat center / contain;
+        background: rgba(255, 255, 255, 0.08);
+    }
 
-  .pups-copy {
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 0 0.5rem 0.5rem 0;
-    background: var(--sl-color-bg);
-    color: var(--sl-color-gray-2);
-    font: inherit;
-    font-size: var(--sl-text-sm);
-    padding: 0 1rem;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .pups-copy:hover {
-    color: var(--sl-color-white);
-    border-color: var(--sl-color-accent);
-  }
+    .pups-code-wrap {
+        position: relative;
+    }
 
-  .pups-view-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
+    /* ── Code blocks ── */
+    .pups-code {
+        margin: 0;
+        background: var(--pups-code-bg);
+        color: var(--pups-code-fg);
+        font-family: var(--__sl-font-mono);
+        font-size: var(--sl-text-code);
+        line-height: var(--sl-line-height);
+        padding: 0.75rem 1rem;
+        overflow-x: auto;
+        tab-size: 2;
+        /* Collapse whitespace between <pre> and <code> so formatter
+           indentation never renders as visible space inside <pre> */
+        white-space: normal;
+    }
 
-  .pups-section { margin-bottom: 2rem; }
-  .pups-section h2 {
-    font-size: var(--sl-text-h4);
-    margin: 0 0 0.75rem;
-  }
+    .pups-code code {
+        display: block;
+        white-space: pre;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+        color: inherit;
+        background: none;
+    }
 
-  .pups-muted { color: var(--sl-color-gray-3); }
+    /* Standalone code blocks (template files) — rounded with border */
+    .pups-code-standalone {
+        border-radius: calc(var(--radius) + 4px);
+        margin: 0.5rem 0;
+        box-shadow: 0 0 0 1px var(--sl-color-gray-5, rgba(139, 148, 158, 0.2));
+    }
 
-  .pups-variable-list {
-    margin: 0;
-    padding-left: 1.25rem;
-    color: var(--sl-color-gray-2);
-    font-size: var(--sl-text-sm);
-    line-height: 1.8;
-  }
-  .pups-variable-list code {
-    font-family: var(--sl-font-mono);
-    font-size: 0.85em;
-    color: var(--sl-color-white);
-  }
+    /* ── Copy button ── */
+    .pups-copy {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        width: 2rem;
+        height: 2rem;
+        border: none;
+        border-radius: 0.375rem;
+        background: rgba(139, 148, 158, 0.15);
+        color: var(--pups-code-copy-fg);
+        cursor: pointer;
+        opacity: 0;
+        transition:
+            opacity 0.15s ease,
+            background 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
 
-  .pups-step-target {
-    font-family: var(--sl-font-mono);
-    font-size: var(--sl-text-sm);
-    color: var(--sl-color-gray-3);
-    overflow-wrap: anywhere;
-  }
+    .pups-code-wrap:hover .pups-copy {
+        opacity: 1;
+    }
+
+    .pups-copy:hover {
+        background: rgba(139, 148, 158, 0.3);
+    }
+
+    /* Clipboard icon via SVG mask */
+    .pups-copy::before {
+        content: "";
+        width: 1rem;
+        height: 1rem;
+        background: currentColor;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2' ry='2'/%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E")
+            no-repeat center / contain;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2' ry='2'/%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E")
+            no-repeat center / contain;
+    }
+
+    /* "Copied!" feedback tooltip */
+    .pups-copy-feedback {
+        position: absolute;
+        top: calc(100% + 0.375rem);
+        right: 0;
+        background: var(--sl-color-accent);
+        color: var(--sl-color-white);
+        font-size: 0.75rem;
+        font-family: var(--__sl-font-mono);
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.25rem;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(-0.2rem);
+        transition:
+            opacity 0.15s ease,
+            transform 0.15s ease;
+    }
+
+    .pups-copy-feedback--visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    @media (scripting: none) {
+        .pups-copy {
+            display: none;
+        }
+    }
+
+    /* ── Custom scrollbar ── */
+    .pups-code::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+    }
+    .pups-code::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .pups-code::-webkit-scrollbar-thumb {
+        background: rgba(139, 148, 158, 0.2);
+        border-radius: 3px;
+    }
+    .pups-code::-webkit-scrollbar-thumb:hover {
+        background: rgba(139, 148, 158, 0.35);
+    }
+
+    /* ── Syntax highlighting — GitHub dark theme ── */
+    .pups-code .hljs-keyword,
+    .pups-code .hljs-selector-tag {
+        color: #ff7b72;
+    }
+    .pups-code .hljs-string,
+    .pups-code .hljs-meta .hljs-string {
+        color: #a5d6ff;
+    }
+    .pups-code .hljs-comment {
+        color: #8b949e;
+        font-style: italic;
+    }
+    .pups-code .hljs-title,
+    .pups-code .hljs-title.function_,
+    .pups-code .hljs-section {
+        color: #d2a8ff;
+    }
+    .pups-code .hljs-number,
+    .pups-code .hljs-literal {
+        color: #79c0ff;
+    }
+    .pups-code .hljs-built_in,
+    .pups-code .hljs-type {
+        color: #ffa657;
+    }
+    .pups-code .hljs-attr,
+    .pups-code .hljs-attribute,
+    .pups-code .hljs-property,
+    .pups-code .hljs-name,
+    .pups-code .hljs-tag {
+        color: #7ee787;
+    }
+    .pups-code .hljs-meta {
+        color: #8b949e;
+    }
+    .pups-code .hljs-variable,
+    .pups-code .hljs-template-variable {
+        color: #ffa657;
+    }
+    .pups-code .hljs-regexp {
+        color: #a5d6ff;
+    }
+    .pups-code .hljs-symbol {
+        color: #f2cc60;
+    }
+    .pups-code .hljs-link {
+        color: #a5d6ff;
+    }
+    .pups-code .hljs-deletion {
+        color: #ffa657;
+    }
+    .pups-code .hljs-addition {
+        color: #7ee787;
+    }
+    .pups-code .hljs-emphasis {
+        font-style: italic;
+    }
+    .pups-code .hljs-strong {
+        font-weight: 700;
+    }
+
+    /* Light theme token colors */
+    :global([data-theme="light"]) .pups-code .hljs-keyword {
+        color: #cf222e;
+    }
+    :global([data-theme="light"]) .pups-code .hljs-string {
+        color: #0a3069;
+    }
+    :global([data-theme="light"]) .pups-code .hljs-comment {
+        color: #6e7781;
+    }
+    :global([data-theme="light"]) .pups-code .hljs-title {
+        color: #8250df;
+    }
+    :global([data-theme="light"]) .pups-code .hljs-number {
+        color: #0550ae;
+    }
+    :global([data-theme="light"]) .pups-code .hljs-built_in {
+        color: #953800;
+    }
+    :global([data-theme="light"]) .pups-code .hljs-attr,
+    :global([data-theme="light"]) .pups-code .hljs-property {
+        color: #0550ae;
+    }
+
+    /* ── Layout sections ── */
+    .pups-view-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .pups-section {
+        margin-bottom: 2rem;
+    }
+    .pups-section h2 {
+        font-size: var(--sl-text-h4);
+        margin: 0 0 0.75rem;
+    }
+
+    .pups-muted {
+        color: var(--sl-color-gray-3);
+    }
+
+    .pups-variable-list {
+        margin: 0;
+        padding-left: 1.25rem;
+        color: var(--sl-color-gray-2);
+        font-size: var(--sl-text-sm);
+        line-height: 1.8;
+    }
+    .pups-variable-list code {
+        font-family: var(--sl-font-mono);
+        font-size: 0.85em;
+        color: var(--sl-color-white);
+    }
+
+    .pups-step-target {
+        font-family: var(--sl-font-mono);
+        font-size: var(--sl-text-sm);
+        color: var(--sl-color-gray-3);
+        overflow-wrap: anywhere;
+    }
 </style>

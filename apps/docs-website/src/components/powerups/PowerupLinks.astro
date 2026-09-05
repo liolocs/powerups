@@ -1,0 +1,33 @@
+---
+import { LinkButton } from "@astrojs/starlight/components";
+import type { PackageDetail } from "../../scripts/powerup-view/fetch-package-detail.ts";
+
+interface Props {
+    detail: PackageDetail;
+}
+
+const { detail } = Astro.props;
+---
+
+{(detail.npmUrl || detail.repositoryUrl) && (
+    <div class="pups-view-links">
+        <LinkButton
+            href={detail.npmUrl}
+            variant="secondary"
+            icon="external"
+            iconPlacement="start"
+        >
+            npm
+        </LinkButton>
+        {detail.repositoryUrl && (
+            <LinkButton
+                href={detail.repositoryUrl}
+                variant="secondary"
+                icon="external"
+                iconPlacement="start"
+            >
+                Repository
+            </LinkButton>
+        )}
+    </div>
+)}

@@ -1,0 +1,20 @@
+---
+import { Aside, LinkButton } from "@astrojs/starlight/components";
+
+interface Props {
+    message: string;
+}
+
+const { message } = Astro.props;
+---
+
+<Aside type="danger" title="Could not load this powerup">
+    <p>{message}</p>
+    <p>
+        Check your connection and try again, or{" "}
+        <LinkButton href="/powerups/" variant="minimal">
+            browse the directory
+        </LinkButton>
+        .
+    </p>
+</Aside>

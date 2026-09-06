@@ -6,25 +6,10 @@ import Collapsible from "@/layouts/docs-layout/Collapsible.astro"
 import CollapsibleTrigger from "@/layouts/docs-layout/CollapsibleTrigger.astro"
 import CollapsibleContent from "@/layouts/docs-layout/CollapsibleContent.astro"
 import SidebarNavChildren from "@/layouts/docs-layout/SidebarNavChildren.astro"
+import type { NavNode } from "@/layouts/docs-layout/buildDocsNav"
 
-export interface NavPage {
-  kind: "page"
-  title: string
-  url: string
-  order?: number
-  isActive: boolean
-}
-
-export interface NavFolder {
-  kind: "folder"
-  name: string
-  title: string
-  url: string
-  order?: number
-  children: NavNode[]
-}
-
-export type NavNode = NavPage | NavFolder
+// Re-export so existing imports of these types keep working.
+export type { NavPage, NavFolder, NavNode } from "@/layouts/docs-layout/buildDocsNav"
 
 interface Props {
   nodes: NavNode[]

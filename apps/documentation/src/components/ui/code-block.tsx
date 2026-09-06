@@ -2,8 +2,17 @@
 
 import * as React from 'react'
 
-import { codeToHtml } from 'shiki'
-import type { BundledLanguage } from 'shiki'
+import { createHighlighter, type BundledLanguage, type Highlighter } from 'shiki'
+import bashLang from 'shiki/dist/langs/bash.mjs'
+import tsLang from 'shiki/dist/langs/typescript.mjs'
+import tsxLang from 'shiki/dist/langs/tsx.mjs'
+import jsoncLang from 'shiki/dist/langs/jsonc.mjs'
+import jsonLang from 'shiki/dist/langs/json.mjs'
+import shellLang from 'shiki/dist/langs/shellscript.mjs'
+import yamlLang from 'shiki/dist/langs/yaml.mjs'
+import pythonLang from 'shiki/dist/langs/python.mjs'
+import mdxLang from 'shiki/dist/langs/mdx.mjs'
+import mdLang from 'shiki/dist/langs/markdown.mjs'
 import { cn } from '@/lib/utils'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -20,6 +29,7 @@ export type CodeBlockFile = {
   highlightLines?: number[]
   highlightClassName?: string
   showLineNumbers?: boolean
+  autoHeight?: boolean
 }
 
 export type CodeBlockProps = React.ComponentProps<'div'> & {
@@ -32,6 +42,7 @@ export type CodeBlockProps = React.ComponentProps<'div'> & {
   highlightLines?: number[]
   highlightClassName?: string
   showLineNumbers?: boolean
+  autoHeight?: boolean
 }
 
 // Internal Helpers
@@ -48,11 +59,35 @@ function splitShikiLines(html: string): string[] {
   return lines
 }
 
+// Statically imported language registrations to avoid Vite dynamic-import chunk issues
+const PRELOADED_LANGS = [bashLang, tsLang, tsxLang, jsoncLang, jsonLang, shellLang, yamlLang, pythonLang, mdxLang, mdLang]
+const PRELOADED_LANG_IDS = new Set(
+  PRELOADED_LANGS.flatMap((l) =>
+    (l as { id: string; aliases?: string[] }[]).map((r) => [r.id, ...(r.aliases ?? [])]).flat()
+  )
+)
+
+let highlighterPromise: Promise<Highlighter> | null = null
+
+function getHighlighter() {
+  if (!highlighterPromise) {
+    highlighterPromise = createHighlighter({
+      themes: ['github-light', 'github-dark'],
+      langs: PRELOADED_LANGS as never,
+    })
+  }
+  return highlighterPromise
+}
+
 async function highlight(code: string, lang: BundledLanguage = 'tsx'): Promise<string> {
   try {
-    return await codeToHtml(code, {
+    const highlighter = await getHighlighter()
+    if (!PRELOADED_LANG_IDS.has(lang)) {
+      await highlighter.loadLanguage(lang as never)
+    }
+    return highlighter.codeToHtml(code, {
       lang,
-      themes: { light: 'github-light', dark: 'github-dark' }
+      themes: { light: 'github-light', dark: 'github-dark' },
     })
   } catch {
     // Fallback: wrap in plain-text pre/code so the UI never breaks
@@ -139,6 +174,7 @@ type CodeBlockPaneProps = {
   highlightLines?: number[]
   highlightClassName?: string
   showLineNumbers?: boolean
+  autoHeight?: boolean
 }
 
 function CodeBlockPane({
@@ -149,7 +185,8 @@ function CodeBlockPane({
   style,
   highlightLines,
   highlightClassName = 'bg-amber-600/40 dark:bg-amber-400/40',
-  showLineNumbers = false
+  showLineNumbers = false,
+  autoHeight = false
 }: CodeBlockPaneProps) {
   const [html, setHtml] = React.useState<string>('')
 
@@ -173,7 +210,9 @@ function CodeBlockPane({
 
   return (
     <div data-slot='code-block-pane' className={cn('cn-code-block-pane', className)} style={style}>
-      <ScrollArea className='max-h-43.75 *:data-[slot=scroll-area-viewport]:h-auto! *:data-[slot=scroll-area-viewport]:max-h-43.75'>
+      <ScrollArea className={cn(
+        !autoHeight && 'max-h-43.75 *:data-[slot=scroll-area-viewport]:h-auto! *:data-[slot=scroll-area-viewport]:max-h-43.75'
+      )}>
         {showCopy && <CodeBlockCopyButton code={code} className='absolute top-2 right-2 z-10' />}
         {html ? (
           useLineView ? (
@@ -234,6 +273,7 @@ function CodeBlock({
   highlightLines,
   highlightClassName,
   showLineNumbers,
+  autoHeight,
   ...props
 }: CodeBlockProps) {
   // Normalise to a files array so the rest of the component is uniform
@@ -250,13 +290,14 @@ function CodeBlock({
           paneStyle,
           highlightLines,
           highlightClassName,
-          showLineNumbers
+          showLineNumbers,
+          autoHeight
         }
       ]
     }
 
     return []
-  }, [files, code, language, filename, panelClassName, paneStyle, highlightLines, highlightClassName, showLineNumbers])
+  }, [files, code, language, filename, panelClassName, paneStyle, highlightLines, highlightClassName, showLineNumbers, autoHeight])
 
   const isMulti = normalizedFiles.length > 1
   const [activeTab, setActiveTab] = React.useState(normalizedFiles[0]?.filename ?? '')
@@ -321,6 +362,7 @@ function CodeBlock({
           highlightLines={activeFile.highlightLines}
           highlightClassName={activeFile.highlightClassName}
           showLineNumbers={activeFile.showLineNumbers}
+          autoHeight={activeFile.autoHeight}
         />
       )}
     </div>

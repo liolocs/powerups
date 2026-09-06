@@ -3,14 +3,34 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import Search from "@/components/header/Search.astro";
 import { GithubLogoIcon } from "@phosphor-icons/react";
 import { ModeToggle } from "@/components/general/ModeToggle";
-import Drawer from "@/components/header/Drawer.tsx";
+import HeaderDrawer from "@/components/header/Drawer.tsx";
+import { buildDocsNav } from "@/layouts/docs-layout/buildDocsNav";
 const githubUrl = import.meta.env.GITHUB_REPO_URL;
+
+const normalize = (path: string) => path.replace(/\/+$/, "") || "/";
+const currentPath = normalize(Astro.url.pathname);
+
+// Build the mobile drawer sections from the `docs` collection, mirroring the
+// sidebar. Each top-level folder becomes a section; its direct children
+// (pages and sub-folders) become flat links (no collapsibles on mobile).
+const navMain = await buildDocsNav(currentPath);
+const sectionLinks = navMain.flatMap((node) =>
+  node.kind === "folder"
+    ? [{
+        title: node.title,
+        links: node.children.map((child) => ({
+          label: child.title,
+          href: child.url,
+        })),
+      }]
+    : [],
+);
 ---
 
 <header class="flex items-center md:justify-between p-2 gap-2" style="height: var(--header-height);">
   <div class="flex items-center md:w-full gap-2">
     <div class="lg:hidden">
-      <Drawer client:load></Drawer>
+      <HeaderDrawer client:load sectionLinks={sectionLinks} />
     </div>
     <div class="hidden lg:flex font-semibold px-4">powerups.dev</div>
 

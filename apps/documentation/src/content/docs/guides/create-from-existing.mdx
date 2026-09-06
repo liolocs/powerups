@@ -4,18 +4,20 @@ description: ''
 sidebar:
   order: 3
 ---
+import CodeBlockWithMultiplePackageManagers from "@/components/pages/install/CodeBlockWithMultiplePackageManagers"
 
 You can also create a powerup from an existing repo's code instead of starting
 starting from scratch:
 
-```sh
-pup create saas-starter \ 
-  --capture=all \ 
-  --description="Scaffolds a SaaS starter" \
-  --intent="Saas, Nextjs with tailwind and auth0" \
-  --variables=theme,projectName,auth0ClientId,auth0Domain,auth0Audience \
-  --type=single-use
-```
+<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+  { filename: 'bash', code: `pup create saas-starter \\ 
+\t--capture=all \\ 
+\t--description="Scaffolds a SaaS starter" \\
+\t--intent="Saas, Nextjs with tailwind and auth0" \\
+\t--variables=theme,projectName,auth0ClientId,auth0Domain,auth0Audience \\
+\t--type=single-use
+`, language: 'bash' },
+]} />
 
 | Flag | Option | Description |
 | --- | --- | --- |

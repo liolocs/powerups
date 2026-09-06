@@ -6,11 +6,7 @@ import {
 } from "@/components/ui/drawer"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
-
-const topLinks = [
-  { label: "Guides", href: "/guides" },
-  { label: "Powerups", href: "/powerups" },
-]
+import type { TopLink } from "@/config/site-nav"
 
 export interface SectionLink {
   label: string
@@ -23,10 +19,11 @@ export interface SectionLinks {
 }
 
 interface HeaderDrawerProps {
+  topLinks?: TopLink[]
   sectionLinks?: SectionLinks[]
 }
 
-export default function HeaderDrawer({ sectionLinks = [] }: HeaderDrawerProps) {
+export default function HeaderDrawer({ topLinks = [], sectionLinks = [] }: HeaderDrawerProps) {
   return (
     <Drawer showSwipeHandle>
       <DrawerTrigger>
@@ -38,7 +35,13 @@ export default function HeaderDrawer({ sectionLinks = [] }: HeaderDrawerProps) {
         <div className="flex-1 p-4 flex flex-col gap-4">
           <div className="flex flex-col gap-2 items-start">
             {topLinks.map((link) => (
-              <a key={link.label} className={cn(buttonVariants({ variant: "link" }), "text-foreground text-lg px-0")} href={link.href}>
+              <a
+                key={link.href}
+                className={cn(buttonVariants({ variant: "link" }), "text-foreground text-lg px-0")}
+                href={link.href}
+                target={link.target}
+                rel={link.target === "_blank" ? "noreferrer" : undefined}
+              >
                 {link.label}
               </a>
             ))}

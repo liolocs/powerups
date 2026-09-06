@@ -6,9 +6,7 @@ description: The @liolocs/powerups-sdk API — schemas, types, defineInstruction
 The authoring SDK for Powerups — the schema, types, and helpers that powerup
 authors use to define and compose instructions.
 
-A powerup is a small package that, when applied with `pup use`, runs a sequence
-of steps (`create`, `modify`, `delete`, `read`, `install`) against a target
-project to scaffold or transform code. This package gives you:
+This package gives you:
 
 - **`instructionsSchema`** — the single source of truth for what an
   `Instructions` object may contain (validated at build time).

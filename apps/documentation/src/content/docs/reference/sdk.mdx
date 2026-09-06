@@ -2,6 +2,7 @@
 title: SDK reference
 description: The @liolocs/powerups-sdk API — schemas, types, defineInstructions, and includePowerup.
 ---
+import CodeBlockWithMultiplePackageManagers from "@/components/pages/install/CodeBlockWithMultiplePackageManagers"
 
 The authoring SDK for Powerups — the schema, types, and helpers that powerup
 authors use to define and compose instructions.
@@ -21,30 +22,38 @@ project to scaffold or transform code. This package gives you:
 
 ## Installation
 
-```sh
-pnpm add -D @liolocs/powerups-sdk
-```
+<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+  { filename: 'pnpm', code: 'pnpm add -D @liolocs/powerups-sdk', language: 'bash' },
+  { filename: 'npm', code: 'npm install -D @liolocs/powerups-sdk', language: 'bash' },
+  { filename: 'yarn', code: 'yarn add -D @liolocs/powerups-sdk', language: 'bash' },
+  { filename: 'bun', code: 'bun add -D @liolocs/powerups-sdk', language: 'bash' }
+]} />
 
 The SDK is a build-time / author-time dependency only. It is inlined into the
 CLI at bundle time, so end users never need to install it.
 
 ## Exports
 
-```ts
-import {
-  // schemas
-  instructionsSchema,
-  powerupPropertySchema,
-  // types
-  type Instructions,
-  type Step,
-  type StepOverrideValue,
-  type PowerupProperty,
-  // helpers
-  defineInstructions,
-  includePowerup,
+<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+  {
+    filename: 'index.ts', language: 'ts', 
+    code: `import {
+\t// schemas
+\tinstructionsSchema,
+\tpowerupPropertySchema,
+\t// types
+\ttype Instructions,
+\ttype Step,
+\ttype StepOverrideValue,
+\ttype PowerupProperty,
+\t// helpers
+\tdefineInstructions,
+\tincludePowerup,
 } from "@liolocs/powerups-sdk";
-```
+`,
+  }
+]} />
+
 
 ---
 

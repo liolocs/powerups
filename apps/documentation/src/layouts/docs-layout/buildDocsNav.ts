@@ -49,6 +49,33 @@ const sortChildren = (folder: NavFolder) => {
   }
 }
 
+// Folders don't have a page of their own, so linking to `/docs/<folder>` 404s.
+// Resolve each folder's `url` to the first page in its subtree (by sidebar
+// `order`, the same ranking used by `sortChildren`) so folder links land on a
+// real page. Recurses into sub-folders, so the chosen page is the one that
+// sorts first across the whole subtree.
+const firstPageUrl = (folder: NavFolder): string | undefined => {
+  for (const child of folder.children) {
+    if (child.kind === "page") return child.url
+    const nested = firstPageUrl(child)
+    if (nested) return nested
+  }
+  return undefined
+}
+
+const resolveFolderUrls = (folder: NavFolder) => {
+  for (const child of folder.children) {
+    if (child.kind === "folder") {
+      const first = firstPageUrl(child)
+      if (first) child.url = first
+      // Stamp the folder's effective order (min child order) so consumers
+      // (e.g. buildTopLinks) can sort without re-deriving it.
+      child.order = nodeOrder(child)
+      resolveFolderUrls(child)
+    }
+  }
+}
+
 // Build the sidebar nav from the `docs` content collection.
 // Pages live at arbitrary nesting depths, e.g. `reference/cli/build.md`.
 // Each path segment before the file becomes a folder node; the file becomes
@@ -101,5 +128,6 @@ export async function buildDocsNav(currentPath: string): Promise<NavNode[]> {
   }
 
   sortChildren(root)
+  resolveFolderUrls(root)
   return root.children
 }

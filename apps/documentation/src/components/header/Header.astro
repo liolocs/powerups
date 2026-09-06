@@ -5,15 +5,19 @@ import { GithubLogoIcon } from "@phosphor-icons/react";
 import { ModeToggle } from "@/components/general/ModeToggle";
 import HeaderDrawer from "@/components/header/Drawer.tsx";
 import { buildDocsNav } from "@/layouts/docs-layout/buildDocsNav";
+import { buildTopLinks } from "@/config/site-nav";
 const githubUrl = import.meta.env.GITHUB_REPO_URL;
 
 const normalize = (path: string) => path.replace(/\/+$/, "") || "/";
 const currentPath = normalize(Astro.url.pathname);
 
-// Build the mobile drawer sections from the `docs` collection, mirroring the
-// sidebar. Each top-level folder becomes a section; its direct children
-// (pages and sub-folders) become flat links (no collapsibles on mobile).
+// Site nav from the `docs` collection (top-level folders -> first page) plus
+// manually-declared standalone pages (see src/config/site-nav.ts).
 const navMain = await buildDocsNav(currentPath);
+const topLinks = buildTopLinks(navMain);
+
+// Mobile drawer sections: each top-level folder becomes a section; its direct
+// children (pages and sub-folders) become flat links (no collapsibles on mobile).
 const sectionLinks = navMain.flatMap((node) =>
   node.kind === "folder"
     ? [{
@@ -30,13 +34,16 @@ const sectionLinks = navMain.flatMap((node) =>
 <header class="flex items-center md:justify-between p-2 gap-2" style="height: var(--header-height);">
   <div class="flex items-center md:w-full gap-2">
     <div class="lg:hidden">
-      <HeaderDrawer client:load sectionLinks={sectionLinks} />
+      <HeaderDrawer client:load topLinks={topLinks} sectionLinks={sectionLinks} />
     </div>
     <div class="hidden lg:flex font-semibold px-4">powerups.dev</div>
 
     <div class="hidden md:flex space-x-2">
-      <a class={buttonVariants({ variant: "ghost" })} href="/guides">Guides</a>
-      <a class={buttonVariants({ variant: "ghost" })} href="/powerups/">Powerups</a>
+      {topLinks.map((link) => (
+        <a class={buttonVariants({ variant: "ghost" })} href={link.href} target={link.target} rel={link.target === "_blank" ? "noreferrer" : undefined}>
+          {link.label}
+        </a>
+      ))}
     </div>
   </div>
 

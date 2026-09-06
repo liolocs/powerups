@@ -1,0 +1,13 @@
+---
+import { cn } from "cn"
+
+interface Props {
+  class?: string
+}
+
+const { class: className, ...props } = Astro.props
+---
+
+<div data-slot="collapsible-content" class={cn(className)} {...props}>
+  <slot />
+</div>

@@ -1,0 +1,71 @@
+---
+import SidebarMenuSub from "@/layouts/docs-layout/SidebarMenuSub.astro"
+import SidebarMenuSubItem from "@/layouts/docs-layout/SidebarMenuSubItem.astro"
+import SidebarMenuSubButton from "@/layouts/docs-layout/SidebarMenuSubButton.astro"
+import Collapsible from "@/layouts/docs-layout/Collapsible.astro"
+import CollapsibleTrigger from "@/layouts/docs-layout/CollapsibleTrigger.astro"
+import CollapsibleContent from "@/layouts/docs-layout/CollapsibleContent.astro"
+import SidebarNavChildren from "@/layouts/docs-layout/SidebarNavChildren.astro"
+
+export interface NavPage {
+  kind: "page"
+  title: string
+  url: string
+  order?: number
+  isActive: boolean
+}
+
+export interface NavFolder {
+  kind: "folder"
+  name: string
+  title: string
+  url: string
+  order?: number
+  children: NavNode[]
+}
+
+export type NavNode = NavPage | NavFolder
+
+interface Props {
+  nodes: NavNode[]
+}
+
+const { nodes } = Astro.props
+---
+
+{
+  nodes.map((node) => (
+    <SidebarMenuSubItem>
+      {node.kind === "page" ? (
+        <SidebarMenuSubButton href={node.url} isActive={node.isActive}>
+          {node.title}
+        </SidebarMenuSubButton>
+    ) : (
+        <Collapsible open>
+          <CollapsibleTrigger
+            class="flex mt-3 min-h-7 w-full items-center gap-2 rounded-md px-3 py-2 text-sidebar-foreground outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <span class="truncate text-sm font-normal">{node.title}</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="ml-auto size-4 shrink-0 text-sidebar-foreground/70 transition-transform duration-200 group-open/collapsible:rotate-90"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              <SidebarNavChildren nodes={node.children} />
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </Collapsible>
+    )}
+    </SidebarMenuSubItem>
+   )
+  )
+}

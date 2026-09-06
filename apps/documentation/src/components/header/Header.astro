@@ -1,0 +1,35 @@
+---
+import { Button, buttonVariants } from "@/components/ui/button"
+import Search from "@/components/header/Search.astro";
+import { GithubLogoIcon } from "@phosphor-icons/react";
+import { ModeToggle } from "@/components/general/ModeToggle";
+import Drawer from "@/components/header/Drawer.tsx";
+const githubUrl = import.meta.env.GITHUB_REPO_URL;
+---
+
+<header class="flex items-center md:justify-between p-2 gap-2" style="height: var(--header-height);">
+  <div class="flex items-center md:w-full gap-2">
+    <div class="lg:hidden">
+      <Drawer client:load></Drawer>
+    </div>
+    <div class="hidden lg:flex font-semibold px-4">powerups.dev</div>
+
+    <div class="hidden md:flex space-x-2">
+      <a class={buttonVariants({ variant: "ghost" })} href="/guides">Guides</a>
+      <a class={buttonVariants({ variant: "ghost" })} href="/powerups/">Powerups</a>
+    </div>
+  </div>
+
+
+  <div class="flex w-full justify-end">
+    <div class="w-full md:max-w-[200px]">
+      <Search></Search>
+    </div>
+
+    <a class={buttonVariants({ variant: "ghost" })} href={githubUrl} target="_blank">
+      <GithubLogoIcon client:load className="size-5"/>
+    </a>
+
+    <ModeToggle client:load />
+  </div>
+</header>

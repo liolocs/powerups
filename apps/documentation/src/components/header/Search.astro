@@ -1,0 +1,15 @@
+---
+import { MagnifyingGlassIcon} from "@phosphor-icons/react";
+import {InputGroup, InputGroupInput, InputGroupAddon} from "@/components/ui/input-group"
+import { Kbd } from "@/components/ui/kbd"
+---
+
+<InputGroup client:load className="w-full h-8">
+  <InputGroupInput client:load placeholder="Search..." />
+  <InputGroupAddon client:load>
+    <MagnifyingGlassIcon />
+  </InputGroupAddon>
+  <InputGroupAddon client:load align="inline-end">
+    <Kbd client:load>⌘K</Kbd>
+  </InputGroupAddon>
+</InputGroup>

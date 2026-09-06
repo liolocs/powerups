@@ -1,0 +1,54 @@
+---
+import HomepageCard from "@/components/homepage/content/HomepageCard.tsx";
+import { GearIcon } from "@phosphor-icons/react";
+
+const homepageCards = [
+  {
+    icon: "install-cli",
+    title: "Install the CLI",
+    description: "Install <code>pup</code> globally with npm and verify your setup.",
+    cta: "Install the CLI",
+  },
+  {
+    icon: "use-powerup",
+    title: "Use a powerup",
+    description: "Install a powerup, then apply powerups to your project with variables.",
+    cta: "Quickstart",
+  },
+  {
+    icon: "author-powerup",
+    title: "Author powerups",
+    description: "Define instructions and templates with the SDK, build them, and share them.",
+    cta: "Authoring guide",
+  },
+  {
+    icon: "command-reference",
+    title: "Command reference",
+    description: "Every pup command with its flags, generated from the CLI source.",
+    cta: "Command reference",
+  },
+  {
+    icon: "sdk-reference",
+    title: "SDK reference",
+    description: "Schemas, types, and helpers for authoring powerups.",
+    cta: "SDK reference", 
+  }
+] as const;
+---
+
+<div class="flex flex-col gap-4 text-left p-8 lg:max-w-[70vw] m-auto">
+  <h2 class="text-lg">What are powerups?</h2>
+  <p class="text-foreground/80 text-md"><span class="font-semibold text-foreground">powerups</span> are coding instructions for AI agents for more predicatable outcomes. Instead of letting an AI generate a solution from scratch, you point it at a powerup you’ve already written, so its output is grounded in code you trust.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {homepageCards.map((card) => (
+      <HomepageCard client:load
+        icon={card.icon}
+        title={card.title}
+        description={card.description}
+        cta={card.cta}
+      ></HomepageCard>
+    ))}
+  </div>
+</div>
+

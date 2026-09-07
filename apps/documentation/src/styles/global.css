@@ -131,7 +131,7 @@
     cursor: pointer;
     }
   html {
-    @apply font-sans;
+    @apply font-sans scroll-smooth;
     }
 }
 
@@ -151,6 +151,10 @@
   --tw-prose-quote-borders: var(--border);
   --tw-prose-counters: var(--muted-foreground);
   --tw-prose-captions: var(--muted-foreground);
+}
+
+.prose :is(h2, h3, h4) {
+  scroll-margin-top: 1.5rem;
 }
 
 .prose h2 {

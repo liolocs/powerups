@@ -15,11 +15,18 @@ export async function getStaticPaths() {
 }
 
 const { page } = Astro.props;
-const { Content } = await render(page);
+const { Content, headings } = await render(page);
 const { prev, next } = await getPrevNextPages(`/docs/${page.id}`);
+
+// Prepend a synthetic "Overview" entry that links to the top of the page.
+// The H1 rendered by PageHeader has `id="_top"`, so this scrolls there.
+const tocHeadings = [
+  { depth: 1, slug: "_top", text: "Overview" },
+  ...headings,
+];
 ---
 
-<DocsLayout>
+<DocsLayout headings={tocHeadings}>
     <div class="prose w-full" >
       <PageHeader title={page.data.title} description={page.data.description} backHref={prev?.url} forwardHref={next?.url} />
       <Content />

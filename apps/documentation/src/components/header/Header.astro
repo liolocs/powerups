@@ -31,7 +31,7 @@ const sectionLinks = navMain.flatMap((node) =>
 );
 ---
 
-<header class="flex items-center md:justify-between p-2 gap-2" style="height: var(--header-height);">
+<header class="sticky top-0 z-50 flex items-center md:justify-between p-2 gap-2 bg-background backdrop-blur-sm border-b border-border" style="height: var(--header-height);">
   <div class="flex items-center md:w-full gap-2">
     <div class="lg:hidden">
       <HeaderDrawer client:load topLinks={topLinks} sectionLinks={sectionLinks} />

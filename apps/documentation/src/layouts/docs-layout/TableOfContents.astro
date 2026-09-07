@@ -1,10 +1,148 @@
 ---
+import Collapsible from "./Collapsible.astro"
+import CollapsibleTrigger from "./CollapsibleTrigger.astro"
+import CollapsibleContent from "./CollapsibleContent.astro"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { CaretRightIcon } from "@phosphor-icons/react"
+
+interface Heading {
+  depth: number
+  slug: string
+  text: string
+}
+
+interface Props {
+  headings: Heading[]
+}
+
+const { headings } = Astro.props
+
+// Include the synthetic "Overview" entry (depth 1, slug "_top") plus H2–H3
+// from the markdown content. H4+ and any stray H1s are excluded.
+const tocHeadings = headings.filter(
+  (h) => h.slug === "_top" || (h.depth >= 2 && h.depth <= 3)
+)
 ---
 
-<nav class="hidden xl:flex flex-col w-[200px] h-full gap-3">
+{/* Mobile / tablet: zero-JS collapsible <details> shown above the content */}
+<div class="xl:hidden w-full sticky top-[var(--header-height)] z-40 bg-background max-h-[calc(100vh-var(--header-height))] overflow-y-auto">
+  <Collapsible>
+    <CollapsibleTrigger class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium border-b border-border">
+      <div class={buttonVariants({variant: "outline"})}>
+        <span>On this page</span>
+        <CaretRightIcon className="size-4" />
+      </div>
+      <span data-toc-current class="text-foreground/50 truncate"></span>
+    </CollapsibleTrigger>
+    <CollapsibleContent class="py-3 border-b border-border">
+      <ul class="flex flex-col gap-3 px-6 py-2">
+        {tocHeadings.map((heading) => (
+          <li style={`padding-left: ${Math.max(0, heading.depth - 2) * 0.75}rem`}>
+            <a
+              href={`#${heading.slug}`}
+              data-toc-link={heading.slug}
+              class="text-sm text-foreground/60 hover:text-foreground transition-colors"
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </CollapsibleContent>
+  </Collapsible>
+</div>
+
+{/* Desktop: sticky sidebar */}
+<nav class="hidden xl:flex xl:order-2 flex-col w-[300px] gap-3 sticky top-[calc(var(--header-height)+1.5rem)] self-start px-8 py-14" data-toc-nav>
   <p class="text-xs text-foreground/60">On this page</p>
   <ul class="flex flex-col gap-2">
-    <li><a href="#" class="text-sm">Overview</a></li>
-    <li><a href="#quick-start" class="text-sm text-foreground/60">Quick start</a></li>
+    {tocHeadings.map((heading) => (
+      <li style={`padding-left: ${Math.max(0, heading.depth - 2) * 0.75}rem`}>
+        <a
+          href={`#${heading.slug}`}
+          data-toc-link={heading.slug}
+          class="text-sm text-foreground/60 hover:text-foreground transition-colors"
+        >
+          {heading.text}
+        </a>
+      </li>
+    ))}
   </ul>
 </nav>
+
+<script>
+  const tocLinks = document.querySelectorAll('[data-toc-link]');
+  const currentDisplay = document.querySelector('[data-toc-current]');
+
+  if (tocLinks.length > 0) {
+    // Build a slug → { el, links, text } map. Each heading appears once;
+    // links contains every ToC <a> pointing at it (mobile + desktop).
+    const bySlug = new Map<string, { el: HTMLElement; links: HTMLElement[]; text: string }>();
+    tocLinks.forEach((link) => {
+      const slug = link.getAttribute('data-toc-link');
+      if (!slug) return;
+      const el = document.getElementById(slug);
+      if (!el) return;
+      const existing = bySlug.get(slug);
+      if (existing) {
+        existing.links.push(link as HTMLElement);
+      } else {
+        bySlug.set(slug, {
+          el,
+          links: [link as HTMLElement],
+          text: link.textContent?.trim() ?? '',
+        });
+      }
+    });
+
+    function setActive(slug: string) {
+      tocLinks.forEach((l) => {
+        l.classList.remove('text-foreground', 'font-medium');
+        l.classList.add('text-foreground/60');
+      });
+      const target = bySlug.get(slug);
+      if (target) {
+        target.links.forEach((l) => {
+          l.classList.remove('text-foreground/60');
+          l.classList.add('text-foreground', 'font-medium');
+        });
+        if (currentDisplay) currentDisplay.textContent = target.text;
+      }
+    }
+
+ // Start with "Overview" active.
+    setActive('_top');
+
+    // Read the sticky header height so the scroll-spy detection band starts
+    // below it (headings hidden behind the header shouldn't be "active").
+    const headerEl = document.querySelector('header');
+    const headerHeight = headerEl ? headerEl.offsetHeight : 56;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id);
+          }
+        }
+      },
+      {
+        // Detect headings just below the sticky header. The top margin
+        // pushes the detection band start down by the header height so the
+        // band begins where content is actually visible.
+        rootMargin: `${headerHeight + 1}px 0px -85% 0px`,
+        threshold: 0,
+      }
+    );
+
+    bySlug.forEach((t) => observer.observe(t.el));
+
+    // Close the mobile collapsible when a ToC link is clicked.
+    tocLinks.forEach((link) => {
+      link.addEventListener('click', () => {
+        const details = link.closest('details');
+        if (details) details.open = false;
+      });
+    });
+  }
+</script>

@@ -2,16 +2,28 @@
 import Layout from "@/layouts/main.astro"
 import Sidebar from "@/layouts/docs-layout/sidebar.astro";
 import TableOfContents from "@/layouts/docs-layout/TableOfContents.astro";
+
+interface Heading {
+  depth: number
+  slug: string
+  text: string
+}
+
+interface Props {
+  headings: Heading[]
+}
+
+const { headings } = Astro.props;
 ---
 
 <Layout>
   <div class="grid grid-cols-1 lg:grid-cols-[auto_1fr]">
     <Sidebar />
-    <main class="py-6 xl:py-14 px-16 h-full w-full md:max-w-[70vw] xl:max-w-full m-auto grid grid-cols-1 xl:grid-cols-[1fr_auto]">
-      <div class="flex flex-col items-center">
+    <main class="h-full w-full grid grid-cols-1 xl:grid-cols-[1fr_auto]">
+      <TableOfContents headings={headings} />
+      <div class="flex flex-col items-center py-6 xl:py-14 px-16 xl:px-4 h-full w-full xl:order-1 md:max-w-[70vw] xl:max-w-full m-auto ">
         <slot />
       </div>
-      <TableOfContents />
     </main>
   </div>
 </Layout>

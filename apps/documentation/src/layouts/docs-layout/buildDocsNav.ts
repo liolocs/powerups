@@ -131,3 +131,35 @@ export async function buildDocsNav(currentPath: string): Promise<NavNode[]> {
   resolveFolderUrls(root)
   return root.children
 }
+
+// Flatten the sorted nav tree into a depth-first list of page nodes only.
+// Folders are skipped — their `url` resolves to a child page that already
+// appears in the list. The resulting order matches the sidebar's reading order.
+const flattenPages = (nodes: NavNode[]): NavPage[] => {
+  const pages: NavPage[] = []
+  for (const node of nodes) {
+    if (node.kind === "page") {
+      pages.push(node)
+    } else {
+      pages.push(...flattenPages(node.children))
+    }
+  }
+  return pages
+}
+
+// Return the previous and next pages relative to `currentPath`, using the same
+// sorted tree the sidebar renders. Returns `{ prev: null, next: null }` if the
+// current page isn't found. `prev` is null on the first page; `next` is null on
+// the last page.
+export async function getPrevNextPages(
+  currentPath: string
+): Promise<{ prev: NavPage | null; next: NavPage | null }> {
+  const nav = await buildDocsNav(currentPath)
+  const flat = flattenPages(nav)
+  const index = flat.findIndex((page) => page.isActive)
+  if (index === -1) return { prev: null, next: null }
+  return {
+    prev: flat[index - 1] ?? null,
+    next: flat[index + 1] ?? null,
+  }
+}

@@ -6,10 +6,14 @@ import InputGroupAddon from "@/components/ui/astro/InputGroupAddon.astro";
 ---
 
 <InputGroup class="w-full h-8">
-  <InputGroupInput placeholder="Search..." />
+  <InputGroupInput id="powerups-search" placeholder="Search..." />
   <InputGroupAddon>
     <MagnifyingGlassIcon />
   </InputGroupAddon>
   <InputGroupAddon align="inline-end">
   </InputGroupAddon>
 </InputGroup>
+
+<div id="powerups-results-count" class="text-sm text-muted-foreground mt-2">
+  <!-- Updated by client-side script -->
+</div>

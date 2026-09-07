@@ -1,0 +1,19 @@
+---
+interface Props {
+  name: string;
+  description: string;
+  keywords: string[];
+  publisher: string;
+}
+
+const { name, description, keywords, publisher } = Astro.props;
+
+// Lowercased concatenation of all searchable fields for client-side filtering
+const searchText = [name, description, keywords.join(" "), publisher]
+  .join(" ")
+  .toLowerCase();
+---
+
+<div data-search={searchText}>
+  {name}
+</div>

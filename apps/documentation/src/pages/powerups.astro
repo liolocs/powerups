@@ -2,15 +2,19 @@
 export const prerender = false;
 
 import { getLiveCollection } from "astro:content";
+import type { LiveDataCollectionResult } from "astro";
 import PageHeader from "@/components/pages/PageHeader.astro";
 import Layout from "@/layouts/main.astro"
 import SearchPowerups from "@/components/pages/powerups/SearchPowerups.astro";
+import PowerupCard from "@/components/pages/powerups/PowerupCard.astro";
+import type { PowerupsPackageData } from "@/loaders/npm-powerups-loader";
 
 const title = "Powerups";
 const description = "Powerups are reusable packages your AI agent installs instead of writing code from scratch. Browse the directory, then install with `pup install <name>.`";
 
 // Fetch live npm packages matching the `powerups-package` keyword at request time
-const { entries, error } = await getLiveCollection("powerups");
+const { entries, error }: LiveDataCollectionResult<PowerupsPackageData, Error> =
+	await getLiveCollection("powerups");
 
 if (error) {
 	console.error("[powerups] live collection loader error:", error.message);
@@ -27,8 +31,82 @@ if (error) {
 
       <div class="flex flex-col">
         <SearchPowerups />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+          {entries?.map((entry) => (
+            <PowerupCard
+              name={entry?.data?.name}
+              description={entry?.data?.description}
+              keywords={entry?.data?.keywords}
+              publisher={entry?.data?.publisher}
+            />
+          ))}
+        </div>
+
+        <div id="powerups-no-results" class="hidden text-center text-muted-foreground py-8">
+          No powerups match your search.
+        </div>
       </div>
   </div>
+
+  <script>
+    const searchInput = document.getElementById("powerups-search") as HTMLInputElement | null;
+    const cards = document.querySelectorAll<HTMLElement>("[data-search]");
+    const resultsCount = document.getElementById("powerups-results-count");
+    const noResults = document.getElementById("powerups-no-results");
+
+    const totalCards = cards.length;
+
+    function updateResultsCount(visible: number) {
+      if (resultsCount) {
+        resultsCount.textContent = `Showing ${visible} of ${totalCards}`;
+      }
+    }
+
+    function showAllCards() {
+      cards.forEach((card) => card.classList.remove("hidden"));
+    }
+
+    function filterCards(query: string) {
+      let visible = 0;
+      cards.forEach((card) => {
+        const searchText = card.dataset.search ?? "";
+        if (searchText.includes(query)) {
+          card.classList.remove("hidden");
+          visible++;
+        } else {
+          card.classList.add("hidden");
+        }
+      });
+      return visible;
+    }
+
+    // Initialize results count on load
+    updateResultsCount(totalCards);
+
+    if (searchInput) {
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim().toLowerCase();
+
+        if (query.length < 2) {
+          // Below threshold: show everything, hide no-results
+          showAllCards();
+          updateResultsCount(totalCards);
+          noResults?.classList.add("hidden");
+          return;
+        }
+
+        const visible = filterCards(query);
+        updateResultsCount(visible);
+
+        if (visible === 0) {
+          noResults?.classList.remove("hidden");
+        } else {
+          noResults?.classList.add("hidden");
+        }
+      });
+    }
+  </script>
 </Layout>
 
 <style>

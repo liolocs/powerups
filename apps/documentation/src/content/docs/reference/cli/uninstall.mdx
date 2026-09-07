@@ -4,12 +4,17 @@ description: 'Uninstall a powerup'
 sidebar:
   order: 4
 ---
+import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
 
 Uninstall a powerup
 
-```sh
-pup uninstall [flags]
-```
+<CodeBlockWithMultiplePackageManagers client:load files={[
+  {
+    filename: 'bash',
+    language: 'bash',
+    code: `pup uninstall [flags]`
+  }
+]} />
 
 ## Flags
 

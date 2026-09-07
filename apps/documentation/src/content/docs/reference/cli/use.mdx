@@ -4,12 +4,18 @@ description: 'Use a powerup'
 sidebar:
   order: 5
 ---
+import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
 
 Use a powerup
 
-```sh
-pup use [flags]
-```
+
+<CodeBlockWithMultiplePackageManagers client:load files={[
+  {
+    filename: 'bash',
+    language: 'bash',
+    code: `pup use [flags]`
+  }
+]} />
 
 ## Flags
 

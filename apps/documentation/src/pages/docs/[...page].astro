@@ -14,12 +14,12 @@ const { page } = Astro.props;
 const { Content } = await render(page);
 
 import DocsLayout from "@/layouts/docs-layout/docs-layout.astro"
+import PageHeader from '@/components/pages/PageHeader.astro';
 ---
 
 <DocsLayout>
-    <h1 class="text-3xl font-semibold tracking-tight leading-9">{page.data.title}</h1>
-    <p class="text-base leading-7 text-muted-foreground mb-8">{page.data.description}</p>
-    <div class="prose" >
+    <PageHeader title={page.data.title} description={page.data.description} />
+    <div class="prose w-full" >
         <Content />
     </div>
 </DocsLayout>

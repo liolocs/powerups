@@ -5,11 +5,17 @@ sidebar:
   order: 3
 ---
 
+import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
+
 Install a powerup locally or globally
 
-```sh
-pup install [flags]
-```
+<CodeBlockWithMultiplePackageManagers client:load files={[
+  {
+    filename: 'bash',
+    language: 'bash',
+    code: `pup install [flags]`
+  }
+]} />
 
 ## Flags
 

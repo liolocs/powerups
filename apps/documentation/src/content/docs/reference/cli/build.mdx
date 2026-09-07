@@ -5,8 +5,14 @@ sidebar:
   order: 1
 ---
 
+import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
+
 Build a powerup for distribution
 
-```sh
-pup build [flags]
-```
+<CodeBlockWithMultiplePackageManagers client:load files={[
+  {
+    filename: 'bash',
+    language: 'bash',
+    code: `pup build`
+  }
+]} />

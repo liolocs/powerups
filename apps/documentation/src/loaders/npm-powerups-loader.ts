@@ -145,6 +145,7 @@ export function npmPowerupsLoader(): LiveLoader<
 				};
 
 				const latestVersion = json["dist-tags"]?.latest ?? "";
+
 				return {
 					id: json.name,
 					data: {

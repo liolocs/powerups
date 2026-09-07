@@ -1,0 +1,18 @@
+---
+import type { HTMLAttributes } from "astro/types"
+import { cn } from "cn"
+
+interface Props extends HTMLAttributes<"option"> {
+  class?: string
+}
+
+const { class: className, ...props } = Astro.props
+---
+
+<option
+  data-slot="native-select-option"
+  class={cn("bg-[Canvas] text-[CanvasText]", className)}
+  {...props}
+>
+  <slot />
+</option>

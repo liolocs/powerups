@@ -16,6 +16,10 @@ const powerups = defineLiveCollection({
 		license: z.string().nullable(),
 		publisher: z.string(),
 		date: z.string(),
+    downloads: z.object({
+      monthly: z.number(),
+      weekly: z.number(),
+    }),
 		links: z.object({
 			npm: z.url(),
 			repository: z.string().nullable(),

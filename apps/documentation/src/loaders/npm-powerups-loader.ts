@@ -17,6 +17,10 @@ export interface PowerupsPackageData {
 		repository: string | null;
 		homepage: string | null;
 	};
+  downloads: {
+    monthly: number;
+    weekly: number;
+  };
 	searchScore: number;
 	score: {
 		final: number;
@@ -35,6 +39,10 @@ export interface PowerupsCollectionFilter {
 interface NpmSearchResponse {
 	total: number;
 	objects: Array<{
+    downloads: {
+      monthly: number;
+      weekly: number;
+    };
 		package: {
 			name: string;
 			version: string;
@@ -76,9 +84,11 @@ export function npmPowerupsLoader(): LiveLoader<
 
 			try {
 				const res = await fetch(url);
+
 				if (!res.ok) {
 					return { error: new Error(`npm registry responded with ${res.status} ${res.statusText}`) };
 				}
+
 				const json = (await res.json()) as NpmSearchResponse;
 
 				return {
@@ -97,6 +107,10 @@ export function npmPowerupsLoader(): LiveLoader<
 								repository: obj.package.links.repository ?? null,
 								homepage: obj.package.links.homepage ?? null,
 							},
+              downloads: {
+                monthly: obj.downloads.monthly,
+                weekly: obj.downloads.weekly,
+              },
 							searchScore: obj.searchScore,
 							score: {
 								final: obj.score.final,
@@ -117,7 +131,9 @@ export function npmPowerupsLoader(): LiveLoader<
 			const packageName = filter as unknown as string;
 			try {
 				const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(packageName)}`);
+
 				if (!res.ok) return undefined;
+
 				const json = (await res.json()) as {
 					name: string;
 					description?: string;
@@ -145,6 +161,10 @@ export function npmPowerupsLoader(): LiveLoader<
 							homepage: null,
 						},
 						searchScore: 0,
+            downloads: {
+              monthly: 0,
+              weekly: 0,
+            },
 						score: { final: 0, quality: 0, popularity: 0, maintenance: 0 },
 					},
 				};

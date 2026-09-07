@@ -8,6 +8,7 @@ import Layout from "@/layouts/main.astro"
 import SearchPowerups from "@/components/pages/powerups/SearchPowerups.astro";
 import PowerupCard from "@/components/pages/powerups/PowerupCard.astro";
 import type { PowerupsPackageData } from "@/loaders/npm-powerups-loader";
+import SortPowerupsDropdown from "@/components/pages/powerups/SortPowerupsDropdown.astro";
 
 const title = "Powerups";
 const description = "Powerups are reusable packages your AI agent installs instead of writing code from scratch. Browse the directory, then install with `pup install <name>.`";
@@ -29,8 +30,15 @@ if (error) {
         <PageHeader title={title} description={description} />
       </div>
 
-      <div class="flex flex-col">
-        <SearchPowerups />
+      <div class="flex flex-col w-full">
+        <div class="flex flex-col md:flex-row gap-3">
+          <div class="w-full">
+            <SearchPowerups />
+          </div>
+          <div class="min-w-[180px]">
+            <SortPowerupsDropdown />
+          </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
           {entries?.map((entry) => (
@@ -39,6 +47,9 @@ if (error) {
               description={entry?.data?.description}
               keywords={entry?.data?.keywords}
               publisher={entry?.data?.publisher}
+              downloads={entry?.data?.downloads}
+              version={entry?.data?.version}
+              url={`/powerups/${entry?.data?.name}`}
             />
           ))}
         </div>

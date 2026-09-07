@@ -1,12 +1,22 @@
 ---
+import Badge from '@/components/ui/astro/Badge.astro';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from 'cn';
+
 interface Props {
   name: string;
   description: string;
   keywords: string[];
   publisher: string;
+  version: string;
+  url: string;
+  downloads: {
+    weekly: number;
+    monthly: number;
+  }
 }
 
-const { name, description, keywords, publisher } = Astro.props;
+const { name, description, keywords, publisher, url, downloads, version } = Astro.props;
 
 // Lowercased concatenation of all searchable fields for client-side filtering
 const searchText = [name, description, keywords.join(" "), publisher]
@@ -14,6 +24,11 @@ const searchText = [name, description, keywords.join(" "), publisher]
   .toLowerCase();
 ---
 
-<div data-search={searchText}>
-  {name}
-</div>
+<a href={url} data-search={searchText} class={cn(buttonVariants({ variant: "outline"}), "dark:hover:border-white/80 hover:border-gray-800 flex flex-col px-4 py-4 h-auto gap-3")}>
+  <span class="w-full text-left text-md">{name}</span>
+  <span class="w-full text-left text-sm text-foreground/60 text-ellipsis overflow-hidden">{description}</span>
+  <div class="flex w-full items-center justify-start gap-2 text-foreground/60">
+    <Badge variant="secondary">{version}</Badge>
+    <span class="font-normal">{downloads.monthly} downloads/mo</span>
+  </div>
+</a>

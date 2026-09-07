@@ -2,6 +2,7 @@
 import type { NavPage } from "@/layouts/docs-layout/buildDocsNav"
 import { buttonVariants } from "../ui/button"
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
+import { cn } from "cn"
 
 interface Props {
   prev: NavPage | null
@@ -16,7 +17,7 @@ const { prev, next } = Astro.props
     {prev ? (
       <a
         href={prev.url}
-        class={buttonVariants({ variant: "secondary" })}
+        class={cn(buttonVariants({ variant: "secondary" }), "no-underline!")}
       >
         <CaretLeftIcon className="size-4" />
         <span>{prev.title}</span>
@@ -27,7 +28,7 @@ const { prev, next } = Astro.props
     {next ? (
       <a
         href={next.url}
-        class={buttonVariants({ variant: "secondary" })}
+        class={cn(buttonVariants({ variant: "secondary" }), "no-underline!")}
       >
         <span>{next.title}</span>
         <CaretRightIcon className="size-4" />

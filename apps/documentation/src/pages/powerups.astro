@@ -1,0 +1,38 @@
+---
+export const prerender = false;
+
+import { getLiveCollection } from "astro:content";
+import PageHeader from "@/components/pages/PageHeader.astro";
+import Layout from "@/layouts/main.astro"
+import SearchPowerups from "@/components/pages/powerups/SearchPowerups.astro";
+
+const title = "Powerups";
+const description = "Powerups are reusable packages your AI agent installs instead of writing code from scratch. Browse the directory, then install with `pup install <name>.`";
+
+// Fetch live npm packages matching the `powerups-package` keyword at request time
+const { entries, error } = await getLiveCollection("powerups");
+
+if (error) {
+	console.error("[powerups] live collection loader error:", error.message);
+} else {
+	console.log("[powerups] live collection entries:", entries);
+}
+---
+
+<Layout>
+  <div class="flex flex-col items-center py-6 xl:py-14 px-8 h-full w-full md:max-w-[80vw] m-auto">
+      <div class="powerups-page w-full">
+        <PageHeader title={title} description={description} />
+      </div>
+
+      <div class="flex flex-col">
+        <SearchPowerups />
+      </div>
+  </div>
+</Layout>
+
+<style>
+  h1 {
+    /* @apply mb-3 */
+  }
+</style>

@@ -1,0 +1,58 @@
+---
+import { cva, type VariantProps } from "class-variance-authority"
+import type { HTMLAttributes } from "astro/types"
+import { cn } from "cn"
+import Button from "./Button.astro"
+
+const inputGroupButtonVariants = cva(
+  "flex items-center gap-2 text-sm shadow-none",
+  {
+    variants: {
+      size: {
+        xs: "h-6 gap-1 rounded-[calc(var(--radius)-5px)] px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
+        sm: "",
+        "icon-xs":
+          "size-6 rounded-[calc(var(--radius)-5px)] p-0 has-[>svg]:p-0",
+        "icon-sm": "size-8 p-0 has-[>svg]:p-0",
+      },
+    },
+    defaultVariants: {
+      size: "xs",
+    },
+  }
+)
+
+type ButtonSize = VariantProps<typeof inputGroupButtonVariants>["size"]
+type ButtonVariant =
+  | "default"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "destructive"
+  | "link"
+
+interface Props extends HTMLAttributes<"button"> {
+  class?: string
+  variant?: ButtonVariant
+  size?: ButtonSize
+  type?: "button" | "submit" | "reset"
+}
+
+const {
+  class: className,
+  variant = "ghost",
+  size = "xs",
+  type = "button",
+  ...props
+} = Astro.props
+---
+
+<Button
+  type={type}
+  data-size={size}
+  variant={variant}
+  class={cn(inputGroupButtonVariants({ size }), className)}
+  {...props}
+>
+  <slot />
+</Button>

@@ -6,6 +6,8 @@ import react from "@astrojs/react"
 
 import mdx from "@astrojs/mdx";
 
+import cloudflare from "@astrojs/cloudflare";
+
 // https://astro.build/config
 export default defineConfig({
   vite: {
@@ -18,5 +20,7 @@ export default defineConfig({
     schema: {
       GITHUB_REPO_URL: envField.string({ context: "client", access: "public", default: "https://github.com/liolocs/powerups" })
     }
-  }
+  },
+
+  adapter: cloudflare()
 })

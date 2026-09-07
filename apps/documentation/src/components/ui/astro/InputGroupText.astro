@@ -1,0 +1,20 @@
+---
+import type { HTMLAttributes } from "astro/types"
+import { cn } from "cn"
+
+interface Props extends HTMLAttributes<"span"> {
+  class?: string
+}
+
+const { class: className, ...props } = Astro.props
+---
+
+<span
+  class={cn(
+    "flex items-center gap-2 text-sm text-muted-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+    className
+  )}
+  {...props}
+>
+  <slot />
+</span>

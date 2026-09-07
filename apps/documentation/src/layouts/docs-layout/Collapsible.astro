@@ -9,10 +9,6 @@ interface Props {
 const { open = false, class: className, ...props } = Astro.props
 ---
 
-<!-- Native <details> gives us a zero-JS collapsible: the `open` attribute
-     controls expansion and the browser handles toggling on click. The
-     `group/collapsible` class lets children react to the open state via
-     Tailwind's `group-open/collapsible:` variant. -->
 <details
   data-slot="collapsible"
   open={open}

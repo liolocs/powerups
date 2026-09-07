@@ -1,0 +1,37 @@
+---
+import type { NavPage } from "@/layouts/docs-layout/buildDocsNav"
+
+interface Props {
+  prev: NavPage | null
+  next: NavPage | null
+}
+
+const { prev, next } = Astro.props
+---
+
+{(prev || next) && (
+  <div class="flex justify-between gap-4 pt-8 mt-8 border-t border-border w-full">
+    {prev ? (
+      <a
+        href={prev.url}
+        class="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <span>←</span>
+        <span>{prev.title}</span>
+      </a>
+    ) : (
+      <span />
+    )}
+    {next ? (
+      <a
+        href={next.url}
+        class="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ml-auto"
+      >
+        <span>{next.title}</span>
+        <span>→</span>
+      </a>
+    ) : (
+      <span />
+    )}
+  </div>
+)}

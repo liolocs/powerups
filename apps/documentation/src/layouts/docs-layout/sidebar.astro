@@ -29,11 +29,11 @@ const navMain = await buildDocsNav(currentPath)
             </SidebarMenuItem>
           ) : (
             <SidebarMenuItem>
-              <a href={node.url} class="text-xs font-normal text-foreground/60">
+              <a href={node.url} class="text-xs font-normal text-foreground/60 mb-4!">
                 {node.title}
               </a>
               {node.children.length > 0 ? (
-                <SidebarMenuSub class="flex flex-col gap-2">
+                <SidebarMenuSub class="flex flex-col gap-2 pt-3!">
                   <SidebarNavChildren nodes={node.children} />
                 </SidebarMenuSub>
               ) : null}

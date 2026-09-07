@@ -1,5 +1,9 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { getPrevNextPages } from "@/layouts/docs-layout/buildDocsNav"
+import DocsLayout from "@/layouts/docs-layout/docs-layout.astro"
+import PageHeader from '@/components/pages/PageHeader.astro';
+import PageBottomLinks from '@/components/pages/PageBottomLinks.astro';
 
 export async function getStaticPaths() {
   const pages = await getCollection('docs');
@@ -12,9 +16,7 @@ export async function getStaticPaths() {
 
 const { page } = Astro.props;
 const { Content } = await render(page);
-
-import DocsLayout from "@/layouts/docs-layout/docs-layout.astro"
-import PageHeader from '@/components/pages/PageHeader.astro';
+const { prev, next } = await getPrevNextPages(`/docs/${page.id}`);
 ---
 
 <DocsLayout>
@@ -22,4 +24,5 @@ import PageHeader from '@/components/pages/PageHeader.astro';
     <div class="prose w-full" >
         <Content />
     </div>
+    <PageBottomLinks prev={prev} next={next} />
 </DocsLayout>

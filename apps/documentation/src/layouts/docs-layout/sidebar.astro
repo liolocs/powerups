@@ -23,7 +23,7 @@ const navMain = await buildDocsNav(currentPath)
         navMain.map((node) =>
           node.kind === "page" ? (
             <SidebarMenuItem>
-              <SidebarMenuSubButton href={node.url} isActive={node.isActive}>
+              <SidebarMenuSubButton href={node.url} isActive={node.isActive} class="text-foreground/85">
                 {node.title}
               </SidebarMenuSubButton>
             </SidebarMenuItem>

@@ -22,7 +22,7 @@ const { nodes } = Astro.props
   nodes.map((node) => (
     <SidebarMenuSubItem>
       {node.kind === "page" ? (
-        <SidebarMenuSubButton href={node.url} isActive={node.isActive}>
+        <SidebarMenuSubButton href={node.url} isActive={node.isActive} class="text-foreground/85">
           {node.title}
         </SidebarMenuSubButton>
     ) : (

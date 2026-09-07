@@ -10,21 +10,27 @@ interface Props {
   publisher: string;
   version: string;
   url: string;
+  date: string;
   downloads: {
     weekly: number;
     monthly: number;
   }
 }
 
-const { name, description, keywords, publisher, url, downloads, version } = Astro.props;
+const { name, description, keywords, publisher, url, downloads, version, date } = Astro.props;
 
 // Lowercased concatenation of all searchable fields for client-side filtering
 const searchText = [name, description, keywords.join(" "), publisher]
   .join(" ")
   .toLowerCase();
+
+// Sort data attributes for client-side sorting
+const sortName = name.toLowerCase();
+const sortDownloads = String(downloads.monthly);
+const sortDate = String(Date.parse(date));
 ---
 
-<a href={url} data-search={searchText} class={cn(buttonVariants({ variant: "outline"}), "dark:hover:border-white/80 hover:border-gray-800 flex flex-col px-4 py-4 h-auto gap-3")}>
+<a href={url} data-search={searchText} data-name={sortName} data-downloads={sortDownloads} data-date={sortDate} class={cn(buttonVariants({ variant: "outline"}), "dark:hover:border-white/80 hover:border-gray-800 flex flex-col px-4 py-4 h-auto gap-3")}>
   <span class="w-full text-left text-md">{name}</span>
   <span class="w-full text-left text-sm text-foreground/60 text-ellipsis overflow-hidden">{description}</span>
   <div class="flex w-full items-center justify-start gap-2 text-foreground/60">

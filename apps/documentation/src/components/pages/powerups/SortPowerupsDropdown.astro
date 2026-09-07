@@ -3,9 +3,9 @@ import NativeSelect from "@/components/ui/astro/native-select/NativeSelect.astro
 import NativeSelectOption from "@/components/ui/astro/native-select/NativeSelectOption.astro"
 import NativeSelectOptGroup from "@/components/ui/astro/native-select/NativeSelectOptGroup.astro"
 ---
-<NativeSelect class="w-full">
+<NativeSelect id="powerups-sort" class="w-full">
   <NativeSelectOptGroup label="Sort powerups">
-    <NativeSelectOption value="most-downloads">Most downloads</NativeSelectOption>
+    <NativeSelectOption value="most-downloads" selected>Most downloads</NativeSelectOption>
     <NativeSelectOption value="recently-published">Recently published</NativeSelectOption>
     <NativeSelectOption value="asc">A - Z</NativeSelectOption>
     <NativeSelectOption value="desc">Z - A</NativeSelectOption>

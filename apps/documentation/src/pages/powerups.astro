@@ -26,7 +26,7 @@ if (error) {
 
 <Layout>
   <div class="flex flex-col items-center py-6 xl:py-14 px-8 h-full w-full md:max-w-[80vw] m-auto">
-      <div class="powerups-page w-full">
+      <div class="powerups-page w-full mb-4">
         <PageHeader title={title} description={description} />
       </div>
 
@@ -40,7 +40,7 @@ if (error) {
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+        <div id="powerups-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-8">
           {entries?.map((entry) => (
             <PowerupCard
               name={entry?.data?.name}
@@ -49,6 +49,7 @@ if (error) {
               publisher={entry?.data?.publisher}
               downloads={entry?.data?.downloads}
               version={entry?.data?.version}
+              date={entry?.data?.date}
               url={`/powerups/${entry?.data?.name}`}
             />
           ))}
@@ -117,11 +118,55 @@ if (error) {
         }
       });
     }
+
+    // --- Sort logic ---
+    const sortSelect = document.getElementById("powerups-sort") as HTMLSelectElement | null;
+    const grid = document.getElementById("powerups-grid");
+
+    function sortCards() {
+      if (!sortSelect || !grid) return;
+
+      const value = sortSelect.value;
+      const cardArray = Array.from(grid.querySelectorAll<HTMLElement>("[data-search]"));
+
+      cardArray.sort((a, b) => {
+        if (value === "most-downloads") {
+          const aVal = Number(a.dataset.downloads ?? 0) || 0;
+          const bVal = Number(b.dataset.downloads ?? 0) || 0;
+          return bVal - aVal;
+        }
+
+        if (value === "recently-published") {
+          const aVal = Number(a.dataset.date ?? 0) || 0;
+          const bVal = Number(b.dataset.date ?? 0) || 0;
+          return bVal - aVal;
+        }
+
+        if (value === "asc") {
+          return (a.dataset.name ?? "").localeCompare(b.dataset.name ?? "");
+        }
+
+        if (value === "desc") {
+          return (b.dataset.name ?? "").localeCompare(a.dataset.name ?? "");
+        }
+
+        return 0;
+      });
+
+      cardArray.forEach((card) => grid.appendChild(card));
+    }
+
+    sortCards();
+
+    if (sortSelect) {
+      sortSelect.addEventListener("change", sortCards);
+    }
   </script>
 </Layout>
 
 <style>
+  @reference "tailwindcss";
   h1 {
-    /* @apply mb-3 */
+    @apply mb-3;
   }
 </style>

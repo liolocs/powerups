@@ -1,13 +1,17 @@
 ---
 import Layout from "@/layouts/main.astro"
 import Sidebar from "@/layouts/docs-layout/sidebar.astro";
+import TableOfContents from "@/layouts/docs-layout/TableOfContents.astro";
 ---
 
 <Layout>
   <div class="grid grid-cols-1 lg:grid-cols-[auto_1fr]">
     <Sidebar />
-    <main class="flex flex-col items-start py-6 px-16 h-full w-full md:max-w-[70vw] m-auto">
-      <slot />
+    <main class="py-6 xl:py-14 px-16 h-full w-full md:max-w-[70vw] xl:max-w-full m-auto grid grid-cols-1 xl:grid-cols-[1fr_auto]">
+      <div class="flex flex-col items-center">
+        <slot />
+      </div>
+      <TableOfContents />
     </main>
   </div>
 </Layout>

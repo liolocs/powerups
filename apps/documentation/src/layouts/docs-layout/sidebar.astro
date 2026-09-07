@@ -14,7 +14,7 @@ const navMain = await buildDocsNav(currentPath)
 
 <aside class="hidden lg:block">
   <div
-    class="sticky top-0 h-[calc(100vh-var(--header-height))] w-72 border-r border-border px-6 py-12"
+    class="sticky top-0 h-[calc(100vh-var(--header-height))] w-72 border-r border-border px-6 py-16"
   >
     <SidebarMenu class="flex flex-col gap-8">
       {
@@ -27,7 +27,7 @@ const navMain = await buildDocsNav(currentPath)
             </SidebarMenuItem>
           ) : (
             <SidebarMenuItem>
-              <a href={node.url} class="font-medium">
+              <a href={node.url} class="text-xs font-normal text-foreground/60">
                 {node.title}
               </a>
               {node.children.length > 0 ? (

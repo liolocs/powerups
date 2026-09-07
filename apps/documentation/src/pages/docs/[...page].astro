@@ -20,9 +20,9 @@ const { prev, next } = await getPrevNextPages(`/docs/${page.id}`);
 ---
 
 <DocsLayout>
-    <PageHeader title={page.data.title} description={page.data.description} backHref={prev?.url} forwardHref={next?.url} />
     <div class="prose w-full" >
-        <Content />
+      <PageHeader title={page.data.title} description={page.data.description} backHref={prev?.url} forwardHref={next?.url} />
+      <Content />
+      <PageBottomLinks prev={prev} next={next} />
     </div>
-    <PageBottomLinks prev={prev} next={next} />
 </DocsLayout>

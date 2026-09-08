@@ -4,6 +4,16 @@
       "type": "http",
       "url": "https://mcp.docs.astro.build/mcp",
       "directTools": true
+    },
+    "context7": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp",
+        "--api-key",
+        "ctx7sk-30f8f041-988a-4adf-b65f-bba022469595"
+      ]
     }
   }
 }

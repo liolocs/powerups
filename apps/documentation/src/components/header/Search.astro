@@ -1,17 +1,6 @@
 ---
-import { MagnifyingGlassIcon} from "@phosphor-icons/react";
-import InputGroup from "@/components/ui/astro/input-group/InputGroup.astro";
-import InputGroupInput from "@/components/ui/astro/input-group/InputGroupInput.astro";
-import InputGroupAddon from "@/components/ui/astro/input-group/InputGroupAddon.astro";
-import { Kbd } from "@/components/ui/kbd"
+// Pagefind modal search trigger.
+// Renders a search-bar-style button that opens a full-screen search modal.
+// ⌘K / Ctrl+K is built in — no custom keyboard handling needed.
 ---
-
-<InputGroup class="w-full h-8">
-  <InputGroupInput placeholder="Search..." />
-  <InputGroupAddon>
-    <MagnifyingGlassIcon />
-  </InputGroupAddon>
-  <InputGroupAddon align="inline-end">
-    <Kbd client:load>⌘K</Kbd>
-  </InputGroupAddon>
-</InputGroup>
+<pagefind-modal-trigger placeholder="Search..." class="block w-full"></pagefind-modal-trigger>

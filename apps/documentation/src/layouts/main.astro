@@ -2,6 +2,7 @@
 import "@/styles/global.css"
 import Header from "@/components/header/Header.astro"
 import DarkMode from "@/components/general/DarkMode.astro";
+import PagefindConfig from "astro-pagefind/components/PagefindConfig.astro";
 ---
 
 <DarkMode />
@@ -16,5 +17,10 @@ import DarkMode from "@/components/general/DarkMode.astro";
   <body>
     <Header></Header>
     <slot />
+
+    <!-- Pagefind Component UI: registers web components and configures the index path -->
+    <PagefindConfig />
+    <!-- The modal overlay rendered when the trigger is activated or ⌘K is pressed -->
+    <pagefind-modal></pagefind-modal>
   </body>
 </html>

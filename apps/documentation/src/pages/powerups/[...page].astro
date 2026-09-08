@@ -25,6 +25,11 @@ if (!isListing) {
   // @ts-ignore
   error = result.error;
   entry = result.entry;
+
+  if (!error && Astro.cache.enabled) {
+    if (result.cacheHint) Astro.cache.set(result.cacheHint);
+    Astro.cache.set({ maxAge: 300, swr: 60 });
+  }
 }
 ---
 

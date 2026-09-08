@@ -12,13 +12,17 @@ const title = "Powerups";
 const description = "Powerups are reusable packages your AI agent installs instead of writing code from scratch. Browse the directory, then install with `pup install <name>.`";
 
 // Fetch live npm packages matching the `powerups-package` keyword at request time
-const { entries, error }: LiveDataCollectionResult<PowerupsPackageData, Error> =
+const { entries, error, cacheHint }: LiveDataCollectionResult<PowerupsPackageData, Error> =
 	await getLiveCollection("powerups");
 
 if (error) {
 	console.error("[powerups] live collection loader error:", error.message);
 } else {
 	console.log("[powerups] live collection entries:", entries);
+	if (Astro.cache.enabled) {
+		if (cacheHint) Astro.cache.set(cacheHint);
+		Astro.cache.set({ maxAge: 900, swr: 60 });
+	}
 }
 ---
 

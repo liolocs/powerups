@@ -2,7 +2,7 @@
 import { buttonVariants } from "@/components/ui/button"
 import Search from "@/components/header/Search.astro";
 import { GithubLogoIcon } from "@phosphor-icons/react";
-import { ModeToggle } from "@/components/general/ModeToggle";
+import ModeToggle from "@/components/general/ModeToggle.astro";
 import HeaderDrawer from "@/components/header/Drawer.tsx";
 import { buildDocsNav } from "@/layouts/docs-layout/buildDocsNav";
 import { buildTopLinks } from "@/config/site-nav";
@@ -57,6 +57,6 @@ const sectionLinks = navMain.flatMap((node) =>
       <GithubLogoIcon client:load className="size-5"/>
     </a>
 
-    <ModeToggle client:load />
+    <ModeToggle />
   </div>
 </header>

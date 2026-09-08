@@ -1,0 +1,40 @@
+---
+import { buttonVariants } from "@/components/ui/button";
+import { MoonIcon, SunIcon } from "@phosphor-icons/react";
+
+// Pure static markup: both icons are rendered server-side and the correct one
+// is shown via Tailwind `dark:` variants. The `.dark` class on <html> is set
+// *before first paint* by the inline script in DarkMode.astro (localStorage /
+// prefers-color-scheme), so the right icon is visible immediately — no flash of
+// the wrong icon while the page loads, and no client hydration required.
+---
+
+<button
+  type="button"
+  class={buttonVariants({ variant: "ghost", size: "icon" })}
+  aria-label="Toggle theme"
+  data-mode-toggle
+>
+  {/* Sun icon — visible only in dark mode (click to switch to light) */}
+  <SunIcon className="hidden size-[1.2rem] dark:block" />
+  {/* Moon icon — visible only in light mode (click to switch to dark) */}
+  <MoonIcon className="block size-[1.2rem] dark:hidden" />
+  <span class="sr-only">Toggle theme</span>
+</button>
+
+<script>
+	const toggle = (button: HTMLElement) => {
+		button.addEventListener("click", () => {
+			const isDark = document.documentElement.classList.toggle("dark");
+			document.documentElement.setAttribute(
+				"data-pf-theme",
+				isDark ? "dark" : "light",
+			);
+			// The MutationObserver in DarkMode.astro persists this to localStorage.
+		});
+	};
+
+	document
+		.querySelectorAll<HTMLButtonElement>("[data-mode-toggle]")
+		.forEach(toggle);
+</script>

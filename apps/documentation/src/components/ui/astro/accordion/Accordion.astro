@@ -1,0 +1,149 @@
+---
+import { cn } from "cn"
+import type { HTMLAttributes } from "astro/types"
+
+interface Props extends HTMLAttributes<"div"> {
+  class?: string
+  /** Whether multiple items can be open at once. @default true */
+  openMultiple?: boolean
+}
+
+const { class: className, openMultiple = true, ...props } = Astro.props
+---
+
+<div
+  data-slot="accordion"
+  data-open-multiple={openMultiple ? "true" : "false"}
+  class={cn("flex w-full flex-col", className)}
+  {...props}
+>
+  <slot />
+</div>
+
+<style is:global>
+  /* ── Accordion height animation (CSS grid trick) ──────────────────────── */
+  /* Without JS, content is fully expanded when <details> is open.           */
+  [data-slot="accordion-content"] {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  [data-slot="accordion-content"] > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* JS-enhanced: collapse closed items and animate grid-template-rows.      */
+  [data-js="true"] [data-slot="accordion-content"] {
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.2s ease-out;
+  }
+  [data-js="true"]
+    [data-slot="accordion-item"][data-open="true"]
+    > [data-slot="accordion-content"] {
+    grid-template-rows: 1fr;
+  }
+
+  /* Pre-JS caret state for default-open items (avoids icon flash).          */
+  [data-slot="accordion-item"][open]:not([data-js="true"])
+    .cb-caret-down {
+    display: none;
+  }
+  [data-slot="accordion-item"][open]:not([data-js="true"])
+    .cb-caret-up {
+    display: inline-block;
+  }
+
+  /* Hide the native <summary> disclosure marker.                           */
+  [data-slot="accordion-trigger"] {
+    list-style: none;
+  }
+  [data-slot="accordion-trigger"]::-webkit-details-marker,
+  [data-slot="accordion-trigger"]::marker {
+    display: none;
+  }
+</style>
+
+<script>
+  const DURATION = 200
+  const closingTimers = new WeakMap<Element, ReturnType<typeof setTimeout>>()
+
+  function setAria(item: Element, open: boolean) {
+    const trigger = item.querySelector("[data-slot='accordion-trigger']")
+    trigger?.setAttribute("aria-expanded", open ? "true" : "false")
+  }
+
+  function openItem(item: HTMLDetailsElement) {
+    clearTimeout(closingTimers.get(item))
+    closingTimers.delete(item)
+    const content = item.querySelector("[data-slot='accordion-content']")
+    if (!item.open) {
+      item.open = true
+      // Commit the collapsed (0fr) state before expanding so the transition runs
+      if (content) void (content as HTMLElement).offsetHeight
+    }
+    item.setAttribute("data-open", "true")
+    setAria(item, true)
+  }
+
+  function closeItem(item: HTMLDetailsElement) {
+    item.setAttribute("data-open", "false")
+    setAria(item, false)
+    const t = setTimeout(() => {
+      item.open = false
+      closingTimers.delete(item)
+    }, DURATION)
+    closingTimers.set(item, t)
+  }
+
+  function initAccordion(root: Element) {
+    const openMultiple = root.getAttribute("data-open-multiple") !== "false"
+    root.setAttribute("data-js", "true")
+
+    const items = Array.from(
+      root.querySelectorAll<HTMLDetailsElement>("[data-slot='accordion-item']"),
+    )
+
+    items.forEach((item) => {
+      const trigger = item.querySelector("[data-slot='accordion-trigger']")
+      const content = item.querySelector("[data-slot='accordion-content']")
+      if (!trigger || !content) return
+
+      // A11y wiring — associate trigger ↔ content
+      const seed = Math.random().toString(36).slice(2, 9)
+      const triggerId = trigger.id || `accordion-trigger-${seed}`
+      const contentId = content.id || `accordion-content-${seed}`
+      trigger.id = triggerId
+      content.id = contentId
+      trigger.setAttribute("aria-controls", contentId)
+      content.setAttribute("role", "region")
+      content.setAttribute("aria-labelledby", triggerId)
+
+      // Sync initial aria-expanded from the rendered data-open state
+      setAria(item, item.getAttribute("data-open") === "true")
+
+      trigger.addEventListener("click", (e) => {
+        e.preventDefault() // we drive <details>.open manually for animation
+        const isOpen = item.getAttribute("data-open") === "true"
+        if (isOpen) {
+          closeItem(item)
+        } else {
+          if (!openMultiple) {
+            items.forEach((other) => {
+              if (
+                other !== item &&
+                other.getAttribute("data-open") === "true"
+              ) {
+                closeItem(other)
+              }
+            })
+          }
+          openItem(item)
+        }
+      })
+    })
+  }
+
+  document
+    .querySelectorAll("[data-slot='accordion']")
+    .forEach(initAccordion)
+</script>

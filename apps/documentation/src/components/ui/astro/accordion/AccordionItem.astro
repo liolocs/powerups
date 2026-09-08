@@ -1,0 +1,25 @@
+---
+import { cn } from "cn"
+import type { HTMLAttributes } from "astro/types"
+
+interface Props extends HTMLAttributes<"details"> {
+  class?: string
+  /** Whether this item starts open. @default false */
+  open?: boolean
+  /** Optional value identifying the item. */
+  value?: string
+}
+
+const { class: className, open = false, value, ...props } = Astro.props
+---
+
+<details
+  data-slot="accordion-item"
+  data-value={value}
+  data-open={open ? "true" : "false"}
+  open={open}
+  class={cn("not-last:border-b", className)}
+  {...props}
+>
+  <slot />
+</details>

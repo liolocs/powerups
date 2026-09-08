@@ -1,0 +1,27 @@
+---
+import { cn } from "cn"
+import type { HTMLAttributes } from "astro/types"
+
+interface Props extends HTMLAttributes<"summary"> {
+  class?: string
+}
+
+const { class: className, ...props } = Astro.props
+
+// Phosphor "regular" weight caret icons
+const caretDown = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" data-slot="accordion-trigger-icon" class="cb-caret-down pointer-events-none shrink-0 group-aria-expanded/accordion-trigger:hidden" aria-hidden="true"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg>`
+const caretUp = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" data-slot="accordion-trigger-icon" class="cb-caret-up pointer-events-none hidden shrink-0 group-aria-expanded/accordion-trigger:inline" aria-hidden="true"><path d="M213.66,165.66a8,8,0,0,1-11.32,0L128,91.31,53.66,165.66a8,8,0,0,1-11.32-11.32l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,213.66,165.66Z"/></svg>`
+---
+
+<summary
+  data-slot="accordion-trigger"
+  class={cn(
+    "group/accordion-trigger relative flex flex-1 cursor-pointer items-start justify-between rounded-md border border-transparent py-4 text-start text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:after:border-ring aria-disabled:pointer-events-none aria-disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ms-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
+    className,
+  )}
+  {...props}
+>
+  <slot />
+  <span class="contents" set:html={caretDown} />
+  <span class="contents" set:html={caretUp} />
+</summary>

@@ -2,8 +2,8 @@
 import { getCollection, render } from 'astro:content';
 import { getPrevNextPages } from "@/layouts/docs-layout/buildDocsNav"
 import DocsLayout from "@/layouts/docs-layout/docs-layout.astro"
-import PageHeader from '@/components/pages/PageHeader.astro';
-import PageBottomLinks from '@/components/pages/PageBottomLinks.astro';
+import PageHeader from '@/components/pages/docs/PageHeader.astro';
+import PageBottomLinks from '@/components/pages/docs/PageBottomLinks.astro';
 
 export async function getStaticPaths() {
   const pages = await getCollection('docs');

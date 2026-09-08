@@ -1,15 +1,17 @@
 ---
 import { MagnifyingGlassIcon} from "@phosphor-icons/react";
-import {InputGroup, InputGroupInput, InputGroupAddon} from "@/components/ui/input-group"
+import InputGroup from "@/components/ui/astro/input-group/InputGroup.astro";
+import InputGroupInput from "@/components/ui/astro/input-group/InputGroupInput.astro";
+import InputGroupAddon from "@/components/ui/astro/input-group/InputGroupAddon.astro";
 import { Kbd } from "@/components/ui/kbd"
 ---
 
-<InputGroup client:load className="w-full h-8">
-  <InputGroupInput client:load placeholder="Search..." />
-  <InputGroupAddon client:load>
+<InputGroup class="w-full h-8">
+  <InputGroupInput placeholder="Search..." />
+  <InputGroupAddon>
     <MagnifyingGlassIcon />
   </InputGroupAddon>
-  <InputGroupAddon client:load align="inline-end">
+  <InputGroupAddon align="inline-end">
     <Kbd client:load>⌘K</Kbd>
   </InputGroupAddon>
 </InputGroup>

@@ -1,0 +1,15 @@
+---
+import Badge from "@/components/ui/astro/Badge.astro";
+
+interface Props {
+  filename: string;
+}
+
+const { filename } = Astro.props;
+---
+<div class="flex w-full items-center gap-4 px-4 py-6">
+  <div class="flex items-center gap-4 w-full text-sm text-muted-foreground">
+    <span class="border border-muted text-muted-foreground size-10 flex items-center justify-center text-lg rounded-md">1</span>
+    <span class="accordion-text"><Badge variant="destructive">Delete</Badge> {filename}</span>
+  </div>
+</div>

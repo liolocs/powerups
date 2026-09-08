@@ -5,7 +5,7 @@ import type { PowerupsPackageData } from '@/loaders/npm-powerups-loader';
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { buttonVariants } from '@/components/ui/button';
 import VariablesSection from "@/components/pages/powerups/PowerupDetails/VariablesSection.astro";
-import StepsSection from '@/components/pages/powerups/PowerupDetails/StepsSection.astro';
+import StepsSection from '@/components/pages/powerups/PowerupDetails/StepsSection/StepsSection.astro';
 
 interface Props {
   entry: {
@@ -62,6 +62,6 @@ const variables = entry.data?.instructions?.variables || {};
 
   <VariablesSection variables={variables} />
 
-  <StepsSection />
+  <StepsSection entry={entry.data} />
 
 </div>

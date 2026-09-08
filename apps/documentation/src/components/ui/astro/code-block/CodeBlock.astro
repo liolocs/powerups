@@ -46,7 +46,7 @@ if (files && files.length > 0) {
   normalizedFiles.push(...files)
 } else if (code !== undefined) {
   normalizedFiles.push({
-    filename: filename ? `${filename}.${language}` : `index.${language}`,
+    filename: filename || '',
     code,
     language,
     panelClassName,

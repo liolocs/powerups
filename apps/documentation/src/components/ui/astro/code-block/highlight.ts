@@ -3,6 +3,11 @@ import {
   type BundledLanguage,
   type Highlighter,
 } from "shiki"
+// JS regex engine — avoids the WebAssembly dependency of the default
+// oniguruma engine, which is blocked in Astro's Vite SSR module runner
+// ("Wasm code generation disallowed by embedder") and on edge runtimes
+// such as Cloudflare without a WASM binding.
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript"
 import bashLang from "shiki/dist/langs/bash.mjs"
 import tsLang from "shiki/dist/langs/typescript.mjs"
 import tsxLang from "shiki/dist/langs/tsx.mjs"
@@ -58,6 +63,9 @@ function getHighlighter(): Promise<Highlighter> {
     highlighterPromise = createHighlighter({
       themes: ["github-light", "github-dark"],
       langs: PRELOADED_LANGS as never,
+      // `forgiving` skips TextMate patterns that rely on oniguruma-only
+      // regex features, so no bundled grammar throws under the JS engine.
+      engine: createJavaScriptRegexEngine({ forgiving: true }),
     })
   }
   return highlighterPromise
@@ -76,8 +84,10 @@ export async function highlight(
       lang,
       themes: { light: "github-light", dark: "github-dark" },
     })
-  } catch {
-    // Fallback: wrap in plain-text pre/code so the UI never breaks
+  } catch (e) {
+    // Fallback: wrap in plain-text pre/code so the UI never breaks, but
+    // surface the cause — a silent fallback masks highlighting regressions.
+    console.error("[CodeBlock highlight] failed for lang=", lang, e)
     const escaped = code
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")

@@ -1,0 +1,28 @@
+---
+import AccordionContent from "@/components/ui/astro/accordion/AccordionContent.astro";
+import AccordionItem from "@/components/ui/astro/accordion/AccordionItem.astro";
+import AccordionTrigger from "@/components/ui/astro/accordion/AccordionTrigger.astro";
+import Badge from "@/components/ui/astro/Badge.astro";
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
+
+interface Props {
+  filename: string;
+  code: string;
+  language: string;
+}
+
+const { filename, code, language } = Astro.props;
+---
+
+<AccordionItem class="flex flex-col gap-4">
+  <AccordionTrigger class="flex w-full items-center gap-4 px-4 no-underline! hover:[&>.accordion-text]:underline! hover:bg-muted/10">
+    <div class="flex items-center gap-4 w-full">
+      <span class="border border-muted text-muted-foreground size-10 flex items-center justify-center text-lg rounded-md">1</span>
+      <span class="accordion-text"><Badge variant="note">Install</Badge> 2 packages</span>
+    </div>
+    <span class="text-xs shrink-0 text-muted-foreground">view</span>
+  </AccordionTrigger>
+  <AccordionContent class="pl-8">
+    <CodeBlock filename={filename} code={code} language={language} class="w-full" />
+  </AccordionContent>
+</AccordionItem>

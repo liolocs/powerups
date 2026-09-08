@@ -1,0 +1,33 @@
+---
+import DetailHeader from "@/components/pages/powerups/PowerupDetails/DetailHeader.astro";
+import Accordion from "@/components/ui/astro/accordion/Accordion.astro";
+import type { PowerupsPackageData } from "@/loaders/npm-powerups-loader";
+import CreateModifyStep from "@/components/pages/powerups/PowerupDetails/StepsSection/CreateModifyStep.astro";
+import InstallStep from "@/components/pages/powerups/PowerupDetails/StepsSection/InstallStep.astro";
+import ReadStep from "@/components/pages/powerups/PowerupDetails/StepsSection/ReadStep.astro";
+import DeleteStep from "@/components/pages/powerups/PowerupDetails/StepsSection/DeleteStep.astro";
+
+interface Props {
+  entry: PowerupsPackageData;
+}
+
+const { entry } = Astro.props;
+---
+
+<div class="flex flex-col gap-4">
+  <DetailHeader>Steps</DetailHeader>
+
+  <Accordion>
+    <CreateModifyStep filename="src/index.ts" code={`import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";`} language="ts" />
+
+    <InstallStep filename="package.json" code={`{
+      "devDependencies": ["@types/node", "@types/react", "@types/react-dom"],
+      "dependencies": ["react", "react-dom"],
+      "peerDependencies": ["react@^18.0.0", "react-dom@^18.0.0"],
+}`} language="json" />
+
+    <ReadStep filename="index.ts" variable="packageName" />
+
+    <DeleteStep filename="index.ts" />
+  </Accordion>
+</div>

@@ -207,38 +207,48 @@ export function npmPowerupsLoader(): LiveLoader<
 
 				const json = (await res.json()) as NpmSearchResponse;
 
-				return {
-					entries: json.objects.map((obj) => ({
-						id: obj.package.name,
-						data: {
-							name: obj.package.name,
-							version: obj.package.version,
-							description: obj.package.description ?? "",
-							keywords: obj.package.keywords ?? [],
-							license: obj.package.license,
-							publisher: obj.package.publisher.username,
-							date: obj.package.date ?? "",
-							links: {
-								npm: obj.package.links.npm,
-								repository: obj.package.links.repository ?? null,
-								homepage: obj.package.links.homepage ?? null,
-							},
-							downloads: {
-								monthly: obj.downloads.monthly,
-								weekly: obj.downloads.weekly,
-							},
-							searchScore: obj.searchScore,
-							score: {
-								final: obj.score.final,
-								quality: obj.score.detail.quality,
-								popularity: obj.score.detail.popularity,
-								maintenance: obj.score.detail.maintenance,
-							},
-							// The search API does not expose instructions or template files.
-							instructions: null,
-							templateFiles: {},
+				const entries = json.objects.map((obj) => ({
+					id: obj.package.name,
+					data: {
+						name: obj.package.name,
+						version: obj.package.version,
+						description: obj.package.description ?? "",
+						keywords: obj.package.keywords ?? [],
+						license: obj.package.license,
+						publisher: obj.package.publisher.username,
+						date: obj.package.date ?? "",
+						links: {
+							npm: obj.package.links.npm,
+							repository: obj.package.links.repository ?? null,
+							homepage: obj.package.links.homepage ?? null,
+						},
+						downloads: {
+							monthly: obj.downloads.monthly,
+							weekly: obj.downloads.weekly,
+						},
+						searchScore: obj.searchScore,
+						score: {
+							final: obj.score.final,
+							quality: obj.score.detail.quality,
+							popularity: obj.score.detail.popularity,
+							maintenance: obj.score.detail.maintenance,
+						},
+						// The search API does not expose instructions or template files.
+						instructions: null,
+						templateFiles: {},
 						} satisfies PowerupsPackageData,
-					})),
+				}));
+
+				// Most recent package publish date across the collection, used as the
+				// cache hint's lastModified so the CDN can emit a Last-Modified header.
+				const lastModified = entries.reduce((latest, entry) => {
+					const d = new Date(entry.data.date);
+					return Number.isNaN(d.getTime()) ? latest : d > latest ? d : latest;
+				}, new Date(0));
+
+				return {
+					entries,
+					cacheHint: { tags: ["powerups", "powerups-listing"], lastModified },
 				};
 			} catch (err) {
 				return { error: err instanceof Error ? err : new Error("Failed to fetch npm packages") };
@@ -268,6 +278,8 @@ export function npmPowerupsLoader(): LiveLoader<
 					? await fetchTemplateFiles(packageName, latestVersion, instructions)
 					: {};
 
+			const modified = packument.time?.modified ? new Date(packument.time.modified) : undefined;
+
 			return {
 				id: packument.name ?? packageName,
 				data: {
@@ -292,6 +304,10 @@ export function npmPowerupsLoader(): LiveLoader<
 					score: { final: 0, quality: 0, popularity: 0, maintenance: 0 },
 					instructions,
 					templateFiles,
+				},
+				cacheHint: {
+					tags: ["powerups", `powerups:${packageName}`],
+					...(modified ? { lastModified: modified } : {}),
 				},
 			};
 		},

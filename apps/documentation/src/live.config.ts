@@ -1,5 +1,6 @@
 import { defineLiveCollection } from "astro:content";
 import { z } from "astro/zod";
+import { instructionsSchema } from "@liolocs/powerups-sdk";
 import { npmPowerupsLoader } from "./loaders/npm-powerups-loader";
 
 /**
@@ -32,6 +33,10 @@ const powerups = defineLiveCollection({
 			popularity: z.number(),
 			maintenance: z.number(),
 		}),
+		/** Validated authoring instructions, or `null` when the package publishes none. */
+		instructions: instructionsSchema.nullable(),
+		/** Template-file contents keyed by path. Empty for collection (search) entries. */
+		templateFiles: z.record(z.string(), z.string()),
 	}),
 });
 

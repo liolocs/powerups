@@ -1,0 +1,50 @@
+---
+import DetailHeader from "@/components/pages/powerups/PowerupDetails/DetailHeader.astro";
+
+interface Props {
+  variables: {
+    required?: string[];
+    optional?: string[];
+    defaults?: Record<string, string>;
+  }
+}
+
+const { variables } = Astro.props;
+
+const required = variables.required ?? [];
+const optional = variables.optional ?? [];
+const defaults = variables.defaults ?? {};
+
+const hasAny = (required?.length ?? 0) > 0 || (optional?.length ?? 0) > 0;
+---
+
+<div class="flex flex-col gap-4">
+  <DetailHeader>Variables</DetailHeader>
+
+  {hasAny ? (
+    <ul>
+      {required.map((requiredVariable) => (
+        <li class="flex gap-2 items-center p-0">
+          <span class="bg-muted px-2 py-1 rounded-lg font-light text-foreground">{requiredVariable}</span>
+
+          <span class="text-foreground/70">(required)</span>
+        </li>
+      ))}
+
+      {(optional ?? []).map((optionalVariable) => {
+        const def = defaults?.[optionalVariable];
+        return (
+          <li class="flex gap-2 items-center p-0">
+            <span class="bg-muted px-2 py-1 rounded-lg font-light text-foreground">{optionalVariable}</span>
+
+            <span class="text-foreground/70">
+              (optional{def !== undefined ? `, default: ${def}` : ""})
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  ) : (
+    <p class="text-foreground/60 font-light">No variables required.</p>
+  )}
+</div>

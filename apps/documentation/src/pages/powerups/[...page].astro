@@ -1,0 +1,48 @@
+---
+export const prerender = false;
+
+import { getLiveEntry } from "astro:content";
+import PageHeader from "@/components/pages/PageHeader.astro";
+import PowerupsListing from "@/components/pages/powerups/PowerupsListing.astro";
+import { buttonVariants } from "@/components/ui/button";
+import PowerupsLayout from "@/layouts/powerups-layout.astro";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
+import ErrorLoadingPowerupMessage from "@/components/pages/powerups/ErrorLoadingPowerupMessage.astro";
+import PowerupDetails from "@/components/pages/powerups/PowerupDetails/PowerupDetails.astro";
+
+// See: https://docs.astro.build/en/guides/routing/#rest-parameters
+const { page } = Astro.params;
+const isListing = typeof page !== "string" || page.trim() === "";
+
+// For a single package, load its full detail (packument + instructions +
+// template files) via the live loader and log it. The npm + unpkg fetches run
+// on every request.
+let error: Error | null = null;
+let entry: any;
+
+if (!isListing) {
+	const result = await getLiveEntry("powerups", page);
+  // @ts-ignore
+  error = result.error;
+  entry = result.entry;
+}
+---
+
+{isListing ? (
+  <PowerupsListing />
+) : (
+  <PowerupsLayout>
+    <div class="flex flex-col items-start w-full mb-6">
+      <a href="/powerups" class={buttonVariants({variant: "secondary"})}>
+      <ArrowLeftIcon className="size-4" />
+      <span>All powerups</span>
+      </a>
+    </div>
+    <div class="powerups-page w-full mb-4">
+      <PageHeader title={page} description={entry?.data?.description} />
+    </div>
+      {error && <ErrorLoadingPowerupMessage name={page} error={error} />}
+
+      {!error && <PowerupDetails entry={entry} />}
+  </PowerupsLayout>
+)}

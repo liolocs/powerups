@@ -1,14 +1,12 @@
 ---
-export const prerender = false;
-
 import { getLiveCollection } from "astro:content";
 import type { LiveDataCollectionResult } from "astro";
 import PageHeader from "@/components/pages/PageHeader.astro";
-import Layout from "@/layouts/main.astro"
 import SearchPowerups from "@/components/pages/powerups/SearchPowerups.astro";
 import PowerupCard from "@/components/pages/powerups/PowerupCard.astro";
 import type { PowerupsPackageData } from "@/loaders/npm-powerups-loader";
 import SortPowerupsDropdown from "@/components/pages/powerups/SortPowerupsDropdown.astro";
+import PowerupsLayout from "@/layouts/powerups-layout.astro";
 
 const title = "Powerups";
 const description = "Powerups are reusable packages your AI agent installs instead of writing code from scratch. Browse the directory, then install with `pup install <name>.`";
@@ -24,41 +22,39 @@ if (error) {
 }
 ---
 
-<Layout>
-  <div class="flex flex-col items-center py-6 xl:py-14 px-8 h-full w-full md:max-w-[80vw] m-auto">
-      <div class="powerups-page w-full mb-4">
-        <PageHeader title={title} description={description} />
+<PowerupsLayout>
+  <div class="powerups-page w-full mb-4">
+    <PageHeader title={title} description={description} />
+  </div>
+
+  <div class="flex flex-col w-full">
+    <div class="flex flex-col md:flex-row gap-3">
+      <div class="w-full">
+        <SearchPowerups />
       </div>
-
-      <div class="flex flex-col w-full">
-        <div class="flex flex-col md:flex-row gap-3">
-          <div class="w-full">
-            <SearchPowerups />
-          </div>
-          <div class="min-w-[180px]">
-            <SortPowerupsDropdown />
-          </div>
-        </div>
-
-        <div id="powerups-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-8">
-          {entries?.map((entry) => (
-            <PowerupCard
-              name={entry?.data?.name}
-              description={entry?.data?.description}
-              keywords={entry?.data?.keywords}
-              publisher={entry?.data?.publisher}
-              downloads={entry?.data?.downloads}
-              version={entry?.data?.version}
-              date={entry?.data?.date}
-              url={`/powerups/${entry?.data?.name}`}
-            />
-          ))}
-        </div>
-
-        <div id="powerups-no-results" class="hidden text-center text-muted-foreground py-8">
-          No powerups match your search.
-        </div>
+      <div class="min-w-[180px]">
+        <SortPowerupsDropdown />
       </div>
+    </div>
+
+    <div id="powerups-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-8">
+      {entries?.map((entry) => (
+        <PowerupCard
+          name={entry?.data?.name}
+          description={entry?.data?.description}
+          keywords={entry?.data?.keywords}
+          publisher={entry?.data?.publisher}
+          downloads={entry?.data?.downloads}
+          version={entry?.data?.version}
+          date={entry?.data?.date}
+          url={`/powerups/${entry?.data?.name}`}
+        />
+      ))}
+    </div>
+
+    <div id="powerups-no-results" class="hidden text-center text-muted-foreground py-8">
+      No powerups match your search.
+    </div>
   </div>
 
   <script>
@@ -162,11 +158,4 @@ if (error) {
       sortSelect.addEventListener("change", sortCards);
     }
   </script>
-</Layout>
-
-<style>
-  @reference "tailwindcss";
-  h1 {
-    @apply mb-3;
-  }
-</style>
+</PowerupsLayout>

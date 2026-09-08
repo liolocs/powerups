@@ -1,0 +1,47 @@
+---
+import { WarningCircleIcon } from "@phosphor-icons/react";
+import { buttonVariants } from "@/components/ui/button";
+import Empty from "@/components/ui/astro/empty/Empty.astro";
+import EmptyHeader from "@/components/ui/astro/empty/EmptyHeader.astro";
+import EmptyMedia from "@/components/ui/astro/empty/EmptyMedia.astro";
+import EmptyTitle from "@/components/ui/astro/empty/EmptyTitle.astro";
+import EmptyDescription from "@/components/ui/astro/empty/EmptyDescription.astro";
+import EmptyContent from "@/components/ui/astro/empty/EmptyContent.astro";
+
+interface Props {
+  /** The requested powerup name that failed to load. */
+  name?: string;
+  /** The error returned by the loader, if any. */
+  error?: Error | null;
+}
+
+const { name, error } = Astro.props;
+
+const title = name ? `Couldn't load "${name}"` : "Couldn't load this powerup";
+---
+
+<Empty class="border">
+  <EmptyHeader>
+    <EmptyMedia variant="icon">
+      <WarningCircleIcon />
+    </EmptyMedia>
+    <EmptyTitle>{title}</EmptyTitle>
+    <EmptyDescription>
+      {error?.message ? (
+        <p class="mt-2 block break-all rounded px-1.5 py-1 font-mono text-xs">
+          {error.message}
+        </p>
+      ) : (
+        <p>
+          We couldn't fetch this powerup's details. It may have been unpublished
+          or renamed, or the npm registry is temporarily unavailable.
+        </p>
+      )}
+    </EmptyDescription>
+  </EmptyHeader>
+  <EmptyContent>
+    <a href="/powerups" class={buttonVariants({ variant: "secondary" })}>
+      Browse all powerups
+    </a>
+  </EmptyContent>
+</Empty>

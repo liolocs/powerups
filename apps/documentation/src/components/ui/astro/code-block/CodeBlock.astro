@@ -1,0 +1,251 @@
+---
+import { cn } from "cn"
+import type { HTMLAttributes } from "astro/types"
+import { type BundledLanguage } from "shiki"
+import {
+  buildPaneInner,
+  highlight,
+  splitShikiLines,
+  type CodeBlockFile,
+} from "./highlight"
+
+export type { CodeBlockFile }
+
+interface Props extends HTMLAttributes<"div"> {
+  class?: string
+  code?: string
+  language?: BundledLanguage
+  filename?: string
+  files?: CodeBlockFile[]
+  panelClassName?: string
+  paneStyle?: Record<string, string>
+  highlightLines?: number[]
+  highlightClassName?: string
+  showLineNumbers?: boolean
+  autoHeight?: boolean
+}
+
+const {
+  class: className,
+  code,
+  language = "tsx",
+  filename,
+  files,
+  panelClassName,
+  paneStyle,
+  highlightLines,
+  highlightClassName,
+  showLineNumbers,
+  autoHeight,
+  ...props
+} = Astro.props
+
+// Normalise to a files array so the rest of the component is uniform
+const normalizedFiles: CodeBlockFile[] = []
+if (files && files.length > 0) {
+  normalizedFiles.push(...files)
+} else if (code !== undefined) {
+  normalizedFiles.push({
+    filename: filename ? `${filename}.${language}` : `index.${language}`,
+    code,
+    language,
+    panelClassName,
+    paneStyle,
+    highlightLines,
+    highlightClassName,
+    showLineNumbers,
+    autoHeight,
+  })
+}
+
+const isMulti = normalizedFiles.length > 1
+
+// Highlight every file at build time
+const renderedFiles = await Promise.all(
+  normalizedFiles.map(async (file) => {
+    const html = await highlight(file.code, file.language ?? "tsx")
+    const lines = splitShikiLines(html)
+    const inner = buildPaneInner(file, html, lines)
+    return { file, html, inner }
+  }),
+)
+
+// Inline Phosphor "regular" icons
+const copyIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="cb-copy size-3.5" aria-hidden="true"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg>`
+const checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="cb-check size-3.5" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>`
+---
+
+{
+  renderedFiles.length === 0 ? null : (
+    <div
+      data-slot="code-block"
+      class={cn(
+        "cn-code-block bg-muted/50 border-border overflow-hidden rounded-xl border text-sm",
+        className,
+      )}
+      {...props}
+    >
+      {/* Header */}
+      <div
+        data-slot="code-block-header"
+        class="cn-code-block-header border-border flex items-center justify-between gap-2 border-b"
+      >
+        {isMulti ? (
+          <div
+            data-slot="code-block-tabs"
+            class="cn-code-block-tabs flex flex-1 items-center gap-1"
+          >
+            {renderedFiles.map(({ file }, i) => (
+              <button
+                type="button"
+                data-slot="code-block-tab"
+                data-code-block-tab
+                data-filename={file.filename}
+                data-active={i === 0 ? "true" : "false"}
+                class={cn(
+                  "cn-code-block-tab relative inline-flex h-auto items-center justify-center px-3 py-2 text-xs font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground",
+                  "data-[active=true]:text-foreground",
+                  "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground after:opacity-0 after:transition-opacity data-[active=true]:after:opacity-100",
+                )}
+              >
+                {file.filename}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <span
+            data-slot="code-block-filename"
+            class="cn-code-block-filename text-muted-foreground px-3 py-2 text-xs font-medium"
+          >
+            {normalizedFiles[0].filename}
+          </span>
+        )}
+
+        <button
+          type="button"
+          data-slot="code-block-copy"
+          data-code-block-copy
+          aria-label="Copy code"
+          class={cn(
+            "cn-code-block-copy text-muted-foreground hover:text-foreground group/copy inline-flex shrink-0 items-center justify-center rounded-md p-1.5 transition-colors",
+            "group-data-[copied=true]/copy:text-foreground",
+          )}
+        >
+          <span class="block group-data-[copied=true]/copy:hidden" set:html={copyIcon} />
+          <span class="hidden group-data-[copied=true]/copy:block" set:html={checkIcon} />
+        </button>
+      </div>
+
+      {/* Panes */}
+      {renderedFiles.map(({ file, inner }, i) => (
+        <div
+          data-slot="code-block-pane"
+          data-code-block-pane
+          data-filename={file.filename}
+          data-active={i === 0 ? "true" : "false"}
+          class={cn(
+            "cn-code-block-pane data-[active=false]:hidden",
+            file.panelClassName,
+          )}
+          style={file.paneStyle}
+        >
+          {/* Raw code for the copy button (JSON-encoded, never rendered) */}
+          <script
+            is:inline
+            type="application/json"
+            data-code-block-code
+            set:html={JSON.stringify(file.code)}
+          ></script>
+          <div
+            class={cn(
+              "cn-code-block-scroll overflow-auto",
+              !file.autoHeight && "max-h-43.75",
+            )}
+            set:html={inner}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+<script>
+  function fallbackCopy(text: string) {
+    const el = document.createElement("textarea")
+    el.value = text
+    el.style.cssText = "position:fixed;top:-9999px;left:-9999px"
+    document.body.appendChild(el)
+    el.focus()
+    el.select()
+    try {
+      document.execCommand("copy")
+    } finally {
+      document.body.removeChild(el)
+    }
+  }
+
+  function copyText(text: string) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).catch(() => fallbackCopy(text))
+    } else {
+      fallbackCopy(text)
+    }
+  }
+
+  const copyTimers = new WeakMap<Element, ReturnType<typeof setTimeout>>()
+
+  document.addEventListener("click", (e) => {
+    // Copy button — copies the active pane's raw code
+    const copyBtn = (e.target as Element)?.closest?.("[data-code-block-copy]")
+    if (copyBtn) {
+      const block = copyBtn.closest('[data-slot="code-block"]')
+      if (!block) return
+      const activePane =
+        block.querySelector('[data-code-block-pane][data-active="true"]') ??
+        block.querySelector("[data-code-block-pane]")
+      const codeEl = activePane?.querySelector("[data-code-block-code]")
+      if (!codeEl) return
+
+      let code = ""
+      try {
+        code = JSON.parse(codeEl.textContent ?? '""')
+      } catch {
+        code = codeEl.textContent ?? ""
+      }
+
+      copyText(code)
+      copyBtn.setAttribute("data-copied", "true")
+      copyBtn.setAttribute("aria-label", "Copied")
+      clearTimeout(copyTimers.get(copyBtn))
+      copyTimers.set(
+        copyBtn,
+        setTimeout(() => {
+          copyBtn.removeAttribute("data-copied")
+          copyBtn.setAttribute("aria-label", "Copy code")
+        }, 1500),
+      )
+      return
+    }
+
+    // Tab button — switches the visible pane
+    const tab = (e.target as Element)?.closest?.("[data-code-block-tab]")
+    if (tab instanceof HTMLElement) {
+      const block = tab.closest('[data-slot="code-block"]')
+      if (!block) return
+      const target = tab.getAttribute("data-filename")
+
+      block.querySelectorAll("[data-code-block-tab]").forEach((t) => {
+        t.setAttribute(
+          "data-active",
+          t.getAttribute("data-filename") === target ? "true" : "false",
+        )
+      })
+      block.querySelectorAll("[data-code-block-pane]").forEach((p) => {
+        p.setAttribute(
+          "data-active",
+          p.getAttribute("data-filename") === target ? "true" : "false",
+        )
+      })
+    }
+  })
+</script>

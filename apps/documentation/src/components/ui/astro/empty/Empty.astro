@@ -1,0 +1,21 @@
+---
+import type { HTMLAttributes } from "astro/types"
+import { cn } from "cn"
+
+interface Props extends HTMLAttributes<"div"> {
+  class?: string
+}
+
+const { class: className, ...props } = Astro.props
+---
+
+<div
+  data-slot="empty"
+  class={cn(
+    "flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-lg border-dashed p-12 text-center text-balance",
+    className
+  )}
+  {...props}
+>
+  <slot />
+</div>

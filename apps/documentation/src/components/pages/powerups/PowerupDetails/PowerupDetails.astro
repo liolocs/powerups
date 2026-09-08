@@ -1,0 +1,66 @@
+---
+import Badge from '@/components/ui/astro/Badge.astro';
+import CodeBlock from '@/components/ui/astro/code-block/CodeBlock.astro';
+import type { PowerupsPackageData } from '@/loaders/npm-powerups-loader';
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { buttonVariants } from '@/components/ui/button';
+import VariablesSection from "@/components/pages/powerups/PowerupDetails/VariablesSection.astro";
+
+interface Props {
+  entry: {
+    id: string;
+    data: PowerupsPackageData
+  };
+}
+
+const { entry } = Astro.props;
+
+console.log("entry:", entry);
+
+const hasLinks = entry.data.links.npm || entry.data.links.repository;
+const fixedRepositoryUrl = entry.data.links.repository?.replace(
+  /^git\+https:/,
+  "https:",
+);
+
+const variables = entry.data?.instructions?.variables || {};
+---
+
+<div class="flex flex-col w-full gap-12">
+  <div class="flex flex-col w-full gap-6">
+    <div class="flex gap-2 w-full items-center justify-start">
+      <Badge variant="secondary">{entry.data.version}</Badge>
+      <Badge variant="note">{entry.data.license}</Badge>
+      <Badge variant="default" class="bg-purple-50 text-purple-800 dark:bg-purple-900 dark:text-purple-300">{entry.data.instructions.type}</Badge>
+    </div>
+
+    <CodeBlock
+      class="w-full"
+      files={[
+        { filename: 'bash', code: 'pup install @liolocs/powerup-hello-world', language: 'bash' },
+      ]}
+    />
+
+    {hasLinks && (
+      <div class="flex gap-2 w-full items-center justify-start">
+        {entry.data.links.npm && (
+          <a href={entry.data.links.npm} target="_blank" class={buttonVariants({ variant: "secondary" })}>
+            <span>npm </span>
+            <ArrowSquareOutIcon className="size-4" />
+          </a>
+        )}
+        {entry.data.links.repository && (
+          <a href={fixedRepositoryUrl} target="_blank" class={buttonVariants({ variant: "secondary" })}>
+            <span>repo </span>
+            <ArrowSquareOutIcon className="size-4" />
+          </a>
+        )}
+      </div>
+    )}
+  </div>
+
+  <div class="flex flex-col w-full gap-6">
+    <VariablesSection variables={variables} />
+  </div>
+
+</div>

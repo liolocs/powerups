@@ -36,7 +36,14 @@ const sectionLinks = navMain.flatMap((node) =>
     <div class="lg:hidden">
       <HeaderDrawer client:load topLinks={topLinks} sectionLinks={sectionLinks} />
     </div>
-    <a href="/" class="hidden lg:flex font-semibold px-4">powerups.dev</a>
+    
+    <div class="hidden lg:flex items-center pl-4 pr-2 gap-2">
+      <a href="/" class="font-semibold">
+        <img src="/favicon.svg" alt="Powerups logo" class="size-8 -mt-1" />
+      </a>
+
+      <!-- <a href="/" class="font-semibold">powerups.dev</a> -->
+    </div>
 
     <div class="hidden md:flex space-x-2">
       {topLinks.map((link) => (
@@ -49,7 +56,7 @@ const sectionLinks = navMain.flatMap((node) =>
 
 
   <div class="flex w-full justify-end">
-    <div class="w-full md:max-w-[200px]">
+    <div class="w-full [&>*]:w-full! pr-2 md:max-w-[200px] flex items-center">
       <Search></Search>
     </div>
 

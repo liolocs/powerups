@@ -12,27 +12,27 @@ interface Props {
 
 const icons = {
   "install-cli": {
-    class: "bg-yellow-900",
+    class: "bg-yellow-100 dark:bg-yellow-900",
     icon: GearIcon,
     href: "/docs/guides/install"
   },
   "use-powerup": {
-    class: "bg-blue-900",
+    class: "bg-blue-100 dark:bg-blue-900",
     icon: LightningIcon,
     href: "/docs/guides/quick-start/"
   },
   "author-powerup": {
-    class: "bg-red-900",
+    class: "bg-red-100 dark:bg-red-900",
     icon: FlaskIcon,
     href: "/docs/guides/authoring-powerups"
   },
   "command-reference": {
-    class: "bg-green-900",
+    class: "bg-green-100 dark:bg-green-900",
     icon: BookIcon,
     href: "/docs/reference/cli/build"
   },
   "sdk-reference": {
-    class: "bg-purple-900",
+    class: "bg-purple-100 dark:bg-purple-900",
     icon: BookIcon,
     href: "/docs/reference/sdk"
   }

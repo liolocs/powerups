@@ -16,8 +16,6 @@ interface Props {
 
 const { entry } = Astro.props;
 
-console.log("entry:", entry);
-
 const hasLinks = entry.data.links.npm || entry.data.links.repository;
 const fixedRepositoryUrl = entry.data.links.repository?.replace(
   /^git\+https:/,

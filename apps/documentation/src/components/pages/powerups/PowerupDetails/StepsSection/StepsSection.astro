@@ -71,7 +71,7 @@ function countPackages(step: InstallStepData): number {
             stepType={step.type}
             filename={step.outputPath}
             code={entry.templateFiles[step.template] ?? ""}
-            language={languageFromPath(step.outputPath)}
+            language={languageFromPath(step.template)}
           />
         );
       }

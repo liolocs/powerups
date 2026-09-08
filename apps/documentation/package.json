@@ -28,6 +28,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "astro": "^7.3.1",
+    "astro-pagefind": "^2.0.1",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.2.5",
     "react": "^19.2.6",
@@ -41,8 +42,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9",
-    "@liolocs/powerups-sdk": "workspace:^",
     "@eslint/js": "^10",
+    "@liolocs/powerups-sdk": "workspace:^",
     "@tailwindcss/typography": "^0.5.20",
     "eslint": "^10",
     "eslint-plugin-react-hooks": "^7.1.1",

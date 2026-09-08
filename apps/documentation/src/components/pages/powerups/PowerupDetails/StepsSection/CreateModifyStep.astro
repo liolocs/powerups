@@ -4,24 +4,29 @@ import AccordionItem from "@/components/ui/astro/accordion/AccordionItem.astro";
 import AccordionTrigger from "@/components/ui/astro/accordion/AccordionTrigger.astro";
 import Badge from "@/components/ui/astro/Badge.astro";
 import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
+import type { BundledLanguage } from "shiki";
 
 interface Props {
+  stepNumber: number;
+  stepType: "create" | "modify";
   filename: string;
   code: string;
-  language: string;
+  language: BundledLanguage;
 }
 
-const { filename, code, language } = Astro.props;
+const { stepNumber, stepType, filename, code, language } = Astro.props;
+const badgeVariant = stepType === "create" ? "success" : "note";
 ---
+
 <AccordionItem class="flex flex-col gap-4">
   <AccordionTrigger class="flex w-full items-center gap-4 px-4 no-underline! hover:[&>.accordion-text]:underline! hover:bg-muted/10">
     <div class="flex items-center gap-4 w-full">
-      <span class="border border-muted text-muted-foreground size-10 flex items-center justify-center text-lg rounded-md">1</span>
-      <span class="accordion-text"><Badge variant="success">Create</Badge> {filename}</span>
+      <span class="border border-muted text-muted-foreground size-10 flex items-center justify-center text-lg rounded-md">{stepNumber}</span>
+      <span class="accordion-text"><Badge variant={badgeVariant}>{stepType === "create" ? "Create" : "Modify"}</Badge> {filename}</span>
     </div>
     <span class="text-xs shrink-0 text-muted-foreground">view template</span>
   </AccordionTrigger>
   <AccordionContent class="pl-8">
-    <CodeBlock filename={filename} code={code} language={language} class="w-full" />
+    <CodeBlock filename={filename} code={code} language={language} class="w-full" autoHeight />
   </AccordionContent>
 </AccordionItem>

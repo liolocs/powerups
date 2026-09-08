@@ -6,23 +6,23 @@ import Badge from "@/components/ui/astro/Badge.astro";
 import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
 interface Props {
-  filename: string;
+  stepNumber: number;
   code: string;
-  language: string;
+  packageCount: number;
 }
 
-const { filename, code, language } = Astro.props;
+const { stepNumber, code, packageCount } = Astro.props;
 ---
 
 <AccordionItem class="flex flex-col gap-4">
   <AccordionTrigger class="flex w-full items-center gap-4 px-4 no-underline! hover:[&>.accordion-text]:underline! hover:bg-muted/10">
     <div class="flex items-center gap-4 w-full">
-      <span class="border border-muted text-muted-foreground size-10 flex items-center justify-center text-lg rounded-md">1</span>
-      <span class="accordion-text"><Badge variant="note">Install</Badge> 2 packages</span>
+      <span class="border border-muted text-muted-foreground size-10 flex items-center justify-center text-lg rounded-md">{stepNumber}</span>
+      <span class="accordion-text"><Badge variant="note">Install</Badge> {packageCount} {packageCount === 1 ? "package" : "packages"}</span>
     </div>
     <span class="text-xs shrink-0 text-muted-foreground">view</span>
   </AccordionTrigger>
   <AccordionContent class="pl-8">
-    <CodeBlock filename={filename} code={code} language={language} class="w-full" />
+    <CodeBlock filename="package.json" code={code} language="json" class="w-full" />
   </AccordionContent>
 </AccordionItem>

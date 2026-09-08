@@ -2,6 +2,8 @@
 import DetailHeader from "@/components/pages/powerups/PowerupDetails/DetailHeader.astro";
 import Accordion from "@/components/ui/astro/accordion/Accordion.astro";
 import type { PowerupsPackageData } from "@/loaders/npm-powerups-loader";
+import type { InstallStep as InstallStepData } from "@liolocs/powerups-sdk";
+import type { BundledLanguage } from "shiki";
 import CreateModifyStep from "@/components/pages/powerups/PowerupDetails/StepsSection/CreateModifyStep.astro";
 import InstallStep from "@/components/pages/powerups/PowerupDetails/StepsSection/InstallStep.astro";
 import ReadStep from "@/components/pages/powerups/PowerupDetails/StepsSection/ReadStep.astro";
@@ -12,22 +14,98 @@ interface Props {
 }
 
 const { entry } = Astro.props;
+
+const steps = entry.instructions?.steps ?? [];
+
+/** Map a file extension to a Shiki language for syntax highlighting. */
+function languageFromPath(path: string): BundledLanguage {
+  const ext = path.split(".").pop()?.toLowerCase() ?? "";
+  const map: Record<string, BundledLanguage> = {
+    ts: "ts",
+    tsx: "tsx",
+    js: "js",
+    jsx: "jsx",
+    json: "json",
+    css: "css",
+    md: "md",
+    mdx: "mdx",
+    html: "html",
+    yaml: "yaml",
+    yml: "yaml",
+    sh: "bash",
+    bash: "bash",
+  };
+  return map[ext] ?? "tsx";
+}
+
+/** Build a JSON code block from the install step's dependency arrays. */
+function buildInstallCode(step: InstallStepData): string {
+  const obj: Record<string, string[]> = {};
+  if (step.dependencies?.length) obj.dependencies = step.dependencies;
+  if (step.devDependencies?.length) obj.devDependencies = step.devDependencies;
+  if (step.peerDependencies?.length) obj.peerDependencies = step.peerDependencies;
+  return JSON.stringify(obj, null, 2);
+}
+
+/** Total number of packages across all dependency arrays. */
+function countPackages(step: InstallStepData): number {
+  return (
+    (step.dependencies?.length ?? 0) +
+    (step.devDependencies?.length ?? 0) +
+    (step.peerDependencies?.length ?? 0)
+  );
+}
 ---
 
 <div class="flex flex-col gap-4">
   <DetailHeader>Steps</DetailHeader>
 
   <Accordion>
-    <CreateModifyStep filename="src/index.ts" code={`import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";`} language="ts" />
+    {steps.map((step, index) => {
+      const stepNumber = index + 1;
 
-    <InstallStep filename="package.json" code={`{
-      "devDependencies": ["@types/node", "@types/react", "@types/react-dom"],
-      "dependencies": ["react", "react-dom"],
-      "peerDependencies": ["react@^18.0.0", "react-dom@^18.0.0"],
-}`} language="json" />
+      if (step.type === "create" || step.type === "modify") {
+        return (
+          <CreateModifyStep
+            stepNumber={stepNumber}
+            stepType={step.type}
+            filename={step.outputPath}
+            code={entry.templateFiles[step.template] ?? ""}
+            language={languageFromPath(step.outputPath)}
+          />
+        );
+      }
 
-    <ReadStep filename="index.ts" variable="packageName" />
+      if (step.type === "install") {
+        return (
+          <InstallStep
+            stepNumber={stepNumber}
+            code={buildInstallCode(step)}
+            packageCount={countPackages(step)}
+          />
+        );
+      }
 
-    <DeleteStep filename="index.ts" />
+      if (step.type === "read") {
+        return (
+          <ReadStep
+            stepNumber={stepNumber}
+            filename={step.path}
+            variable={step.as}
+          />
+        );
+      }
+
+      if (step.type === "delete") {
+        return (
+          <DeleteStep
+            stepNumber={stepNumber}
+            filename={step.outputPath}
+          />
+        );
+      }
+
+      return null;
+    })}
   </Accordion>
 </div>

@@ -2,15 +2,16 @@
 import Badge from "@/components/ui/astro/Badge.astro";
 
 interface Props {
+  stepNumber: number;
   filename: string;
   variable: string;
 }
 
-const { filename, variable } = Astro.props;
+const { stepNumber, filename, variable } = Astro.props;
 ---
 <div class="flex w-full items-center gap-4 px-4 py-6">
   <div class="flex items-center gap-4 w-full text-sm text-muted-foreground">
-    <span class="border border-muted text-muted-foreground size-10 flex items-center justify-center text-lg rounded-md">1</span>
+    <span class="border border-muted text-muted-foreground size-10 flex items-center justify-center text-lg rounded-md">{stepNumber}</span>
     <span class="accordion-text"><Badge variant="secondary">Read</Badge> {filename} and get the variable <Badge variant="secondary">{variable}</Badge></span>
   </div>
 </div>

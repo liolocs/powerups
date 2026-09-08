@@ -4,13 +4,13 @@ description: This page will guide you through the process of creating your first
 sidebar:
   order: 3
 ---
-import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
 ## 1. Create the powerup
 
 The first step is to create the powerup package. This is done using the `pup create` command.
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: `pup create hello-world \\ \n\t--description="Creates a hello world script" \\
   \t--variables=name \\
   \t--type=single-use 
@@ -19,7 +19,7 @@ The first step is to create the powerup package. This is done using the `pup cre
 
 
 This creates `~/.powerups/installed/_internal/hello-world/` with the following structure:
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'templates/hello-world.ts', code: `├── index.ts # the instructions file
 ├── package.json
 ├── tsconfig.json
@@ -34,7 +34,7 @@ This creates `~/.powerups/installed/_internal/hello-world/` with the following s
 By default the instructions file is mapped to `index.ts`, this is done in the `package.json`'s powerup/instructions property.
 
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'package.json', code: `{
 \t"name": "hello-world",
 \t// ...
@@ -48,7 +48,7 @@ By default the instructions file is mapped to `index.ts`, this is done in the `p
 
 ### B. Modify the instructions file
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'index.ts', code: `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";
 
 const instructions: Instructions = {
@@ -78,7 +78,7 @@ export default defineInstructions(instructions, import.meta.url); // <-- Require
 The defined steps in the file are executed when running `pup use`.
 
 E.G. Running the command 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: 'pup use hello-world --name="world"', language: 'bash' },
 ]} />
 This will create a file called `hello-world.ts` in the root of the folder it is run from.
@@ -87,7 +87,7 @@ This will create a file called `hello-world.ts` in the root of the folder it is 
 
 The template is the file that will be used to create the instructions file. It is a file that is rendered by the cli.
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'templates/hello-world.ts', code: `export default function(variables: Record<string, string>): string {
 \tconst { name } = variables;
 \treturn \`console.log("Hello \${name}!");\`;
@@ -99,7 +99,7 @@ The template is the file that will be used to create the instructions file. It i
 
 You must build the powerup before it can be used with the command:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: 'pup build', language: 'bash' },
 ]} />
 
@@ -109,7 +109,7 @@ This will run a verification on the instructions file and create a `dist` folder
 
 Once the powerup is built you can use it by running the following command:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: 'pup use hello-world --name=world', language: 'bash' },
 ]} />
 
@@ -121,7 +121,7 @@ Once the powerup is built you can share by publishing it to npm or git.
 
 To publish the powerup to npm run:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: 'npm publish', language: 'bash' },
 ]} />
 
@@ -129,7 +129,7 @@ You may use the conventional commits preset to generate the changelog.
 
 Users will then be able to install the powerup by running:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: 'pup install npm:hello-world', language: 'bash' },
 ]} />
 
@@ -139,12 +139,12 @@ To publish the powerup to git simply push the package to a git repo.
 
 You may run the following script to create a github repo using the gh cli and push the package to it.
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: './scripts/create-github-repo.sh', language: 'bash' },
 ]} />
 
 Users will then be able to install the powerup by running:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: 'pup install git:github.com/<owner>/hello-world', language: 'bash' },
 ]} />

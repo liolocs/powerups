@@ -5,7 +5,7 @@ updatedDate: 2026-09-06
 sidebar:
   order: 1
 ---
-import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
 `pup` helps you manage reusable **powerups** — bits of existing code and
 patterns — and make them available to AI agents working in your project.
@@ -14,7 +14,7 @@ powerups you've already written, so its output is grounded in code you trust.
 
 ## Install
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'pnpm', code: 'pnpm add -g @liolocs/powerups-cli', language: 'bash' },
   { filename: 'npm', code: 'npm install -g @liolocs/powerups-cli', language: 'bash' },
   { filename: 'yarn', code: 'yarn global add @liolocs/powerups-cli', language: 'bash' },
@@ -25,7 +25,7 @@ Requires [Node.js](https://nodejs.org/).
 
 ## Verify
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: 'pup --version', language: 'bash' },
 ]} />
 

@@ -4,12 +4,12 @@ description: ''
 sidebar:
   order: 3
 ---
-import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
 You can also create a powerup from an existing repo's code instead of starting
 starting from scratch:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'bash', code: `pup create saas-starter \\ 
 \t--capture=all \\ 
 \t--description="Scaffolds a SaaS starter" \\

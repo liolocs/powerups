@@ -5,11 +5,11 @@ sidebar:
   order: 1
 ---
 
-import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
 Build a powerup for distribution
 
-<CodeBlockWithMultiplePackageManagers client:load files={[
+<CodeBlock autoHeight files={[
   {
     filename: 'bash',
     language: 'bash',

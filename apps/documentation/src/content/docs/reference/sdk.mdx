@@ -2,7 +2,7 @@
 title: SDK reference
 description: The @liolocs/powerups-sdk API — schemas, types, defineInstructions, and includePowerup.
 ---
-import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
 The authoring SDK for Powerups — the schema, types, and helpers that powerup
 authors use to define and compose instructions.
@@ -22,7 +22,7 @@ project to scaffold or transform code. This package gives you:
 
 ## Installation
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'pnpm', code: 'pnpm add -D @liolocs/powerups-sdk', language: 'bash' },
   { filename: 'npm', code: 'npm install -D @liolocs/powerups-sdk', language: 'bash' },
   { filename: 'yarn', code: 'yarn add -D @liolocs/powerups-sdk', language: 'bash' },
@@ -34,7 +34,7 @@ CLI at bundle time, so end users never need to install it.
 
 ## Exports
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   {
     filename: 'index.ts', language: 'ts', 
     code: `import {
@@ -65,7 +65,7 @@ A `.strict()` Zod schema describing a complete powerup definition. Use it
 implicitly via `defineInstructions` (the build command validates for you), or
 explicitly when you want to validate an instructions object by hand:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'index.ts', language: 'ts', code: `import { instructionsSchema } from "@liolocs/powerups-sdk";
 
 const parsed = instructionsSchema.parse(myInstructions); // throws on unknown keys
@@ -78,7 +78,7 @@ silently stripped.
 
 The shape it validates:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'instructions.ts', language: 'ts', code: `{
 \tname: string,
 \ttype: "multi-use" | "single-use",
@@ -99,7 +99,7 @@ The schema for the `powerup` field in a powerup package's `package.json`. It
 tells the build command where the TypeScript entry lives and (optionally)
 declares compatibility constraints:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'index.ts', language: 'ts', code: `{
 \tinstructions: string,\t\t\t\t\t\t\t\t\t\t\t// e.g. "index.ts"
 \tcompatibility?: Record<string, unknown>,\t\t// optional, forward-declared
@@ -109,7 +109,7 @@ declares compatibility constraints:
 
 A typical `package.json` excerpt:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'package.json', language: 'json', code: `{
 \t"powerup": { "instructions": "index.ts", "compatibility": {} }
 }
@@ -151,7 +151,7 @@ option. It mirrors a step's fields **except `name`** (the name is always taken
 from the original step so the override can be keyed by it). You supply one
 variant matching the step's `type`:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'index.ts', language: 'ts', code: `type StepOverrideValue =
 \t| { type: "create"; template: string; outputPath: string }
 \t| { type: "modify"; template: string; outputPath: string }
@@ -176,7 +176,7 @@ package's `package.json`.
 
 ## `defineInstructions`
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'index.ts', language: 'ts', code: `function defineInstructions<I extends Instructions>(
 \tinstructions: I,
 \tsource: string,
@@ -201,7 +201,7 @@ the **required** shape for a powerup's default export — the build command and
 
 ### Usage
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'index.ts', language: 'ts', code: `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";
 
 const instructions = {
@@ -234,7 +234,7 @@ templates.
 
 ## `includePowerup`
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'index.ts', language: 'ts', code: `function includePowerup<I extends Instructions>(
 \tchild: { instructions: I; source: string },
 \toptions: {
@@ -322,7 +322,7 @@ once and their names differ. The explicit `namespace` option is **required** in
 one case: **including the same child more than once** — for example, a parent
 that scaffolds two subcommands from a single `cli-sub-command` powerup:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'index.ts', language: 'ts', code: `steps: [
 \t...includePowerup(cliSubCommand, {
 \t\tnamespace: "subcommand-1",\t\t\t\t\t\t// distinct, or templates/steps collide
@@ -348,7 +348,7 @@ optional — it just yields cleaner paths (e.g. `_internal/command/…` vs
 
 A parent powerup that composes two children:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'index.ts', language: 'ts', code: `import {
 \tdefineInstructions,
 \tincludePowerup,
@@ -410,7 +410,7 @@ export default defineInstructions(instructions, import.meta.url);
 
 After `pup build`, the parent's `dist/` is fully self-contained:
 
-<CodeBlockWithMultiplePackageManagers client:load autoHeight files={[
+<CodeBlock autoHeight files={[
   { filename: 'dist/', language: 'markdown', code: `dist/
 \tindex.js
 \tinstructions.json

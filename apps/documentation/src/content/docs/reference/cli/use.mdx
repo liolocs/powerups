@@ -4,12 +4,12 @@ description: 'Use a powerup'
 sidebar:
   order: 5
 ---
-import CodeBlockWithMultiplePackageManagers from "@/components/pages/CodeBlockWithMultiplePackageManagers"
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
 Use a powerup
 
 
-<CodeBlockWithMultiplePackageManagers client:load files={[
+<CodeBlock autoHeight files={[
   {
     filename: 'bash',
     language: 'bash',

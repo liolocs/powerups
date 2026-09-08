@@ -6,6 +6,7 @@ import pagefind from "astro-pagefind";
 import react from "@astrojs/react"
 import mdx from "@astrojs/mdx";
 import cloudflare from "@astrojs/cloudflare";
+import { cacheCloudflare } from "@astrojs/cloudflare/cache";
 
 // https://astro.build/config
 export default defineConfig({
@@ -24,5 +25,6 @@ export default defineConfig({
     }
   },
 
-  adapter: cloudflare()
+  adapter: cloudflare(),
+  cache: { provider: cacheCloudflare() },
 })

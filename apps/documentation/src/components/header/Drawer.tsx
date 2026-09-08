@@ -1,4 +1,4 @@
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Drawer,
   DrawerContent,
@@ -34,6 +34,12 @@ export default function HeaderDrawer({ topLinks = [], sectionLinks = [] }: Heade
       <DrawerContent className="h-[70vh]">
         <div className="flex-1 p-4 flex flex-col gap-4">
           <div className="flex flex-col gap-2 items-start">
+            <a
+              className={cn(buttonVariants({ variant: "link" }), "text-foreground text-lg px-0")}
+              href={"/"}
+            >
+              powerups.dev
+            </a>
             {topLinks.map((link) => (
               <a
                 key={link.href}

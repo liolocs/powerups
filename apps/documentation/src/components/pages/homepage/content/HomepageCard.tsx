@@ -14,27 +14,27 @@ const icons = {
   "install-cli": {
     class: "bg-yellow-900",
     icon: GearIcon,
-    href: "/guides/install-cli/"
+    href: "/docs/guides/install"
   },
   "use-powerup": {
     class: "bg-blue-900",
     icon: LightningIcon,
-    href: "/guides/use-powerup/"
+    href: "/docs/guides/quick-start/"
   },
   "author-powerup": {
     class: "bg-red-900",
     icon: FlaskIcon,
-    href: "/guides/authoring-powerups/"
+    href: "/docs/guides/authoring-powerups"
   },
   "command-reference": {
     class: "bg-green-900",
     icon: BookIcon,
-    href: "/guides/command-reference/"
+    href: "/docs/reference/cli/build"
   },
   "sdk-reference": {
     class: "bg-purple-900",
     icon: BookIcon,
-    href: "/guides/sdk-reference/"
+    href: "/docs/reference/sdk"
   }
 }
 

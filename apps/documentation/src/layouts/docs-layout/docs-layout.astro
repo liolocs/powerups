@@ -11,12 +11,14 @@ interface Heading {
 
 interface Props {
   headings: Heading[]
+  title: string
+  description: string
 }
 
-const { headings } = Astro.props;
+const { headings, title, description } = Astro.props;
 ---
 
-<Layout>
+<Layout {title} {description}>
   <div class="grid grid-cols-1 lg:grid-cols-[auto_1fr]">
     <Sidebar />
     <main class="h-full w-full xl:grid xl:grid-cols-1 xl:grid-cols-[1fr_auto]">

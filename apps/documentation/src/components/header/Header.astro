@@ -6,7 +6,7 @@ import ModeToggle from "@/components/general/ModeToggle.astro";
 import HeaderDrawer from "@/components/header/Drawer.tsx";
 import { buildDocsNav } from "@/layouts/docs-layout/buildDocsNav";
 import { buildTopLinks } from "@/config/site-nav";
-const githubUrl = import.meta.env.GITHUB_REPO_URL;
+import {GITHUB_REPO_URL} from "astro:env/client"
 
 const normalize = (path: string) => path.replace(/\/+$/, "") || "/";
 const currentPath = normalize(Astro.url.pathname);
@@ -60,7 +60,7 @@ const sectionLinks = navMain.flatMap((node) =>
       <Search></Search>
     </div>
 
-    <a class={buttonVariants({ variant: "ghost" })} href={githubUrl} target="_blank">
+    <a class={buttonVariants({ variant: "ghost" })} href={GITHUB_REPO_URL} target="_blank">
       <GithubLogoIcon client:load className="size-5"/>
     </a>
 

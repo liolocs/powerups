@@ -1,0 +1,10 @@
+---
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {GITHUB_REPO_URL} from "astro:env/client"
+---
+
+<div class="flex flex-col gap-2 text-sm text-foreground/70 text-center mb-3">
+  <span>© 2026 <a class={cn(buttonVariants({ variant: 'link'}), "px-0")} href="https://github.com/liolocs" target="_blank">Liolocs</a> and <a class={cn(buttonVariants({ variant: 'link'}), "px-0")} href={GITHUB_REPO_URL} target="_blank">contributors</a>.</span>
+  <span>Powerups is released under the MIT License.</span>
+</div>

@@ -24,9 +24,11 @@ const tocHeadings = [
   { depth: 1, slug: "_top", text: "Overview" },
   ...headings,
 ];
----
 
-<DocsLayout headings={tocHeadings}>
+const title = page.data?.title ? `${page.data.title} — Powerups.dev` : "";
+const description = page.data?.description || "";
+---
+<DocsLayout headings={tocHeadings} {title} {description}>
     <div class="prose w-full" >
       <PageHeader title={page.data.title} description={page.data.description} backHref={prev?.url} forwardHref={next?.url} />
       <Content />

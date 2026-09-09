@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx,astro}\"",
     "typecheck": "astro check",
-    "generate-types": "wrangler types"
+    "generate-types": "wrangler types",
+    "deploy": "astro build && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.0",

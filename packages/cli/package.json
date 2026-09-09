@@ -19,7 +19,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepublishOnly": "npm run build",
-    "test": "npx proby",
+    "test": "CI=true npx proby",
     "b:link": "bun run scripts/link.ts",
     "build:builtins": "bun run scripts/build-builtin-powerups.ts",
     "readme": "bun run scripts/generate-readme.ts",

@@ -6,49 +6,61 @@ sidebar:
 ---
 import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
-## 1. Install a powerup 
+## Install a powerup 
 
 Powerups can be installed from either npm or git repos:
 
 <CodeBlock autoHeight files={[
-  { filename: 'bash', code: 'pup install npm:@liolocs/powerup-hello-world', language: 'bash' },
+  { filename: 'npm', code: 'pup install npm:@liolocs/powerup-hello-world', language: 'bash' },
+  { filename: 'git', code: 'pup install git@github.com:liolocs/powerup-hello-world.git', language: 'bash' },
 ]} />
 
-Add `--local` to install into the project store instead of the global store,
-and `--dry-run` to preview what would happen.
+This will save the powerup in the global `~/.powerups` folder 
 
-## 2. Use a powerup
+Refer to the [install](/docs/reference/cli/install/) api for more info.
 
-Apply a powerup in a project, passing its variables as flags:
+## Use a powerup
+
+Using a powerup will apply its coding instructions in your current working directory.
+
+1. Use the powerup-hello-world:
 
 <CodeBlock autoHeight files={[
-  { filename: 'bash', code: 'pup use powerup-hello-world', language: 'bash' },
+  { filename: 'bash', code: 'pup use powerup-hello-world --target-dir=./hello-world-test', language: 'bash' },
 ]} />
 
-Add `--dry-run` to print the rendered output instead of writing files, and
-`--target-dir` to run against a different directory.
+2. Resulting in the following output:
 
-Every `pup use` records what it wrote in `.powerups/manifest.jsonl` — the
-applied manifest that powers diagnosis and repair workflows.
+<CodeBlock autoHeight files={[
+  { filename: 'bash', code: `Created: index.ts
+Created: package.json
 
-## 3. Remove a powerup
+✓ Powerup powerup-hello-world was successfully used in /Users/<user>/<path>/hello-world-test`, language: 'bash' },
+]} />
+
+- Refer to the [powerup-hello-world](/powerups/@liolocs/powerup-hello-world) page for more details on the powerup.
+- Refer to the [use](/docs/reference/cli/use/) api for more info on the use command 
+
+## Remove a powerup
 
 You can remove the powerup by using just the powerup name:
 
 <CodeBlock autoHeight files={[
-  { filename: 'bash', code: 'pup uninstall powerup-hello-world', language: 'bash' },
+  { filename: 'npm', code: 'pup uninstall powerup-hello-world', language: 'bash' },
+  { filename: 'git', code: 'pup uninstall git:@github.com/liolocs/powerup-hello-world', language: 'bash' },
 ]} />
 
 or by using the full package source:
 
 <CodeBlock autoHeight files={[
-  { filename: 'bash', code: 'pup uninstall npm:@liolocs/powerup-hello-world', language: 'bash' },
+  { filename: 'npm', code: 'pup uninstall npm:@liolocs/powerup-hello-world', language: 'bash' },
+  { filename: 'git', code: 'pup uninstall git:@github.com/liolocs/powerup-hello-world', language: 'bash' },
 ]} />
 
-Like `install`, it removes from the global store unless you pass `--local`.
+Like `install`, it removes from the global store unless you pass `--local` or `-l`.
 
-## Next steps
+{/* ## Next steps
 
 - See the full [command reference](/reference/cli/build/) for every flag.
 - Ready to write your own powerups? Follow the
-  [authoring guide](/guides/authoring-powerups/).
+  [authoring guide](/guides/authoring-powerups/). */}

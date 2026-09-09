@@ -6,19 +6,19 @@ sidebar:
 ---
 import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
-## 1. Create the powerup
+## 1. Creating your first powerup
 
 The first step is to create the powerup package. This is done using the `pup create` command.
 
 <CodeBlock autoHeight files={[
-  { filename: 'bash', code: `pup create hello-world \\ \n\t--description="Creates a hello world script" \\
+  { filename: 'bash', code: `pup create hello-world --description="Creates a hello world script" \\
   \t--variables=name \\
   \t--type=single-use 
 `, language: 'bash' },
 ]} />
 
 
-This creates `~/.powerups/installed/_internal/hello-world/` with the following structure:
+This creates `~/.powerups/installed/_internal/hello-world/` with the following files:
 <CodeBlock autoHeight files={[
   { filename: 'templates/hello-world.ts', code: `├── index.ts # the instructions file
 ├── package.json
@@ -31,8 +31,9 @@ This creates `~/.powerups/installed/_internal/hello-world/` with the following s
 
 ### A. Setup the package.json
 
-By default the instructions file is mapped to `index.ts`, this is done in the `package.json`'s powerup/instructions property.
+Your package.json is setup automatically.
 
+By default, the main instructions file is mapped to `index.ts`, you can change it to another file if you prefer.
 
 <CodeBlock autoHeight files={[
   { filename: 'package.json', code: `{

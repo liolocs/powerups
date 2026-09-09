@@ -40,10 +40,22 @@ const {
   ...props
 } = Astro.props
 
-// Normalise to a files array so the rest of the component is uniform
+// Normalise to a files array so the rest of the component is uniform.
+// Component-level props act as defaults that are merged onto each file
+// (file-level values take precedence when present).
 const normalizedFiles: CodeBlockFile[] = []
 if (files && files.length > 0) {
-  normalizedFiles.push(...files)
+  normalizedFiles.push(
+    ...files.map((file) => ({
+      ...file,
+      panelClassName: file.panelClassName ?? panelClassName,
+      paneStyle: file.paneStyle ?? paneStyle,
+      highlightLines: file.highlightLines ?? highlightLines,
+      highlightClassName: file.highlightClassName ?? highlightClassName,
+      showLineNumbers: file.showLineNumbers ?? showLineNumbers,
+      autoHeight: file.autoHeight ?? autoHeight,
+    })),
+  )
 } else if (code !== undefined) {
   normalizedFiles.push({
     filename: filename || '',

@@ -8,7 +8,7 @@ import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
 ## 1. Creating your first powerup
 
-The first step is to create the powerup package. This is done using the `pup create` command.
+The first step is to create the powerup package. This is done using the `pup create` command:
 
 <CodeBlock autoHeight files={[
   { filename: 'bash', code: `pup create hello-world --description="Creates a hello world script" \\
@@ -20,10 +20,10 @@ The first step is to create the powerup package. This is done using the `pup cre
 
 This creates `~/.powerups/installed/_internal/hello-world/` with the following files:
 <CodeBlock autoHeight files={[
-  { filename: 'templates/hello-world.ts', code: `├── index.ts # the instructions file
+  { filename: '~/.powerups/installed/_internal/hello-world/', code: `├── .gitignore
 ├── package.json
 ├── tsconfig.json
-├── .gitignore
+├── index.ts
 └── scripts
     └── create-github-repo.sh
 `, language: 'markdown' },
@@ -47,46 +47,41 @@ By default, the main instructions file is mapped to `index.ts`, you can change i
 ]} />
 
 
-### B. Modify the instructions file
+### B. Add a step to the instructions file
 
-<CodeBlock autoHeight files={[
-  { filename: 'index.ts', code: `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";
+<CodeBlock autoHeight showLineNumbers files={[
+  { filename: 'index.ts',
+    highlightLines: [11,12,13,14,15,16,17,18,19,20,21],
+    code: `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";
 
 const instructions: Instructions = {
-  name: "hello-world",
-  type: "single-use",
-  description: "Creates a hello world script",
-  variables: {
-    required: ["name"],
-    optional: [],
-  },
-  intent: [
-    "create a hello world script",
-  ],
-  steps: [
-    {
-      type: "create",
-      name: "hello-world.ts",
-      template: "templates/hello-world.ts",
-      outputPath: "hello-world.ts",
-    },
-  ],
+\tname: "hello-world",
+\ttype: "single-use",
+\tdescription: "Creates a hello world script",
+\tvariables: {
+\t\trequired: ["name"],
+\t\toptional: [],
+\t},
+\tintent: [
+\t\t"create a hello world script",
+\t],
+\tsteps: [
+\t\t{
+\t\t\ttype: "create",
+\t\t\tname: "hello-world.ts",
+\t\t\ttemplate: "templates/hello-world.ts",
+\t\t\toutputPath: "hello-world.ts",
+\t\t},
+\t],
 };
 
 export default defineInstructions(instructions, import.meta.url); // <-- Required`, language: 'ts' },
 ]} />
 
-The defined steps in the file are executed when running `pup use`.
-
-E.G. Running the command 
-<CodeBlock autoHeight files={[
-  { filename: 'bash', code: 'pup use hello-world --name="world"', language: 'bash' },
-]} />
-This will create a file called `hello-world.ts` in the root of the folder it is run from.
 
 ### C. Create the template
 
-The template is the file that will be used to create the instructions file. It is a file that is rendered by the cli.
+Create the template your create step is referring to at `templates/hello-world.ts`.
 
 <CodeBlock autoHeight files={[
   { filename: 'templates/hello-world.ts', code: `export default function(variables: Record<string, string>): string {
@@ -106,12 +101,28 @@ You must build the powerup before it can be used with the command:
 
 This will run a verification on the instructions file and create a `dist` folder containing the necessary files for the powerup to be used. 
 
+Your output should look like this:
+
+<CodeBlock autoHeight files={[
+  { filename: 'bash', code: `✓ Built powerup: hello-world
+  output: /Users/<user>/.powerups/installed/_internal/hello-world/dist`, language: 'bash' },
+]}
+/>
+
 ## 3. Use powerup
 
 Once the powerup is built you can use it by running the following command:
 
 <CodeBlock autoHeight files={[
-  { filename: 'bash', code: 'pup use hello-world --name=world', language: 'bash' },
+  { filename: 'bash', code: 'pup use hello-world --name=world --target-dir=./test-hello-world', language: 'bash' },
+]} />
+
+This will result in the following output:
+
+<CodeBlock autoHeight files={[
+  { filename: 'bash', code: `Created: hello-world.ts
+
+✓ Powerup hello-world was successfully used in /Users/<user>/<path>/test-hello-world`, language: 'bash' },
 ]} />
 
 ## 4. Share the powerup
@@ -126,19 +137,19 @@ To publish the powerup to npm run:
   { filename: 'bash', code: 'npm publish', language: 'bash' },
 ]} />
 
-You may use the conventional commits preset to generate the changelog.
+You may use the conventional commits script to generate a changelog with `npm run release`.
 
 Users will then be able to install the powerup by running:
 
 <CodeBlock autoHeight files={[
-  { filename: 'bash', code: 'pup install npm:hello-world', language: 'bash' },
+  { filename: 'bash', code: `pup install npm:<your-user-scope>/hello-world`, language: 'bash' },
 ]} />
 
 ### Publishing to git
 
 To publish the powerup to git simply push the package to a git repo.
 
-You may run the following script to create a github repo using the gh cli and push the package to it.
+You may run the following script to create a github repo using the `gh cli` and push the package to it.
 
 <CodeBlock autoHeight files={[
   { filename: 'bash', code: './scripts/create-github-repo.sh', language: 'bash' },

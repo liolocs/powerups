@@ -10,11 +10,10 @@ You can also create a powerup from an existing repo's code instead of starting
 starting from scratch:
 
 <CodeBlock autoHeight files={[
-  { filename: 'bash', code: `pup create saas-starter \\ 
+  { filename: 'bash', code: `pup create saas-starter --description="Scaffolds a SaaS starter" \\
 \t--capture=all \\ 
-\t--description="Scaffolds a SaaS starter" \\
 \t--intent="Saas, Nextjs with tailwind and auth0" \\
-\t--variables=theme,projectName,auth0ClientId,auth0Domain,auth0Audience \\
+\t--variables="theme,projectName,auth0ClientId,auth0Domain,auth0Audience" \\
 \t--type=single-use
 `, language: 'bash' },
 ]} />

@@ -1,8 +1,10 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"compatibility_date": "2026-09-07",
-	"compatibility_flags": ["global_fetch_strictly_public"],
-	"name": "documentation",
+	"compatibility_flags": [
+		"global_fetch_strictly_public"
+	],
+	"name": "powerups-dev",
 	"main": "@astrojs/cloudflare/entrypoints/server",
 	"assets": {
 		"directory": "./dist",
@@ -10,8 +12,8 @@
 	},
 	"observability": {
 		"enabled": true
-  },
-  "vars": {
-    "GITHUB_REPO_URL": "https://github.com/liolocs/powerups"
-  }
+	},
+	"vars": {
+		"GITHUB_REPO_URL": "https://github.com/liolocs/powerups"
+	}
 }

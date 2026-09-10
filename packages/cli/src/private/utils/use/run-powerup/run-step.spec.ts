@@ -3,7 +3,7 @@ import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { UseErrorCode } from "#errors/useErrors";
 import runStep from "#utils/use/run-powerup/run-step";
-import type { CreateStep, ReadStep } from "@liolocs/powerups-sdk";
+import type { DynamicCreateStep, ReadStep } from "@liolocs/powerups-sdk";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -33,7 +33,7 @@ test.case("routes to create step and returns correct manifest", async assert => 
   await setupTestDir();
   await createTemplateFile();
 
-  const createStep: CreateStep = {
+  const createStep: DynamicCreateStep = {
     type: "dynamic-create",
     name: "create-component",
     template: "component.ts",
@@ -71,7 +71,7 @@ test.case("resolves variableMap before dispatching to step runner", async assert
   await setupTestDir();
   await createTemplateFile();
 
-  const createStepWithVariableMap: CreateStep = {
+  const createStepWithVariableMap: DynamicCreateStep = {
     type: "dynamic-create",
     name: "create-mapped",
     template: "component.ts",

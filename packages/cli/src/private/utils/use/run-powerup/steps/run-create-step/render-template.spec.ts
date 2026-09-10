@@ -26,7 +26,7 @@ test.case("renders a .ts template with variables successfully", async assert => 
 
   const result = await renderTemplate({
     template: "component.ts",
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables: { name: "MyComponent" },
   });
 
@@ -40,7 +40,7 @@ test.case("throws template_not_found when template file does not exist", async a
 
   await assert(renderTemplate({
     template: "nonexistent.ts",
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables: { name: "foo" },
   })).throwsAsync(UseErrorCode.template_not_found);
 

@@ -2,15 +2,15 @@ import fs from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import type { FileRef } from "@rcompat/fs";
 
-export default async function runCaptureWithRollback({
+export default async function runCaptureWithRollback<T>({
   capture,
   newPowerupDirectory,
   isDryRun,
 }: {
-  capture: () => Promise<unknown>;
+  capture: () => Promise<T>;
   newPowerupDirectory: FileRef;
   isDryRun: boolean;
-}): Promise<unknown> {
+}): Promise<T> {
   try {
     return await capture();
   } catch (error) {

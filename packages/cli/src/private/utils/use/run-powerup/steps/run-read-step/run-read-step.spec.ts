@@ -38,7 +38,7 @@ test.case("reads a file in raw mode and returns applied manifest with ReadOutput
     step,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables: {},
   });
 
@@ -74,7 +74,7 @@ test.case("reads a JSON file with jsonPath and returns the resolved value", asyn
     step,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables: {},
   });
 
@@ -97,7 +97,7 @@ test.case("throws read_file_not_found when target file does not exist", async as
     step,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables: {},
   })).throwsAsync(UseErrorCode.read_file_not_found);
 
@@ -120,7 +120,7 @@ test.case("throws read_json_parse_error when file is not valid JSON and jsonPath
     step,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables: {},
   })).throwsAsync(UseErrorCode.read_json_parse_error);
 
@@ -146,7 +146,7 @@ test.case("throws read_json_path_not_found when JSON path does not resolve", asy
     step,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables: {},
   })).throwsAsync(UseErrorCode.read_json_path_not_found);
 
@@ -173,7 +173,7 @@ test.case("template mode reads file content and passes it as __content to the te
     step,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables: {},
   });
 
@@ -204,7 +204,7 @@ test.case("variable update uses resolved path with variables from a previous rea
     step: firstStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables,
   });
 
@@ -221,7 +221,7 @@ test.case("variable update uses resolved path with variables from a previous rea
     step: secondStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     variables,
   });
 

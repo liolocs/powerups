@@ -101,9 +101,9 @@ test.case("works without git — falls back to filesystem walk", async assert =>
   });
 
   assert(result.steps.length).equals(2);
-  assert(result.steps.some(s => s.outputPath === "hello.txt")).true();
-  assert(result.steps.some(s => s.outputPath === "src/main.ts")).true();
-  assert(result.steps.some(s => s.outputPath.includes("node_modules/"))).false();
+  assert(result.steps.some(s => s.type === "create" && s.outputPath === "hello.txt")).true();
+  assert(result.steps.some(s => s.type === "create" && s.outputPath === "src/main.ts")).true();
+  assert(result.steps.some(s => s.type === "create" && s.outputPath.includes("node_modules/"))).false();
   assert(await newPowerupDir.append("/src/create/hello.txt").text()).equals("no git here\n");
 
   await nonGitRoot.remove({ recursive: true });
@@ -128,7 +128,7 @@ test.case("excludes the new powerup's own directory", async assert => {
 
   assert(
     result.steps.some(s =>
-      s.outputPath.startsWith(".powerups/installed/_internal/my-powerup/"),
+      s.type === "create" && s.outputPath.startsWith(".powerups/installed/_internal/my-powerup/"),
     ),
   ).false();
 
@@ -153,9 +153,9 @@ test.case("respects .gitignore — gitignored files are not captured", async ass
     isDryRun: false,
   });
 
-  assert(result.steps.some(s => s.outputPath === "secret.txt")).false();
+  assert(result.steps.some(s => s.type === "create" && s.outputPath === "secret.txt")).false();
   assert(
-    result.steps.some(s => s.outputPath === "visible.ts" && s.file === "src/create/visible.ts"),
+    result.steps.some(s => s.type === "create" && s.outputPath === "visible.ts" && s.file === "src/create/visible.ts"),
   ).true();
 
   await cleanup();
@@ -178,7 +178,7 @@ test.case("excludes lock files from capture", async assert => {
     isDryRun: false,
   });
 
-  assert(result.steps.some(s => s.outputPath === "pnpm-lock.yaml")).false();
+  assert(result.steps.some(s => s.type === "create" && s.outputPath === "pnpm-lock.yaml")).false();
 
   await cleanup();
 });
@@ -200,7 +200,7 @@ test.case("excludes .env files from capture", async assert => {
     isDryRun: false,
   });
 
-  assert(result.steps.some(s => s.outputPath === ".env")).false();
+  assert(result.steps.some(s => s.type === "create" && s.outputPath === ".env")).false();
 
   await cleanup();
 });
@@ -222,7 +222,7 @@ test.case("does not write any source files in dry-run mode", async assert => {
   });
 
   assert(result.steps.length).equals(2);
-  assert(result.steps.every(s => typeof s.file === "string")).true();
+  assert(result.steps.every(s => s.type === "create" && typeof s.file === "string")).true();
   assert(await fs.exists(newPowerupDir.append("/src/create"))).false();
 
   await cleanup();

@@ -34,9 +34,9 @@ test.case("should create instructions.json based on the compiled index file", as
     ],
     steps: [
       {
-        type: "create",
+        type: "dynamic-create",
         name: "component",
-        template: "templates/component.ts",
+        template: "src/dynamic-create/component.ts",
         outputPath: "src/components/{{name}}.ts",
       },
     ],
@@ -71,7 +71,7 @@ test.case("should create instructions.json based on the compiled index file", as
   const createdStep = createdInstructionsJson.steps[0];
   const originalStep = instructions.steps[0];
 
-  if (createdStep.type === "create" && originalStep.type === "create") {
+  if (createdStep.type === "dynamic-create" && originalStep.type === "dynamic-create") {
     assert(createdStep.template).equals(originalStep.template);
     assert(createdStep.outputPath).equals(originalStep.outputPath);
   }

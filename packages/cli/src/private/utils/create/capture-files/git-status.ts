@@ -1,6 +1,7 @@
 import io from "@rcompat/io";
 import { type FileRef } from "@rcompat/fs";
 import path from "node:path";
+import create_errors from "#errors/createErrors";
 
 export type GitChangeStatus = "new" | "modified" | "deleted" | "renamed" | "unknown";
 

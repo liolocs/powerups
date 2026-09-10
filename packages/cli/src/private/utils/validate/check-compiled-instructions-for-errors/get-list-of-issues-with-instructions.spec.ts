@@ -10,8 +10,8 @@ test.case("should have no issues with valid instructions", async assert => {
     variables: { required: ["name"], optional: [] },
     intent: [],
     steps: [
-      { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "src/{{name}}.ts" },
-      { type: "create", name: "spec", template: "spec.ts.ts", outputPath: "src/{{name}}.spec.ts" },
+      { type: "dynamic-create", name: "comp", template: "src/dynamic-create/comp.ts", outputPath: "src/{{name}}.ts" },
+      { type: "dynamic-create", name: "spec", template: "spec.ts.ts", outputPath: "src/{{name}}.spec.ts" },
     ],
   };
 
@@ -26,8 +26,8 @@ test.case("should flag when steps have same name", async assert => {
     variables: { required: ["name"], optional: [] },
     intent: [],
     steps: [
-      { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "src/{{name}}.ts" },
-      { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "src/{{name}}.ts" },
+      { type: "dynamic-create", name: "comp", template: "src/dynamic-create/comp.ts", outputPath: "src/{{name}}.ts" },
+      { type: "dynamic-create", name: "comp", template: "src/dynamic-create/comp.ts", outputPath: "src/{{name}}.ts" },
     ],
   };
 
@@ -43,7 +43,7 @@ test.case("should flag when a variable is used before it is available", async as
     variables: { required: ["name"], optional: [] },
     intent: [],
     steps: [
-      { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "src/{{pkgName}}.ts" },
+      { type: "dynamic-create", name: "comp", template: "src/dynamic-create/comp.ts", outputPath: "src/{{pkgName}}.ts" },
       { type: "read", name: "pkg", path: "package.json", as: "pkgName", jsonPath: "name" },
     ],
   };
@@ -61,7 +61,7 @@ test.case("should not flag when a read variable is registered correctly", async 
     intent: [],
     steps: [
       { type: "read", name: "pkg", path: "package.json", as: "pkgName", jsonPath: "name" },
-      { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "src/{{pkgName}}.ts" },
+      { type: "dynamic-create", name: "comp", template: "src/dynamic-create/comp.ts", outputPath: "src/{{pkgName}}.ts" },
     ],
   };
 
@@ -78,7 +78,7 @@ test.case("should have no errors when parent variable is mapped to child through
     intent: [],
     steps: [
       { type: "read", name: "pkg", path: "package.json", as: "pkgName", jsonPath: "name" },
-      { type: "create", name: "child:component", template: "_internal/child/templates/component.ts", outputPath: "src/{{childName}}.ts", variableMap: { childName: "{{name}}" } }
+      { type: "dynamic-create", name: "child:component", template: "_internal/child/src/dynamic-create/component.ts", outputPath: "src/{{childName}}.ts", variableMap: { childName: "{{name}}" } }
     ],
   };
 
@@ -90,7 +90,7 @@ test.case("should flag when an unknown variable is used", async assert => {
   const unknownVariable = "random";
   const steps: Step[] = [
     { type: "read", name: "pkg", path: "{{random}}.json", as: "pkgName", jsonPath: "name" },
-    { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "src/{{random}}.ts" },
+    { type: "dynamic-create", name: "comp", template: "src/dynamic-create/comp.ts", outputPath: "src/{{random}}.ts" },
   ];
 
   for (const step of steps) {
@@ -117,7 +117,7 @@ test.case("should flag when an unknown variable is used in a variableMap", async
     intent: [],
     steps: [
       { type: "read", name: "pkg", path: "package.json", as: "pkgName", jsonPath: "name" },
-      { type: "create", name: "child:component", template: "_internal/child/templates/component.ts", outputPath: "src/{{childName}}.ts", variableMap: { childName: "{{random}}" } }
+      { type: "dynamic-create", name: "child:component", template: "_internal/child/src/dynamic-create/component.ts", outputPath: "src/{{childName}}.ts", variableMap: { childName: "{{random}}" } }
     ],
   };
 
@@ -134,7 +134,7 @@ test.case("should not flag when a variable is read before it is used in a variab
     intent: [],
     steps: [
       { type: "read", name: "pkg", path: "package.json", as: "pkgName", jsonPath: "name" },
-      { type: "create", name: "child:component", template: "_internal/child/templates/component.ts", outputPath: "src/{{childName}}.ts", variableMap: { childName: "{{pkgName}}" } }
+      { type: "dynamic-create", name: "child:component", template: "_internal/child/src/dynamic-create/component.ts", outputPath: "src/{{childName}}.ts", variableMap: { childName: "{{pkgName}}" } }
     ],
   };
 

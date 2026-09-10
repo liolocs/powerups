@@ -64,7 +64,7 @@ test.case("should throw source_not_found when an own template does not exist", a
     intent: [],
     steps: [
       {
-        type: "create",
+        type: "dynamic-create",
         name: "component",
         template: "src/dynamic-create/missing.ts",
         outputPath: "src/components/{{name}}.ts",
@@ -103,7 +103,7 @@ test.case("should skip steps that do not declare a template", async assert => {
     intent: [],
     steps: [
       {
-        type: "create",
+        type: "dynamic-create",
         name: "component",
         template: "src/dynamic-create/component.ts",
         outputPath: "src/components/{{name}}.ts",
@@ -153,13 +153,13 @@ test.case("should only copy each own template once when referenced by multiple s
     intent: [],
     steps: [
       {
-        type: "create",
+        type: "dynamic-create",
         name: "component-a-uses-same-template",
         template: "src/dynamic-create/component.ts",
         outputPath: "src/some-path/{{name}}.ts",
       },
       {
-        type: "modify",
+        type: "dynamic-modify",
         name: "component-b-uses-same-template",
         template: "src/dynamic-create/component.ts",
         outputPath: "src/some-other-path/{{name}}.ts",
@@ -225,7 +225,7 @@ test.case("should copy internal templates from a built child package's dist fold
 
   const steps: Step[] = [
     {
-      type: "create",
+      type: "dynamic-create",
       name: "child:component",
       template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/components/{{name}}.ts",
@@ -276,7 +276,7 @@ test.case("should resolve the child source from sourceFromCompiledInstructions w
   const childSource = `${childPackageDir.path}/dist/index.js`;
   const steps: Step[] = [
     {
-      type: "create",
+      type: "dynamic-create",
       name: "child:component",
       template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/components/{{name}}.ts",
@@ -324,7 +324,7 @@ test.case("should throw child_not_built when the child package dist template is 
   const childSource = `${childPackageDir.path}/dist/index.js`;
   const steps: Step[] = [
     {
-      type: "create",
+      type: "dynamic-create",
       name: "child:component",
       template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/components/{{name}}.ts",
@@ -372,14 +372,14 @@ test.case("should only copy each internal template once when referenced by multi
   const childSource = `${childPackageDir.path}/dist/index.js`;
   const steps: Step[] = [
     {
-      type: "create",
+      type: "dynamic-create",
       name: "child:component-a",
       template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/a/{{name}}.ts",
       __source: childSource,
     } as Step,
     {
-      type: "modify",
+      type: "dynamic-modify",
       name: "child:component-b",
       template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/b/{{name}}.ts",
@@ -415,7 +415,7 @@ test.case("should print the powerup name in the success message", async assert =
 
   const steps: Step[] = [
     {
-      type: "create",
+      type: "dynamic-create",
       name: "component",
       template: "src/dynamic-create/component.ts",
       outputPath: "src/components/{{name}}.ts",

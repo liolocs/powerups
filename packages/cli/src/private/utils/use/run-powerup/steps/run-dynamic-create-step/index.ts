@@ -1,4 +1,4 @@
-import type { CreateManifestEntry, DynamicCreateStep } from "@liolocs/powerups-sdk";
+import type { DynamicCreateManifestEntry, DynamicCreateStep } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
@@ -20,7 +20,7 @@ export default async function runDynamicCreateStep({
   sourceBase: FileRef;
   variables: ResolvedVariable;
   overwriteExisting: boolean;
-}): Promise<{ manifest: Omit<CreateManifestEntry, BaseManifestProperties> }> {
+}): Promise<{ manifest: Omit<DynamicCreateManifestEntry, BaseManifestProperties> }> {
   const resolvedOutputPath = resolveOutputPath({ outputPath: step.outputPath, variables });
 
   const renderedContent = await renderTemplate({
@@ -29,7 +29,7 @@ export default async function runDynamicCreateStep({
     variables,
   });
 
-  const manifest: Omit<CreateManifestEntry, BaseManifestProperties> = {
+  const manifest: Omit<DynamicCreateManifestEntry, BaseManifestProperties> = {
     timestamp: new Date(),
     stepName: step.name,
     from: step.from?.name,

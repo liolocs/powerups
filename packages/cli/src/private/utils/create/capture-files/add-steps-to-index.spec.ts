@@ -23,7 +23,7 @@ test.case("should replace steps: [] in the index file with the provided steps as
   await indexFile.write("const instructions = {\n  steps: [],\n};\n");
 
   const steps: Step[] = [
-    { type: "create", name: "create-foo", template: "templates/foo.ts.ts", outputPath: "foo.ts" },
+    { type: "create", name: "create-foo", file: "src/create/foo.ts", outputPath: "foo.ts" },
   ];
 
   await addStepsToIndex({ indexFilePath: indexFile, steps });
@@ -78,8 +78,8 @@ test.case("should format multiple steps with proper JSON indentation", async ass
   await indexFile.write("const instructions = {\n  steps: [],\n};\n");
 
   const steps: Step[] = [
-    { type: "create", name: "create-foo", template: "templates/foo.ts.ts", outputPath: "foo.ts" },
-    { type: "create", name: "create-bar", template: "templates/bar.ts.ts", outputPath: "bar.ts" },
+    { type: "create", name: "create-foo", file: "src/create/foo.ts", outputPath: "foo.ts" },
+    { type: "create", name: "create-bar", file: "src/create/bar.ts", outputPath: "bar.ts" },
   ];
 
   await addStepsToIndex({ indexFilePath: indexFile, steps });

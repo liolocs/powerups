@@ -20,9 +20,9 @@ const defaultInstructions = (powerupName: string): Instructions => ({
   ],
   steps: [
     {
-      type: "create",
+      type: "dynamic-create",
       name: "component",
-      template: "templates/component.ts",
+      template: "src/dynamic-create/component.ts",
       outputPath: "src/components/{{name}}.ts",
     },
   ],
@@ -42,12 +42,12 @@ const defaultTemplates = () => {
   return [
     {
       name: "index",
-      templatePath: "/templates/index.ts",
+      templatePath: "/src/dynamic-create/index.ts",
       content: indexTemplateContent,
     },
     {
       name: "component",
-      templatePath: "/templates/component.ts",
+      templatePath: "/src/dynamic-create/component.ts",
       content: templateComponentContent,
     },
   ];
@@ -69,8 +69,8 @@ export type DefaultTemplateForTest = {
  *     index.ts          (default-exports defineInstructions(instructions, import.meta.url))
  *     tsconfig.json
  *     .gitignore
- *     templates/
- *       component.ts    (template function used by the `create` step)
+ *     src/dynamic-create/
+ *       component.ts    (template function used by the `dynamic-create` step)
  */
 export async function createPowerupPackageForTest({
   powerupName = "test-powerup",
@@ -96,7 +96,7 @@ export async function createPowerupPackageForTest({
 
   await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}`));
 
-  await fs.create(packageDir.append("/templates"));
+  await fs.create(packageDir.append("/src/dynamic-create"));
 
   // E.G. .powerups/_internal/cli-command/package.json
   const packageJsonContents = {
@@ -136,7 +136,9 @@ export async function createPowerupPackageForTest({
   nodeFs.symlinkSync(path.relative(liolocsNodeModulesRef.path, sdkPackageAbsolutePath), sdkSymlinkPath, "dir");
 
   for (const template of templates) {
-    await packageDir.append(`${template.templatePath}`).write(template.content);
+    const templateRef = packageDir.append(`${template.templatePath}`);
+    await fs.create(templateRef.directory);
+    await templateRef.write(template.content);
   }
 
   const indexTsContents = `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";

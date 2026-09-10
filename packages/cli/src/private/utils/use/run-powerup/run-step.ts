@@ -117,7 +117,7 @@ export default async function runStep({
         step,
         isDryRun,
         destination,
-        powerupDirectory,
+        sourceBase,
         variables: stepVariables,
       });
 

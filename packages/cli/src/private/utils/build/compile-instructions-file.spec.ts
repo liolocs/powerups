@@ -34,7 +34,7 @@ test.case("should create a powerup package with correct folder structure", async
   assert(await packageDir.append("/index.ts").exists()).true();
   assert(await packageDir.append("/tsconfig.json").exists()).true();
   assert(await packageDir.append("/.gitignore").exists()).true();
-  assert(await packageDir.append("/templates/component.ts").exists()).true();
+  assert(await packageDir.append("/src/dynamic-create/component.ts").exists()).true();
 
   // The package.json must declare itself as a powerups package.
   const pkgJson = await packageDir.append("/package.json").json() as {

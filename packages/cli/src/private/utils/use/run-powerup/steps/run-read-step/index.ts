@@ -12,13 +12,13 @@ export default async function runReadStep({
   step,
   isDryRun,
   destination,
-  powerupDirectory,
+  sourceBase,
   variables,
 }: {
   step: ReadStep;
   isDryRun: boolean;
   destination: FileRef;
-  powerupDirectory: FileRef;
+  sourceBase: FileRef;
   variables: ResolvedVariable;
 }): Promise<{
   manifest: Omit<ReadManifestEntry, BaseManifestProperties>;
@@ -51,7 +51,7 @@ export default async function runReadStep({
   if (step.template) {
     value = await renderTemplate({
       template: step.template,
-      powerupDirectory,
+      sourceBase,
       variables: { ...variables, __content: content },
     });
   } else if (step.jsonPath) {

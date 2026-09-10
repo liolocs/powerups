@@ -4,7 +4,7 @@ import type { Step } from "@liolocs/powerups-sdk";
 
 test.case("returns variables unchanged when step has no variableMap", async assert => {
   const step = {
-    type: "create",
+    type: "dynamic-create",
     name: "create-component",
     template: "component.ts",
     outputPath: "src/{{name}}.ts",
@@ -19,7 +19,7 @@ test.case("returns variables unchanged when step has no variableMap", async asse
 
 test.case("applies variableMap mappings, resolving template strings in values", async assert => {
   const step = {
-    type: "create",
+    type: "dynamic-create",
     name: "create-component",
     template: "component.ts",
     outputPath: "src/{{childName}}.ts",
@@ -36,7 +36,7 @@ test.case("applies variableMap mappings, resolving template strings in values", 
 
 test.case("resolves variableMap values that reference multiple variables", async assert => {
   const step = {
-    type: "create",
+    type: "dynamic-create",
     name: "create-component",
     template: "component.ts",
     outputPath: "src/{{fullName}}.ts",

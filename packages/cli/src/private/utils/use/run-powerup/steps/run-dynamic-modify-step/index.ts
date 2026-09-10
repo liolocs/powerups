@@ -1,4 +1,4 @@
-import type { ModifyManifestEntry, DynamicModifyStep } from "@liolocs/powerups-sdk";
+import type { DynamicModifyManifestEntry, DynamicModifyStep } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
@@ -19,10 +19,10 @@ export default async function runDynamicModifyStep({
   destination: FileRef;
   sourceBase: FileRef;
   variables: ResolvedVariable;
-}): Promise<{ manifest: Omit<ModifyManifestEntry, BaseManifestProperties> }> {
+}): Promise<{ manifest: Omit<DynamicModifyManifestEntry, BaseManifestProperties> }> {
   const resolvedOutputPath = resolveOutputPath({ outputPath: step.outputPath, variables });
 
-  const manifest: Omit<ModifyManifestEntry, BaseManifestProperties> = {
+  const manifest: Omit<DynamicModifyManifestEntry, BaseManifestProperties> = {
     timestamp: new Date(),
     stepName: step.name,
     from: step.from?.name,

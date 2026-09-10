@@ -18,9 +18,9 @@ const defaultInstructions = (powerupName: string): Instructions => ({
   ],
   steps: [
     {
-      type: "create",
+      type: "dynamic-create",
       name: "component",
-      template: "templates/component.ts",
+      template: "src/dynamic-create/component.ts",
       outputPath: "src/components/{{name}}.ts",
     },
   ],
@@ -82,21 +82,21 @@ export async function createSimpleScaffoldPowerupForTest({
     ],
     steps: [
       {
-        type: "create",
+        type: "dynamic-create",
         name: "index",
-        template: "templates/index.ts",
+        template: "src/dynamic-create/index.ts",
         outputPath: "index.ts",
       },
       {
-        type: "create",
+        type: "dynamic-create",
         name: "package.json",
-        template: "templates/package.json.ts",
+        template: "src/dynamic-create/package.json.ts",
         outputPath: "package.json",
       },
     ],
   };
 
-  // E.G. .powerups/installed/installed/_internal/cli-command/templates/component.ts
+  // E.G. .powerups/installed/_internal/cli-command/src/dynamic-create/component.ts
   const indexTemplateContent = `export default function(variables: Record<string, string>): string {
   const { name } = variables;
   return \`export const \${name} = "";\\n\`;
@@ -124,12 +124,12 @@ export async function createSimpleScaffoldPowerupForTest({
   const templates: DefaultTemplateForTest[] = [
     {
       name: "index",
-      templatePath: "/templates/index.ts",
+      templatePath: "/src/dynamic-create/index.ts",
       content: indexTemplateContent,
     },
     {
       name: "package.json",
-      templatePath: "/templates/package.json.ts",
+      templatePath: "/src/dynamic-create/package.json.ts",
       content: packageJsonTemplateContent,
     },
   ];
@@ -183,21 +183,21 @@ export async function createSimpleGlobalScaffoldPowerupForTest({
     ],
     steps: [
       {
-        type: "create",
+        type: "dynamic-create",
         name: "index",
-        template: "templates/index.ts",
+        template: "src/dynamic-create/index.ts",
         outputPath: "index.ts",
       },
       {
-        type: "create",
+        type: "dynamic-create",
         name: "package.json",
-        template: "templates/package.json.ts",
+        template: "src/dynamic-create/package.json.ts",
         outputPath: "package.json",
       },
     ],
   };
 
-  // E.G. .powerups/installed/_internal/cli-command/templates/component.ts
+  // E.G. .powerups/installed/_internal/cli-command/src/dynamic-create/component.ts
   const indexTemplateContent = `export default function(variables: Record<string, string>): string {
   const { name } = variables;
   return \`export const \${name} = "";\\n\`;
@@ -225,12 +225,12 @@ export async function createSimpleGlobalScaffoldPowerupForTest({
   const templates: DefaultTemplateForTest[] = [
     {
       name: "index",
-      templatePath: "/templates/index.ts",
+      templatePath: "/src/dynamic-create/index.ts",
       content: indexTemplateContent,
     },
     {
       name: "package.json",
-      templatePath: "/templates/package.json.ts",
+      templatePath: "/src/dynamic-create/package.json.ts",
       content: packageJsonTemplateContent,
     },
   ];

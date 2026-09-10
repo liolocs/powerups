@@ -61,6 +61,23 @@ const use_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  install_step_offline: ({ stepName, packageManager, dependencies, destination }: {
+    stepName: string;
+    packageManager: string;
+    dependencies: string[];
+    destination: string;
+  }) => {
+    const dependencyList = dependencies.map(dependency => `  - ${dependency}`).join("\n");
+    const errorText =
+      `No network connection detected, install step "${stepName}" was skipped.\n\n` +
+      `${packageManager} could not reach the package registry to install:\n` +
+      `${dependencyList}\n\n` +
+      `Once you are back online, either:\n` +
+      `  - run "${packageManager} install" inside ${destination}\n` +
+      `  - or delete ${destination} and re-run the command`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   missing_name: () => {
     const errorText =
       `${CAPITALIZED_SINGLULAR_CLI_NAME} name required.\n\nUsage: ${CLI_CMD} use <name> [variables]`;

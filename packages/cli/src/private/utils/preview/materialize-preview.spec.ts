@@ -119,3 +119,51 @@ test.case("second run deletes stale generated files but preserves untracked ones
 
   await testRoot.remove({ recursive: true });
 });
+
+test.case("reports outputChanged true on first render and false when nothing changed", async assert => {
+  const powerupRoot = testRoot.append("/powerup3");
+  await scaffoldPowerup({ powerupRoot });
+  const load = (await import("#utils/preview/load-instructions-from-source")).default;
+  const config = { variables: { appName: "my-app" }, outputDir: "preview", watch: false };
+
+  const first = await materializePreview({
+    powerupRoot,
+    instructions: await load({ powerupRoot }),
+    config: config as never,
+    isFirstMaterialize: true,
+  });
+  assert(first.outputChanged).true();
+
+  const second = await materializePreview({
+    powerupRoot,
+    instructions: await load({ powerupRoot }),
+    config: config as never,
+    isFirstMaterialize: false,
+  });
+  assert(second.outputChanged).false();
+
+  await testRoot.remove({ recursive: true });
+});
+
+test.case("reports outputChanged true after a source template change", async assert => {
+  const powerupRoot = testRoot.append("/powerup4");
+  await scaffoldPowerup({ powerupRoot });
+  const load = (await import("#utils/preview/load-instructions-from-source")).default;
+  const config = { variables: { appName: "my-app" }, outputDir: "preview", watch: false };
+
+  await materializePreview({ powerupRoot, instructions: await load({ powerupRoot }), config: config as never, isFirstMaterialize: true });
+
+  const template = powerupRoot.append("/src/dynamic-create/dynamic.ts");
+  await template.write(`export default function (_variables: Record<string, string>): string {\n  return \`app=\${_variables.appName}-v2\`;\n}\n`);
+
+  const rerender = await materializePreview({
+    powerupRoot,
+    instructions: await load({ powerupRoot }),
+    config: config as never,
+    isFirstMaterialize: false,
+  });
+  assert(rerender.outputChanged).true();
+  assert(await powerupRoot.append("/preview/dynamic.txt").text()).equals("app=my-app-v2\n");
+
+  await testRoot.remove({ recursive: true });
+});

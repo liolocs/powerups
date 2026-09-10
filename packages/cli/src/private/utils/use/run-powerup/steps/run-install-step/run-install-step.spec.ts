@@ -4,6 +4,9 @@ import runtime from "@rcompat/runtime";
 import runInstallStep from "#utils/use/run-powerup/steps/run-install-step/index";
 import { type Step } from "@liolocs/powerups-sdk";
 import type { ResolvedVariable } from "#utils/use/resolved-variable";
+import captureStdout from "#test-utils/capture-stdout";
+import { UseErrorCode } from "#errors/useErrors";
+import use_errors from "#errors/useErrors";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
@@ -168,4 +171,67 @@ test.case("should install into the target subdirectory when target is provided",
   assert(threw).false();
 
   await cleanup();
+});
+
+test.case("should skip installation with a loud offline error when the network check fails", async assert => {
+  await setupTestDir();
+
+  const destinationRef = testRoot.append("/tmp-repo-for-install-step-test");
+  await fs.create(destinationRef);
+
+  const destinationPackageJson = destinationRef.append("/package.json");
+  await destinationPackageJson.writeJSON({ name: "test-powerup", version: "1.0.0", description: "a test project" });
+
+  await fs.write(destinationRef.append("/pnpm-lock.yaml"), "");
+
+  const step: Step = {
+    type: "install",
+    name: "deps",
+    dependencies: ["lodash"],
+    packageManager: "auto",
+  };
+
+  const offlineCheckNetwork = async () => ({ online: false, error: "network unreachable" });
+
+  let manifest;
+  const output = await captureStdout(async () => {
+    ({ manifest } = await runInstallStep({
+      step,
+      isDryRun: false,
+      destination: destinationRef,
+      variables: {},
+      checkNetwork: offlineCheckNetwork,
+    }));
+  });
+
+  assert(manifest).defined();
+  assert(manifest!.status).equals("skipped-warning");
+
+  assert(output).includes("No network connection detected");
+  assert(output).includes("deps");
+  assert(output).includes("lodash");
+  assert(output).includes("pnpm install");
+
+  // no install command was attempted, so package.json is untouched
+  const pkgJson = await destinationPackageJson.json() as any;
+  assert(pkgJson.dependencies).undefined();
+
+  await cleanup();
+});
+
+test.case("install_step_offline error should name the step, dependencies and recovery commands", async assert => {
+  const offlineError = use_errors.install_step_offline({
+    stepName: "deps",
+    packageManager: "npm",
+    dependencies: ["lodash", "vitest"],
+    destination: "/tmp/.powerups/installed/_internal/my-powerup",
+  });
+
+  // @ts-expect-error error.code is not typed on TemplateError
+  assert(offlineError.code).equals(UseErrorCode.install_step_offline);
+  assert(offlineError.message).includes("No network connection detected");
+  assert(offlineError.message).includes("deps");
+  assert(offlineError.message).includes("lodash");
+  assert(offlineError.message).includes("vitest");
+  assert(offlineError.message).includes("npm install");
 });

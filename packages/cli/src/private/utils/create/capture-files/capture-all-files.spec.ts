@@ -13,7 +13,11 @@ async function gitInit(dir: import("@rcompat/fs").FileRef): Promise<void> {
   await io.run("git config user.name test", { cwd: dir.path });
 }
 
-async function createFile(dir: import("@rcompat/fs").FileRef, filePath: string, content: string): Promise<void> {
+async function createFile(
+  dir: import("@rcompat/fs").FileRef,
+  filePath: string,
+  content: string,
+): Promise<void> {
   const target = dir.append(`/${filePath}`);
   await fs.create(target.directory);
   await target.write(content);
@@ -32,7 +36,7 @@ async function cleanup(): Promise<void> {
   await testRoot.remove();
 }
 
-test.case("should capture all tracked files as create steps with correct output paths", async assert => {
+test.case("captures tracked files as verbatim copies with file-field steps", async assert => {
   await setupTestDir();
 
   await createFile(testRoot, "src/foo.ts", "export const foo = 1;\n");
@@ -50,14 +54,24 @@ test.case("should capture all tracked files as create steps with correct output 
   });
 
   assert(result.steps.length).equals(3);
-  assert(result.steps.some(s => s.type === "create" && s.outputPath === "README.md")).true();
-  assert(result.steps.some(s => s.type === "create" && s.outputPath === "src/foo.ts")).true();
-  assert(result.steps.some(s => s.type === "create" && s.outputPath === "src/bar.ts")).true();
+  assert(
+    result.steps.some(
+      s => s.type === "create" && s.outputPath === "README.md" && s.file === "src/create/README.md",
+    ),
+  ).true();
+  assert(
+    result.steps.some(
+      s => s.type === "create" && s.outputPath === "src/foo.ts" && s.file === "src/create/src/foo.ts",
+    ),
+  ).true();
+
+  const copiedContent = await newPowerupDir.append("/src/create/src/foo.ts").text();
+  assert(copiedContent).equals("export const foo = 1;\n");
 
   await cleanup();
 });
 
-test.case("should respect .gitignore — gitignored files are not captured", async assert => {
+test.case("respects .gitignore — gitignored files are not captured", async assert => {
   await setupTestDir();
 
   await createFile(testRoot, ".gitignore", "secret.txt\n");
@@ -81,7 +95,7 @@ test.case("should respect .gitignore — gitignored files are not captured", asy
   await cleanup();
 });
 
-test.case("should exclude files inside node_modules/ directories", async assert => {
+test.case("excludes files inside node_modules/ directories", async assert => {
   await setupTestDir();
 
   await createFile(testRoot, "node_modules/pkg/index.js", "module.exports = {};\n");
@@ -98,13 +112,15 @@ test.case("should exclude files inside node_modules/ directories", async assert 
     isDryRun: false,
   });
 
-  assert(result.steps.some(s => s.type === "create" && s.outputPath.includes("node_modules/"))).false();
+  assert(
+    result.steps.some(s => s.type === "create" && s.outputPath.includes("node_modules/")),
+  ).false();
   assert(result.steps.some(s => s.type === "create" && s.outputPath === "src/main.ts")).true();
 
   await cleanup();
 });
 
-test.case("should exclude lock files from capture", async assert => {
+test.case("excludes lock files from capture", async assert => {
   await setupTestDir();
 
   await createFile(testRoot, "pnpm-lock.yaml", "lockfile: 1.0\n");
@@ -121,12 +137,14 @@ test.case("should exclude lock files from capture", async assert => {
     isDryRun: false,
   });
 
-  assert(result.steps.some(s => s.type === "create" && s.outputPath === "pnpm-lock.yaml")).false();
+  assert(
+    result.steps.some(s => s.type === "create" && s.outputPath === "pnpm-lock.yaml"),
+  ).false();
 
   await cleanup();
 });
 
-test.case("should exclude .env files from capture", async assert => {
+test.case("excludes .env files from capture", async assert => {
   await setupTestDir();
 
   await createFile(testRoot, ".env", "SECRET=abc\n");
@@ -148,12 +166,11 @@ test.case("should exclude .env files from capture", async assert => {
   await cleanup();
 });
 
-test.case("should exclude the newly created powerup's own directory to avoid self-referencing", async assert => {
+test.case("excludes the newly created powerup's own directory", async assert => {
   await setupTestDir();
 
   const newPowerupDir = testRoot.append("/.powerups/installed/_internal/my-powerup");
   await fs.create(newPowerupDir);
-  await fs.create(newPowerupDir.append("/templates"));
   await newPowerupDir.append("/index.ts").write("export default {};\n");
   await io.run("git add -A", { cwd: testRoot.path });
   await io.run("git commit -m add", { cwd: testRoot.path });
@@ -164,15 +181,24 @@ test.case("should exclude the newly created powerup's own directory to avoid sel
     isDryRun: false,
   });
 
-  assert(result.steps.some(s => s.type === "create" && s.outputPath.startsWith(".powerups/installed/_internal/my-powerup/"))).false();
+  assert(
+    result.steps.some(s =>
+      s.type === "create"
+      && s.outputPath.startsWith(".powerups/installed/_internal/my-powerup/")
+    ),
+  ).false();
 
   await cleanup();
 });
 
-test.case("should include files inside .powerups/ (local powerups are captured)", async assert => {
+test.case("includes files inside .powerups/ (local powerups are captured)", async assert => {
   await setupTestDir();
 
-  await createFile(testRoot, ".powerups/installed/_internal/other-pup/index.ts", "export default {};\n");
+  await createFile(
+    testRoot,
+    ".powerups/installed/_internal/other-pup/index.ts",
+    "export default {};\n",
+  );
   await io.run("git add -A", { cwd: testRoot.path });
   await io.run("git commit -m add", { cwd: testRoot.path });
 
@@ -185,12 +211,17 @@ test.case("should include files inside .powerups/ (local powerups are captured)"
     isDryRun: false,
   });
 
-  assert(result.steps.some(s => s.type === "create" && s.outputPath.startsWith(".powerups/installed/_internal/other-pup/"))).true();
+  assert(
+    result.steps.some(s =>
+      s.type === "create"
+      && s.outputPath.startsWith(".powerups/installed/_internal/other-pup/")
+    ),
+  ).true();
 
   await cleanup();
 });
 
-test.case("should not write any template files in dry-run mode", async assert => {
+test.case("does not write any source files in dry-run mode", async assert => {
   await setupTestDir();
 
   await createFile(testRoot, "src/foo.ts", "export const foo = 1;\n");
@@ -206,12 +237,12 @@ test.case("should not write any template files in dry-run mode", async assert =>
     isDryRun: true,
   });
 
-  assert(await fs.exists(newPowerupDir.append("/templates"))).false();
+  assert(await fs.exists(newPowerupDir.append("/src/create"))).false();
 
   await cleanup();
 });
 
-test.case("should generate template files whose content matches the original file content", async assert => {
+test.case("verbatim copy content matches the original file content", async assert => {
   await setupTestDir();
 
   const fileContent = "export const foo = 42;\n";
@@ -228,10 +259,33 @@ test.case("should generate template files whose content matches the original fil
     isDryRun: false,
   });
 
-  const templatePath = newPowerupDir.append("/templates/src/foo.ts.ts");
-  assert(await fs.exists(templatePath)).true();
-  const templateContent = await templatePath.text();
-  assert(templateContent).includes(JSON.stringify(fileContent));
+  const copiedPath = newPowerupDir.append("/src/create/src/foo.ts");
+  assert(await fs.exists(copiedPath)).true();
+  assert(await copiedPath.text()).equals(fileContent);
 
   await cleanup();
+});
+
+test.case("works in a directory without git — falls back to a filesystem walk", async assert => {
+  const nonGitRoot = fs.ref("/tmp/pup-capture-nogit");
+  await nonGitRoot.remove({ recursive: true }).catch(() => {});
+  await fs.create(nonGitRoot);
+  await createFile(nonGitRoot, "hello.txt", "no git here\n");
+  await createFile(nonGitRoot, "node_modules/dep/index.js", "skipped\n");
+
+  const newPowerupDir = nonGitRoot.append("/.powerups/installed/_internal/ng");
+  await fs.create(newPowerupDir);
+
+  const result = await captureAllFiles({
+    projectRoot: nonGitRoot,
+    newPowerupDirectory: newPowerupDir,
+    isDryRun: false,
+  });
+
+  assert(result.steps.length).equals(1);
+  assert(result.steps[0]!.type).equals("create");
+  assert(result.steps[0]!.outputPath).equals("hello.txt");
+  assert(await newPowerupDir.append("/src/create/hello.txt").text()).equals("no git here\n");
+
+  await nonGitRoot.remove({ recursive: true });
 });

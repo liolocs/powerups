@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.0](https://github.com/liolocs/powerups/compare/v1.0.0...v1.1.0) (2026-09-10)
+
+### Features
+
+* **sdk:** export preview schema from public entry ([d5ee3c5](https://github.com/liolocs/powerups/commit/d5ee3c5e1307d82b73421ad6c9346601187a71c2))
+* **sdk:** preview.json zod schema ([ac50982](https://github.com/liolocs/powerups/commit/ac50982c157ce8759741c3ae72634e8cb9013007))
+* **sdk:** preview.schema.json artifact + build script ([12afecc](https://github.com/liolocs/powerups/commit/12afecc788ff9173b9aedd01511e73dabfa90ce0))
+
+### Bug Fixes
+
+* **sdk:** exclude scripts folder from tsgo build program ([b071428](https://github.com/liolocs/powerups/commit/b071428bb5d8558cf17c17856f00bb7bca8c4b18))
 ## [1.0.0](https://github.com/liolocs/powerups/compare/v0.2.0...v1.0.0) (2026-09-10)
 
 ### ⚠ BREAKING CHANGES

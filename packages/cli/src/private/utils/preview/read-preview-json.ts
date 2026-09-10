@@ -1,13 +1,9 @@
 import type { FileRef } from "@rcompat/fs";
+import type { PreviewJsonFile } from "@liolocs/powerups-sdk";
 import preview_errors from "#errors/previewErrors";
 import getErrorMessage from "#errors/get-error-message";
 
-export type PreviewJsonFile = {
-  variables?: Record<string, string>;
-  run?: string;
-  output?: string;
-  watch?: boolean;
-};
+export type { PreviewJsonFile };
 
 export default async function readPreviewJson({
   powerupRoot,

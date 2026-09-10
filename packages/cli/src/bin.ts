@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import CLI from "@liolocs/program";
-import { type TemplateError } from "@rcompat/error";
 import commands from "./commands/index.js";
 import { CLI_CMD } from "#constants";
+import getErrorMessage from "./private/errors/get-error-message.js";
 
 const program = new CLI({
   name: CLI_CMD,
@@ -24,5 +24,5 @@ const program = new CLI({
 try {
   await program.run();
 } catch (err) {
-  console.error("\n" + (err as TemplateError).message);
+  console.error("\n" + getErrorMessage(err));
 }

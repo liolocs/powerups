@@ -1,7 +1,9 @@
 import type { ManifestEntry, Step } from "@liolocs/powerups-sdk";
 import runInstallStep from "#utils/use/run-powerup/steps/run-install-step/index";
 import runCreateStep from "#utils/use/run-powerup/steps/run-create-step/index";
+import runDynamicCreateStep from "#utils/use/run-powerup/steps/run-dynamic-create-step/index";
 import runModifyStep from "#utils/use/run-powerup/steps/run-modify-step/index";
+import runDynamicModifyStep from "#utils/use/run-powerup/steps/run-dynamic-modify-step/index";
 import runReadStep from "#utils/use/run-powerup/steps/run-read-step/index";
 import runDeleteStep from "#utils/use/run-powerup/steps/run-delete-step/index";
 import { type FileRef } from "@rcompat/fs";
@@ -21,21 +23,27 @@ export default async function runStep({
   isDryRun,
   destination,
   powerupDirectory,
+  sourceBase,
   variables,
   powerupName,
   powerupVersion,
   powerupLocation,
   powerupType,
+  overwriteExisting,
+  skipInstallSteps,
 }: {
   step: Step;
   isDryRun: boolean;
   destination: FileRef;
   powerupDirectory: FileRef;
+  sourceBase: FileRef;
   variables: ResolvedVariable;
   powerupName: string;
   powerupVersion: string;
   powerupLocation: string;
   powerupType: "multi-use" | "single-use";
+  overwriteExisting: boolean;
+  skipInstallSteps: boolean;
 }): Promise<StepRunnerResult> {
   const stepVariables = resolveStepVariables({ step, variables });
 
@@ -49,34 +57,68 @@ export default async function runStep({
   switch (step.type) {
     case "create": {
       const result = await runCreateStep({
-        step, isDryRun, destination, powerupDirectory, variables: stepVariables,
+        step,
+        isDryRun,
+        destination,
+        sourceBase,
+        variables: stepVariables,
+        overwriteExisting,
       });
 
-      return {
-        manifest: { ...result.manifest, ...base },
-      };
+      return { manifest: { ...result.manifest, ...base } };
+    }
+    case "dynamic-create": {
+      const result = await runDynamicCreateStep({
+        step,
+        isDryRun,
+        destination,
+        sourceBase,
+        variables: stepVariables,
+        overwriteExisting,
+      });
+
+      return { manifest: { ...result.manifest, ...base } };
     }
     case "modify": {
       const result = await runModifyStep({
-        step, isDryRun, destination, powerupDirectory, variables: stepVariables,
+        step,
+        isDryRun,
+        destination,
+        sourceBase,
+        variables: stepVariables,
       });
 
-      return {
-        manifest: { ...result.manifest, ...base },
-      };
+      return { manifest: { ...result.manifest, ...base } };
+    }
+    case "dynamic-modify": {
+      const result = await runDynamicModifyStep({
+        step,
+        isDryRun,
+        destination,
+        sourceBase,
+        variables: stepVariables,
+      });
+
+      return { manifest: { ...result.manifest, ...base } };
     }
     case "delete": {
       const result = await runDeleteStep({
-        step, isDryRun, destination, powerupDirectory, variables: stepVariables,
+        step,
+        isDryRun,
+        destination,
+        powerupDirectory,
+        variables: stepVariables,
       });
 
-      return {
-        manifest: { ...result.manifest, ...base },
-      };
+      return { manifest: { ...result.manifest, ...base } };
     }
     case "read": {
       const result = await runReadStep({
-        step, isDryRun, destination, powerupDirectory, variables: stepVariables,
+        step,
+        isDryRun,
+        destination,
+        powerupDirectory,
+        variables: stepVariables,
       });
 
       return {
@@ -85,13 +127,28 @@ export default async function runStep({
       };
     }
     case "install": {
+      if (skipInstallSteps) {
+        return {
+          manifest: {
+            timestamp: new Date(),
+            stepName: step.name,
+            from: step.from?.name,
+            stepType: "install",
+            status: "skipped-warning",
+            output: { type: "none" },
+            ...base,
+          },
+        };
+      }
+
       const result = await runInstallStep({
-        step, isDryRun, destination, variables: stepVariables,
+        step,
+        isDryRun,
+        destination,
+        variables: stepVariables,
       });
 
-      return {
-        manifest: { ...result.manifest, ...base },
-      };
+      return { manifest: { ...result.manifest, ...base } };
     }
     default:
       throw use_errors.unsupported_step_type((step as { type: string }).type);

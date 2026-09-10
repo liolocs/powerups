@@ -47,7 +47,7 @@ test.case("read then create flow with variable threading writes file and manifes
         jsonPath: "port",
       },
       {
-        type: "create",
+        type: "dynamic-create",
         name: "create-server",
         template: "server-template.ts",
         outputPath: "server.ts",
@@ -58,6 +58,7 @@ test.case("read then create flow with variable threading writes file and manifes
   await runPowerup({
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     instructions,
     isDryRun: false,
     variables: {},
@@ -76,7 +77,7 @@ test.case("read then create flow with variable threading writes file and manifes
   assert(entries.length).equals(2);
   assert(entries[0].stepType).equals("read");
   assert(entries[0].status).equals("applied");
-  assert(entries[1].stepType).equals("create");
+  assert(entries[1].stepType).equals("dynamic-create");
   assert(entries[1].status).equals("applied");
 
   await cleanup();
@@ -107,7 +108,7 @@ test.case("dry-run does not create manifest or write files to destination", asyn
         jsonPath: "port",
       },
       {
-        type: "create",
+        type: "dynamic-create",
         name: "create-server",
         template: "server-template.ts",
         outputPath: "server.ts",
@@ -118,6 +119,7 @@ test.case("dry-run does not create manifest or write files to destination", asyn
   await runPowerup({
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     instructions,
     isDryRun: true,
     variables: {},
@@ -148,7 +150,7 @@ test.case("create then delete flow removes file and writes manifest with both en
     intent: ["test"],
     steps: [
       {
-        type: "create",
+        type: "dynamic-create",
         name: "create-component",
         template: "component-template.ts",
         outputPath: "component.ts",
@@ -164,6 +166,7 @@ test.case("create then delete flow removes file and writes manifest with both en
   await runPowerup({
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
     instructions,
     isDryRun: false,
     variables: { name: "MyComponent" },
@@ -178,7 +181,7 @@ test.case("create then delete flow removes file and writes manifest with both en
 
   const entries = await manifestPath.json() as unknown as ManifestEntry[];
   assert(entries.length).equals(2);
-  assert(entries[0].stepType).equals("create");
+  assert(entries[0].stepType).equals("dynamic-create");
   assert(entries[0].status).equals("applied");
   assert(entries[1].stepType).equals("delete");
   assert(entries[1].status).equals("applied");

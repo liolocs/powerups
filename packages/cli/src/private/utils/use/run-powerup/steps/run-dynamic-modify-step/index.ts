@@ -1,4 +1,4 @@
-import type { ModifyManifestEntry, ModifyStep } from "@liolocs/powerups-sdk";
+import type { ModifyManifestEntry, DynamicModifyStep } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
@@ -7,14 +7,14 @@ import parseModifyTemplate from "#utils/use/run-powerup/steps/run-modify-step/pa
 import { applyModifications } from "#utils/use/run-powerup/steps/run-modify-step/apply-modifications";
 import writeIfChanged from "#utils/shared/write-if-changed";
 
-export default async function runModifyStep({
+export default async function runDynamicModifyStep({
   step,
   isDryRun,
   destination,
   sourceBase,
   variables,
 }: {
-  step: ModifyStep;
+  step: DynamicModifyStep;
   isDryRun: boolean;
   destination: FileRef;
   sourceBase: FileRef;
@@ -26,7 +26,7 @@ export default async function runModifyStep({
     timestamp: new Date(),
     stepName: step.name,
     from: step.from?.name,
-    stepType: "modify",
+    stepType: "dynamic-modify",
     status: "applied",
     output: {
       type: "modify",
@@ -36,12 +36,12 @@ export default async function runModifyStep({
     },
   };
 
-  const sourcePath = sourceBase.append(`/${step.file}`);
+  const templatePath = sourceBase.append(`/${step.template}`);
   const targetPath = destination.append(`/${resolvedOutputPath}`);
 
   try {
     const modifications = await parseModifyTemplate({
-      templatePath: sourcePath,
+      templatePath,
       variables,
     });
 

@@ -103,6 +103,7 @@ const create = new Command({
     await runPowerup({
       destination: cwd,
       powerupDirectory: powerup.location,
+      sourceBase: powerup.location.append("/dist"),
       instructions: validatedCompiledInstructions,
       isDryRun,
       variables,

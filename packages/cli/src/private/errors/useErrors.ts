@@ -96,6 +96,11 @@ const use_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
+  source_not_found: (sourcePath: string) => {
+    const errorText = `Step source file not found: ${sourcePath}`;
+    return t`${errorBGText}${errorText}`;
+  },
+
   read_file_not_found: (path: string) => {
     const errorText = `Read step target file not found: ${path}`;
     return t`${errorBGText}${errorText}`;

@@ -34,7 +34,7 @@ test.case("routes to create step and returns correct manifest", async assert => 
   await createTemplateFile();
 
   const createStep: CreateStep = {
-    type: "create",
+    type: "dynamic-create",
     name: "create-component",
     template: "component.ts",
     outputPath: "src/{{name}}.ts",
@@ -45,6 +45,9 @@ test.case("routes to create step and returns correct manifest", async assert => 
     isDryRun: false,
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
+    overwriteExisting: false,
+    skipInstallSteps: false,
     variables: { name: "MyComponent" },
     powerupName: "test-powerup",
     powerupVersion: "1.0.0",
@@ -53,7 +56,7 @@ test.case("routes to create step and returns correct manifest", async assert => 
   });
 
   assert(manifest.status).equals("applied");
-  assert(manifest.stepType).equals("create");
+  assert(manifest.stepType).equals("dynamic-create");
 
   if (manifest.output.type === "create") {
     assert(manifest.output.path).equals("src/MyComponent.ts");
@@ -69,7 +72,7 @@ test.case("resolves variableMap before dispatching to step runner", async assert
   await createTemplateFile();
 
   const createStepWithVariableMap: CreateStep = {
-    type: "create",
+    type: "dynamic-create",
     name: "create-mapped",
     template: "component.ts",
     outputPath: "src/{{name}}.ts",
@@ -81,6 +84,9 @@ test.case("resolves variableMap before dispatching to step runner", async assert
     isDryRun: false,
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
+    overwriteExisting: false,
+    skipInstallSteps: false,
     variables: { componentName: "Widget" },
     powerupName: "test-powerup",
     powerupVersion: "1.0.0",
@@ -115,6 +121,9 @@ test.case("passes through variableUpdate from read step", async assert => {
     isDryRun: false,
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
+    overwriteExisting: false,
+    skipInstallSteps: false,
     variables: {},
     powerupName: "test-powerup",
     powerupVersion: "1.0.0",
@@ -138,6 +147,9 @@ test.case("throws unsupported_step_type error for unknown step type", async asse
     isDryRun: false,
     destination: testDestinationDir,
     powerupDirectory: testPowerupDir,
+    sourceBase: testPowerupDir.append("/dist"),
+    overwriteExisting: false,
+    skipInstallSteps: false,
     variables: {},
     powerupName: "test-powerup",
     powerupVersion: "1.0.0",

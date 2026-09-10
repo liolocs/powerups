@@ -1,12 +1,12 @@
-import type { CreateManifestEntry, CreateStep } from "@liolocs/powerups-sdk";
+import type { CreateManifestEntry, DynamicCreateStep } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import type { BaseManifestProperties } from "#utils/use/run-powerup/run-step";
 import resolveOutputPath from "#utils/use/run-powerup/steps/shared/resolve-output-path";
+import renderTemplate from "#utils/use/run-powerup/steps/run-create-step/render-template";
 import writeIfChanged from "#utils/shared/write-if-changed";
-import use_errors from "#errors/useErrors";
 
-export default async function runCreateStep({
+export default async function runDynamicCreateStep({
   step,
   isDryRun,
   destination,
@@ -14,7 +14,7 @@ export default async function runCreateStep({
   variables,
   overwriteExisting,
 }: {
-  step: CreateStep;
+  step: DynamicCreateStep;
   isDryRun: boolean;
   destination: FileRef;
   sourceBase: FileRef;
@@ -23,25 +23,23 @@ export default async function runCreateStep({
 }): Promise<{ manifest: Omit<CreateManifestEntry, BaseManifestProperties> }> {
   const resolvedOutputPath = resolveOutputPath({ outputPath: step.outputPath, variables });
 
-  const sourcePath = sourceBase.append(`/${step.file}`);
-
-  if (!(await sourcePath.exists())) {
-    throw use_errors.source_not_found(step.file);
-  }
-
-  const content = await sourcePath.text();
+  const renderedContent = await renderTemplate({
+    template: step.template,
+    sourceBase,
+    variables,
+  });
 
   const manifest: Omit<CreateManifestEntry, BaseManifestProperties> = {
     timestamp: new Date(),
     stepName: step.name,
     from: step.from?.name,
-    stepType: "create",
+    stepType: "dynamic-create",
     status: "applied",
     output: {
       type: "create",
       path: resolvedOutputPath,
       action: "create",
-      characterCount: content.length,
+      characterCount: renderedContent.length,
     },
   };
 
@@ -55,7 +53,7 @@ export default async function runCreateStep({
     return { manifest };
   }
 
-  await writeIfChanged({ targetPath, content });
+  await writeIfChanged({ targetPath, content: renderedContent });
 
   return { manifest };
 }

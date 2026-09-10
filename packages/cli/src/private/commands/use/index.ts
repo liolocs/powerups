@@ -74,6 +74,7 @@ const use = new Command({
     await runPowerup({
       destination: root,
       powerupDirectory: powerup.location,
+      sourceBase: powerup.location.append("/dist"),
       instructions: validatedCompiledInstructions,
       isDryRun,
       variables,

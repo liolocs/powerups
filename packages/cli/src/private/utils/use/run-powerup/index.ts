@@ -9,21 +9,32 @@ import is from "@rcompat/is";
 export default async function runPowerup({
   destination,
   powerupDirectory,
+  sourceBase,
   instructions,
   isDryRun,
   variables,
   powerupVersion,
   powerupLocation,
+  saveManifest: shouldSaveManifest = true,
+  overwriteExisting = false,
+  skipInstallSteps = false,
+  printFinalSummary = true,
 }: {
   destination: FileRef;
   powerupDirectory: FileRef;
+  sourceBase: FileRef;
   instructions: Instructions;
   isDryRun: boolean;
   variables: ResolvedVariable;
-    powerupVersion: string;
-    powerupLocation: string;
-}): Promise<void> {
+  powerupVersion: string;
+  powerupLocation: string;
+  saveManifest?: boolean;
+  overwriteExisting?: boolean;
+  skipInstallSteps?: boolean;
+  printFinalSummary?: boolean;
+}): Promise<ManifestEntry[]> {
   const steps = instructions.steps;
+  const collectedManifests: ManifestEntry[] = [];
 
   for (const step of steps) {
     const { manifest, variableUpdate } = await runStep({
@@ -31,11 +42,14 @@ export default async function runPowerup({
       isDryRun,
       destination,
       powerupDirectory,
+      sourceBase,
       variables,
       powerupName: instructions.name,
       powerupVersion,
       powerupLocation,
       powerupType: instructions.type,
+      overwriteExisting,
+      skipInstallSteps,
     });
 
     if (is.truthy(variableUpdate)) {
@@ -44,27 +58,23 @@ export default async function runPowerup({
 
     printStepSummary({ manifest });
 
-    if (!isDryRun && is.truthy(manifest)) {
-      await saveManifest({
-        destination,
-        manifest,
-      });
-    }
+    collectedManifests.push(manifest);
 
+    if (!isDryRun && shouldSaveManifest && is.truthy(manifest)) {
+      await saveManifest({ destination, manifest });
+    }
   }
 
-  if (!isDryRun) {
+  if (!isDryRun && printFinalSummary) {
     const green = cli.fg.green;
     const blue = cli.fg.cyan;
     cli.print(`\n${green("✓")} Powerup ${instructions.name} was successfully used in ${blue(destination.path)}\n`);
   }
+
+  return collectedManifests;
 }
 
-function printStepSummary({
-  manifest,
-}: {
-    manifest: ManifestEntry;
-}): void {
+function printStepSummary({ manifest }: { manifest: ManifestEntry }): void {
   const { stepName, status, output } = manifest;
   const dim = cli.fg.dim;
 
@@ -94,7 +104,7 @@ function printStepSummary({
   }
 
   if (output.type === "install") {
-    const allDeps = [];
+    const allDeps: string[] = [];
     if (is.defined(output.dependencies) && output.dependencies.length > 0) {
       allDeps.push(...output.dependencies);
     }

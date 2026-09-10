@@ -6,14 +6,14 @@ import use_errors from "#errors/useErrors";
 
 export default async function renderTemplate({
   template,
-  powerupDirectory,
+  sourceBase,
   variables,
 }: {
   template: string;
-  powerupDirectory: FileRef;
+  sourceBase: FileRef;
   variables: ResolvedVariable;
 }): Promise<string> {
-  const templatePath = powerupDirectory.append(`/dist/${template}`);
+  const templatePath = sourceBase.append(`/${template}`);
 
   if (!(await fs.exists(templatePath))) {
     throw use_errors.template_not_found(template);

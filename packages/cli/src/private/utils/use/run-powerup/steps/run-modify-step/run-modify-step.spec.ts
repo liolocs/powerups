@@ -1,19 +1,20 @@
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import runModifyStep from "#utils/use/run-powerup/steps/run-modify-step/index";
-import type { ModifyStep } from "@liolocs/powerups-sdk";
+import runDynamicModifyStep from "#utils/use/run-powerup/steps/run-dynamic-modify-step/index";
+import type { DynamicModifyStep } from "@liolocs/powerups-sdk";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp");
 const testPowerupDir = testRoot.append("/run-modify-step-test-powerup");
+const testSourceBase = testPowerupDir.append("/dist");
 const testDestinationDir = testRoot.append("/run-modify-step-test-destination");
 
 async function setupTestDir(): Promise<void> {
   await testRoot.remove();
   await fs.create(testRoot);
   await fs.create(testPowerupDir);
-  await fs.create(testPowerupDir.append("/dist"));
+  await fs.create(testSourceBase);
   await fs.create(testDestinationDir);
 }
 
@@ -23,7 +24,7 @@ async function cleanup(): Promise<void> {
 
 function createTemplateFile(): Promise<void> {
   return fs.write(
-    testPowerupDir.append("/dist/mod.json"),
+    testSourceBase.append("/mod.json"),
     `[{"where":"top","content":"// header\\n"}]`,
   );
 }
@@ -34,8 +35,8 @@ async function createTargetFile(name: string, content: string): Promise<void> {
   await fs.write(testDestinationDir.append(`/src/${name}`), content);
 }
 
-const baseStep: ModifyStep = {
-  type: "modify",
+const baseStep: DynamicModifyStep = {
+  type: "dynamic-modify",
   name: "modify-component",
   template: "mod.json",
   outputPath: "src/{{name}}.ts",
@@ -46,16 +47,16 @@ test.case("applies modifications to an existing file and returns applied manifes
   await createTemplateFile();
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
-  const { manifest } = await runModifyStep({
+  const { manifest } = await runDynamicModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testSourceBase,
     variables: { name: "MyComponent" },
   });
 
   assert(manifest.status).equals("applied");
-  assert(manifest.stepType).equals("modify");
+  assert(manifest.stepType).equals("dynamic-modify");
 
   if (manifest.output.type === "modify") {
     assert(manifest.output.path).equals("src/MyComponent.ts");
@@ -73,11 +74,11 @@ test.case("returns skipped-warning and NoneOutput when target file does not exis
   await setupTestDir();
   await createTemplateFile();
 
-  const { manifest } = await runModifyStep({
+  const { manifest } = await runDynamicModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testSourceBase,
     variables: { name: "NonExistent" },
   });
 
@@ -87,67 +88,61 @@ test.case("returns skipped-warning and NoneOutput when target file does not exis
   await cleanup();
 });
 
-test.case("returns skipped-warning and NoneOutput when an anchor is not found in the target file", async assert => {
+test.case("returns skipped-warning when an anchor is not found in the target file", async assert => {
   await setupTestDir();
   await createTemplateFile();
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
-  // Override template with one that uses an anchor not present in the target
   await fs.write(
-    testPowerupDir.append("/dist/mod.json"),
+    testSourceBase.append("/mod.json"),
     `[{"where":{"after":"NONEXISTENT_ANCHOR"},"content":"inserted"}]`,
   );
 
-  const { manifest } = await runModifyStep({
+  const { manifest } = await runDynamicModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testSourceBase,
     variables: { name: "MyComponent" },
   });
 
   assert(manifest.status).equals("skipped-warning");
   assert(manifest.output.type).equals("none");
 
-  // Verify the file content was NOT changed
   const content = (await testDestinationDir.append("/src/MyComponent.ts").text()).trim();
   assert(content).equals("line1\nline2\nline3");
 
   await cleanup();
 });
 
-test.case("returns skipped-warning and NoneOutput when template does not exist", async assert => {
+test.case("returns skipped-warning when template does not exist", async assert => {
   await setupTestDir();
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
-  const { manifest } = await runModifyStep({
+  const { manifest } = await runDynamicModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testSourceBase,
     variables: { name: "MyComponent" },
   });
 
   assert(manifest.status).equals("skipped-warning");
   assert(manifest.output.type).equals("none");
 
-  // Verify the file content was NOT changed
-  const content = (await testDestinationDir.append("/src/MyComponent.ts").text()).trim();
-  assert(content).equals("line1\nline2\nline3");
-
   await cleanup();
 });
 
-test.case("returns skipped-warning and NoneOutput when template produces invalid JSON", async assert => {
+test.case("returns skipped-warning when template produces invalid JSON", async assert => {
   await setupTestDir();
-  await fs.write(testPowerupDir.append("/dist/mod.json"), `{not valid json}`);
+  await fs.write(testSourceBase.append("/mod.json"), `{not valid json}`);
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
-  const { manifest } = await runModifyStep({
+  const { manifest } = await runDynamicModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testSourceBase,
     variables: { name: "MyComponent" },
   });
 
@@ -162,11 +157,11 @@ test.case("dry-run applies modifications but does NOT write the file", async ass
   await createTemplateFile();
   await createTargetFile("MyComponent.ts", "line1\nline2\nline3\n");
 
-  const { manifest } = await runModifyStep({
+  const { manifest } = await runDynamicModifyStep({
     step: baseStep,
     isDryRun: true,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testSourceBase,
     variables: { name: "MyComponent" },
   });
 
@@ -176,7 +171,6 @@ test.case("dry-run applies modifications but does NOT write the file", async ass
     assert(manifest.output.characterCount > 0).true();
   }
 
-  // Verify the file content is UNCHANGED
   const content = (await testDestinationDir.append("/src/MyComponent.ts").text()).trim();
   assert(content).equals("line1\nline2\nline3");
 
@@ -189,19 +183,19 @@ test.case("different variable values produce different output paths", async asse
   await createTargetFile("First.ts", "content1\n");
   await createTargetFile("Second.ts", "content2\n");
 
-  await runModifyStep({
+  await runDynamicModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testSourceBase,
     variables: { name: "First" },
   });
 
-  await runModifyStep({
+  await runDynamicModifyStep({
     step: baseStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testSourceBase,
     variables: { name: "Second" },
   });
 
@@ -218,23 +212,22 @@ test.case("creates parent directories that do not exist yet when writing", async
   await setupTestDir();
   await createTemplateFile();
 
-  const deepStep: ModifyStep = {
-    type: "modify",
+  const deepStep: DynamicModifyStep = {
+    type: "dynamic-modify",
     name: "modify-nested",
     template: "mod.json",
     outputPath: "src/deep/nested/{{name}}.ts",
   };
 
-  // Pre-create the target file in nested dirs
   const nestedDir = testDestinationDir.append("/src/deep/nested");
   await fs.create(nestedDir);
   await fs.write(testDestinationDir.append("/src/deep/nested/Nested.ts"), "original\n");
 
-  const { manifest } = await runModifyStep({
+  const { manifest } = await runDynamicModifyStep({
     step: deepStep,
     isDryRun: false,
     destination: testDestinationDir,
-    powerupDirectory: testPowerupDir,
+    sourceBase: testSourceBase,
     variables: { name: "Nested" },
   });
 

@@ -48,13 +48,21 @@ export default async function resolvePreviewConfig({
   const flagOutputDir = getFlagValue({ rawFlags, long: "--output-dir", short: "-o" });
   const watchFlag = rawFlags.find(f => f.flag === "--watch");
 
-  const exec = flagExec ?? previewJson?.exec;
+  const exec = normalizeExec(flagExec ?? previewJson?.exec);
   const outputDir = flagOutputDir ?? previewJson?.outputDir ?? "preview";
   const watch = watchFlag !== undefined
     ? watchFlag.value !== "false"
     : (previewJson?.watch ?? exec !== undefined);
 
   return { variables, exec, outputDir, watch };
+}
+
+function normalizeExec(exec: string | undefined): string | undefined {
+  if (exec === undefined) {
+    return undefined;
+  }
+
+  return exec.trim().length > 0 ? exec : undefined;
 }
 
 function getFlagValue({

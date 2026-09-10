@@ -11,6 +11,12 @@ export function startSupervisor({
   runCommand: string;
   previewDir: FileRef;
 }): SupervisorHandle {
+  if (runCommand.trim() === "") {
+    const yellow = cli.fg.yellow;
+    cli.print(`${yellow("!")} empty run command — nothing was started\n`);
+    return { restart: async () => {}, stop: () => {} };
+  }
+
   let child = spawnCommand({ runCommand, previewDir });
 
   return {
@@ -55,6 +61,10 @@ export function runCommandOnce({
   runCommand: string;
   previewDir: FileRef;
 }): SupervisorHandle {
+  if (runCommand.trim() === "") {
+    return { restart: async () => {}, stop: () => {} };
+  }
+
   const child = spawnCommand({ runCommand, previewDir });
 
   return { restart: async () => {}, stop: () => child.kill("SIGTERM") };

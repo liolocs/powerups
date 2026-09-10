@@ -38,6 +38,21 @@ test.case("merges preview.json variables with flag overrides (flags win)", async
   await testRoot.remove({ recursive: true });
 });
 
+test.case("treats a blank exec as absent so the supervisor never spawns an empty command", async assert => {
+  await fs.create(testRoot);
+  await testRoot.append("/preview.json").write(JSON.stringify({ variables: { appName: "x" } }));
+
+  const config = await resolvePreviewConfig({
+    powerupRoot: testRoot,
+    instructions,
+    rawFlags: [{ flag: "--exec" }],
+  });
+
+  assert(config.exec).undefined();
+
+  await testRoot.remove({ recursive: true });
+});
+
 test.case("watch defaults to false without an exec command", async assert => {
   await fs.create(testRoot);
 

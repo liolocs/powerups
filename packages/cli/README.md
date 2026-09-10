@@ -75,6 +75,10 @@ pup create [flags]
 | `--optional-variables` | `-ov` | string | Comma-separated optional variable names |
 | `--type` | `-t` | string | Powerup type: multi-use or single-use (defaults to single-use) |
 
+`--capture=all` works without git — it captures every file in the working
+directory into the new powerup. Captured files land in `src/create/` (new
+files) and `src/modify/` + `fixtures/` (modified files).
+
 ### `pup install`
 
 Install a powerup locally or globally
@@ -114,6 +118,51 @@ pup use [flags]
 | `--dry-run` | `-dr` | boolean | Print output to stdout instead of writing files |
 | `--target-dir` | `-td` | string | Target directory for the use command |
 
+### `pup template`
+
+Convert a powerup step between static and dynamic (template) form, keeping
+`index.ts` in sync.
+
+```bash
+# convert a static step into a readable template, then edit it to inject variables
+pup template src/components/button.tsx
+
+# convert back to a verbatim static file
+pup template src/components/button.tsx --revert
+
+# list all steps and their static/dynamic status
+pup template
+```
+
+### `pup preview`
+
+Materialize a powerup **from source** with concrete variable values into
+`preview/` and optionally run it — test boilerplates (dev servers included)
+before building.
+
+```bash
+# with preview.json configured (variables, run, watch)
+pup preview
+
+# or fully via flags
+pup preview --appName=my-app --run "npm install && npm run dev"
+```
+
+`preview.json`:
+
+```json
+{
+  "variables": { "appName": "my-test-app" },
+  "run": "npm install && npm run dev",
+  "output": "preview",
+  "watch": true
+}
+```
+
+Modify steps get their base state from `fixtures/` (auto-captured from git
+pre-images during `--capture=workingDir`, or hand-authored). Preview never
+touches anything outside its gitignored output dir.
+
 ## Concepts
 
 - **Powerup** — a reusable unit of code/behavior. Two types: **multi-use**
@@ -125,6 +174,27 @@ pup use [flags]
 - **Applied manifest** — every `pup use` records the powerup, variables,
   and files it wrote in `.powerups/applied.json`. This powers diagnosis and
   repair workflows; don't edit it by hand.
+
+A powerup package:
+
+```
+<powerup>/
+  index.ts            # steps
+  src/
+    create/           # verbatim sources for create steps
+    dynamic-create/   # readable .ts/.njk templates for dynamic-create steps
+    modify/           # pretty-printed modification JSON for modify steps
+    dynamic-modify/   # readable templates for dynamic-modify steps
+  fixtures/           # pre-state files for preview
+  preview.json        # preview config
+```
+
+| Step | Source field | Behavior |
+|---|---|---|
+| `create` | `file` | verbatim copy |
+| `dynamic-create` | `template` | render template |
+| `modify` | `file` | parse JSON modifications, apply anchors |
+| `dynamic-modify` | `template` | render → parse → apply |
 
 ## Development
 

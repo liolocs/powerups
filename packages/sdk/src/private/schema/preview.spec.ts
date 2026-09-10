@@ -1,5 +1,6 @@
 import test from "@rcompat/test";
-import { previewSchema } from "#schema/preview";
+import { readFile } from "node:fs/promises";
+import { previewSchema, previewJsonSchema } from "#schema/preview";
 
 test.group("preview schema acceptance", () => {
   test.case("parses an empty preview.json", assert => {
@@ -46,4 +47,12 @@ test.group("preview schema rejections", () => {
     }
     assert(threw).true();
   });
+});
+
+test.case("committed preview.schema.json is up to date", async assert => {
+  const committed = await readFile(
+    new URL("../../../preview.schema.json", import.meta.url),
+    "utf8",
+  );
+  assert(`${JSON.stringify(previewJsonSchema(), null, 2)}\n`).equals(committed);
 });

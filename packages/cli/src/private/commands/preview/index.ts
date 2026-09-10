@@ -10,6 +10,7 @@ import resolvePreviewConfig from "#utils/preview/resolve-preview-config";
 import materializePreview from "#utils/preview/materialize-preview";
 import { readPreviewManifest } from "#utils/preview/preview-manifest";
 import { watchSources } from "#utils/preview/watch-source";
+import getStepSourcePaths from "#utils/preview/get-step-source-paths";
 import { startSupervisor, runCommandOnce } from "#utils/preview/run-supervisor";
 import getErrorMessage from "#errors/get-error-message";
 
@@ -72,6 +73,7 @@ const preview = new Command({
 
     const watcher = watchSources({
       powerupRoot,
+      extraPaths: getStepSourcePaths({ instructions: validatedCompiledInstructions }),
       onChange: async () => {
         try {
           const rerender = await materializePreview({

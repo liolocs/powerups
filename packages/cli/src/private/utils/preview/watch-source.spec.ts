@@ -51,3 +51,16 @@ test.case("snapshot watches the package.json-mapped instructions entry", async a
 
   await testRoot.remove({ recursive: true });
 });
+
+test.case("snapshot includes extra referenced paths outside src/", async assert => {
+  await fs.create(testRoot);
+  await fs.create(testRoot.append("/templates"));
+  await testRoot.append("/templates/base.njk").write("1");
+  await testRoot.append("/index.ts").write("1");
+
+  const snapshot = await takeSourceSnapshot({ powerupRoot: testRoot, extraPaths: ["templates/base.njk"] });
+
+  assert(snapshot.has("templates/base.njk")).true();
+
+  await testRoot.remove({ recursive: true });
+});

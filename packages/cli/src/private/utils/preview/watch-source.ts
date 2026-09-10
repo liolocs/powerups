@@ -9,7 +9,13 @@ export type SourceSnapshot = Map<string, number>;
 const WATCHED_DIR_NAMES = ["src", "fixtures"];
 const WATCHED_ROOT_FILES = ["preview.json"];
 
-export async function takeSourceSnapshot({ powerupRoot }: { powerupRoot: FileRef }): Promise<SourceSnapshot> {
+export async function takeSourceSnapshot({
+  powerupRoot,
+  extraPaths = [],
+}: {
+  powerupRoot: FileRef;
+  extraPaths?: string[];
+}): Promise<SourceSnapshot> {
   const entryFile = await getInstructionsEntry({ powerupRoot });
   const snapshot: SourceSnapshot = new Map();
 
@@ -32,6 +38,15 @@ export async function takeSourceSnapshot({ powerupRoot }: { powerupRoot: FileRef
     if (await rootFileRef.exists()) {
       const stats = await stat(rootFileRef.path);
       snapshot.set(rootFileName, stats.mtimeMs);
+    }
+  }
+
+  for (const extraPath of extraPaths) {
+    const extraFileRef = powerupRoot.append(`/${extraPath}`);
+
+    if (await extraFileRef.exists()) {
+      const stats = await stat(extraFileRef.path);
+      snapshot.set(extraPath, stats.mtimeMs);
     }
   }
 
@@ -60,11 +75,13 @@ export function snapshotsDiffer({
 
 export function watchSources({
   powerupRoot,
+  extraPaths = [],
   onChange,
   intervalMs = 300,
   debounceMs = 400,
 }: {
   powerupRoot: FileRef;
+  extraPaths?: string[];
   onChange: () => void | Promise<void>;
   intervalMs?: number;
   debounceMs?: number;
@@ -79,7 +96,7 @@ export function watchSources({
     }
 
     try {
-      const current = await takeSourceSnapshot({ powerupRoot });
+      const current = await takeSourceSnapshot({ powerupRoot, extraPaths });
 
       if (lastSnapshot !== undefined && snapshotsDiffer({ previous: lastSnapshot, current })) {
         if (debounceTimer !== undefined) {

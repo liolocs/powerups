@@ -23,7 +23,7 @@ export default async function materializePreview({
   instructions: Instructions;
   config: PreviewConfig;
   isFirstMaterialize: boolean;
-}): Promise<{ generatedPaths: string[]; stalePaths: string[]; skippedSteps: string[] }> {
+}): Promise<{ generatedPaths: string[]; stalePaths: string[]; skippedSteps: string[]; outputChanged: boolean }> {
   const previewDir = powerupRoot.append(`/${config.outputDir}`);
   await fs.create(previewDir);
 
@@ -78,9 +78,11 @@ export default async function materializePreview({
     newManifest[generatedPath] = await hashFile({ path: previewDir.append(`/${generatedPath}`) });
   }
 
+  const outputChanged = stalePaths.length > 0 || manifestsDiffer({ previous: previousManifest, current: newManifest });
+
   await writePreviewManifest({ previewDir, manifest: newManifest });
 
-  return { generatedPaths, stalePaths, skippedSteps };
+  return { generatedPaths, stalePaths, skippedSteps, outputChanged };
 }
 
 async function listFixturePaths({ powerupRoot }: { powerupRoot: FileRef }): Promise<string[]> {
@@ -91,4 +93,21 @@ async function listFixturePaths({ powerupRoot }: { powerupRoot: FileRef }): Prom
   }
 
   return walkFiles({ root: fixturesDir });
+}
+
+function manifestsDiffer({
+  previous,
+  current,
+}: {
+  previous: PreviewManifest;
+  current: PreviewManifest;
+}): boolean {
+  const previousPaths = Object.keys(previous);
+  const currentPaths = Object.keys(current);
+
+  if (previousPaths.length !== currentPaths.length) {
+    return true;
+  }
+
+  return currentPaths.some(path => previous[path] !== current[path]);
 }

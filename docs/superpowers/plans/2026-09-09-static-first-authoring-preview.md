@@ -355,6 +355,89 @@ git commit -m "feat!: clean-break step schema — create/dynamic-create/modify/d
 
 ---
 
+### Task 1.5: SDK — prefix included static `file` sources
+
+**Files:**
+- Modify: `packages/sdk/src/private/include.ts`
+- Modify: `packages/sdk/src/private/include.spec.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+Add to `include.spec.ts` (using its existing `includePowerup` fixtures/imports):
+
+```ts
+test.case("prefixes static file fields of included steps into the _internal namespace", async assert => {
+  const steps = includePowerup(childWithStaticSteps, { variables: {} });
+
+  const createStep = steps.find(step => step.name === `${childName}:static-note`) as { file?: string };
+  assert(createStep.file).equals(`_internal/${childName}/src/create/note.txt`);
+
+  const modifyStep = steps.find(step => step.name === `${childName}:static-patch`) as { file?: string };
+  assert(modifyStep.file).equals(`_internal/${childName}/src/modify/pkg.json.json`);
+});
+
+test.case("leaves already-internal file paths untouched (transitive includes)", async assert => {
+  const steps = includePowerup(childWithTransitiveStaticSteps, { variables: {} });
+
+  const createStep = steps.find(step => step.name === `${childName}:nested`) as { file?: string };
+  assert(createStep.file).equals("_internal/grandchild/src/create/nested.txt");
+});
+
+test.case("dynamic template steps keep their existing prefixing behavior", async assert => {
+  const steps = includePowerup(childWithStaticSteps, { variables: {} });
+
+  const dynamicStep = steps.find(step => step.name === `${childName}:dyn`) as { template?: string };
+  assert(dynamicStep.template).equals(`_internal/${childName}/src/dynamic-create/dyn.ts`);
+});
+```
+
+(Construct the child fixtures inside the spec with static create/modify steps — `file: "src/create/note.txt"`, `file: "src/modify/pkg.json.json"` — one dynamic-create step, and one transitive child step whose `file` already starts with `_internal/`.)
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `cd packages/sdk && npx proby src/private/include.spec.ts`
+Expected: FAIL — `file` fields pass through unprefixed.
+
+- [ ] **Step 3: Implement**
+
+In `include.ts`, rename the path helpers to be field-agnostic and add `file` prefixing next to the existing `template` prefixing:
+
+```ts
+function isInternalPath(path: string): boolean {
+  return path.startsWith("_internal/");
+}
+
+function prefixPath(path: string, namespace: string): string {
+  return isInternalPath(path) ? path : `_internal/${namespace}/${path}`;
+}
+```
+
+In the step mapping, after the existing `template` block:
+
+```ts
+      const fileField = (overridden as Step & { file?: string }).file;
+
+      if (fileField !== undefined) {
+        renamed.file = prefixPath(fileField, namespace);
+      }
+```
+
+(Update the `renamed` cast to `Step & { template?: string; file?: string }` and replace the two `prefixTemplate`/`isInternalTemplate` call sites with the renamed helpers. Template behavior must remain byte-identical.)
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `cd packages/sdk && npx proby && pnpm build`
+Expected: all specs PASS, build clean.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/sdk/src/private/include.ts packages/sdk/src/private/include.spec.ts
+git commit -m "feat: prefix included static file sources into the _internal namespace"
+```
+
+---
+
 ### Task 2: CLI — normalize non-Error rejections (`undefined` fix)
 
 **Files:**
@@ -2226,7 +2309,7 @@ function sourcePathsOfStep(step: Step): string[] {
   const file = (step as Step & { file?: string }).file;
   const template = (step as Step & { template?: string }).template;
 
-  if (is.truthy(file)) {
+  if (is.truthy(file) && !file!.startsWith("_internal/")) {
     paths.push(file!);
   }
 
@@ -2262,7 +2345,24 @@ async function copyOwnSourcesToDist({
 }
 ```
 
-(Update the internal-template helper's `template` lookup to also skip steps whose `template` starts with `_internal/` only — it already does; no change.)
+Generalize `copyInternalTemplatesUsingSourceProperty` into `copyInternalStepSourcesUsingSourceProperty`: collect each step's `_internal/`-prefixed sources from **BOTH** fields — `(step as Step & { file?: string }).file` and `(step as Step & { template?: string }).template` — and copy each from the child's dist (`pkgDir.append(\`/dist/${subpath}\`)`, where `subpath = path.split("/").slice(2).join("/")`) into `distFileRef.append(\`/${path}\`)`, reusing the existing `copied` set, `resolvePowerupPackageDir`, and `child_not_built` error. (Static `file` sources from included children are prefixed by the SDK's `includePowerup` — see Task 1.5 — so the parent build must copy them exactly like child templates.)
+
+Add two spec cases to the Task 13 spec:
+
+```ts
+test.case("copies _internal/ static files and templates from the child's dist", async assert => {
+  // arrange: steps with file "_internal/child/src/create/x.txt" and
+  // template "_internal/child/src/dynamic-create/y.ts" (__source pointing into a fake
+  // child package containing dist/src/create/x.txt and dist/src/dynamic-create/y.ts)
+  // assert: both land under distFileRef/_internal/child/src/...
+});
+
+test.case("throws child_not_built when a child static file is missing from its dist", async assert => {
+  // arrange: step with file "_internal/child/src/create/missing.txt" and a child
+  // package whose dist lacks that file
+  // expect: error.code equals "child_not_built"
+});
+```
 
 In `packages/cli/src/private/commands/build/index.ts`:
 

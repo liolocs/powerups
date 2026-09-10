@@ -103,7 +103,7 @@ test.case("second run deletes stale generated files but preserves untracked ones
   // The static block is the first array element, so match it from its opening brace
   // through its closing brace + trailing comma + newline.
   const indexRef = powerupRoot.append("/index.ts");
-  await indexRef.write((await indexRef.text()).replace(/    \{\n      "type": "create",\n      "name": "static",[\s\S]*?\n    \},\n/, ""));
+  await indexRef.write((await indexRef.text()).replace(/ {4}\{\n {6}"type": "create",\n {6}"name": "static",[\s\S]*?\n {4}\},\n/, ""));
 
   const refreshedInstructions = await load({ powerupRoot });
   const second = await materializePreview({

@@ -150,7 +150,7 @@ function parseDiffHunks(diffOutput: string): DiffHunk[] {
     }
 
     if (line.startsWith("\\ ") && line.includes("No newline at end of file")) {
-      if (currentHunk !== null && currentHunk.lines.length > 0) {
+      if (currentHunk.lines.length > 0) {
         currentHunk.lines[currentHunk.lines.length - 1]!.noNewline = true;
       }
       continue;

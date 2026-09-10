@@ -1,5 +1,6 @@
 import { stat } from "node:fs/promises";
 import type { FileRef } from "@rcompat/fs";
+import is from "@rcompat/is";
 import walkFiles from "#utils/create/capture-files/walk-files";
 
 export type SourceSnapshot = Map<string, number>;
@@ -91,7 +92,7 @@ export function watchSources({
 
       lastSnapshot = current;
     } finally {
-      if (!stopped) {
+      if (is.falsy(stopped)) {
         setTimeout(poll, intervalMs);
       }
     }

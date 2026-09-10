@@ -39,7 +39,8 @@ export function includePowerup<const I extends Instructions>(
   return child.instructions.steps
     .filter(step => !exclude.has(step.name))
     .map(step => {
-      const overridden = overrides[step.name] ? applyOverride(step, overrides[step.name]) : step;
+      const stepOverride = overrides[step.name] as StepOverrideValue | undefined;
+      const overridden = stepOverride !== undefined ? applyOverride(step, stepOverride) : step;
 
       // compose: parent map first (resolves against parent scope), child's existing
       // map last (transitive — may reference parent-mapped names). Sequential

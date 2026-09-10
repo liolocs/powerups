@@ -142,8 +142,8 @@ function parseHunksIntoEdits(hunks: DiffHunk[], preImage: string): AtomicEdit[] 
         continue;
       }
 
-      let removedLines: string[] = [];
-      let addedLines: string[] = [];
+      const removedLines: string[] = [];
+      const addedLines: string[] = [];
       let oldNoNewline = false;
       let newNoNewline = false;
 
@@ -455,7 +455,7 @@ function wholeHunkReplacement({
     } else if (line.type === "removed") {
       preLines.push(line.content);
       preNoNewline = line.noNewline ?? false;
-    } else if (line.type === "added") {
+    } else {
       postLines.push(line.content);
       postNoNewline = line.noNewline ?? false;
     }

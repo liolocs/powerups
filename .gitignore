@@ -12,3 +12,4 @@ pi-subagents/
 .pnpm-store
 .agents/skills/
 .superpowers/
+.kilo/

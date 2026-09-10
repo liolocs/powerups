@@ -10,7 +10,6 @@ import resolvePreviewConfig from "#utils/preview/resolve-preview-config";
 import materializePreview from "#utils/preview/materialize-preview";
 import { readPreviewManifest } from "#utils/preview/preview-manifest";
 import { watchSources } from "#utils/preview/watch-source";
-import selectSupervisorStrategy from "#utils/preview/select-supervisor-strategy";
 import { startSupervisor, runCommandOnce } from "#utils/preview/run-supervisor";
 import getErrorMessage from "#errors/get-error-message";
 
@@ -69,8 +68,7 @@ const preview = new Command({
       return;
     }
 
-    const strategy = selectSupervisorStrategy({ runtimeName: runtime.name, runCommand: config.exec });
-    const supervisor = await startSupervisor({ strategy, runCommand: config.exec, previewDir, powerupRoot });
+    const supervisor = startSupervisor({ runCommand: config.exec, previewDir });
 
     const watcher = watchSources({
       powerupRoot,
@@ -84,6 +82,10 @@ const preview = new Command({
           });
 
           printPreviewSummary({ previewDir, ...rerender });
+
+          if (rerender.outputChanged) {
+            supervisor.restart();
+          }
         } catch (error) {
           const yellow = cli.fg.yellow;
           cli.print(`${yellow("!")} re-render failed (keeping last-good preview): ${getErrorMessage(error)}\n`);

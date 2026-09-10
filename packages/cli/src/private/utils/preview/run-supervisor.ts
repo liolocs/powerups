@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import type { FileRef } from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import type { SupervisorStrategy } from "#utils/preview/select-supervisor-strategy";
+import resolveNodemonBin from "#utils/preview/resolve-nodemon-bin";
 
 export type SupervisorHandle = { stop: () => void };
 
@@ -9,10 +10,12 @@ export async function startSupervisor({
   strategy,
   runCommand,
   previewDir,
+  powerupRoot,
 }: {
   strategy: SupervisorStrategy;
   runCommand: string;
   previewDir: FileRef;
+  powerupRoot: FileRef;
 }): Promise<SupervisorHandle> {
   const yellow = cli.fg.yellow;
 
@@ -21,9 +24,9 @@ export async function startSupervisor({
       let nodemonBin: string;
 
       try {
-        nodemonBin = import.meta.resolve("nodemon/bin/nodemon.js");
+        nodemonBin = resolveNodemonBin({ powerupRoot });
       } catch {
-        cli.print(`${yellow("!")} nodemon not available — running once without restart supervision\n`);
+        cli.print(`${yellow("!")} nodemon not found in the powerup (add it as a devDependency) — running once without restart supervision\n`);
         return runCommandOnce({ runCommand, previewDir });
       }
 

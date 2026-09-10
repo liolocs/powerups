@@ -70,7 +70,7 @@ const preview = new Command({
     }
 
     const strategy = selectSupervisorStrategy({ runtimeName: runtime.name, runCommand: config.exec });
-    const supervisor = await startSupervisor({ strategy, runCommand: config.exec, previewDir });
+    const supervisor = await startSupervisor({ strategy, runCommand: config.exec, previewDir, powerupRoot });
 
     const watcher = watchSources({
       powerupRoot,

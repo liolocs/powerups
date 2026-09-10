@@ -59,7 +59,7 @@ const instructions: Instructions = {
       name: "deps",
       target: "{{outputPath}}/{{name}}",
       dependencies: ["@liolocs/powerups-sdk"],
-      devDependencies: ["commit-and-tag-version"],
+      devDependencies: ["commit-and-tag-version", "nodemon"],
       packageManager: "auto",
     },
   ],

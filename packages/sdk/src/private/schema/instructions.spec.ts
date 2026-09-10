@@ -9,14 +9,14 @@ test.case("should parse instructions with create steps", async assert => {
     variables: { required: ["componentName"] },
     intent: [],
     steps: [
-      { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "src/{{componentName}}.ts" },
+      { type: "create", name: "comp", file: "src/create/comp.ts", outputPath: "src/{{componentName}}.ts" },
     ],
   });
 
   assert(result.steps.length).equals(1);
   assert(result.steps[0].type).equals("create");
   assert(result.steps[0].name).equals("comp");
-  assert((result.steps[0] as any).template).equals("comp.ts.ts");
+  assert((result.steps[0] as any).file).equals("src/create/comp.ts");
   assert((result.steps[0] as any).outputPath).equals("src/{{componentName}}.ts");
 });
 
@@ -28,12 +28,12 @@ test.case("should parse instructions with modify steps", async assert => {
     variables: { required: ["name"] },
     intent: [],
     steps: [
-      { type: "modify", name: "wire", template: "wire.json", outputPath: "src/index.ts" },
+      { type: "modify", name: "wire", file: "src/modify/wire.json.json", outputPath: "src/index.ts" },
     ],
   });
 
   assert(result.steps[0].type).equals("modify");
-  assert((result.steps[0] as any).template).equals("wire.json");
+  assert((result.steps[0] as any).file).equals("src/modify/wire.json.json");
 });
 
 test.case("should parse instructions with delete steps", async assert => {
@@ -64,7 +64,7 @@ test.case("should parse instructions with read step (jsonPath mode)", async asse
     intent: [],
     steps: [
       { type: "read", name: "read-pkg", path: "package.json", as: "packageName", jsonPath: "name" },
-      { type: "create", name: "comp", template: "comp.ts.ts", outputPath: "packages/{{packageName}}/src/{{componentName}}.ts" },
+      { type: "create", name: "comp", file: "src/create/comp.ts", outputPath: "packages/{{packageName}}/src/{{componentName}}.ts" },
     ],
   });
 
@@ -116,8 +116,8 @@ test.case("should parse instructions with mixed step types in order", async asse
     intent: [],
     steps: [
       { type: "read", name: "read-pkg", path: "package.json", as: "pkgName", jsonPath: "name" },
-      { type: "create", name: "c", template: "c.njk", outputPath: "src/{{name}}.ts" },
-      { type: "modify", name: "m", template: "m.json", outputPath: "src/index.ts" },
+      { type: "create", name: "c", file: "src/create/c.ts", outputPath: "src/{{name}}.ts" },
+      { type: "modify", name: "m", file: "src/modify/m.json.json", outputPath: "src/index.ts" },
       { type: "delete", name: "d", outputPath: "src/old.ts" },
       { type: "install", name: "deps", dependencies: ["lodash@^4.0.0"] },
     ],
@@ -225,7 +225,7 @@ test.case("should parse variableMap, __source, and from on a create step", async
   const result = stepSchema.parse({
     type: "create",
     name: "cmd:comp",
-    template: "_internal/cmd/templates/comp.ts",
+    file: "_internal/cmd/src/create/comp.ts",
     outputPath: "src/{{commandName}}.ts",
     variableMap: { commandName: "{{name}}" },
     __source: "file:///x/dist/index.js",
@@ -251,7 +251,7 @@ test.case("should parse variableMap and from on an install step", async assert =
 });
 
 test.case("stepSchema should parse a create step", async assert => {
-  const result = stepSchema.parse({ type: "create", name: "c", template: "c.njk", outputPath: "src/x.ts" });
+  const result = stepSchema.parse({ type: "create", name: "c", file: "src/create/c.ts", outputPath: "src/x.ts" });
 
   assert(result.type).equals("create");
   assert(result.name).equals("c");
@@ -266,13 +266,74 @@ test.case("stepSchema should parse a read step", async assert => {
 
 test.case("stepsSchema should parse an array of steps", async assert => {
   const result = stepsSchema.parse([
-    { type: "create", name: "a", template: "a.njk", outputPath: "src/a.ts" },
+    { type: "create", name: "a", file: "src/create/a.ts", outputPath: "src/a.ts" },
     { type: "delete", name: "b", outputPath: "src/b.ts" },
   ]);
 
   assert(result.length).equals(2);
   assert(result[0].type).equals("create");
   assert(result[1].type).equals("delete");
+});
+
+test.group("four-way step schema (static vs dynamic)", () => {
+  test.case("accepts a static create step with a file field", assert => {
+    const result = stepSchema.safeParse({
+      type: "create",
+      name: "create-package-json",
+      file: "src/create/package.json",
+      outputPath: "package.json",
+    });
+    assert(result.success).true();
+  });
+
+  test.case("accepts a dynamic-create step with a template field", assert => {
+    const result = stepSchema.safeParse({
+      type: "dynamic-create",
+      name: "create-package-json",
+      template: "src/dynamic-create/package.json.ts",
+      outputPath: "package.json",
+    });
+    assert(result.success).true();
+  });
+
+  test.case("accepts a static modify step with a file field", assert => {
+    const result = stepSchema.safeParse({
+      type: "modify",
+      name: "modify-package-json",
+      file: "src/modify/package.json.json",
+      outputPath: "package.json",
+    });
+    assert(result.success).true();
+  });
+
+  test.case("accepts a dynamic-modify step with a template field", assert => {
+    const result = stepSchema.safeParse({
+      type: "dynamic-modify",
+      name: "modify-package-json",
+      template: "src/dynamic-modify/package.json.modify.ts",
+      outputPath: "package.json",
+    });
+    assert(result.success).true();
+  });
+
+  test.case("rejects the old create-with-template format", assert => {
+    const result = stepSchema.safeParse({
+      type: "create",
+      name: "old-step",
+      template: "templates/old.ts",
+      outputPath: "old.txt",
+    });
+    assert(result.success).false();
+  });
+
+  test.case("rejects a static create step missing the file field", assert => {
+    const result = stepSchema.safeParse({
+      type: "create",
+      name: "bad-step",
+      outputPath: "x.txt",
+    });
+    assert(result.success).false();
+  });
 });
 
 test.group("instruction schema rejections", () => {
@@ -442,7 +503,7 @@ test.group("instruction schema rejections", () => {
     assert(threw).true();
   });
 
-  test.case("should reject a create step missing template", async assert => {
+  test.case("should reject a create step missing file", async assert => {
     let threw = false;
     try {
       instructionsSchema.parse({

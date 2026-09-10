@@ -10,13 +10,13 @@ const childInstructions: Instructions = {
   intent: [],
   steps: [
     {
-      type: "create",
+      type: "dynamic-create",
       name: "command",
       template: "templates/command.ts",
       outputPath: "src/{{commandName}}.ts",
     },
     {
-      type: "create",
+      type: "dynamic-create",
       name: "spec",
       template: "templates/spec.ts",
       outputPath: "src/{{commandName}}.spec.ts",
@@ -62,7 +62,7 @@ test.case("includePowerup applies stepOverride", async assert => {
   const steps = includePowerup(child, {
     variables: { commandName: "{{name}}" },
     stepOverride: {
-      command: { type: "create", template: "templates/other.ts", outputPath: "src/{{commandName}}.ts" },
+      command: { type: "dynamic-create", template: "templates/other.ts", outputPath: "src/{{commandName}}.ts" },
     },
   });
 
@@ -88,7 +88,7 @@ test.case("includePowerup marks single-use children", async assert => {
     variables: { required: ["x"] },
     intent: [],
     steps: [
-      { type: "create", name: "s", template: "templates/s.ts", outputPath: "src/{{x}}.ts" },
+      { type: "dynamic-create", name: "s", template: "templates/s.ts", outputPath: "src/{{x}}.ts" },
     ],
   };
   const child = defineInstructions(singleUseChild, "file:///once/dist/index.js");
@@ -107,7 +107,7 @@ test.case("includePowerup composes variableMap for transitive includes", async a
     intent: [],
     steps: [
       {
-        type: "create",
+        type: "dynamic-create",
         name: "g",
         template: "_internal/grand/templates/g.ts",
         outputPath: "src/{{grandName}}.ts",

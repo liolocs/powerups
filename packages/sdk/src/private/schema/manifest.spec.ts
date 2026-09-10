@@ -162,6 +162,16 @@ test.group("manifest line acceptance", () => {
 
     assert(result.type).equals("single-use");
   });
+
+  test.case("accepts a dynamic-create entry with a create output", assert => {
+    const result = manifestLineSchema.parse({
+      ...base,
+      stepType: "dynamic-create",
+      output: { type: "create", path: "src/App.tsx", action: "create", characterCount: 412 },
+    });
+
+    assert(result.stepType).equals("dynamic-create");
+  });
 });
 
 test.group("manifest file (array) acceptance", () => {
@@ -206,6 +216,11 @@ test.group("manifest line rejections", () => {
   rejects("delete output with a characterCount (not in shape)", { ...base, stepType: "delete", output: { type: "delete", path: "x", characterCount: 1 } });
   rejects("install output with non-string dependencies", { ...base, stepType: "install", output: { type: "install", packageManager: "auto", dependencies: [1] } });
   rejects("read output missing variable", { ...base, stepType: "read", output: { type: "read" } });
+  rejects("dynamic-create with a modify output (type mismatch)", {
+    ...base,
+    stepType: "dynamic-create",
+    output: { type: "modify", path: "src/index.ts", action: "modify", characterCount: 88 },
+  });
   rejects("none output with extra fields", { ...base, status: "skipped-already-applied", output: { type: "none", path: "x" } });
   rejects("non-string powerupName (number)", { ...base, powerupName: 1 });
   rejects("extra unknown key on line (strict)", { ...base, variables: {} });

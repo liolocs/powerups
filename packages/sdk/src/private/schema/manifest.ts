@@ -105,15 +105,31 @@ export const readManifestEntrySchema = zod.object({
   output: zod.union([readOutputSchema, noneOutputSchema]),
 }).strict();
 
+export const dynamicCreateManifestEntrySchema = zod.object({
+  ...manifestLineBase,
+  stepType: zod.literal("dynamic-create"),
+  output: zod.union([createOutputSchema, noneOutputSchema]),
+}).strict();
+
+export const dynamicModifyManifestEntrySchema = zod.object({
+  ...manifestLineBase,
+  stepType: zod.literal("dynamic-modify"),
+  output: zod.union([modifyOutputSchema, noneOutputSchema]),
+}).strict();
+
 export type CreateManifestEntry = zod.infer<typeof createManifestEntrySchema>;
 export type ModifyManifestEntry = zod.infer<typeof modifyManifestEntrySchema>;
 export type DeleteManifestEntry = zod.infer<typeof deleteManifestEntrySchema>;
 export type InstallManifestEntry = zod.infer<typeof installManifestEntrySchema>;
 export type ReadManifestEntry = zod.infer<typeof readManifestEntrySchema>;
+export type DynamicCreateManifestEntry = zod.infer<typeof dynamicCreateManifestEntrySchema>;
+export type DynamicModifyManifestEntry = zod.infer<typeof dynamicModifyManifestEntrySchema>;
 
 export const manifestLineSchema = zod.discriminatedUnion("stepType", [
   createManifestEntrySchema,
+  dynamicCreateManifestEntrySchema,
   modifyManifestEntrySchema,
+  dynamicModifyManifestEntrySchema,
   deleteManifestEntrySchema,
   installManifestEntrySchema,
   readManifestEntrySchema,
@@ -121,7 +137,9 @@ export const manifestLineSchema = zod.discriminatedUnion("stepType", [
 
 export type ManifestEntry =
   | CreateManifestEntry
+  | DynamicCreateManifestEntry
   | ModifyManifestEntry
+  | DynamicModifyManifestEntry
   | DeleteManifestEntry
   | InstallManifestEntry
   | ReadManifestEntry;

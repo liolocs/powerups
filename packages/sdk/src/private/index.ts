@@ -19,9 +19,13 @@ export {
   type NoneOutput,
   installManifestEntrySchema,
   createManifestEntrySchema,
+  dynamicCreateManifestEntrySchema,
   modifyManifestEntrySchema,
+  dynamicModifyManifestEntrySchema,
   deleteManifestEntrySchema,
   readManifestEntrySchema,
+  type DynamicCreateManifestEntry,
+  type DynamicModifyManifestEntry,
 } from "#schema/manifest";
 export {
   instructionsSchema,
@@ -29,9 +33,13 @@ export {
   type Step,
   type StepOverrideValue,
   type CreateStep,
+  type DynamicCreateStep,
   type ModifyStep,
+  type DynamicModifyStep,
   type DeleteStep,
   type ReadStep,
   type InstallStep,
+  dynamicCreateStepSchema,
+  dynamicModifyStepSchema,
 } from "#schema/instructions";
 export { defineInstructions, includePowerup } from "#include";

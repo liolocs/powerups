@@ -1,0 +1,147 @@
+import { SINGULAR_NAME_FOR_CLI } from "#constants";
+import { Command, type Flag } from "@liolocs/program";
+import type { FileRef } from "@rcompat/fs";
+import runtime from "@rcompat/runtime";
+import cli from "@rcompat/cli";
+
+import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
+import loadInstructionsFromSource from "#utils/preview/load-instructions-from-source";
+import resolvePreviewConfig from "#utils/preview/resolve-preview-config";
+import materializePreview from "#utils/preview/materialize-preview";
+import { readPreviewManifest } from "#utils/preview/preview-manifest";
+import { watchSources } from "#utils/preview/watch-source";
+import selectSupervisorStrategy from "#utils/preview/select-supervisor-strategy";
+import { startSupervisor, runCommandOnce } from "#utils/preview/run-supervisor";
+import getErrorMessage from "#errors/get-error-message";
+
+const runFlag = {
+  name: "run", long: "run", short: "r",
+  description: `Shell command to run inside the preview dir (overrides preview.json)`,
+} as const satisfies Flag;
+
+const outputFlag = {
+  name: "output", long: "output", short: "o",
+  description: `Preview output directory (default: preview)`,
+} as const satisfies Flag;
+
+const watchFlag = {
+  name: "watch", long: "watch", short: "w",
+  description: "Watch powerup sources and re-render on change (default: true when run is set)",
+  type: "boolean",
+} as const satisfies Flag;
+
+const preview = new Command({
+  name: "preview",
+  description: `Materialize a ${SINGULAR_NAME_FOR_CLI} from source with concrete variables and optionally run it`,
+  flags: [runFlag, outputFlag, watchFlag],
+  subcommands: [],
+
+  action: async ({ context, rawFlags }) => {
+    const powerupRoot: FileRef = context?.root ?? runtime.cwd();
+
+    const instructions = await loadInstructionsFromSource({ powerupRoot });
+    const { validatedCompiledInstructions } = await checkCompiledInstructionsForErrors(instructions);
+
+    const config = await resolvePreviewConfig({
+      powerupRoot,
+      instructions: validatedCompiledInstructions,
+      rawFlags: rawFlags ?? [],
+    });
+
+    const previewDir = powerupRoot.append(`/${config.output}`);
+    const isFirstMaterialize = Object.keys(await readPreviewManifest({ previewDir })).length === 0;
+
+    const first = await materializePreview({
+      powerupRoot,
+      instructions: validatedCompiledInstructions,
+      config,
+      isFirstMaterialize,
+    });
+
+    printPreviewSummary({ previewDir, ...first });
+
+    if (config.run === undefined) {
+      return;
+    }
+
+    if (!config.watch) {
+      runCommandOnce({ runCommand: config.run, previewDir });
+      return;
+    }
+
+    const strategy = selectSupervisorStrategy({ runtimeName: runtime.name, runCommand: config.run });
+    const supervisor = await startSupervisor({ strategy, runCommand: config.run, previewDir });
+
+    const watcher = watchSources({
+      powerupRoot,
+      onChange: async () => {
+        try {
+          const rerender = await materializePreview({
+            powerupRoot,
+            instructions: await reloadInstructions({ powerupRoot }),
+            config: await reloadConfig({ powerupRoot, instructions: validatedCompiledInstructions, rawFlags: rawFlags ?? [] }),
+            isFirstMaterialize: false,
+          });
+
+          printPreviewSummary({ previewDir, ...rerender });
+        } catch (error) {
+          const yellow = cli.fg.yellow;
+          cli.print(`${yellow("!")} re-render failed (keeping last-good preview): ${getErrorMessage(error)}\n`);
+        }
+      },
+    });
+
+    process.on("SIGINT", () => {
+      watcher.stop();
+      supervisor.stop();
+      process.exit(0);
+    });
+
+    await new Promise(() => {});
+  },
+});
+
+async function reloadInstructions({ powerupRoot }: { powerupRoot: FileRef }) {
+  const instructions = await loadInstructionsFromSource({ powerupRoot });
+  const { validatedCompiledInstructions } = await checkCompiledInstructionsForErrors(instructions);
+  return validatedCompiledInstructions;
+}
+
+async function reloadConfig({
+  powerupRoot,
+  instructions,
+  rawFlags,
+}: {
+  powerupRoot: FileRef;
+  instructions: import("@liolocs/powerups-sdk").Instructions;
+  rawFlags: { flag: string; value?: string }[];
+}) {
+  return resolvePreviewConfig({ powerupRoot, instructions, rawFlags });
+}
+
+function printPreviewSummary({
+  previewDir,
+  generatedPaths,
+  stalePaths,
+  skippedSteps,
+}: {
+  previewDir: FileRef;
+  generatedPaths: string[];
+  stalePaths: string[];
+  skippedSteps: string[];
+}): void {
+  const green = cli.fg.green;
+  const dim = cli.fg.dim;
+
+  cli.print(`${green("✓")} Preview materialized: ${generatedPaths.length} files → ${previewDir.path}\n`);
+
+  if (stalePaths.length > 0) {
+    cli.print(`  ${dim(`removed stale: ${stalePaths.length}`)}\n`);
+  }
+
+  for (const skippedStep of skippedSteps) {
+    cli.print(`  ${dim(`skipped: ${skippedStep} (target missing)`)}\n`);
+  }
+}
+
+export default preview;

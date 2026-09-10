@@ -5,6 +5,7 @@ import install from "./install.js";
 import uninstall from "./uninstall.js";
 import use from "./use.js";
 import template from "./template.js";
+import preview from "./preview.js";
 
 const commands: Command<any>[] = [
   build,
@@ -13,5 +14,6 @@ const commands: Command<any>[] = [
   uninstall,
   use,
   template,
+  preview,
 ];
 export default commands;

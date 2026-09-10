@@ -1,5 +1,6 @@
 export { powerupPropertySchema, type PowerupProperty } from "#schema/powerup";
 export { powerupConfigSchema, type PowerupConfig, type PackageEntry } from "#schema/config";
+export { previewSchema, previewJsonSchema, type PreviewJsonFile } from "#schema/preview";
 export {
   manifestLineSchema,
   type ManifestEntry,

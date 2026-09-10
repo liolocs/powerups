@@ -11,7 +11,9 @@ const TOKEN = /\{\{(\w+)\}\}/g;
 
 function pathOf(step: Step): string | undefined {
   if (step.type === "create" ||
+    step.type === "dynamic-create" ||
     step.type === "modify" ||
+    step.type === "dynamic-modify" ||
     step.type === "delete"
   ) {
     return step.outputPath;

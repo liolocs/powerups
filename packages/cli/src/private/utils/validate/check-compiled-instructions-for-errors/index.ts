@@ -1,4 +1,5 @@
 import build_errors from "#errors/buildErrors";
+import shared_errors from "#errors/sharedErrors";
 import { type Instructions, instructionsSchema } from "@liolocs/powerups-sdk";
 import {
   getListOfIssuesWithInstructions,
@@ -31,10 +32,29 @@ function checkForValidInstructionsSchema(instructions: unknown) {
   const schemaResult = instructionsSchema.safeParse(instructions);
 
   if (!schemaResult.success) {
+    if (isOldFormatInstructions(instructions)) {
+      throw shared_errors.old_format_instructions();
+    }
     throw build_errors.malformed_instructions(schemaResult.error.message);
   }
 
   return schemaResult.data;
+}
+
+function isOldFormatInstructions(instructions: unknown): boolean {
+  if (typeof instructions !== "object" || instructions === null) {
+    return false;
+  }
+
+  const steps = (instructions as { steps?: { type?: string; template?: string }[] }).steps;
+
+  if (!Array.isArray(steps)) {
+    return false;
+  }
+
+  return steps.some(step =>
+    (step.type === "create" || step.type === "modify") && typeof step.template === "string",
+  );
 }
 
 // function checkCompiledIndexFileForValidExports({

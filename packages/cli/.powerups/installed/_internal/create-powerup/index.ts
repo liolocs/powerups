@@ -37,15 +37,21 @@ const instructions: Instructions = {
       outputPath: "{{outputPath}}/{{name}}/package.json",
     },
     {
-      type: "dynamic-create",
+      type: "create",
       name: "tsconfig",
-      template: "src/dynamic-create/powerup-tsconfig.ts",
+      file: "src/create/tsconfig.json",
       outputPath: "{{outputPath}}/{{name}}/tsconfig.json",
     },
     {
-      type: "dynamic-create",
+      type: "create",
+      name: "vscode-settings",
+      file: "src/create/vscode-settings.json",
+      outputPath: "{{outputPath}}/{{name}}/.vscode/settings.json",
+    },
+    {
+      type: "create",
       name: "gitignore",
-      template: "src/dynamic-create/gitignore.ts",
+      file: "src/create/.gitignore",
       outputPath: "{{outputPath}}/{{name}}/.gitignore",
     },
     {

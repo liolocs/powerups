@@ -97,6 +97,79 @@ test.case("includePowerup marks single-use children", async assert => {
   assert((steps[0] as any).from.singleUse).true();
 });
 
+const childWithStaticSteps: Instructions = {
+  name: "static-child",
+  type: "multi-use",
+  description: "static child",
+  variables: { required: [], optional: [] },
+  intent: [],
+  steps: [
+    {
+      type: "create",
+      name: "static-note",
+      file: "src/create/note.txt",
+      outputPath: "note.txt",
+    },
+    {
+      type: "modify",
+      name: "static-patch",
+      file: "src/modify/pkg.json.json",
+      outputPath: "package.json",
+    },
+    {
+      type: "dynamic-create",
+      name: "dyn",
+      template: "src/dynamic-create/dyn.ts",
+      outputPath: "dyn.txt",
+    },
+  ],
+};
+
+const childWithTransitiveStaticSteps: Instructions = {
+  name: "transitive-child",
+  type: "multi-use",
+  description: "transitive child",
+  variables: { required: [], optional: [] },
+  intent: [],
+  steps: [
+    {
+      type: "create",
+      name: "nested",
+      file: "_internal/grandchild/src/create/nested.txt",
+      outputPath: "nested.txt",
+      __source: "file:///grandchild/dist/index.js",
+      from: { name: "grandchild", singleUse: false },
+    },
+  ],
+};
+
+test.case("includePowerup prefixes static file fields of included steps", async assert => {
+  const child = defineInstructions(childWithStaticSteps, "file:///static-child/dist/index.js");
+  const steps = includePowerup(child, { variables: {} });
+
+  const createStep = steps.find(step => step.name === "static-child:static-note") as any;
+  assert(createStep.file).equals("_internal/static-child/src/create/note.txt");
+
+  const modifyStep = steps.find(step => step.name === "static-child:static-patch") as any;
+  assert(modifyStep.file).equals("_internal/static-child/src/modify/pkg.json.json");
+});
+
+test.case("includePowerup leaves already-internal file paths untouched", async assert => {
+  const child = defineInstructions(childWithTransitiveStaticSteps, "file:///transitive-child/dist/index.js");
+  const steps = includePowerup(child, { variables: {} });
+
+  const createStep = steps.find(step => step.name === "transitive-child:nested") as any;
+  assert(createStep.file).equals("_internal/grandchild/src/create/nested.txt");
+});
+
+test.case("includePowerup keeps template prefixing behavior alongside file prefixing", async assert => {
+  const child = defineInstructions(childWithStaticSteps, "file:///static-child/dist/index.js");
+  const steps = includePowerup(child, { variables: {} });
+
+  const dynamicStep = steps.find(step => step.name === "static-child:dyn") as any;
+  assert(dynamicStep.template).equals("_internal/static-child/src/dynamic-create/dyn.ts");
+});
+
 test.case("includePowerup composes variableMap for transitive includes", async assert => {
   // simulate a step that already carries a variableMap (as a transitive child would)
   const transitiveInstructions: Instructions = {

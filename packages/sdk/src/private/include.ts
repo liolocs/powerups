@@ -7,12 +7,12 @@ export function defineInstructions<const I extends Instructions>(
   return { instructions, source };
 }
 
-function isInternalTemplate(template: string): boolean {
-  return template.startsWith("_internal/");
+function isInternalPath(path: string): boolean {
+  return path.startsWith("_internal/");
 }
 
-function prefixTemplate(template: string, namespace: string): string {
-  return isInternalTemplate(template) ? template : `_internal/${namespace}/${template}`;
+function prefixPath(path: string, namespace: string): string {
+  return isInternalPath(path) ? path : `_internal/${namespace}/${path}`;
 }
 
 function applyOverride(step: Step, override: StepOverrideValue): Step {
@@ -51,11 +51,16 @@ export function includePowerup<const I extends Instructions>(
       };
 
       const templateField = (overridden as Step & { template?: string }).template;
+      const fileField = (overridden as Step & { file?: string }).file;
       const existingSource = (overridden as Step & { __source?: string }).__source;
-      const renamed = { ...overridden, name: `${namespace}:${overridden.name}` } as Step & { template?: string };
+      const renamed = { ...overridden, name: `${namespace}:${overridden.name}` } as Step & { template?: string; file?: string };
 
       if (templateField !== undefined) {
-        renamed.template = prefixTemplate(templateField, namespace);
+        renamed.template = prefixPath(templateField, namespace);
+      }
+
+      if (fileField !== undefined) {
+        renamed.file = prefixPath(fileField, namespace);
       }
 
       const withMap = {

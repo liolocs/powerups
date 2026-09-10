@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.0](https://github.com/liolocs/powerups/compare/v0.2.0...v1.0.0) (2026-09-10)
+
+### ⚠ BREAKING CHANGES
+
+* clean-break step schema — create/dynamic-create/modify/dynamic-modify
+
+### Features
+
+* clean-break step schema — create/dynamic-create/modify/dynamic-modify ([a9cc20b](https://github.com/liolocs/powerups/commit/a9cc20bbb341ea24923231340ef63492364afe86))
+* prefix included static file sources into the _internal namespace ([4446043](https://github.com/liolocs/powerups/commit/44460435808e81a744a2bb925e9dd2cc0d4250fb))
+
+### Bug Fixes
+
+* global install npm store bug; feat: uninstall with full scope; ([078683f](https://github.com/liolocs/powerups/commit/078683f0f802907b955445050008b2064cefd86a))
 ## [0.1.0](https://github.com/liolocs/powerups/compare/v0.0.1...v0.1.0) (2026-08-21)
 
 ### Features

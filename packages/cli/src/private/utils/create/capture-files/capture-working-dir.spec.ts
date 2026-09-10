@@ -128,7 +128,7 @@ test.case("should not write any template files in dry-run mode", async assert =>
   await cleanup();
 });
 
-test.case("should generate a create step with a template for each new file", async assert => {
+test.case("generates create steps with file fields for each new file", async assert => {
   await setupTestDir();
 
   const newFiles: GitChange[] = [
@@ -152,11 +152,13 @@ test.case("should generate a create step with a template for each new file", asy
 
   assert(steps.length).equals(2);
   assert(steps.every(s => s.type === "create")).true();
+  assert((steps[0] as { file?: string }).file).equals("src/create/src/foo.ts");
+  assert((steps[1] as { file?: string }).file).equals("src/create/src/bar.ts");
 
   await cleanup();
 });
 
-test.case("should write template files to the powerup directory when not in dry-run mode", async assert => {
+test.case("writes verbatim copies to src/create/ when not in dry-run", async assert => {
   await setupTestDir();
 
   await createFile(testRoot, "src/foo.ts", "export const foo = 1;\n");
@@ -172,12 +174,13 @@ test.case("should write template files to the powerup directory when not in dry-
     isDryRun: false,
   });
 
-  assert(await fs.exists(newPowerupDir.append("/templates/src/foo.ts.ts"))).true();
+  assert(await fs.exists(newPowerupDir.append("/src/create/src/foo.ts"))).true();
+  assert(await newPowerupDir.append("/src/create/src/foo.ts").text()).equals("export const foo = 1;\n");
 
   await cleanup();
 });
 
-test.case("should not write template files in dry-run mode for new files", async assert => {
+test.case("does not write source files in dry-run mode for new files", async assert => {
   await setupTestDir();
 
   await createFile(testRoot, "src/foo.ts", "export const foo = 1;\n");
@@ -193,7 +196,7 @@ test.case("should not write template files in dry-run mode for new files", async
     isDryRun: true,
   });
 
-  assert(await fs.exists(newPowerupDir.append("/templates"))).false();
+  assert(await fs.exists(newPowerupDir.append("/src/create"))).false();
 
   await cleanup();
 });
@@ -221,6 +224,14 @@ test.case("should generate a modify step with diff-based modifications for a mod
 
   assert(steps.length).equals(1);
   assert(steps[0]!.type).equals("modify");
+  assert((steps[0] as { file?: string }).file).equals("src/modify/src/tracked.ts.json");
+
+  const modifyJson = await newPowerupDir.append("/src/modify/src/tracked.ts.json").text();
+  assert(modifyJson).includes("\"where\"");
+  assert(modifyJson.split("\n")[1]!.startsWith("  {")).true();
+
+  const fixtureContent = await newPowerupDir.append("/fixtures/src/tracked.ts").text();
+  assert(fixtureContent).equals("export const x = 1;\n");
 
   await cleanup();
 });

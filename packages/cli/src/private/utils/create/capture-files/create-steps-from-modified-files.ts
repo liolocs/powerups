@@ -2,7 +2,6 @@ import type { Step } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import fs from "@rcompat/fs";
 import io from "@rcompat/io";
-import wrapAsTemplate from "#utils/create/capture-files/wrap-as-template";
 import generateStepName from "#utils/create/capture-files/generate-step-name";
 import { generateModifications, type DiffHunk } from "#utils/create/capture-files/diff-to-modifications";
 import type { GitChange } from "#utils/create/capture-files/git-status";
@@ -100,19 +99,22 @@ async function createModifyStep({
     warnings.push(`${change.path}: ${warning}`);
   }
 
-  const jsonString = JSON.stringify(result.modifications, null, 2);
-  const templateContent = wrapAsTemplate(jsonString);
-  const templatePath = `templates/${change.path}.modify.ts.ts`;
+  const modificationsJson = JSON.stringify(result.modifications, null, 2);
+  const fileField = `src/modify/${change.path}.json`;
 
   if (!isDryRun) {
-    const templateFileRef = newPowerupDirectory.append(`/${templatePath}`);
-    await fs.create(templateFileRef.directory);
-    await templateFileRef.write(templateContent);
+    const modifyTargetRef = newPowerupDirectory.append(`/${fileField}`);
+    await fs.create(modifyTargetRef.directory);
+    await modifyTargetRef.write(modificationsJson);
+
+    const fixtureRef = newPowerupDirectory.append(`/fixtures/${change.path}`);
+    await fs.create(fixtureRef.directory);
+    await fixtureRef.write(preImage);
   }
 
   const stepName = generateStepName({ prefix: "modify", filePath: change.path, existingNames });
 
-  return { type: "modify", name: stepName, template: templatePath, outputPath: change.path };
+  return { type: "modify", name: stepName, file: fileField, outputPath: change.path };
 }
 
 function parseDiffHunks(diffOutput: string): DiffHunk[] {

@@ -19,33 +19,33 @@ const instructions: Instructions = {
   ],
   steps: [
     {
-      type: "create",
+      type: "dynamic-create",
       name: "index",
-      template: "templates/powerup-index.ts",
+      template: "src/dynamic-create/powerup-index.ts",
       outputPath: "{{outputPath}}/{{name}}/index.ts",
     },
     {
-      type: "create",
+      type: "dynamic-create",
       name: "create-repo-sh",
-      template: "templates/create-repo-sh.ts",
+      template: "src/dynamic-create/create-repo-sh.ts",
       outputPath: "{{outputPath}}/{{name}}/scripts/create-github-repo.sh",
     },
     {
-      type: "create",
+      type: "dynamic-create",
       name: "package",
-      template: "templates/powerup-package.ts",
+      template: "src/dynamic-create/powerup-package.ts",
       outputPath: "{{outputPath}}/{{name}}/package.json",
     },
     {
-      type: "create",
+      type: "dynamic-create",
       name: "tsconfig",
-      template: "templates/powerup-tsconfig.ts",
+      template: "src/dynamic-create/powerup-tsconfig.ts",
       outputPath: "{{outputPath}}/{{name}}/tsconfig.json",
     },
     {
-      type: "create",
+      type: "dynamic-create",
       name: "gitignore",
-      template: "templates/gitignore.ts",
+      template: "src/dynamic-create/gitignore.ts",
       outputPath: "{{outputPath}}/{{name}}/.gitignore",
     },
     {

@@ -12,7 +12,7 @@
  *
  * Produces, for each builtin:
  *   lib/private/builtin/<name>/dist/instructions.json   (from index.ts)
- *   lib/private/builtin/<name>/dist/templates/*.ts       (copied verbatim)
+ *   lib/private/builtin/<name>/dist/src/**         (copied verbatim)
  *   lib/private/builtin/<name>/package.json              (copied verbatim)
  *
  * Run from the package dir (`packages/cli`):
@@ -51,7 +51,7 @@ async function writeDist(
   if (await exists(distDir)) {
     await rm(distDir, { recursive: true, force: true });
   }
-  await mkdir(path.join(distDir, "templates"), { recursive: true });
+  await mkdir(path.join(distDir, "src"), { recursive: true });
 
   const serializable = {
     ...instructions,
@@ -63,10 +63,10 @@ async function writeDist(
     `${JSON.stringify(serializable, null, 2)}\n`,
   );
 
-  // Templates are imported as-is by the ts template runner — copy verbatim.
+  // Step sources live under src/ — copy the whole tree verbatim.
   await cp(
-    path.join(srcDir, "templates"),
-    path.join(distDir, "templates"),
+    path.join(srcDir, "src"),
+    path.join(distDir, "src"),
     { recursive: true },
   );
 }

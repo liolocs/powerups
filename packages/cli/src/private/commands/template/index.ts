@@ -7,6 +7,7 @@ import cli from "@rcompat/cli";
 import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
 import loadInstructionsFromSource from "#utils/preview/load-instructions-from-source";
 import readPreviewJson from "#utils/preview/read-preview-json";
+import getInstructionsEntry from "#utils/preview/get-instructions-entry";
 import normalizeFlagName from "#utils/shared/normalize-flag-name";
 import {
   convertStepToDynamic,
@@ -170,9 +171,10 @@ async function rewriteIndexStep({
   stepName: string;
   newStep: import("@liolocs/powerups-sdk").Step;
 }): Promise<void> {
-  const indexFileRef = powerupRoot.append("/index.ts");
-  const indexContent = await indexFileRef.text();
-  await indexFileRef.write(replaceStepInIndex({ indexContent, stepName, newStep }));
+  const entryFile = await getInstructionsEntry({ powerupRoot });
+  const entryFileRef = powerupRoot.append(`/${entryFile}`);
+  const entryContent = await entryFileRef.text();
+  await entryFileRef.write(replaceStepInIndex({ indexContent: entryContent, stepName, newStep }));
 }
 
 function printStepListing({ steps }: { steps: import("@liolocs/powerups-sdk").Step[] }): void {

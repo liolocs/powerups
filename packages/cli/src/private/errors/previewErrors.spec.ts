@@ -3,12 +3,12 @@ import test from "#test-utils/test/index";
 
 test.case("instructions_not_found points at the powerup root", async assert => {
   try {
-    throw preview_errors.instructions_not_found("/some/root");
+    throw preview_errors.instructions_not_found("/some/root", "src/instructions.ts");
   } catch (error) {
     // @ts-expect-error error.code is not typed on unknown
     assert(error.code).equals(PreviewErrorCode.instructions_not_found);
     // @ts-expect-error error.message is not typed on unknown
-    assert(error.message).includes("index.ts");
+    assert(error.message).includes("src/instructions.ts");
   }
 });
 

@@ -43,3 +43,32 @@ test.case("throws instructions_not_found when index.ts is missing", async assert
 
   await testRoot.remove({ recursive: true });
 });
+
+test.case("loads from the package.json powerup.instructions entry", async assert => {
+  await fs.create(testRoot);
+  await testRoot.append("/package.json").writeJSON({
+    name: "entry-loader-test",
+    powerup: { instructions: "src/instructions.ts" },
+  });
+  await fs.create(testRoot.append("/src"));
+  await testRoot.append("/src/instructions.ts").write([
+    `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";`,
+    ``,
+    `const instructions: Instructions = {`,
+    `  name: "custom-entry-test",`,
+    `  type: "single-use",`,
+    `  description: "loads from a mapped entry",`,
+    `  variables: { required: [], optional: [] },`,
+    `  intent: [],`,
+    `  steps: [],`,
+    `};`,
+    ``,
+    `export default defineInstructions(instructions, import.meta.url);`,
+  ].join("\n"));
+
+  const instructions = await loadInstructionsFromSource({ powerupRoot: testRoot });
+
+  assert(instructions.name).equals("custom-entry-test");
+
+  await testRoot.remove({ recursive: true });
+});

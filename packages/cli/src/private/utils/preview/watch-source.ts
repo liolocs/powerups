@@ -2,13 +2,15 @@ import { stat } from "node:fs/promises";
 import type { FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
 import walkFiles from "#utils/create/capture-files/walk-files";
+import getInstructionsEntry from "#utils/preview/get-instructions-entry";
 
 export type SourceSnapshot = Map<string, number>;
 
 const WATCHED_DIR_NAMES = ["src", "fixtures"];
-const WATCHED_ROOT_FILES = ["index.ts", "preview.json"];
+const WATCHED_ROOT_FILES = ["preview.json"];
 
 export async function takeSourceSnapshot({ powerupRoot }: { powerupRoot: FileRef }): Promise<SourceSnapshot> {
+  const entryFile = await getInstructionsEntry({ powerupRoot });
   const snapshot: SourceSnapshot = new Map();
 
   for (const watchedDirName of WATCHED_DIR_NAMES) {
@@ -24,7 +26,7 @@ export async function takeSourceSnapshot({ powerupRoot }: { powerupRoot: FileRef
     }
   }
 
-  for (const rootFileName of WATCHED_ROOT_FILES) {
+  for (const rootFileName of [...WATCHED_ROOT_FILES, entryFile]) {
     const rootFileRef = powerupRoot.append(`/${rootFileName}`);
 
     if (await rootFileRef.exists()) {

@@ -1,15 +1,17 @@
 import error from "@rcompat/error";
 import cli from "@rcompat/cli";
+import { SINGULAR_NAME_FOR_CLI } from "#constants";
 
 const t = error.template;
 
 const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const preview_errors = error.coded({
-  instructions_not_found: (root: string) => {
+  instructions_not_found: (root: string, entryFile: string) => {
     const errorText =
-      `No index.ts found at ${root}.\n\n` +
-      `"pup preview" and "pup template" must run inside a powerup package.`;
+      `No ${entryFile} found at ${root}.\n\n` +
+      `"pup preview" and "pup template" must run inside a powerup package.\n` +
+      `Check the "${SINGULAR_NAME_FOR_CLI}.instructions" entry in package.json.`;
     return t`${errorBGText}${errorText}`;
   },
   preview_json_invalid: (detail: string) => {

@@ -32,3 +32,22 @@ test.case("snapshotsDiffer detects changed files", async assert => {
   assert(snapshotsDiffer({ previous, current: same })).false();
   assert(snapshotsDiffer({ previous, current: changed })).true();
 });
+
+test.case("snapshot watches the package.json-mapped instructions entry", async assert => {
+  await fs.create(testRoot);
+  await testRoot.append("/package.json").writeJSON({
+    name: "watch-entry-test",
+    powerup: { instructions: "src/instructions.ts" },
+  });
+  await fs.create(testRoot.append("/src"));
+  await testRoot.append("/src/instructions.ts").write("1");
+  await testRoot.append("/preview.json").write("{}");
+
+  const snapshot = await takeSourceSnapshot({ powerupRoot: testRoot });
+
+  assert(snapshot.has("src/instructions.ts")).true();
+  assert(snapshot.has("preview.json")).true();
+  assert(snapshot.has("index.ts")).false();
+
+  await testRoot.remove({ recursive: true });
+});

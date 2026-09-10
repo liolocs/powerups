@@ -7,6 +7,7 @@ import fs from "@rcompat/fs";
 import checkForPreCreateErrors from "#utils/create/check-for-pre-create-errors/index";
 import buildVariables from "#utils/create/build-variables";
 import captureFiles from "#utils/create/capture-files/index";
+import runCaptureWithRollback from "#utils/create/rollback-on-capture-failure";
 import registerPowerup from "#utils/shared/register-powerup";
 import printCreateSummary from "#utils/create/print-create-summary";
 
@@ -115,12 +116,16 @@ const create = new Command({
       const newPowerupDirectory = cwd.append(`/${outputPath}/${powerupName}`);
       const indexFilePath = newPowerupDirectory.append("/index.ts");
 
-      captureResult = await captureFiles({
-        captureMode: flags.capture as "all" | "workingDir",
-        projectRoot,
-        workingDir: projectRoot,
+      captureResult = await runCaptureWithRollback({
+        capture: () => captureFiles({
+          captureMode: flags.capture as "all" | "workingDir",
+          projectRoot,
+          workingDir: projectRoot,
+          newPowerupDirectory,
+          indexFilePath,
+          isDryRun,
+        }),
         newPowerupDirectory,
-        indexFilePath,
         isDryRun,
       });
     }

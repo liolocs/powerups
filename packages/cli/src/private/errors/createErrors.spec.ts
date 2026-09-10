@@ -64,3 +64,16 @@ test.case("main_folder_not_found still works", async assert => {
     assert(error.code).equals(CreateErrorCode.main_folder_not_found);
   }
 });
+
+test.case("git_repo_required explains workingDir needs git and suggests capture=all", async assert => {
+  try {
+    throw create_errors.git_repo_required();
+  } catch (error) {
+    // @ts-expect-error error.code is not typed on unknown
+    assert(error.code).equals(CreateErrorCode.git_repo_required);
+    // @ts-expect-error error.message is not typed on unknown
+    assert(error.message).includes("requires a git repository");
+    // @ts-expect-error error.message is not typed on unknown
+    assert(error.message).includes("--capture=all");
+  }
+});

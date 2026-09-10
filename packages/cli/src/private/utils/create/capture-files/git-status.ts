@@ -73,7 +73,7 @@ export async function getGitStatus({
       { cwd: projectRoot.path },
     );
   } catch {
-    throw new Error("Working directory is not a git repository");
+    throw create_errors.git_repo_required();
   }
 
   if (!statusOutput.trim()) {
@@ -87,7 +87,7 @@ export async function getGitStatus({
       cwd: projectRoot.path,
     })).trim();
   } catch {
-    throw new Error("Working directory is not a git repository");
+    throw create_errors.git_repo_required();
   }
 
   const changes: GitChange[] = [];

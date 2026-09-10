@@ -39,6 +39,12 @@ const create_errors = error.coded({
       `Global ${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first, or use --local to create locally.`;
     return t`${errorBGText}${errorText}`;
   },
+  git_repo_required: () => {
+    const errorText =
+      `capture=workingDir requires a git repository — there is no commit history to diff against.\n\n` +
+      `Use "${CLI_CMD} create <name> --capture=all" to capture every file instead.`;
+    return t`${errorBGText}${errorText}`;
+  },
 });
 
 export type CreateErrorCode = keyof typeof create_errors;

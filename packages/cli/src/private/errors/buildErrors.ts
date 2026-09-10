@@ -63,8 +63,10 @@ const build_errors = error.coded({
     return t`${errorBGText}${errorText}`;
   },
 
-  template_not_found: (templatePath: string) => {
-    const errorText = `Template file not found: ${templatePath}`;
+  source_not_found: (sourcePath: string) => {
+    const errorText =
+      `Step source not found: ${sourcePath}\n\n` +
+      `Every step's "file"/"template" path must exist in the powerup package before building.`;
     return t`${errorBGText}${errorText}`;
   },
 });

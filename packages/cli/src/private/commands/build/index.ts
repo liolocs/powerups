@@ -1,7 +1,7 @@
 import { SINGULAR_NAME_FOR_CLI } from "#constants";
 import checkForPreBuildErrors from "#utils/build/check-pre-build-errors";
 import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
-import copyTemplatesToDistFolder from "#utils/build/copy-templates-to-dist-folder";
+import copyStepSourcesToDistFolder from "#utils/build/copy-step-sources-to-dist-folder";
 import compileInstructionsFile from "#utils/build/compile-instructions-file";
 import createInstructionsJSONFile from "#utils/build/create-instructions-json-file";
 import { getPackageJson } from "#utils/build/getPackageJson";
@@ -40,7 +40,7 @@ const build = new Command({
       outputFolderRef: distFolderRef,
     });
 
-    await copyTemplatesToDistFolder({
+    await copyStepSourcesToDistFolder({
       instructionSteps: validatedCompiledInstructions.steps,
       cwd: root,
       distFileRef: distFolderRef,

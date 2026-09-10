@@ -3,7 +3,7 @@ import { BuildErrorCode } from "#errors/buildErrors";
 import captureStdout from "#test-utils/capture-stdout";
 import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
 import test from "#test-utils/test/index";
-import copyTemplatesToDistFolder from "#utils/build/copy-templates-to-dist-folder";
+import copyStepSourcesToDistFolder from "#utils/build/copy-step-sources-to-dist-folder";
 import { type Instructions, type Step } from "@liolocs/powerups-sdk";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
@@ -35,7 +35,7 @@ test.case("should copy own templates referenced by steps into the dist folder", 
   const distFileRef = packageDir.append("/dist");
   await fs.create(distFileRef.path);
 
-  await copyTemplatesToDistFolder({
+  await copyStepSourcesToDistFolder({
     instructionSteps: instructions.steps,
     cwd: packageDir,
     distFileRef,
@@ -43,17 +43,17 @@ test.case("should copy own templates referenced by steps into the dist folder", 
     powerupName,
   });
 
-  const copiedTemplate = distFileRef.append("/templates/component.ts");
+  const copiedTemplate = distFileRef.append("/src/dynamic-create/component.ts");
   assert(await fs.exists(copiedTemplate)).true();
 
-  const source = await packageDir.append("/templates/component.ts").text();
+  const source = await packageDir.append("/src/dynamic-create/component.ts").text();
   const copy = await copiedTemplate.text();
   assert(copy).equals(source);
 
   await cleanup();
 });
 
-test.case("should throw template_not_found when an own template does not exist", async assert => {
+test.case("should throw source_not_found when an own template does not exist", async assert => {
   await setupTestDir();
   const powerupName = "test-powerup";
   const instructions: Instructions = {
@@ -66,7 +66,7 @@ test.case("should throw template_not_found when an own template does not exist",
       {
         type: "create",
         name: "component",
-        template: "templates/missing.ts",
+        template: "src/dynamic-create/missing.ts",
         outputPath: "src/components/{{name}}.ts",
       },
     ],
@@ -80,14 +80,14 @@ test.case("should throw template_not_found when an own template does not exist",
   await fs.create(distFileRef.path);
 
   await assert(
-    copyTemplatesToDistFolder({
+    copyStepSourcesToDistFolder({
       instructionSteps: instructions.steps,
       cwd: packageDir,
       distFileRef,
       sourceFromCompiledInstructions: `${packageDir.path}/dist/index.js`,
       powerupName,
     }),
-  ).throwsAsync(BuildErrorCode.template_not_found);
+  ).throwsAsync(BuildErrorCode.source_not_found);
 
   await cleanup();
 });
@@ -105,7 +105,7 @@ test.case("should skip steps that do not declare a template", async assert => {
       {
         type: "create",
         name: "component",
-        template: "templates/component.ts",
+        template: "src/dynamic-create/component.ts",
         outputPath: "src/components/{{name}}.ts",
       },
       {
@@ -130,7 +130,7 @@ test.case("should skip steps that do not declare a template", async assert => {
   await fs.create(distFileRef.path);
 
   await assert(
-    copyTemplatesToDistFolder({
+    copyStepSourcesToDistFolder({
       instructionSteps: instructions.steps,
       cwd: packageDir,
       distFileRef,
@@ -155,13 +155,13 @@ test.case("should only copy each own template once when referenced by multiple s
       {
         type: "create",
         name: "component-a-uses-same-template",
-        template: "templates/component.ts",
+        template: "src/dynamic-create/component.ts",
         outputPath: "src/some-path/{{name}}.ts",
       },
       {
         type: "modify",
         name: "component-b-uses-same-template",
-        template: "templates/component.ts",
+        template: "src/dynamic-create/component.ts",
         outputPath: "src/some-other-path/{{name}}.ts",
       },
     ],
@@ -174,7 +174,7 @@ test.case("should only copy each own template once when referenced by multiple s
   const distFileRef = packageDir.append("/dist");
   await fs.create(distFileRef.path);
 
-  await copyTemplatesToDistFolder({
+  await copyStepSourcesToDistFolder({
     instructionSteps: instructions.steps,
     cwd: packageDir,
     distFileRef,
@@ -183,10 +183,10 @@ test.case("should only copy each own template once when referenced by multiple s
   });
 
   // The template is copied once and remains identical to the source.
-  const copiedTemplate = distFileRef.append("/templates/component.ts");
+  const copiedTemplate = distFileRef.append("/src/dynamic-create/component.ts");
   assert(await fs.exists(copiedTemplate)).true();
   assert(await copiedTemplate.text()).equals(
-    await packageDir.append("/templates/component.ts").text(),
+    await packageDir.append("/src/dynamic-create/component.ts").text(),
   );
 
   await cleanup();
@@ -202,7 +202,7 @@ test.case("should copy internal templates from a built child package's dist fold
   const childName = "child-powerup";
   await createPowerupPackageForTest({ powerupName: parentName, testRoot });
 
-  // Simulate a built child package: package.json + dist/templates/component.ts
+  // Simulate a built child package: package.json + dist/src/dynamic-create/component.ts
   const childPackageDir = testRoot.append(
     `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${childName}`,
   );
@@ -213,7 +213,7 @@ test.case("should copy internal templates from a built child package's dist fold
     keywords: ["powerups-package"],
   });
   const childTemplateContent = "export default () => 'child template';\n";
-  await childPackageDir.append("/dist/templates/component.ts").write(childTemplateContent);
+  await childPackageDir.append("/dist/src/dynamic-create/component.ts").write(childTemplateContent);
 
   const parentPackageDir = testRoot.append(
     `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${parentName}`,
@@ -227,13 +227,13 @@ test.case("should copy internal templates from a built child package's dist fold
     {
       type: "create",
       name: "child:component",
-      template: `_internal/${childName}/templates/component.ts`,
+      template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/components/{{name}}.ts",
       __source: childSource,
     } as Step,
   ];
 
-  await copyTemplatesToDistFolder({
+  await copyStepSourcesToDistFolder({
     instructionSteps: steps,
     cwd: parentPackageDir,
     distFileRef,
@@ -241,7 +241,7 @@ test.case("should copy internal templates from a built child package's dist fold
     powerupName: parentName,
   });
 
-  const copiedTemplate = distFileRef.append(`/_internal/${childName}/templates/component.ts`);
+  const copiedTemplate = distFileRef.append(`/_internal/${childName}/src/dynamic-create/component.ts`);
   assert(await fs.exists(copiedTemplate)).true();
   assert(await copiedTemplate.text()).equals(childTemplateContent);
 
@@ -264,7 +264,7 @@ test.case("should resolve the child source from sourceFromCompiledInstructions w
     keywords: ["powerups-package"],
   });
   const childTemplateContent = "export default () => 'child template';\n";
-  await childPackageDir.append("/dist/templates/component.ts").write(childTemplateContent);
+  await childPackageDir.append("/dist/src/dynamic-create/component.ts").write(childTemplateContent);
 
   const parentPackageDir = testRoot.append(
     `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${parentName}`,
@@ -278,12 +278,12 @@ test.case("should resolve the child source from sourceFromCompiledInstructions w
     {
       type: "create",
       name: "child:component",
-      template: `_internal/${childName}/templates/component.ts`,
+      template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/components/{{name}}.ts",
     } as Step,
   ];
 
-  await copyTemplatesToDistFolder({
+  await copyStepSourcesToDistFolder({
     instructionSteps: steps,
     cwd: parentPackageDir,
     distFileRef,
@@ -291,7 +291,7 @@ test.case("should resolve the child source from sourceFromCompiledInstructions w
     powerupName: parentName,
   });
 
-  const copiedTemplate = distFileRef.append(`/_internal/${childName}/templates/component.ts`);
+  const copiedTemplate = distFileRef.append(`/_internal/${childName}/src/dynamic-create/component.ts`);
   assert(await fs.exists(copiedTemplate)).true();
   assert(await copiedTemplate.text()).equals(childTemplateContent);
 
@@ -326,14 +326,14 @@ test.case("should throw child_not_built when the child package dist template is 
     {
       type: "create",
       name: "child:component",
-      template: `_internal/${childName}/templates/component.ts`,
+      template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/components/{{name}}.ts",
       __source: childSource,
     } as Step,
   ];
 
   await assert(
-    copyTemplatesToDistFolder({
+    copyStepSourcesToDistFolder({
       instructionSteps: steps,
       cwd: parentPackageDir,
       distFileRef,
@@ -361,7 +361,7 @@ test.case("should only copy each internal template once when referenced by multi
     keywords: ["powerups-package"],
   });
   const childTemplateContent = "export default () => 'child template';\n";
-  await childPackageDir.append("/dist/templates/component.ts").write(childTemplateContent);
+  await childPackageDir.append("/dist/src/dynamic-create/component.ts").write(childTemplateContent);
 
   const parentPackageDir = testRoot.append(
     `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${parentName}`,
@@ -374,20 +374,20 @@ test.case("should only copy each internal template once when referenced by multi
     {
       type: "create",
       name: "child:component-a",
-      template: `_internal/${childName}/templates/component.ts`,
+      template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/a/{{name}}.ts",
       __source: childSource,
     } as Step,
     {
       type: "modify",
       name: "child:component-b",
-      template: `_internal/${childName}/templates/component.ts`,
+      template: `_internal/${childName}/src/dynamic-create/component.ts`,
       outputPath: "src/b/{{name}}.ts",
       __source: childSource,
     } as Step,
   ];
 
-  await copyTemplatesToDistFolder({
+  await copyStepSourcesToDistFolder({
     instructionSteps: steps,
     cwd: parentPackageDir,
     distFileRef,
@@ -395,7 +395,7 @@ test.case("should only copy each internal template once when referenced by multi
     powerupName: parentName,
   });
 
-  const copiedTemplate = distFileRef.append(`/_internal/${childName}/templates/component.ts`);
+  const copiedTemplate = distFileRef.append(`/_internal/${childName}/src/dynamic-create/component.ts`);
   assert(await fs.exists(copiedTemplate)).true();
   assert(await copiedTemplate.text()).equals(childTemplateContent);
 
@@ -417,13 +417,13 @@ test.case("should print the powerup name in the success message", async assert =
     {
       type: "create",
       name: "component",
-      template: "templates/component.ts",
+      template: "src/dynamic-create/component.ts",
       outputPath: "src/components/{{name}}.ts",
     } as Step,
   ];
 
   const output = await captureStdout(() =>
-    copyTemplatesToDistFolder({
+    copyStepSourcesToDistFolder({
       instructionSteps: steps,
       cwd: packageDir,
       distFileRef,

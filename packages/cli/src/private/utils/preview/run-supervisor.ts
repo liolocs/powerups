@@ -29,12 +29,29 @@ export function startSupervisor({
       const exited = new Promise<void>(resolve => {
         child.once("exit", () => resolve());
       });
-      child.kill("SIGTERM");
+      killTree({ child });
       await exited;
       child = spawnCommand({ runCommand, previewDir });
     },
-    stop: () => child.kill("SIGTERM"),
+    stop: () => killTree({ child }),
   };
+}
+
+function killTree({ child }: { child: ChildProcess }): void {
+  if (child.pid === undefined) {
+    return;
+  }
+
+  if (process.platform === "win32") {
+    spawn("taskkill", ["/pid", String(child.pid), "/T", "/F"]);
+    return;
+  }
+
+  try {
+    process.kill(-child.pid, "SIGTERM");
+  } catch {
+    child.kill("SIGTERM");
+  }
 }
 
 function spawnCommand({
@@ -44,7 +61,12 @@ function spawnCommand({
   runCommand: string;
   previewDir: FileRef;
 }): ChildProcess {
-  const child = spawn(runCommand, { shell: true, cwd: previewDir.path, stdio: "inherit" });
+  const child = spawn(runCommand, {
+    shell: true,
+    cwd: previewDir.path,
+    stdio: "inherit",
+    detached: true,
+  });
 
   child.on("error", () => {
     const yellow = cli.fg.yellow;
@@ -67,5 +89,5 @@ export function runCommandOnce({
 
   const child = spawnCommand({ runCommand, previewDir });
 
-  return { restart: async () => {}, stop: () => child.kill("SIGTERM") };
+  return { restart: async () => {}, stop: () => killTree({ child }) };
 }

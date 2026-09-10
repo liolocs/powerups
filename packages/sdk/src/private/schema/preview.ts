@@ -2,8 +2,8 @@ import zod from "zod";
 
 export const previewSchema = zod.object({
   variables: zod.record(zod.string(), zod.string()).optional(),
-  run: zod.string().optional(),
-  output: zod.string().optional(),
+  exec: zod.string().optional(),
+  outputDir: zod.string().optional(),
   watch: zod.boolean().optional(),
 }).strict();
 

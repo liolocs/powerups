@@ -141,11 +141,11 @@ Materialize a powerup **from source** with concrete variable values into
 before building.
 
 ```bash
-# with preview.json configured (variables, run, watch)
+# with preview.json configured (variables, exec, watch)
 pup preview
 
 # or fully via flags
-pup preview --appName=my-app --run "npm install && npm run dev"
+pup preview --appName=my-app --exec "npm install && npm run dev"
 ```
 
 `preview.json`:
@@ -153,8 +153,8 @@ pup preview --appName=my-app --run "npm install && npm run dev"
 ```json
 {
   "variables": { "appName": "my-test-app" },
-  "run": "npm install && npm run dev",
-  "output": "preview",
+  "exec": "npm install && npm run dev",
+  "outputDir": "preview",
   "watch": true
 }
 ```

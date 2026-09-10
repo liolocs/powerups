@@ -24,7 +24,7 @@ export default async function materializePreview({
   config: PreviewConfig;
   isFirstMaterialize: boolean;
 }): Promise<{ generatedPaths: string[]; stalePaths: string[]; skippedSteps: string[] }> {
-  const previewDir = powerupRoot.append(`/${config.output}`);
+  const previewDir = powerupRoot.append(`/${config.outputDir}`);
   await fs.create(previewDir);
 
   const previousManifest = await readPreviewManifest({ previewDir });

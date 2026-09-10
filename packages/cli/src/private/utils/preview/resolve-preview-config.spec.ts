@@ -20,7 +20,7 @@ test.case("merges preview.json variables with flag overrides (flags win)", async
   await fs.create(testRoot);
   await testRoot.append("/preview.json").write(JSON.stringify({
     variables: { appName: "from-file", theme: "dark" },
-    run: "npm run dev",
+    exec: "npm run dev",
   }));
 
   const config = await resolvePreviewConfig({
@@ -31,14 +31,14 @@ test.case("merges preview.json variables with flag overrides (flags win)", async
 
   assert(config.variables.appName).equals("from-flag");
   assert(config.variables.theme).equals("dark");
-  assert(config.run).equals("npm run dev");
-  assert(config.output).equals("preview");
+  assert(config.exec).equals("npm run dev");
+  assert(config.outputDir).equals("preview");
   assert(config.watch).true();
 
   await testRoot.remove({ recursive: true });
 });
 
-test.case("watch defaults to false without a run command", async assert => {
+test.case("watch defaults to false without an exec command", async assert => {
   await fs.create(testRoot);
 
   const config = await resolvePreviewConfig({

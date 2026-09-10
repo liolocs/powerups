@@ -6,7 +6,7 @@ import preview from "#commands/preview/index";
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/preview-command");
 
-test.case("materializes with variables from flags and exits when no run command is configured", async assert => {
+test.case("materializes with variables from flags and exits when no exec command is configured", async assert => {
   await fs.create(testRoot);
   await testRoot.append("/index.ts").write([
     `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";`,

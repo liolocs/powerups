@@ -11,10 +11,10 @@
         "type": "string"
       }
     },
-    "run": {
+    "exec": {
       "type": "string"
     },
-    "output": {
+    "outputDir": {
       "type": "string"
     },
     "watch": {

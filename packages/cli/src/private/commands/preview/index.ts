@@ -14,26 +14,26 @@ import selectSupervisorStrategy from "#utils/preview/select-supervisor-strategy"
 import { startSupervisor, runCommandOnce } from "#utils/preview/run-supervisor";
 import getErrorMessage from "#errors/get-error-message";
 
-const runFlag = {
-  name: "run", long: "run", short: "r",
+const execFlag = {
+  name: "exec", long: "exec", short: "e",
   description: `Shell command to run inside the preview dir (overrides preview.json)`,
 } as const satisfies Flag;
 
-const outputFlag = {
-  name: "output", long: "output", short: "o",
+const outputDirFlag = {
+  name: "outputDir", long: "output-dir", short: "o",
   description: `Preview output directory (default: preview)`,
 } as const satisfies Flag;
 
 const watchFlag = {
   name: "watch", long: "watch", short: "w",
-  description: "Watch powerup sources and re-render on change (default: true when run is set)",
+  description: "Watch powerup sources and re-render on change (default: true when exec is set)",
   type: "boolean",
 } as const satisfies Flag;
 
 const preview = new Command({
   name: "preview",
   description: `Materialize a ${SINGULAR_NAME_FOR_CLI} from source with concrete variables and optionally run it`,
-  flags: [runFlag, outputFlag, watchFlag],
+  flags: [execFlag, outputDirFlag, watchFlag],
   subcommands: [],
 
   action: async ({ context, rawFlags }) => {
@@ -48,7 +48,7 @@ const preview = new Command({
       rawFlags: rawFlags ?? [],
     });
 
-    const previewDir = powerupRoot.append(`/${config.output}`);
+    const previewDir = powerupRoot.append(`/${config.outputDir}`);
     const isFirstMaterialize = Object.keys(await readPreviewManifest({ previewDir })).length === 0;
 
     const first = await materializePreview({
@@ -60,17 +60,17 @@ const preview = new Command({
 
     printPreviewSummary({ previewDir, ...first });
 
-    if (config.run === undefined) {
+    if (config.exec === undefined) {
       return;
     }
 
     if (!config.watch) {
-      runCommandOnce({ runCommand: config.run, previewDir });
+      runCommandOnce({ runCommand: config.exec, previewDir });
       return;
     }
 
-    const strategy = selectSupervisorStrategy({ runtimeName: runtime.name, runCommand: config.run });
-    const supervisor = await startSupervisor({ strategy, runCommand: config.run, previewDir });
+    const strategy = selectSupervisorStrategy({ runtimeName: runtime.name, runCommand: config.exec });
+    const supervisor = await startSupervisor({ strategy, runCommand: config.exec, previewDir });
 
     const watcher = watchSources({
       powerupRoot,

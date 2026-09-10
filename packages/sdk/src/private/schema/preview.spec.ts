@@ -16,13 +16,13 @@ test.group("preview schema acceptance", () => {
   test.case("parses all fields", assert => {
     const result = previewSchema.parse({
       variables: { theme: "dark" },
-      run: "bun run dev",
-      output: ".preview",
+      exec: "bun run dev",
+      outputDir: ".preview",
       watch: true,
     });
     assert(result.variables).equals({ theme: "dark" });
-    assert(result.run).equals("bun run dev");
-    assert(result.output).equals(".preview");
+    assert(result.exec).equals("bun run dev");
+    assert(result.outputDir).equals(".preview");
     assert(result.watch).true();
   });
 });
@@ -38,10 +38,10 @@ test.group("preview schema rejections", () => {
     assert(threw).true();
   });
 
-  test.case("rejects a non-string run", async assert => {
+  test.case("rejects a non-string exec", async assert => {
     let threw = false;
     try {
-      previewSchema.parse({ run: 42 });
+      previewSchema.parse({ exec: 42 });
     } catch {
       threw = true;
     }

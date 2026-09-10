@@ -69,7 +69,7 @@ test.case("materializes fixtures + static + dynamic + modify steps into the prev
   const result = await materializePreview({
     powerupRoot,
     instructions,
-    config: { variables: { appName: "my-app" }, output: "preview", watch: false },
+    config: { variables: { appName: "my-app" }, outputDir: "preview", watch: false },
     isFirstMaterialize: true,
   });
 
@@ -92,7 +92,7 @@ test.case("second run deletes stale generated files but preserves untracked ones
 
   const load = (await import("#utils/preview/load-instructions-from-source")).default;
   const instructions = await load({ powerupRoot });
-  const config = { variables: { appName: "my-app" }, output: "preview", watch: false };
+  const config = { variables: { appName: "my-app" }, outputDir: "preview", watch: false };
 
   await materializePreview({ powerupRoot, instructions, config: config as never, isFirstMaterialize: true });
 

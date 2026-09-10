@@ -5,12 +5,12 @@ import readPreviewJson from "#utils/preview/read-preview-json";
 import normalizeFlagName from "#utils/shared/normalize-flag-name";
 import preview_errors from "#errors/previewErrors";
 
-const PREVIEW_EXCLUDE_FLAGS = ["--dry-run", "-dr", "--run", "--output", "-o", "--watch"];
+const PREVIEW_EXCLUDE_FLAGS = ["--dry-run", "-dr", "--exec", "-e", "--output-dir", "-o", "--watch"];
 
 export type PreviewConfig = {
   variables: ResolvedVariable;
-  run?: string;
-  output: string;
+  exec?: string;
+  outputDir: string;
   watch: boolean;
 };
 
@@ -44,17 +44,17 @@ export default async function resolvePreviewConfig({
     throw preview_errors.missing_variables(missing, instructions.variables.required);
   }
 
-  const flagRun = getFlagValue({ rawFlags, long: "--run" });
-  const flagOutput = getFlagValue({ rawFlags, long: "--output", short: "-o" });
+  const flagExec = getFlagValue({ rawFlags, long: "--exec", short: "-e" });
+  const flagOutputDir = getFlagValue({ rawFlags, long: "--output-dir", short: "-o" });
   const watchFlag = rawFlags.find(f => f.flag === "--watch");
 
-  const run = flagRun ?? previewJson?.run;
-  const output = flagOutput ?? previewJson?.output ?? "preview";
+  const exec = flagExec ?? previewJson?.exec;
+  const outputDir = flagOutputDir ?? previewJson?.outputDir ?? "preview";
   const watch = watchFlag !== undefined
     ? watchFlag.value !== "false"
-    : (previewJson?.watch ?? run !== undefined);
+    : (previewJson?.watch ?? exec !== undefined);
 
-  return { variables, run, output, watch };
+  return { variables, exec, outputDir, watch };
 }
 
 function getFlagValue({

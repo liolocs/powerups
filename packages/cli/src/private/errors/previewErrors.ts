@@ -1,0 +1,37 @@
+import error from "@rcompat/error";
+import cli from "@rcompat/cli";
+
+const t = error.template;
+
+const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
+
+const preview_errors = error.coded({
+  instructions_not_found: (root: string) => {
+    const errorText =
+      `No index.ts found at ${root}.\n\n` +
+      `"pup preview" and "pup template" must run inside a powerup package.`;
+    return t`${errorBGText}${errorText}`;
+  },
+  preview_json_invalid: (detail: string) => {
+    const errorText =
+      `preview.json is not valid JSON.\n\n${detail}`;
+    return t`${errorBGText}${errorText}`;
+  },
+  missing_variables: (missing: string[], required: string[]) => {
+    const missingText = missing.join(", ");
+    const requiredText = required.join(", ");
+    const errorText =
+      `Missing required variables: ${missingText}\n\n` +
+      `Required: ${requiredText}\n` +
+      `Provide them in preview.json ("variables") or as flags: --<name>=<value>`;
+    return t`${errorBGText}${errorText}`;
+  },
+});
+
+export type PreviewErrorCode = keyof typeof preview_errors;
+
+export const PreviewErrorCode = Object.fromEntries(
+  Object.keys(preview_errors).map(k => [k, k]),
+) as { [K in PreviewErrorCode]: K };
+
+export default preview_errors;

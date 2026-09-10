@@ -2,6 +2,7 @@ import is from "@rcompat/is";
 import type { Instructions } from "@liolocs/powerups-sdk";
 import type { ResolvedVariable } from "#utils/use/resolved-variable";
 import use_errors from "#errors/useErrors";
+import normalizeFlagName from "#utils/shared/normalize-flag-name";
 
 export default function extractVariables({
   rawFlags,
@@ -109,14 +110,4 @@ function getVariablesWithDefaults({
   }
 
   return variablesWithDefaults;
-}
-
-function normalizeFlagName(flag: string): string {
-  const stripped = flag.replace(/^--?/, "");
-  const parts = stripped.split("-");
-
-  return parts[0] +
-    parts.slice(1)
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-      .join("");
 }

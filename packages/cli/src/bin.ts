@@ -18,6 +18,9 @@ const program = new CLI({
     `$ ${CLI_CMD} create <powerup-name> --capture=all`,
     `$ ${CLI_CMD} create <powerup-name> --capture=workingDir`,
     `$ ${CLI_CMD} use <powerup-name> --var name=foo`,
+    `$ ${CLI_CMD} harness init pi`,
+    `$ ${CLI_CMD} harness update pi`,
+    `$ ${CLI_CMD} harness remove pi`,
   ],
 });
 

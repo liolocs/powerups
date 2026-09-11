@@ -157,3 +157,25 @@ test.case("remove dry-run deletes nothing", async assert => {
 
   await testRoot.remove({ recursive: true });
 });
+
+import harness from "#commands/harness/index";
+
+test.case("harness requires a subcommand", async assert => {
+  try {
+    await harness.run({ subcommands: [], flags: [] });
+    assert(false).true();
+  } catch (error) {
+    // @ts-expect-error error.code is not typed on unknown
+    assert(error.code).equals("missing_required_subcommand");
+  }
+});
+
+test.case("harness rejects unknown subcommands", async assert => {
+  try {
+    await harness.run({ subcommands: ["frobnicate"], flags: [] });
+    assert(false).true();
+  } catch (error) {
+    // @ts-expect-error error.code is not typed on unknown
+    assert(error.code).equals("invalid_subcommand");
+  }
+});

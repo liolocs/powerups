@@ -1,0 +1,31 @@
+import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";
+
+const instructions: Instructions = {
+  name: "harness-skills",
+  type: "single-use",
+  description: "Install powerup skills into an AI coding harness",
+  variables: {
+    required: [
+      "CLI_CMD",
+      "CLI_FOLDER_NAME",
+      "INTERNAL_FOLDER",
+      "SINGULAR_NAME_FOR_CLI",
+    ],
+    optional: [],
+  },
+  intent: [
+    "install powerup skills into a harness",
+    "add powerup skills to a coding harness",
+    "set up harness skills",
+  ],
+  steps: [
+    {
+      type: "dynamic-create",
+      name: "create-powerup-skill",
+      template: "src/skills/create-powerup.njk",
+      outputPath: "create-powerup/SKILL.md",
+    },
+  ],
+};
+
+export default defineInstructions(instructions, import.meta.url);

@@ -28,6 +28,7 @@ const PKG_DIR = path.resolve(import.meta.dir, "..");
 // <name, source dir relative to packages/cli>
 const BUILTINS: ReadonlyArray<readonly [name: string, src: string]> = [
   ["create-powerup", ".powerups/installed/_internal/create-powerup"],
+  ["harness-skills", ".powerups/installed/_internal/harness-skills"],
 ];
 
 type DefinedInstructions = { instructions: Instructions; source: string };

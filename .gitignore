@@ -15,3 +15,4 @@ pi-subagents/
 .kilo/
 !apps/documentation/src/lib/
 !packages/cli/.powerups/installed/_internal/create-powerup/dist/
+!packages/cli/.powerups/installed/_internal/harness-skills/dist/

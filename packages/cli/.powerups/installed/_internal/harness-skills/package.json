@@ -1,0 +1,24 @@
+{
+  "name": "harness-skills",
+  "version": "1.0.0",
+  "description": "Install powerup skills into an AI coding harness",
+  "type": "module",
+  "scripts": {},
+  "keywords": [
+    "powerups-package"
+  ],
+  "powerup": {
+    "instructions": "index.ts",
+    "compatibility": {}
+  },
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "devDependencies": {
+    "@liolocs/powerups-sdk": "link:../../packages/sdk"
+  }
+}

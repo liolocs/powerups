@@ -1,0 +1,87 @@
+---
+name: create-powerup
+description: "Create a new {{ SINGULAR_NAME_FOR_CLI }}: scaffold it if needed, then author its templates and variables with the {{ CLI_CMD }} template command"
+---
+Create a new {{ SINGULAR_NAME_FOR_CLI }} for the user.
+
+**Announce at start:** "I'm using the create-powerup skill."
+
+## 1. Determine the current state
+
+Check whether the {{ SINGULAR_NAME_FOR_CLI }} already exists:
+
+- If a `{{ CLI_FOLDER_NAME }}` directory exists in the current working
+  directory, the project is already a created powerup — skip to step 3.
+- If the user tells you the {{ SINGULAR_NAME_FOR_CLI }} is already created,
+  skip to step 3.
+- Otherwise the {{ SINGULAR_NAME_FOR_CLI }} does not exist yet — create it
+  first (step 2).
+
+## 2. Create the {{ SINGULAR_NAME_FOR_CLI }}
+
+Collect from the user (ask if anything is missing):
+
+- name (short, kebab-case)
+- description (what it generates)
+- intent keywords (comma-separated)
+- required variable names (comma-separated) — the parts that change between
+  uses
+- optional variable names (comma-separated)
+- type — `multi-use` (recurring pattern) or `single-use` (one-time addition)
+
+Then run:
+
+```
+{{ CLI_CMD }} create <name> -d="<description>" -i="<intent keywords>" -v="<required variables>" -ov="<optional variables>" -t=<multi-use|single-use>
+```
+
+Omit `-v` / `-ov` when there are none; `-t` defaults to `single-use`. Add `-l`
+to create the {{ SINGULAR_NAME_FOR_CLI }} in the current project instead of
+globally.
+
+This scaffolds the folder at
+`{{ CLI_FOLDER_NAME }}/{{ INTERNAL_FOLDER }}/<name>/` containing an
+`instructions.json` with an empty `steps: []` array. It does not create any
+template files — add those in step 3.
+
+## 3. Author templates and variables
+
+1. Write the template files into the {{ SINGULAR_NAME_FOR_CLI }} folder (the
+   directory containing `instructions.json`). Template paths in steps are
+   relative to that folder.
+
+2. Declare the steps in `instructions.json`. Start with static `create` steps:
+
+   ```json
+   { "type": "create", "name": "<step-name>", "file": "<template path>", "outputPath": "<project path>" }
+   ```
+
+3. Turn the parts that change between uses into variables:
+
+   - Declare each variable in the `variables` property of
+     `instructions.json` (`required` or `optional`).
+   - Run `{{ CLI_CMD }} template <outputPath>` to convert a static step into a
+     dynamic (template) step — it generates a `.ts` template by default; pass
+     `-e=njk` for a `.njk` template. Edit the generated template to replace
+     concrete values with variables:
+     - `.ts` — export a default function that returns the file content and
+       read the variables from it, e.g.
+       `export default ({ componentName }: Record<string, string>) => \`<button class="${componentName}">\`;`.
+       Keep it a pure function of the variables — no imports, no filesystem
+       access.
+     - `.njk` — replace values with `{{ '{{var}}' }}` tokens.
+   - `{{ CLI_CMD }} template -r <outputPath>` converts a dynamic step back to
+     static.
+
+## 4. Verify
+
+1. Run `{{ CLI_CMD }} build` from the {{ SINGULAR_NAME_FOR_CLI }} folder — it
+   compiles and validates `instructions.json`. Fix any reported errors and
+   rebuild.
+
+2. Run `{{ CLI_CMD }} use <name> -dr --<variable-name>=<value> ...` for a
+   dry-run and check the printed output. Do not run `use` without `-dr` until
+   the dry-run output is correct.
+
+3. Report back to the user: the {{ SINGULAR_NAME_FOR_CLI }} name, its
+   variables, and the command to apply it.

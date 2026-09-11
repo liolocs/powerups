@@ -1,5 +1,6 @@
 import test from "@rcompat/test";
-import parseArgs from "#parseArgs";
+import Command from "#Command";
+import parseArgs, { collectFlagTypes } from "#parseArgs";
 
 test.case("A series of args are recognised", assert => {
   const args = ["-n=John", "--project=calypso"];
@@ -116,4 +117,61 @@ test.case("A bare double dash is a valueless flag", assert => {
   assert(parsed.flags[0].flag).equals("--");
   assert(parsed.flags[0].value === undefined).true();
   assert(parsed.commands).equals(["x"]);
+});
+
+test.case("collectFlagTypes merges long and short keys across subcommands",
+  assert => {
+  const findCommand = new Command({
+    name: "find",
+    description: "Find powerups",
+    flags: [{
+      name: "query", long: "query", short: "q",
+      description: "Search query",
+    } as const],
+    subcommands: [],
+    action: () => {},
+  });
+
+  const useCommand = new Command({
+    name: "use",
+    description: "Use a powerup",
+    flags: [{
+      name: "dryRun", long: "dry-run", short: "dr",
+      description: "Dry run", type: "boolean",
+    } as const],
+    subcommands: [findCommand],
+    action: () => {},
+  });
+
+  const flagTypes = collectFlagTypes({
+    commands: [useCommand],
+    extraFlags: { help: "boolean" },
+  });
+
+  assert(flagTypes["dry-run"]).equals("boolean");
+  assert(flagTypes.dr).equals("boolean");
+  assert(flagTypes.query).equals("string");
+  assert(flagTypes.q).equals("string");
+  assert(flagTypes.help).equals("boolean");
+});
+
+test.case("collectFlagTypes resolves conflicts to string", assert => {
+  const createCommand = new Command({
+    name: "create",
+    description: "Create a powerup",
+    flags: [{
+      name: "variables", long: "variables", short: "v",
+      description: "Variables",
+    } as const],
+    subcommands: [],
+    action: () => {},
+  });
+
+  const flagTypes = collectFlagTypes({
+    commands: [createCommand],
+    extraFlags: { v: "boolean", version: "boolean" },
+  });
+
+  assert(flagTypes.v).equals("string");
+  assert(flagTypes.version).equals("boolean");
 });

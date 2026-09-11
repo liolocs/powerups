@@ -1,4 +1,40 @@
+import type Command from "#Command";
+
 export type FlagTypes = Record<string, "boolean" | "string">;
+
+export function collectFlagTypes({
+  commands,
+  extraFlags = {},
+}: {
+  commands: Command<any>[];
+  extraFlags?: FlagTypes;
+}): FlagTypes {
+  const flagTypes: FlagTypes = { ...extraFlags };
+
+  function record({ key, type }: { key: string; type: "boolean" | "string" }) {
+    if (type === "boolean" && flagTypes[key] === "string") {
+      return;
+    }
+    flagTypes[key] = type;
+  }
+
+  function collect(command: Command<any>) {
+    for (const flag of command.flags) {
+      const type = flag.type === "boolean" ? "boolean" : "string";
+      record({ key: flag.long, type });
+      record({ key: flag.short, type });
+    }
+    for (const sub of command.subcommands.values()) {
+      collect(sub);
+    }
+  }
+
+  for (const command of commands) {
+    collect(command);
+  }
+
+  return flagTypes;
+}
 
 export default function parseArgs(args: string[], flagTypes: FlagTypes = {}) {
   const flags: { flag: string; value?: string }[] = [];

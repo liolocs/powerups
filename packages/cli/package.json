@@ -21,6 +21,7 @@
     "prepublishOnly": "npm run build",
     "test": "CI=true npx proby",
     "b:link": "bun run scripts/link.ts",
+    "b:unlink": "bun run scripts/unlink.ts",
     "build:builtins": "bun run scripts/build-builtin-powerups.ts",
     "readme": "bun run scripts/generate-readme.ts",
     "release": "commit-and-tag-version --preset conventionalcommits",

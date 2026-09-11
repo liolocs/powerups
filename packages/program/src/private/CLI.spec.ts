@@ -217,3 +217,141 @@ test.case("CLI program groups subcommands under their own section",
   assert(allOutput).includes("thing gen");
   assert(allOutput).includes("Generate a thing");
 });
+
+test.case("CLI passes space-separated values to a command's action",
+  async assert => {
+  const nameFlag = {
+    name: "name", long: "name", short: "n",
+    description: "Project name",
+  } as const;
+
+  let receivedName: string | undefined;
+
+  const createCommand = new Command({
+    name: "create",
+    description: "Create a new project",
+    flags: [nameFlag],
+    subcommands: [],
+    action: ({ flags }) => {
+      receivedName = flags.name;
+      return "works";
+    },
+  });
+
+  const program = new CLI({
+    name: "dryai",
+    description: "test description",
+    version: "1.0.0",
+    commands: [createCommand],
+  });
+
+  await program.run(["create", "--name", "John"]);
+
+  assert(receivedName).equals("John");
+});
+
+test.case("Boolean flag before a subcommand keeps subcommand routing",
+  async assert => {
+  const dryRunFlag = {
+    name: "dryRun", long: "dry-run", short: "dr",
+    description: "Dry run", type: "boolean",
+  } as const;
+
+  const queryFlag = {
+    name: "query", long: "query", short: "q",
+    description: "Search query", required: true,
+  } as const;
+
+  let receivedRouting: string | undefined;
+
+  const findCommand = new Command({
+    name: "find",
+    description: "Find powerups",
+    flags: [queryFlag],
+    subcommands: [],
+    action: ({ flags, rawFlags }) => {
+      const dryRunPassed = rawFlags?.some(f => f.flag === "--dry-run");
+      receivedRouting = `${dryRunPassed}:${flags.query}`;
+      return "works";
+    },
+  });
+
+  const useCommand = new Command({
+    name: "use",
+    description: "Use a powerup",
+    flags: [dryRunFlag],
+    subcommands: [findCommand],
+    action: () => "never",
+  });
+
+  const program = new CLI({
+    name: "dryai",
+    description: "test description",
+    version: "1.0.0",
+    commands: [useCommand],
+  });
+
+  await program.run(["use", "--dry-run", "find", "-q", "x"]);
+
+  assert(receivedRouting).equals("true:x");
+});
+
+test.case("Command short flag colliding with -v wins as string",
+  async assert => {
+  const variablesFlag = {
+    name: "variables", long: "variables", short: "v",
+    description: "Variables",
+  } as const;
+
+  let receivedVariables: string | undefined;
+
+  const createCommand = new Command({
+    name: "create",
+    description: "Create a powerup",
+    flags: [variablesFlag],
+    subcommands: [],
+    action: ({ flags }) => {
+      receivedVariables = flags.variables;
+      return "works";
+    },
+  });
+
+  const program = new CLI({
+    name: "dryai",
+    description: "test description",
+    version: "1.0.0",
+    commands: [createCommand],
+  });
+
+  await program.run(["create", "-v", "x"]);
+
+  assert(receivedVariables).equals("x");
+});
+
+test.case("Bare -v still prints the version", async assert => {
+  const createCommand = new Command({
+    name: "create",
+    description: "Create a powerup",
+    flags: [],
+    subcommands: [],
+    action: () => "works",
+  });
+
+  const program = new CLI({
+    name: "dryai",
+    description: "test description",
+    version: "1.0.0",
+    commands: [createCommand],
+  });
+
+  rcli.print = test.spy(rcli.print);
+
+  await program.run(["-v"]);
+
+  // @ts-expect-error due to spy functions not being typed
+  const allOutput = (rcli.print.calls as string[][])
+    .map(call => call[0])
+    .join("");
+
+  assert(allOutput).includes("dryai 1.0.0");
+});

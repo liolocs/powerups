@@ -2,7 +2,7 @@ import cli from "@rcompat/cli";
 import runtime from "@rcompat/runtime";
 import is from "@rcompat/is";
 import type Command from "#Command";
-import parseArgs from "#parseArgs";
+import parseArgs, { collectFlagTypes } from "#parseArgs";
 
 export default class CLI {
   name: string;
@@ -35,7 +35,16 @@ export default class CLI {
   }
 
   async run(args?: string[]): Promise<void> {
-    const { flags, commands } = parseArgs(args ?? runtime.args);
+    const flagTypes = collectFlagTypes({
+      commands: Object.values(this.commands),
+      extraFlags: {
+        h: "boolean",
+        help: "boolean",
+        v: "boolean",
+        version: "boolean",
+      },
+    });
+    const { flags, commands } = parseArgs(args ?? runtime.args, flagTypes);
 
     // Top-level flags only apply when no command is given. When a command is
     // present, everything (including -h / -v) delegates to that command so its

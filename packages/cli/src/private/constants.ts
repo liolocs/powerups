@@ -61,18 +61,3 @@ export const FOLDER_FOR_NPM_INSTALLED_PACKAGES = "npm";
 export const FOLDER_FOR_GIT_INSTALLED_PACKAGES = "git";
 
 export const NAME_FOR_NPM_PACKAGE_GLOBAL_GROUP = CLI_NAME;
-
-/** Global harness fingerprint paths for detection (relative to homeDir). */
-export const HARNESS_FINGERPRINTS = {
-  claude: ".claude",
-  pi: ".pi",
-  opencode: ".opencode",
-  codex: ".codex",
-};
-
-export const SKILLS_DIRS = {
-  claude: ".claude/skills",
-  pi: ".pi/skills",
-  opencode: ".opencode/skills",
-  codex: ".codex/skills",
-};

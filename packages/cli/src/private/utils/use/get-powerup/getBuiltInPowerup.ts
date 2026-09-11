@@ -50,7 +50,7 @@ export default async function getBuiltInPowerup({
  * Built-in powerups ship inside the CLI package itself so they work regardless
  * of where `pup` is run — no install / config registration required.
  *
- * Resolution mirrors the `scaffold` asset pattern:
+ * Resolution:
  *   - bundled (published `lib/bin.js`): assets live under `lib/private/builtin/`
  *     next to the bundle, so `import.meta.dirname` (the `lib/` dir) is the anchor.
  *   - source (non-bundled dev): assets live in the repo's `.powerups` dir, found

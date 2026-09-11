@@ -1,0 +1,77 @@
+{
+  "name": "create-powerup",
+  "type": "multi-use",
+  "description": "Scaffold a new powerup package",
+  "variables": {
+    "required": [
+      "name",
+      "description"
+    ],
+    "optional": [
+      "intent",
+      "requiredVariables",
+      "optionalVariables",
+      "powerupType",
+      "outputPath"
+    ],
+    "defaults": {
+      "outputPath": ".powerups/installed/_internal",
+      "powerupType": "single-use"
+    }
+  },
+  "intent": [
+    "create a new powerup",
+    "scaffold a powerup package",
+    "bootstrap a powerup project"
+  ],
+  "steps": [
+    {
+      "type": "dynamic-create",
+      "name": "index",
+      "template": "src/dynamic-create/powerup-index.ts",
+      "outputPath": "{{outputPath}}/{{name}}/index.ts"
+    },
+    {
+      "type": "dynamic-create",
+      "name": "create-repo-sh",
+      "template": "src/dynamic-create/create-repo-sh.ts",
+      "outputPath": "{{outputPath}}/{{name}}/scripts/create-github-repo.sh"
+    },
+    {
+      "type": "dynamic-create",
+      "name": "package",
+      "template": "src/dynamic-create/powerup-package.ts",
+      "outputPath": "{{outputPath}}/{{name}}/package.json"
+    },
+    {
+      "type": "create",
+      "name": "tsconfig",
+      "file": "src/create/tsconfig.json",
+      "outputPath": "{{outputPath}}/{{name}}/tsconfig.json"
+    },
+    {
+      "type": "create",
+      "name": "vscode-settings",
+      "file": "src/create/vscode-settings.json",
+      "outputPath": "{{outputPath}}/{{name}}/.vscode/settings.json"
+    },
+    {
+      "type": "create",
+      "name": "gitignore",
+      "file": "src/create/.gitignore",
+      "outputPath": "{{outputPath}}/{{name}}/.gitignore"
+    },
+    {
+      "type": "install",
+      "name": "deps",
+      "target": "{{outputPath}}/{{name}}",
+      "dependencies": [
+        "@liolocs/powerups-sdk"
+      ],
+      "devDependencies": [
+        "commit-and-tag-version"
+      ],
+      "packageManager": "auto"
+    }
+  ]
+}

@@ -14,3 +14,4 @@ pi-subagents/
 .superpowers/
 .kilo/
 !apps/documentation/src/lib/
+!packages/cli/.powerups/installed/_internal/create-powerup/dist/

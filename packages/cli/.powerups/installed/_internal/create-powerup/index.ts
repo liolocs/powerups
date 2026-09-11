@@ -51,7 +51,7 @@ const instructions: Instructions = {
     {
       type: "create",
       name: "gitignore",
-      file: "src/create/.gitignore",
+      file: "src/create/gitignore",
       outputPath: "{{outputPath}}/{{name}}/.gitignore",
     },
     {

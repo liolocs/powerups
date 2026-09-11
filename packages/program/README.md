@@ -59,6 +59,28 @@ await program.run();
 - `commands` — the top-level command list.
 - `run()` — parses `process.argv` and dispatches to the matching command.
 
+### Flag values
+
+Flag values can be passed with `=` or with a space — both forms are
+equivalent:
+
+```sh
+mycli build --project=calypso
+mycli build --project calypso
+mycli build -p calypso
+```
+
+Rules:
+
+- Declared boolean flags (`type: "boolean"`) never consume the next
+  argument, so `mycli use --dry-run find -q x` treats `find` as the next
+  subcommand.
+- Values containing `=` work in both forms: `--msg=a=b` and `--msg a=b`
+  both yield `"a=b"`.
+- A space-separated value cannot start with `-` — use the `=` form for
+  those: `--name=-5`.
+- `--flag=` passes an empty string.
+
 ## How the CLI consumes it
 
 `@liolocs/program` is a **devDependency** of `@liolocs/powerups-cli`, not a

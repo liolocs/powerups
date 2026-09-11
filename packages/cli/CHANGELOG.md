@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.0](https://github.com/liolocs/powerups/compare/v1.1.1...v0.4.0) (2026-09-11)
+
+### Features
+
+* **preview:** report whether a render changed any output ([6d99126](https://github.com/liolocs/powerups/commit/6d9912694597a70399e9b3f8d2be09d8a62386f9))
+* **preview:** watch instruction-referenced files outside src/ ([0696663](https://github.com/liolocs/powerups/commit/06966630186b65943970d92954ecde34d54e0012))
+
+### Bug Fixes
+
+* gitignore ([725f601](https://github.com/liolocs/powerups/commit/725f601a7fe9c443d95915255713be62bfa2362d))
+* preview ([8409117](https://github.com/liolocs/powerups/commit/8409117fdfc280c1877141bb23b6782682ed64b1))
+* **preview:** kill the whole supervised process tree on restart and stop ([c77972f](https://github.com/liolocs/powerups/commit/c77972f9064ef5bfb2762a9c7ba721495e43f786))
+* **preview:** resolve nodemon relative to the powerup root instead of the CLI ([59fb5ad](https://github.com/liolocs/powerups/commit/59fb5adb29139c52b7dbdb097dd68c89131958d9))
+* **preview:** restart dev server only after output changes, stop watching the output dir ([d98991f](https://github.com/liolocs/powerups/commit/d98991f69c70730cde5d7ca30b269e58d5e62221))
+* **preview:** treat a blank exec as absent instead of spawning an empty command ([53b067f](https://github.com/liolocs/powerups/commit/53b067fcd9c0cc62532f08279e3b25fe576801b6))
 ## [0.2.0](https://github.com/liolocs/powerups/compare/v0.1.0...v0.2.0) (2026-08-25)
 
 ### Features

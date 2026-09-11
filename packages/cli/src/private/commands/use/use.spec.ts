@@ -104,7 +104,7 @@ test.case("should give an error if the powerup is not in the config", async asse
     subcommands: ["test-powerup"],
     flags: [{ flag: "--name", value: "name-value-required-from-powerup" }],
     context: { root: targetDir },
-  })).throwsAsync(UseErrorCode.not_installed);
+  })).throwsAsync(UseErrorCode.powerup_missing);
 
   await cleanup();
 });

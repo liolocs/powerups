@@ -91,7 +91,32 @@ Create the template your create step is referring to at `src/dynamic-create/hell
 `, language: 'ts' },
 ]} />
 
-## 2. Build the powerup
+## 2. Preview the powerup
+
+You can test your powerup before publishing or building it with the preview command:
+
+<CodeBlock autoHeight files={[
+  { filename: 'bash', code: 'pup author preview', language: 'bash' },
+]} />
+
+You can pass preview flags to the command to control the output:
+
+<CodeBlock autoHeight files={[
+  { filename: 'bash', code: 'pup author preview --variables=name --exec="npm run dev"', language: 'bash' },
+]} />
+
+You can also use a `preview.json` file instead of passing flags:
+
+<CodeBlock autoHeight files={[
+  { filename: 'preview.json', code: `{
+  "variables": {
+    "name": "world"
+  },
+  "exec": "npm run dev"
+}`, language: 'json' },
+]} />
+
+## 3. Build the powerup
 
 You must build the powerup before it can be used with the command:
 
@@ -109,9 +134,9 @@ Your output should look like this:
 ]}
 />
 
-## 3. Use powerup
+## 4. Use powerup
 
-Once the powerup is built you can use it by running the following command:
+Once the powerup is built you can use it locally anywhere by running the following command:
 
 <CodeBlock autoHeight files={[
   { filename: 'bash', code: 'pup use hello-world --name=world --target-dir=./test-hello-world', language: 'bash' },
@@ -125,7 +150,7 @@ This will result in the following output:
 ✓ Powerup hello-world was successfully used in /Users/<user>/<path>/test-hello-world`, language: 'bash' },
 ]} />
 
-## 4. Share the powerup
+## 5. Share the powerup
 
 Once the powerup is built you can share by publishing it to npm or git.
 

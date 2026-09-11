@@ -29,7 +29,7 @@ const icons = {
   "command-reference": {
     class: "bg-green-100 dark:bg-green-900",
     icon: BookIcon,
-    href: "/docs/reference/cli/build"
+    href: "/docs/reference/cli/install"
   },
   "sdk-reference": {
     class: "bg-purple-100 dark:bg-purple-900",

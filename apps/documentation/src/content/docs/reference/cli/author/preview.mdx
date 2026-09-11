@@ -1,31 +1,55 @@
 ---
 title: 'preview'
-description: 'Preview a powerup before publishing'
+description: 'Materialize a powerup from source with concrete variables and optionally run it'
 sidebar:
-  order: 3
+  order: 5
 ---
 import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
-Create a powerup
+Test your powerup locally before publishing or building it with the preview command
 
 <CodeBlock autoHeight files={[
   {
     filename: 'bash',
     language: 'bash',
-    code: `pup author preview <powerup-name> [flags]`
+    code: `pup author preview [flags]`
   }
 ]} />
+
+## Preview.json
+
+You may use a `preview.json` to control the preview command:
+
+<CodeBlock autoHeight files={[
+  {
+    filename: 'preview.json',
+    language: 'json',
+    code: `{
+\t"variables": { "componentName": "Button" },
+\t"exec": "npm install && npm run dev",
+\t"outputDir": "preview", // <--- default
+\t"watch": true
+}`
+  }
+]} />
+
+Flags win over `preview.json`. Missing required variables
+abort the preview and list what's missing.
 
 ## Flags
 
 | Flag | Short | Type | Description |
 | ---- | ----- | ---- | ----------- |
-| `--dry-run` | `-dr` | boolean | Print output to stdout instead of writing files |
-| `--capture` | `-c` | string | Capture files into the new powerup: "all" or "workingDir" |
-| `--local` | `-l` | boolean | Create locally (default: global) |
-| `--description` | `-d` | string | Human-readable description (required) |
-| `--intent` | `-i` | string | Comma-separated intent keywords |
-| `--variables` | `-v` | string | Comma-separated required variable names |
-| `--optional-variables` | `-ov` | string | Comma-separated optional variable names |
-| `--type` | `-t` | string | Powerup type: multi-use or single-use (defaults to single-use) |
+| `--exec` | `-e` | string | Shell command to run inside the preview dir (overrides `preview.json`) |
+| `--output-dir` | `-o` | string | Preview output directory (default: `preview`) |
+| `--watch` | `-w` | boolean | Watch powerup sources and re-render on change (default: true when `--exec` is set) |
 
+Template variables can also be passed as flags:
+
+<CodeBlock autoHeight files={[
+  {
+    filename: 'bash',
+    language: 'bash',
+    code: `pup author preview --component-name=Button --theme=dark`
+  }
+]} />

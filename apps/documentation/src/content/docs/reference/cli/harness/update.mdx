@@ -1,0 +1,29 @@
+---
+title: 'update'
+description: 'Update powerup skills in an AI coding harness'
+sidebar:
+  order: 9
+---
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
+
+Overwrite the powerup CLI's built-in skills in a harness's global skills
+directory. Files installed by `pup harness init` are replaced with the current
+versions — use this after upgrading the CLI to refresh the installed skills.
+
+<CodeBlock autoHeight files={[
+  {
+    filename: 'bash',
+    language: 'bash',
+    code: `pup harness update <harness>`
+  }
+]} />
+
+`<harness>` is one of the harnesses the CLI supports — see
+[`pup harness init`](/docs/reference/cli/harness/init) for the list of harnesses
+and their skills directories.
+
+## Flags
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+| `--dry-run` | `-dr` | boolean | Print output to stdout instead of writing files |

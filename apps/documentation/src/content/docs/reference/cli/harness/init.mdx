@@ -1,13 +1,14 @@
 ---
 title: 'init'
-description: 'Init, update, or remove agent skills in an AI coding harness'
+description: 'Install powerup skills into an AI coding harness'
 sidebar:
-  order: 4
+  order: 8
 ---
 import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
 
-Use a powerup
-
+Install the powerup CLI's built-in skills into a harness's global skills
+directory. Existing files are left untouched — use `pup harness update` to
+overwrite them.
 
 <CodeBlock autoHeight files={[
   {
@@ -17,10 +18,18 @@ Use a powerup
   }
 ]} />
 
+`<harness>` is one of the harnesses the CLI supports. Skills are written
+relative to your home directory:
+
+| Harness | Skills directory |
+| ------- | ---------------- |
+| `claude` | `~/.claude/skills` |
+| `opencode` | `~/.opencode/skills` |
+| `pi` | `~/.pi/agent/skills` |
+| `codex` | `~/.codex/skills` |
+
 ## Flags
 
 | Flag | Short | Type | Description |
 | ---- | ----- | ---- | ----------- |
 | `--dry-run` | `-dr` | boolean | Print output to stdout instead of writing files |
-| `--target-dir` | `-td` | string | Target directory for the use command |
-

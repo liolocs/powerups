@@ -1,0 +1,29 @@
+---
+title: 'remove'
+description: 'Remove powerup skills from an AI coding harness'
+sidebar:
+  order: 10
+---
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
+
+Remove the skills installed by `pup harness init` and `pup harness update` from
+a harness's global skills directory. Skills whose directory doesn't exist are
+skipped.
+
+<CodeBlock autoHeight files={[
+  {
+    filename: 'bash',
+    language: 'bash',
+    code: `pup harness remove <harness>`
+  }
+]} />
+
+`<harness>` is one of the harnesses the CLI supports — see
+[`pup harness init`](/docs/reference/cli/harness/init) for the list of harnesses
+and their skills directories.
+
+## Flags
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+| `--dry-run` | `-dr` | boolean | Print what would be removed instead of deleting files |

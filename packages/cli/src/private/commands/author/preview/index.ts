@@ -11,7 +11,7 @@ import materializePreview from "#utils/preview/materialize-preview";
 import { readPreviewManifest } from "#utils/preview/preview-manifest";
 import { watchSources } from "#utils/preview/watch-source";
 import getStepSourcePaths from "#utils/preview/get-step-source-paths";
-import { startSupervisor, runCommandOnce } from "#utils/preview/run-supervisor";
+import { startSupervisor, runCommandOnce, sweepStalePreview } from "#utils/preview/run-supervisor";
 import getErrorMessage from "#errors/get-error-message";
 
 const execFlag = {
@@ -49,6 +49,14 @@ const preview = new Command({
     });
 
     const previewDir = powerupRoot.append(`/${config.outputDir}`);
+
+    const stalePid = await sweepStalePreview({ previewDir });
+
+    if (stalePid !== undefined) {
+      const yellow = cli.fg.yellow;
+      cli.print(`${yellow("!")} killed stale preview process (pid ${stalePid})\n`);
+    }
+
     const isFirstMaterialize = Object.keys(await readPreviewManifest({ previewDir })).length === 0;
 
     const first = await materializePreview({
@@ -65,7 +73,8 @@ const preview = new Command({
     }
 
     if (!config.watch) {
-      runCommandOnce({ runCommand: config.exec, previewDir });
+      const once = runCommandOnce({ runCommand: config.exec, previewDir });
+      wireCleanup({ stop: () => once.stop() });
       return;
     }
 
@@ -95,10 +104,11 @@ const preview = new Command({
       },
     });
 
-    process.on("SIGINT", () => {
-      watcher.stop();
-      supervisor.stop();
-      process.exit(0);
+    wireCleanup({
+      stop: () => {
+        watcher.stop();
+        supervisor.stop();
+      },
     });
 
     await new Promise(() => {});
@@ -146,6 +156,26 @@ function printPreviewSummary({
   for (const skippedStep of skippedSteps) {
     cli.print(`  ${dim(`skipped: ${skippedStep} (target missing)`)}\n`);
   }
+}
+
+function wireCleanup({ stop }: { stop: () => void }): void {
+  let cleanedUp = false;
+  const cleanup = () => {
+    if (cleanedUp) {
+      return;
+    }
+    cleanedUp = true;
+    stop();
+  };
+
+  for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
+    process.on(signal, () => {
+      cleanup();
+      process.exit(0);
+    });
+  }
+
+  process.on("exit", cleanup);
 }
 
 export default preview;

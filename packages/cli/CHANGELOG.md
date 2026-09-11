@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.1](https://github.com/liolocs/powerups/compare/v0.4.0...v0.4.1) (2026-09-11)
+
+### Bug Fixes
+
+* .gitignore missing in build ([f6ecb60](https://github.com/liolocs/powerups/commit/f6ecb601a6f3ac2363217053651fddab7a7889d8))
+* gitignore ([6a5ab09](https://github.com/liolocs/powerups/commit/6a5ab093a764f677323828ea915b07508eb60e72))
+* remove tsup ([10681f7](https://github.com/liolocs/powerups/commit/10681f7359d3bc4779220bd76adeac6d8e68cbb6))
 ## [0.4.0](https://github.com/liolocs/powerups/compare/v1.1.1...v0.4.0) (2026-09-11)
 
 ### Features

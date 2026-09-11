@@ -61,3 +61,23 @@ export const FOLDER_FOR_NPM_INSTALLED_PACKAGES = "npm";
 export const FOLDER_FOR_GIT_INSTALLED_PACKAGES = "git";
 
 export const NAME_FOR_NPM_PACKAGE_GLOBAL_GROUP = CLI_NAME;
+
+/** Harnesses the CLI can install skills into. */
+export const VALID_HARNESSES = ["claude", "opencode", "pi", "codex"] as const;
+
+export type Harness = (typeof VALID_HARNESSES)[number];
+
+/** Global skill directories per harness, relative to the user's home directory. */
+export const GLOBAL_SKILLS_DIRS: Record<Harness, string> = {
+  claude: ".claude/skills",
+  opencode: ".opencode/skills",
+  pi: ".pi/agent/skills",
+  codex: ".codex/skills",
+};
+
+export function globalSkillsDir({ harness, homeDir }: {
+  harness: Harness;
+  homeDir?: string;
+}): string {
+  return path.join(homeDir ?? homedir(), GLOBAL_SKILLS_DIRS[harness]);
+}

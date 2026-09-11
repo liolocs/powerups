@@ -7,6 +7,9 @@ const t = error.template;
 const errorLabel = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const init_errors = error.coded({
+  missing_harness: () => {
+    return t`${errorLabel} Missing harness argument.\n\n  Usage: ${CLI_CMD} harness <init|update|remove> <harness>\n  Valid values: claude, opencode, pi, codex`;
+  },
   invalid_harness: (value: string) => {
     return t`${errorLabel} Invalid harness: ${cli.fg.yellow(value)}\n\n  Valid values: claude, opencode, pi, codex`;
   },

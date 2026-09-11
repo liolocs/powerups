@@ -175,3 +175,11 @@ test.case("collectFlagTypes resolves conflicts to string", assert => {
   assert(flagTypes.v).equals("string");
   assert(flagTypes.version).equals("boolean");
 });
+
+test.case("Tokens after a consumed space value still classify", assert => {
+  const parsed = parseArgs(["-q", "x", "find"], { q: "string" });
+
+  assert(parsed.flags[0].flag).equals("-q");
+  assert(parsed.flags[0].value).equals("x");
+  assert(parsed.commands).equals(["find"]);
+});

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.1](https://github.com/liolocs/powerups/compare/v0.5.0...v0.5.1) (2026-09-11)
+
+### Bug Fixes
+
+* docs issues with displaying steps ([d900444](https://github.com/liolocs/powerups/commit/d900444bf790d458aa1c64b315adf4ae1d70ef44))
+* preview issue ([aad49e3](https://github.com/liolocs/powerups/commit/aad49e3b67c4e0c2fe8323191c847cc5cf394766))
 ## [0.5.0](https://github.com/liolocs/powerups/compare/v0.4.1...v0.5.0) (2026-09-11)
 
 ### Features

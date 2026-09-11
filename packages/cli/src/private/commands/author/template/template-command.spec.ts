@@ -1,7 +1,7 @@
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import template from "#commands/template/index";
+import template from "#commands/author/template/index";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/template-command");

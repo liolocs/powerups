@@ -1,4 +1,4 @@
-import build from "#commands/build/index";
+import build from "#commands/author/build/index";
 import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
 import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
 import test from "#test-utils/test/index";

@@ -3,7 +3,7 @@
  * Generate this package's README.md from the CLI's command definitions.
  *
  * The command registry in `lib/commands/index.js` (built from
- * `src/private/commands/<name>/index.ts`) is the single source of truth:
+ * `src/private/commands/<group>/<name>/index.ts`) is the single source of truth:
  * each command's `name`, `description`, `flags`, and `subcommands` flow
  * into the "## Commands" section of `scripts/templates/readme.njk`. The
  * template also carries the static prose (intro, install, quick start,
@@ -43,28 +43,52 @@ type CommandMetadata = {
   description: string;
   flags: FlagMetadata[];
   subcommandNames: string[];
+  subcommands: CommandMetadata[];
+  notes?: string;
+};
+
+const SUBCOMMAND_NOTES: Record<string, string> = {
+  "author create":
+    "`--capture=all` works without git — it captures every file in the working\n" +
+    "directory into the new powerup. Captured files land in `src/create/` (new\n" +
+    "files) and `src/modify/` + `fixtures/` (modified files).",
 };
 
 const collapseBlankLines = (markdown: string): string =>
   markdown.replace(/\n{3,}/g, "\n\n");
 
+const collectFlagMetadata = (flag: Flag): FlagMetadata => ({
+  long: flag.long,
+  short: flag.short,
+  description: flag.description,
+  required: flag.required ?? false,
+  type: flag.type,
+});
+
 const collectCommandMetadata = ({
   commandList,
+  parentPath,
 }: {
   commandList: Command<any>[];
+  parentPath?: string;
 }): CommandMetadata[] =>
-  commandList.map((command) => ({
-    name: command.name,
-    description: command.description,
-    flags: command.flags.map((flag: Flag) => ({
-      long: flag.long,
-      short: flag.short,
-      description: flag.description,
-      required: flag.required ?? false,
-      type: flag.type,
-    })),
-    subcommandNames: [...command.subcommands.keys()],
-  }));
+  commandList.map((command) => {
+    const commandPath = parentPath === undefined
+      ? command.name
+      : `${parentPath} ${command.name}`;
+
+    return {
+      name: command.name,
+      description: command.description,
+      flags: command.flags.map(collectFlagMetadata),
+      subcommandNames: [...command.subcommands.keys()],
+      subcommands: collectCommandMetadata({
+        commandList: [...command.subcommands.values()],
+        parentPath: commandPath,
+      }),
+      notes: SUBCOMMAND_NOTES[commandPath],
+    };
+  });
 
 const main = async (): Promise<void> => {
   const registryExists = await exists(COMMAND_REGISTRY_PATH);

@@ -31,7 +31,14 @@ pup install npm:my-package
 Create a new powerup:
 
 ```sh
-pup create my-powerup --description="Scaffolds a svelte component" --variables=componentName,theme
+pup author create my-powerup --description="Scaffolds a svelte component" --variables=componentName,theme
+```
+
+While authoring, preview the rendered output and build it for distribution:
+
+```sh
+pup author preview
+pup author build
 ```
 
 Use a powerup, rendering its templates with variables:
@@ -48,20 +55,30 @@ pup uninstall my-powerup
 
 ## Commands
 
-### `pup build`
+### `pup author`
+
+Commands for powerup authors
+
+```sh
+pup author <subcommand>
+```
+
+**Subcommands:** `build`,  `create`,  `preview`,  `template`
+
+#### `pup author build`
 
 Build a powerup for distribution
 
 ```sh
-pup build [flags]
+pup author build [flags]
 ```
 
-### `pup create`
+#### `pup author create`
 
 Create a powerup
 
 ```sh
-pup create [flags]
+pup author create [flags]
 ```
 
 | Flag | Short | Type | Description |
@@ -78,6 +95,79 @@ pup create [flags]
 `--capture=all` works without git — it captures every file in the working
 directory into the new powerup. Captured files land in `src/create/` (new
 files) and `src/modify/` + `fixtures/` (modified files).
+
+#### `pup author preview`
+
+Materialize a powerup from source with concrete variables and optionally run it
+
+```sh
+pup author preview [flags]
+```
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+| `--exec` | `-e` | string | Shell command to run inside the preview dir (overrides preview.json) |
+| `--output-dir` | `-o` | string | Preview output directory (default: preview) |
+| `--watch` | `-w` | boolean | Watch powerup sources and re-render on change (default: true when exec is set) |
+
+#### `pup author template`
+
+Convert a powerup step between static and dynamic (template) form
+
+```sh
+pup author template [flags]
+```
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+| `--revert` | `-r` | boolean | Convert a dynamic (template) step back to static |
+| `--engine` | `-e` | string | Template engine for conversion: ts (default) or njk |
+
+### `pup harness`
+
+Install, update, or remove powerup skills in an AI coding harness
+
+```sh
+pup harness <subcommand>
+```
+
+**Subcommands:** `init`,  `update`,  `remove`
+
+#### `pup harness init`
+
+Install powerup skills into a harness's global skills dir
+
+```sh
+pup harness init [flags]
+```
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+| `--dry-run` | `-dr` | boolean | Print output to stdout instead of writing files |
+
+#### `pup harness update`
+
+Update installed powerup skills in a harness's global skills dir
+
+```sh
+pup harness update [flags]
+```
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+| `--dry-run` | `-dr` | boolean | Print output to stdout instead of writing files |
+
+#### `pup harness remove`
+
+Remove installed powerup skills from a harness's global skills dir
+
+```sh
+pup harness remove [flags]
+```
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+| `--dry-run` | `-dr` | boolean | Print output to stdout instead of writing files |
 
 ### `pup install`
 
@@ -118,51 +208,6 @@ pup use [flags]
 | `--dry-run` | `-dr` | boolean | Print output to stdout instead of writing files |
 | `--target-dir` | `-td` | string | Target directory for the use command |
 
-### `pup template`
-
-Convert a powerup step between static and dynamic (template) form, keeping
-`index.ts` in sync.
-
-```bash
-# convert a static step into a readable template, then edit it to inject variables
-pup template src/components/button.tsx
-
-# convert back to a verbatim static file
-pup template src/components/button.tsx --revert
-
-# list all steps and their static/dynamic status
-pup template
-```
-
-### `pup preview`
-
-Materialize a powerup **from source** with concrete variable values into
-`preview/` and optionally run it — test boilerplates (dev servers included)
-before building.
-
-```bash
-# with preview.json configured (variables, exec, watch)
-pup preview
-
-# or fully via flags
-pup preview --appName=my-app --exec "npm install && npm run dev"
-```
-
-`preview.json`:
-
-```json
-{
-  "variables": { "appName": "my-test-app" },
-  "exec": "npm install && npm run dev",
-  "outputDir": "preview",
-  "watch": true
-}
-```
-
-Modify steps get their base state from `fixtures/` (auto-captured from git
-pre-images during `--capture=workingDir`, or hand-authored). Preview never
-touches anything outside its gitignored output dir.
-
 ## Concepts
 
 - **Powerup** — a reusable unit of code/behavior. Two types: **multi-use**
@@ -174,27 +219,6 @@ touches anything outside its gitignored output dir.
 - **Applied manifest** — every `pup use` records the powerup, variables,
   and files it wrote in `.powerups/applied.json`. This powers diagnosis and
   repair workflows; don't edit it by hand.
-
-A powerup package:
-
-```
-<powerup>/
-  index.ts            # steps
-  src/
-    create/           # verbatim sources for create steps
-    dynamic-create/   # readable .ts/.njk templates for dynamic-create steps
-    modify/           # pretty-printed modification JSON for modify steps
-    dynamic-modify/   # readable templates for dynamic-modify steps
-  fixtures/           # pre-state files for preview
-  preview.json        # preview config
-```
-
-| Step | Source field | Behavior |
-|---|---|---|
-| `create` | `file` | verbatim copy |
-| `dynamic-create` | `template` | render template |
-| `modify` | `file` | parse JSON modifications, apply anchors |
-| `dynamic-modify` | `template` | render → parse → apply |
 
 ## Development
 
@@ -209,7 +233,7 @@ pnpm lint    # lint
 ```
 
 This README is generated from `scripts/templates/readme.njk` and the command
-definitions in `src/private/commands/<name>/index.ts`. After changing a
+definitions in `src/private/commands/<group>/<name>/index.ts`. After changing a
 command, rebuild and regenerate:
 
 ```sh

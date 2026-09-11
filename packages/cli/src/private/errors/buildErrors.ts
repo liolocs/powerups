@@ -9,14 +9,14 @@ const build_errors = error.coded({
   no_package_json: () => {
     const errorText =
       `No package.json found in the current directory.\n\n` +
-      `Run "${CLI_CMD} build" from inside a ${SINGULAR_NAME_FOR_CLI} directory.`;
+      `Run "${CLI_CMD} author build" from inside a ${SINGULAR_NAME_FOR_CLI} directory.`;
     return t`${errorBGText}${errorText}`;
   },
 
   built_instructions_failed: (instructionsPath: string) => {
     const errorText =
       `Failed to build instructions.json based on ${instructionsPath}.\n\n` +
-      `Run "${CLI_CMD} build" from inside a ${SINGULAR_NAME_FOR_CLI} directory.`;
+      `Run "${CLI_CMD} author build" from inside a ${SINGULAR_NAME_FOR_CLI} directory.`;
     return t`${errorBGText}${errorText}`;
   },
 
@@ -24,7 +24,7 @@ const build_errors = error.coded({
     const errorText =
       `This directory is not a ${SINGULAR_NAME_FOR_CLI} package.\n` +
       `package.json must have "${PACKAGE_JSON_KEYWORD_PROPERTY}" in its keywords array.\n\n` +
-      `Run "${CLI_CMD} build" from inside a ${SINGULAR_NAME_FOR_CLI} directory.`;
+      `Run "${CLI_CMD} author build" from inside a ${SINGULAR_NAME_FOR_CLI} directory.`;
     return t`${errorBGText}${errorText}`;
   },
 
@@ -52,7 +52,7 @@ const build_errors = error.coded({
   child_not_built: (childName: string) => {
     const errorText =
       `Included powerup "${childName}" has no dist/ — build it first.\n` +
-      `Run "pup build" in the ${childName} package, then rebuild the parent.`;
+      `Run "pup author build" in the ${childName} package, then rebuild the parent.`;
     return t`${errorBGText}${errorText}`;
   },
 

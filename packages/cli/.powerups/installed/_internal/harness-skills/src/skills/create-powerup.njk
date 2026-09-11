@@ -1,6 +1,6 @@
 ---
 name: create-powerup
-description: "Create a new {{ SINGULAR_NAME_FOR_CLI }}: scaffold it if needed, then author its templates and variables with the {{ CLI_CMD }} template command"
+description: "Create a new {{ SINGULAR_NAME_FOR_CLI }}: scaffold it if needed, then author its templates and variables with the {{ CLI_CMD }} author template command"
 ---
 Create a new {{ SINGULAR_NAME_FOR_CLI }} for the user.
 
@@ -32,7 +32,7 @@ Collect from the user (ask if anything is missing):
 Then run:
 
 ```
-{{ CLI_CMD }} create <name> -d="<description>" -i="<intent keywords>" -v="<required variables>" -ov="<optional variables>" -t=<multi-use|single-use>
+{{ CLI_CMD }} author create <name> -d="<description>" -i="<intent keywords>" -v="<required variables>" -ov="<optional variables>" -t=<multi-use|single-use>
 ```
 
 Omit `-v` / `-ov` when there are none; `-t` defaults to `single-use`. Add `-l`
@@ -60,7 +60,7 @@ template files — add those in step 3.
 
    - Declare each variable in the `variables` property of
      `instructions.json` (`required` or `optional`).
-   - Run `{{ CLI_CMD }} template <outputPath>` to convert a static step into a
+   - Run `{{ CLI_CMD }} author template <outputPath>` to convert a static step into a
      dynamic (template) step — it generates a `.ts` template by default; pass
      `-e=njk` for a `.njk` template. Edit the generated template to replace
      concrete values with variables:
@@ -70,12 +70,12 @@ template files — add those in step 3.
        Keep it a pure function of the variables — no imports, no filesystem
        access.
      - `.njk` — replace values with `{{ '{{var}}' }}` tokens.
-   - `{{ CLI_CMD }} template -r <outputPath>` converts a dynamic step back to
+   - `{{ CLI_CMD }} author template -r <outputPath>` converts a dynamic step back to
      static.
 
 ## 4. Verify
 
-1. Run `{{ CLI_CMD }} build` from the {{ SINGULAR_NAME_FOR_CLI }} folder — it
+1. Run `{{ CLI_CMD }} author build` from the {{ SINGULAR_NAME_FOR_CLI }} folder — it
    compiles and validates `instructions.json`. Fix any reported errors and
    rebuild.
 

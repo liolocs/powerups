@@ -208,7 +208,7 @@ const use_errors = error.coded({
 
   instructions_not_built: (name: string) => {
     const errorText =
-      `No built instructions for ${name}. Run "pup build" in the powerup package first.`;
+      `No built instructions for ${name}. Run "pup author build" in the powerup package first.`;
     return t`${errorBGText}${errorText}`;
   },
 

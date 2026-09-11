@@ -104,7 +104,7 @@ export async function createPowerupPackageForTest({
     version: "1.0.0",
     description: "a test powerup",
     type: "module",
-    scripts: { build: "pup build" },
+    scripts: { build: "pup author build" },
     keywords: ["powerups-package"],
     powerup: { instructions: "index.ts", compatibility: {} },
     files: ["dist"],

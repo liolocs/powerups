@@ -31,7 +31,14 @@ Install a powerup package from npm or git:
 Create a new powerup:
 
 ```sh
-{{ cliCmd }} create my-powerup --description="Scaffolds a svelte component" --variables=componentName,theme
+{{ cliCmd }} author create my-powerup --description="Scaffolds a svelte component" --variables=componentName,theme
+```
+
+While authoring, preview the rendered output and build it for distribution:
+
+```sh
+{{ cliCmd }} author preview
+{{ cliCmd }} author build
 ```
 
 Use a powerup, rendering its templates with variables:
@@ -54,7 +61,7 @@ Remove an installed powerup:
 {{ command.description }}
 
 ```sh
-{{ cliCmd }} {{ command.name }} [flags]
+{{ cliCmd }} {{ command.name }}{{ " <subcommand>" if command.subcommands.length > 0 else " [flags]" }}
 ```
 {%- if command.flags.length > 0 %}
 
@@ -64,9 +71,31 @@ Remove an installed powerup:
 | `--{{ flag.long }}` | `-{{ flag.short }}` | {{ flag.type or "string" }} | {{ flag.description }} |
 {% endfor -%}
 {%- endif %}
-{%- if command.subcommandNames.length > 0 %}
+{%- if command.subcommands.length > 0 %}
 
-**Subcommands:** {%- for subcommandName in command.subcommandNames %} `{{ subcommandName }}`{{ ", " if not loop.last else "" }}{%- endfor %}
+**Subcommands:** {%- for subcommand in command.subcommands %} `{{ subcommand.name }}`{{ ", " if not loop.last else "" }}{%- endfor %}
+{%- for subcommand in command.subcommands %}
+
+#### `{{ cliCmd }} {{ command.name }} {{ subcommand.name }}`
+
+{{ subcommand.description }}
+
+```sh
+{{ cliCmd }} {{ command.name }} {{ subcommand.name }} [flags]
+```
+{%- if subcommand.flags.length > 0 %}
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+{% for flag in subcommand.flags -%}
+| `--{{ flag.long }}` | `-{{ flag.short }}` | {{ flag.type or "string" }} | {{ flag.description }} |
+{% endfor -%}
+{%- endif %}
+{%- if subcommand.notes %}
+
+{{ subcommand.notes }}
+{%- endif %}
+{%- endfor %}
 {%- endif %}
 {%- endfor %}
 
@@ -74,8 +103,6 @@ Remove an installed powerup:
 
 - **Powerup** — a reusable unit of code/behavior. Two types: **multi-use**
   (recurring patterns) and **single-use** (one-time additions).
-- **Pack** — a package that bundles one or more powerups. Installed from npm or
-  git, then available to the project.
 - **Stores** — powerups live in a global store (`~/.powerups`) and a per-project
   store (`.powerups` at the project root).
 - **Applied manifest** — every `{{ cliCmd }} use` records the powerup, variables,
@@ -95,7 +122,7 @@ pnpm lint    # lint
 ```
 
 This README is generated from `scripts/templates/readme.njk` and the command
-definitions in `src/private/commands/<name>/index.ts`. After changing a
+definitions in `src/private/commands/<group>/<name>/index.ts`. After changing a
 command, rebuild and regenerate:
 
 ```sh

@@ -21,7 +21,7 @@ const uninstall_errors = error.coded({
 
   internal_not_uninstallable: (name: string) => {
     const errorText =
-      `"${name}" is an internal powerup. Internal powerups are created with "${CLI_CMD} create", not installed, so they cannot be uninstalled.`;
+      `"${name}" is an internal powerup. Internal powerups are created with "${CLI_CMD} author create", not installed, so they cannot be uninstalled.`;
     return t`${errorBGText}${errorText}`;
   },
 });

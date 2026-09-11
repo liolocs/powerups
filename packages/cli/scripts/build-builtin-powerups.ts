@@ -2,10 +2,10 @@
 /**
  * Build the CLI's built-in powerups into `lib/private/builtin/<name>/`.
  *
- * Built-in powerups ship inside the published CLI so commands like `pup create`
+ * Built-in powerups ship inside the published CLI so commands like `pup author create`
  * work anywhere — without requiring the powerup to be installed/registered.
  *
- * Unlike `pup build` (which operates on cwd and needs `pup` on PATH), this
+ * Unlike `pup author build` (which operates on cwd and needs `pup` on PATH), this
  * script generates the dist directly from source so the CLI build never depends
  * on `pup` being linked. This avoids a bootstrap circle: `pnpm run local` runs
  * `build:packages` (→ this script) *before* `link.ts` puts `pup` on PATH.

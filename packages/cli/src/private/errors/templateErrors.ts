@@ -9,20 +9,20 @@ const template_errors = error.coded({
   steps_region_invalid: (detail: string) => {
     const errorText =
       `Could not read the steps array in index.ts: ${detail}\n\n` +
-      `"pup template" requires the steps array to be JSON-compatible (no TS expressions inside it).` +
+      `"pup author template" requires the steps array to be JSON-compatible (no TS expressions inside it).` +
       ` Convert the step by hand.`;
     return t`${errorBGText}${errorText}`;
   },
   step_not_found: (outputPath: string) => {
     const errorText =
       `No step found for output path "${outputPath}".\n\n` +
-      `Run "pup template" without arguments to list steps.`;
+      `Run "pup author template" without arguments to list steps.`;
     return t`${errorBGText}${errorText}`;
   },
   already_dynamic: (outputPath: string) => {
     const errorText =
       `The step for "${outputPath}" is already dynamic (template-based).\n\n` +
-      `Use "pup template ${outputPath} --revert" to convert it back to static.`;
+      `Use "pup author template ${outputPath} --revert" to convert it back to static.`;
     return t`${errorBGText}${errorText}`;
   },
   not_dynamic: (outputPath: string) => {

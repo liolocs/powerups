@@ -2,7 +2,7 @@ import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
-import build from "#commands/build/index";
+import build from "#commands/author/build/index";
 import checkCompiledInstructionsForErrors from "#utils/validate/check-compiled-instructions-for-errors/index";
 import { createPowerupPackageForTest } from "#test-utils/create-powerup-for-test";
 

@@ -25,7 +25,7 @@ test.case("should include the powerup name in internal_not_installable error", a
     // @ts-expect-error error.message is not typed on unknown
     assert(error.message).includes("my-powerup");
     // @ts-expect-error error.message is not typed on unknown
-    assert(error.message).includes("pup create");
+    assert(error.message).includes("pup author create");
   }
 });
 

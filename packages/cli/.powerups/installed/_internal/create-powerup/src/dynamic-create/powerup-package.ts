@@ -16,7 +16,7 @@ export default function(variables: Record<string, string>): string {
       "directory": "",
     },
     scripts: {
-      build: "npx @liolocs/powerups-cli build",
+      build: "npx @liolocs/powerups-cli author build",
       release: "commit-and-tag-version --preset conventionalcommits --path .",
       "release:dry-run": "commit-and-tag-version --preset conventionalcommits --path . --dry-run",
     },

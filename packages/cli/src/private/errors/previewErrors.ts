@@ -10,7 +10,7 @@ const preview_errors = error.coded({
   instructions_not_found: (root: string, entryFile: string) => {
     const errorText =
       `No ${entryFile} found at ${root}.\n\n` +
-      `"pup preview" and "pup template" must run inside a powerup package.\n` +
+      `"pup author preview" and "pup author template" must run inside a powerup package.\n` +
       `Check the "${SINGULAR_NAME_FOR_CLI}.instructions" entry in package.json.`;
     return t`${errorBGText}${errorText}`;
   },

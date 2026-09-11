@@ -1,4 +1,4 @@
-import create from "#commands/create/index";
+import create from "#commands/author/create/index";
 import { GLOBAL_INTERNAL_PATH, } from "#constants";
 import { type FileRef } from "@rcompat/fs";
 

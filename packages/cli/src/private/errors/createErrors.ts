@@ -8,13 +8,13 @@ const errorBGText = " " + cli.bg.red(cli.fg.white(" ERROR ")) + " ";
 
 const create_errors = error.coded({
   main_folder_not_found: () => {
-    const errorText = `${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first.`;
+    const errorText = `${CLI_FOLDER_NAME} folder not found. Have you installed a powerup yet?`;
     return t`${errorBGText}${errorText}`;
   },
   invalid_capture: (value: string) => {
     const errorText =
       `Invalid --capture value "${value}". Must be "all" or "workingDir".\n\n` +
-      `Usage: ${CLI_CMD} create <name> --capture=<all|workingDir>`;
+      `Usage: ${CLI_CMD} author create <name> --capture=<all|workingDir>`;
     return t`${errorBGText}${errorText}`;
   },
   already_exists: (name: string) => {
@@ -25,24 +25,24 @@ const create_errors = error.coded({
   missing_name: () => {
     const errorText =
       `${CAPITALIZED_SINGLULAR_CLI_NAME} name is required.\n\n` +
-      `Usage: ${CLI_CMD} create <name> [options]`;
+      `Usage: ${CLI_CMD} author create <name> [options]`;
     return t`${errorBGText}${errorText}`;
   },
   missing_description: () => {
     const errorText =
       `${CAPITALIZED_SINGLULAR_CLI_NAME} description is required.\n\n` +
-      `Usage: ${CLI_CMD} create <name> --description="..."`;
+      `Usage: ${CLI_CMD} author create <name> --description="..."`;
     return t`${errorBGText}${errorText}`;
   },
   global_root_not_found: () => {
     const errorText =
-      `Global ${CLI_FOLDER_NAME} folder not found. Run "${CLI_CMD} project init" first, or use --local to create locally.`;
+      `Global ${CLI_FOLDER_NAME} folder not found. Have you installed a powerup yet?`;
     return t`${errorBGText}${errorText}`;
   },
   git_repo_required: () => {
     const errorText =
       `capture=workingDir requires a git repository — there is no commit history to diff against.\n\n` +
-      `Use "${CLI_CMD} create <name> --capture=all" to capture every file instead.`;
+      `Use "${CLI_CMD} author create <name> --capture=all" to capture every file instead.`;
     return t`${errorBGText}${errorText}`;
   },
 });

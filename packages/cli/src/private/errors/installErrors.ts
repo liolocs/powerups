@@ -15,7 +15,7 @@ const install_errors = error.coded({
 
   internal_not_installable: (name: string) => {
     const errorText =
-      `"${name}" is an internal package name. Internal packages are created with "${CLI_CMD} create", not installed.\n` +
+      `"${name}" is an internal package name. Internal packages are created with "${CLI_CMD} author create", not installed.\n` +
       `Use npm:<name> or git:<url> to install from a remote source.`;
     return t`${errorBGText}${errorText}`;
   },

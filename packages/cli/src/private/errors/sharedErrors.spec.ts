@@ -30,6 +30,6 @@ test.case("old_format_instructions explains the break and points at re-capture",
     // @ts-expect-error error.message is not typed on unknown
     assert(error.message).includes("no longer supported");
     // @ts-expect-error error.message is not typed on unknown
-    assert(error.message).includes("pup create");
+    assert(error.message).includes("pup author create");
   }
 });

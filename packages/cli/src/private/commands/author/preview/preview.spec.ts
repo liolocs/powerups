@@ -1,7 +1,7 @@
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import preview from "#commands/preview/index";
+import preview from "#commands/author/preview/index";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/preview-command");

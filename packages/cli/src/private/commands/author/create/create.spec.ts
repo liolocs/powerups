@@ -1,7 +1,7 @@
 import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
-import create from "#commands/create/index";
+import create from "#commands/author/create/index";
 import { CreateErrorCode } from "#errors/createErrors";
 import { CLI_FOLDER_NAME, INSTALLED_FOLDER } from "#constants";
 

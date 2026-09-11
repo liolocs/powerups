@@ -18,7 +18,7 @@ test.case("init writes the create-powerup skill into the global skills dir", asy
 
   const content = await skillFile.text();
   assert(content).includes("name: create-powerup");
-  assert(content).includes("pup create");
+  assert(content).includes("pup author create");
   assert(content).includes(".powerups");
   assert(content.startsWith("---")).true();
 

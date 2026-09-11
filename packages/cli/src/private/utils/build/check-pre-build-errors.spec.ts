@@ -44,7 +44,7 @@ test.case("should flag when package.json is missing powerups keyword", async ass
     version: "1.0.0",
     description: "a test powerup",
     type: "module",
-    scripts: { build: "pup build" },
+    scripts: { build: "pup author build" },
     files: ["dist"],
     exports: {
       ".": {
@@ -76,7 +76,7 @@ test.case("should flag when powerups shape is invalid", async assert => {
     version: "1.0.0",
     description: "a test powerup",
     type: "module",
-    scripts: { build: "pup build" },
+    scripts: { build: "pup author build" },
     keywords: ["powerups-package"],
     powerup: {},
     files: ["dist"],

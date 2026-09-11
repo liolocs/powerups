@@ -80,6 +80,9 @@ Rules:
 - A space-separated value cannot start with `-` — use the `=` form for
   those: `--name=-5`.
 - `--flag=` passes an empty string.
+- The forms differ for boolean flags: `--dry-run=true` is rejected
+  (booleans take no value), while `--dry-run true` leaves `true` as a
+  separate positional/subcommand.
 
 ## How the CLI consumes it
 

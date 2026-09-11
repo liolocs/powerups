@@ -96,3 +96,64 @@ test.case("init rejects a missing harness positional", async assert => {
     assert(error.code).equals("missing_harness");
   }
 });
+
+import update from "#commands/harness/update";
+import remove from "#commands/harness/remove";
+
+test.case("update overwrites an installed skill with current content", async assert => {
+  await fs.create(testRoot);
+
+  await init.run({ subcommands: ["pi"], flags: [], context: { homeDir } });
+
+  const skillFile = piSkills().append("/create-powerup/SKILL.md");
+  await skillFile.write("stale content");
+
+  await update.run({ subcommands: ["pi"], flags: [], context: { homeDir } });
+
+  const content = await skillFile.text();
+  assert(content).includes("name: create-powerup");
+  assert(content.includes("stale")).false();
+
+  await testRoot.remove({ recursive: true });
+});
+
+test.case("remove deletes the installed skill dir", async assert => {
+  await fs.create(testRoot);
+
+  await init.run({ subcommands: ["pi"], flags: [], context: { homeDir } });
+
+  const skillDir = piSkills().append("/create-powerup");
+  assert(await skillDir.exists()).true();
+
+  await remove.run({ subcommands: ["pi"], flags: [], context: { homeDir } });
+
+  assert(await skillDir.exists()).false();
+
+  await testRoot.remove({ recursive: true });
+});
+
+test.case("remove reports skipped when nothing is installed", async assert => {
+  await fs.create(testRoot);
+
+  await remove.run({ subcommands: ["claude"], flags: [], context: { homeDir } });
+
+  assert(await testRoot.append("/home/.claude/skills").exists()).false();
+
+  await testRoot.remove({ recursive: true });
+});
+
+test.case("remove dry-run deletes nothing", async assert => {
+  await fs.create(testRoot);
+
+  await init.run({ subcommands: ["pi"], flags: [], context: { homeDir } });
+
+  await remove.run({
+    subcommands: ["pi"],
+    flags: [{ flag: "--dry-run" }],
+    context: { homeDir },
+  });
+
+  assert(await piSkills().append("/create-powerup/SKILL.md").exists()).true();
+
+  await testRoot.remove({ recursive: true });
+});

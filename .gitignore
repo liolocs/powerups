@@ -13,3 +13,4 @@ pi-subagents/
 .agents/skills/
 .superpowers/
 .kilo/
+!apps/documentation/src/lib/

@@ -1,0 +1,31 @@
+---
+title: 'template'
+description: 'Convert a powerup step between static and dynamic (template) form'
+sidebar:
+  order: 4
+---
+import CodeBlock from "@/components/ui/astro/code-block/CodeBlock.astro";
+
+Create a powerup
+
+<CodeBlock autoHeight files={[
+  {
+    filename: 'bash',
+    language: 'bash',
+    code: `pup author template <powerup-name> [flags]`
+  }
+]} />
+
+## Flags
+
+| Flag | Short | Type | Description |
+| ---- | ----- | ---- | ----------- |
+| `--dry-run` | `-dr` | boolean | Print output to stdout instead of writing files |
+| `--capture` | `-c` | string | Capture files into the new powerup: "all" or "workingDir" |
+| `--local` | `-l` | boolean | Create locally (default: global) |
+| `--description` | `-d` | string | Human-readable description (required) |
+| `--intent` | `-i` | string | Comma-separated intent keywords |
+| `--variables` | `-v` | string | Comma-separated required variable names |
+| `--optional-variables` | `-ov` | string | Comma-separated optional variable names |
+| `--type` | `-t` | string | Powerup type: multi-use or single-use (defaults to single-use) |
+

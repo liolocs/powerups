@@ -1,10 +1,26 @@
 export default function parseArgs(args: string[]) {
-  const flags = args.filter(arg => arg.startsWith("-") || arg.startsWith("--"));
-  return {
-    flags: flags.map(flag => {
-      const [name, value] = flag.split("=");
-      return { flag: name, value };
-    }),
-    commands: args.filter(arg => !arg.startsWith("-")),
-  };
+  const flags: { flag: string; value?: string }[] = [];
+  const commands: string[] = [];
+
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index];
+
+    if (!arg.startsWith("-")) {
+      commands.push(arg);
+      continue;
+    }
+
+    const separatorIndex = arg.indexOf("=");
+
+    if (separatorIndex !== -1) {
+      const name = arg.slice(0, separatorIndex);
+      const value = arg.slice(separatorIndex + 1);
+      flags.push({ flag: name, value });
+      continue;
+    }
+
+    flags.push({ flag: arg, value: undefined });
+  }
+
+  return { flags, commands };
 }

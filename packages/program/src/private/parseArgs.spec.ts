@@ -25,3 +25,11 @@ test.case("A series of flags have correct values", assert => {
   assert(parsed.flags[0].value).equals("John");
   assert(parsed.flags[1].value).equals("calypso");
 });
+
+test.case("A value containing an equals sign is kept in full", assert => {
+  const parsed = parseArgs(["--msg=a=b"]);
+
+  assert(parsed.flags.length).equals(1);
+  assert(parsed.flags[0].flag).equals("--msg");
+  assert(parsed.flags[0].value).equals("a=b");
+});

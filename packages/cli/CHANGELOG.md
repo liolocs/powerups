@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.0](https://github.com/liolocs/powerups/compare/v0.4.1...v0.5.0) (2026-09-11)
+
+### Features
+
+* add global skills dir constants and missing_harness error ([1df69d1](https://github.com/liolocs/powerups/commit/1df69d175012975fff19d0f03bb2183155c779e5))
+* add harness-skills builtin powerup with create-powerup skill ([f7123ca](https://github.com/liolocs/powerups/commit/f7123ca9b9f1654fa5c53a491bf4c9b7fdc96714))
+* add pup harness init ([1b71158](https://github.com/liolocs/powerups/commit/1b71158b8a07c974153e54676710e1796222fee5))
+* add pup harness update and remove ([b60f580](https://github.com/liolocs/powerups/commit/b60f580d0b995b5f77a2e8804555a51fa3971077))
+* **program:** add collectFlagTypes helper for merged flag type schema ([7dea1f0](https://github.com/liolocs/powerups/commit/7dea1f053ecdde7364c58a5f96b82ca240d60ae8))
+* **program:** pass merged flag type schema to parseArgs in CLI.run ([08c35e9](https://github.com/liolocs/powerups/commit/08c35e9c5033af1f998bbc704ad2231b937e3a46))
+* **program:** support space-separated flag values via flag types ([95a9978](https://github.com/liolocs/powerups/commit/95a9978d4e04ef91eb5e7868123d9cf35d1b5cd3))
+* wire up the pup harness command ([ac4fc35](https://github.com/liolocs/powerups/commit/ac4fc35174519c4c944724ab9abcb56bb910bc4c))
+
+### Bug Fixes
+
+* **program:** keep values containing equals signs intact in parseArgs ([9e468ac](https://github.com/liolocs/powerups/commit/9e468aca15a6c826303f815b4f126f5a413b16ba))
 ## [0.4.1](https://github.com/liolocs/powerups/compare/v0.4.0...v0.4.1) (2026-09-11)
 
 ### Bug Fixes

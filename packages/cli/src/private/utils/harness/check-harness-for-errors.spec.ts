@@ -1,13 +1,14 @@
 import test from "#test-utils/test/index";
-import parseHarness from "#utils/harness/parse-harness";
+import checkHarnessForErrors from "#utils/harness/check-harness-for-errors";
 
 test.case("returns the harness when it is valid", async assert => {
-  assert(parseHarness({ subcommands: ["pi"] })).equals("pi");
+  assert(checkHarnessForErrors("pi")).equals("pi");
 });
 
 test.case("throws missing_harness when no positional is passed", async assert => {
   try {
-    parseHarness({ subcommands: [] });
+    checkHarnessForErrors();
+
     assert(false).true();
   } catch (error) {
     // @ts-expect-error error.code is not typed on unknown
@@ -17,7 +18,8 @@ test.case("throws missing_harness when no positional is passed", async assert =>
 
 test.case("throws invalid_harness for an unknown harness", async assert => {
   try {
-    parseHarness({ subcommands: ["nope"] });
+    checkHarnessForErrors("random-harness");
+
     assert(false).true();
   } catch (error) {
     // @ts-expect-error error.code is not typed on unknown

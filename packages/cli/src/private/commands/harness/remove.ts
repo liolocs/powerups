@@ -1,12 +1,11 @@
-import fs from "@rcompat/fs";
 import cli from "@rcompat/cli";
 import { Command, type Flag } from "@liolocs/program";
 
-import { globalSkillsDir } from "#constants";
 import resolveOutputPath from "#utils/use/run-powerup/steps/shared/resolve-output-path";
 import buildSkillVariables from "#utils/harness/build-skill-variables";
 import loadHarnessSkills from "#utils/harness/load-harness-skills";
-import parseHarness from "#utils/harness/parse-harness";
+import { getSkillDestination } from "#utils/harness/get-skill-destination";
+import checkHarnessForErrors from "#utils/harness/check-harness-for-errors";
 
 const dryRunFlag = {
   name: "dryRun",
@@ -23,9 +22,17 @@ const remove = new Command({
   subcommands: [],
 
   action: async ({ subcommands, flags, context }) => {
-    const harness = parseHarness({ subcommands });
+    const harness = subcommands?.[0];
+
+    checkHarnessForErrors(harness);
+
     const isDryRun = flags.dryRun === true;
-    const destination = fs.ref(globalSkillsDir({ harness, homeDir: context?.homeDir }));
+
+    const destination = getSkillDestination({
+      harness: harness!,
+      homeDir: context?.homeDir,
+    });
+
     const { instructions } = await loadHarnessSkills();
 
     for (const step of instructions.steps) {
@@ -50,6 +57,7 @@ const remove = new Command({
       }
 
       await skillDir.remove({ recursive: true });
+
       cli.print(cli.fg.dim(`Removed: ${skillDir.path}\n`));
     }
   },

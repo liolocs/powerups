@@ -1,11 +1,10 @@
-import fs from "@rcompat/fs";
 import { Command, type Flag } from "@liolocs/program";
 
-import { globalSkillsDir } from "#constants";
 import runPowerup from "#utils/use/run-powerup/index";
 import buildSkillVariables from "#utils/harness/build-skill-variables";
 import loadHarnessSkills from "#utils/harness/load-harness-skills";
-import parseHarness from "#utils/harness/parse-harness";
+import checkHarnessForErrors from "#utils/harness/check-harness-for-errors";
+import { getSkillDestination } from "#utils/harness/get-skill-destination";
 
 const dryRunFlag = {
   name: "dryRun",
@@ -22,9 +21,17 @@ const update = new Command({
   subcommands: [],
 
   action: async ({ subcommands, flags, context }) => {
-    const harness = parseHarness({ subcommands });
+    const harness = subcommands?.[0];
+
+    checkHarnessForErrors(harness);
+
     const isDryRun = flags.dryRun === true;
-    const destination = fs.ref(globalSkillsDir({ harness, homeDir: context?.homeDir }));
+
+    const destination = getSkillDestination({
+      harness: harness!,
+      homeDir: context?.homeDir,
+    });
+
     const { instructions, location, version } = await loadHarnessSkills();
 
     await runPowerup({

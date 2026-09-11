@@ -74,10 +74,3 @@ export const GLOBAL_SKILLS_DIRS: Record<Harness, string> = {
   pi: ".pi/agent/skills",
   codex: ".codex/skills",
 };
-
-export function globalSkillsDir({ harness, homeDir }: {
-  harness: Harness;
-  homeDir?: string;
-}): string {
-  return path.join(homeDir ?? homedir(), GLOBAL_SKILLS_DIRS[harness]);
-}

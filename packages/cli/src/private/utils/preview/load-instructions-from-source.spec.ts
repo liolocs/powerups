@@ -2,12 +2,19 @@ import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import loadInstructionsFromSource from "#utils/preview/load-instructions-from-source";
+import { createSdkDependencyForTest } from "#test-utils/create-powerup-for-test";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/load-instructions");
 
 test.case("loads and returns the instructions module from source", async assert => {
   await fs.create(testRoot);
+  const sdkDependency = await createSdkDependencyForTest({ packageDir: testRoot });
+  await testRoot.append("/package.json").writeJSON({
+    name: "loader-test",
+    type: "module",
+    dependencies: { "@liolocs/powerups-sdk": sdkDependency },
+  });
   await testRoot.append("/index.ts").write([
     `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";`,
     ``,
@@ -46,8 +53,10 @@ test.case("throws instructions_not_found when index.ts is missing", async assert
 
 test.case("loads from the package.json powerup.instructions entry", async assert => {
   await fs.create(testRoot);
+  await createSdkDependencyForTest({ packageDir: testRoot });
   await testRoot.append("/package.json").writeJSON({
     name: "entry-loader-test",
+    type: "module",
     powerup: { instructions: "src/instructions.ts" },
   });
   await fs.create(testRoot.append("/src"));

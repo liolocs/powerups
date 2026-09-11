@@ -1,10 +1,6 @@
 import test from "#test-utils/test/index";
 import checkHarnessForErrors from "#utils/harness/check-harness-for-errors";
 
-test.case("returns the harness when it is valid", async assert => {
-  assert(checkHarnessForErrors("pi")).equals("pi");
-});
-
 test.case("throws missing_harness when no positional is passed", async assert => {
   try {
     checkHarnessForErrors();

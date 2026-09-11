@@ -6,7 +6,7 @@ import { runTemplate } from "#template-runners/index";
 const root = await runtime.projectRoot();
 
 test.case("intent and variables flags land in the rendered index.ts", async assert => {
-  const templateRef = root.append("/.powerups/installed/_internal/create-powerup/src/dynamic-create/powerup-index.ts");
+  const templateRef = root.append("/packages/cli/.powerups/installed/_internal/create-powerup/src/dynamic-create/powerup-index.ts");
 
   const variables = buildVariables({
     name: "saas-starter",
@@ -18,7 +18,14 @@ test.case("intent and variables flags land in the rendered index.ts", async asse
     outputPath: "installed/_internal",
   });
 
-  const rendered = await runTemplate({ templatePath: templateRef, variables });
+  let rendered;
+
+  try {
+    rendered = await runTemplate({ templatePath: templateRef, variables });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 
   assert(rendered).includes('["Saas","Nextjs with tailwind and auth0"]');
   assert(rendered).includes('["theme","projectName","auth0ClientId","auth0Domain","auth0Audience"]');

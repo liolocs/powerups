@@ -60,6 +60,28 @@ export type DefaultTemplateForTest = {
 };
 
 /**
+ * Links the workspace SDK into a dynamically-scaffolded test powerup package so
+ * Node's ESM resolver can find `@liolocs/powerups-sdk` at runtime, and returns
+ * the `package.json` dependency specifier to declare for it.
+ *
+ * Linked at scaffold time rather than via `pnpm install`: dynamically created
+ * test projects are wiped & recreated by test setup and never see an install,
+ * and a `pnpm install` under tmp/ scopes to the enclosing workspace instead of
+ * the fixture. Works at any folder depth/name.
+ */
+export async function createSdkDependencyForTest({ packageDir }: { packageDir: FileRef }): Promise<string> {
+  const sdkPackageAbsolutePath = path.resolve((await runtime.projectRoot()).path, "packages/sdk");
+  const liolocsNodeModulesRef = packageDir.append("/node_modules/@liolocs");
+  await liolocsNodeModulesRef.create();
+
+  const sdkSymlinkPath = path.resolve(liolocsNodeModulesRef.path, "powerups-sdk");
+  nodeFs.rmSync(sdkSymlinkPath, { force: true, recursive: true });
+  nodeFs.symlinkSync(path.relative(liolocsNodeModulesRef.path, sdkPackageAbsolutePath), sdkSymlinkPath, "dir");
+
+  return `link:${path.relative(packageDir.path, sdkPackageAbsolutePath)}`;
+}
+
+/**
  * Creates a real, buildable powerup package on disk under
  * `/tmp/.powerups/_internal/<powerupName>/`, mirroring the layout of a
  * real powerup package such as `.powerups/_internal/cli-command/`:
@@ -89,14 +111,11 @@ export async function createPowerupPackageForTest({
     `/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}/${powerupName}`,
   );
 
-  // Absolute path to the workspace SDK, and a `link:` specifier relative to
-  // this package's directory. Both stay correct for any folder depth/name.
-  const sdkPackageAbsolutePath = path.resolve((await runtime.projectRoot()).path, "packages/sdk");
-  const sdkPackageLinkSpecifier = `link:${path.relative(packageDir.path, sdkPackageAbsolutePath)}`;
-
   await fs.create(testRoot.append(`/${CLI_FOLDER_NAME}/${INSTALLED_FOLDER.internal}`));
 
   await fs.create(packageDir.append("/src/dynamic-create"));
+
+  const sdkPackageLinkSpecifier = await createSdkDependencyForTest({ packageDir });
 
   // E.G. .powerups/_internal/cli-command/package.json
   const packageJsonContents = {
@@ -121,19 +140,6 @@ export async function createPowerupPackageForTest({
     },
   };
   await packageDir.append("/package.json").writeJSON(packageJsonContents);
-
-  // Create the node_modules/@liolocs/powerups-sdk symlink so Node's ESM resolver
-  // can find the SDK at runtime when the build step does `import("dist/index.js")`.
-  // This mirrors what `pnpm install` would create for a static workspace package,
-  // but is done at scaffold time so it works for dynamically-created test
-  // projects (which are wiped & recreated by test setup and never see a
-  // `pnpm install`) at any folder depth / name.
-  const liolocsNodeModulesRef = packageDir.append("/node_modules/@liolocs");
-  await liolocsNodeModulesRef.create();
-
-  const sdkSymlinkPath = path.resolve(liolocsNodeModulesRef.path, "powerups-sdk");
-  nodeFs.rmSync(sdkSymlinkPath, { force: true, recursive: true });
-  nodeFs.symlinkSync(path.relative(liolocsNodeModulesRef.path, sdkPackageAbsolutePath), sdkSymlinkPath, "dir");
 
   for (const template of templates) {
     const templateRef = packageDir.append(`${template.templatePath}`);

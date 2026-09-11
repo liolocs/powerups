@@ -2,12 +2,20 @@ import test from "#test-utils/test/index";
 import fs from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import template from "#commands/author/template/index";
+import { createSdkDependencyForTest } from "#test-utils/create-powerup-for-test";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/template-command");
 
 async function scaffoldPowerup(): Promise<void> {
   await fs.create(testRoot);
+  const sdkDependency = await createSdkDependencyForTest({ packageDir: testRoot });
+  await testRoot.append("/package.json").writeJSON({
+    name: "test-powerup",
+    description: "",
+    type: "module",
+    dependencies: { "@liolocs/powerups-sdk": sdkDependency },
+  });
   await testRoot.append("/index.ts").write([
     `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";`,
     ``,

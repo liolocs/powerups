@@ -1,14 +1,22 @@
 import test from "#test-utils/test/index";
-import fs from "@rcompat/fs";
+import fs, { type FileRef } from "@rcompat/fs";
 import runtime from "@rcompat/runtime";
 import materializePreview from "#utils/preview/materialize-preview";
-import type { Instructions } from "@liolocs/powerups-sdk";
+import loadInstructionsFromSource from "#utils/preview/load-instructions-from-source";
+import { createSdkDependencyForTest } from "#test-utils/create-powerup-for-test";
 
 const root = await runtime.projectRoot();
 const testRoot = root.append("/tmp/materialize");
 
-async function scaffoldPowerup({ powerupRoot }: { powerupRoot: import("@rcompat/fs").FileRef }): Promise<void> {
+async function scaffoldPowerup({ powerupRoot }: { powerupRoot: FileRef }): Promise<void> {
+  await powerupRoot.remove({ recursive: true });
   await fs.create(powerupRoot);
+  const sdkDependency = await createSdkDependencyForTest({ packageDir: powerupRoot });
+  await powerupRoot.append("/package.json").writeJSON({
+    name: "prev",
+    type: "module",
+    dependencies: { "@liolocs/powerups-sdk": sdkDependency },
+  });
   await powerupRoot.append("/index.ts").write([
     `import { defineInstructions, type Instructions } from "@liolocs/powerups-sdk";`,
     ``,
@@ -64,7 +72,9 @@ test.case("materializes fixtures + static + dynamic + modify steps into the prev
   const powerupRoot = testRoot.append("/powerup");
   await scaffoldPowerup({ powerupRoot });
 
-  const instructions = await (await import("#utils/preview/load-instructions-from-source")).default({ powerupRoot });
+  const instructions = await loadInstructionsFromSource({ powerupRoot });
+
+  assert(instructions.name).equals("prev");
 
   const result = await materializePreview({
     powerupRoot,
@@ -90,8 +100,7 @@ test.case("second run deletes stale generated files but preserves untracked ones
   const powerupRoot = testRoot.append("/powerup2");
   await scaffoldPowerup({ powerupRoot });
 
-  const load = (await import("#utils/preview/load-instructions-from-source")).default;
-  const instructions = await load({ powerupRoot });
+  const instructions = await loadInstructionsFromSource({ powerupRoot });
   const config = { variables: { appName: "my-app" }, outputDir: "preview", watch: false };
 
   await materializePreview({ powerupRoot, instructions, config: config as never, isFirstMaterialize: true });
@@ -105,7 +114,7 @@ test.case("second run deletes stale generated files but preserves untracked ones
   const indexRef = powerupRoot.append("/index.ts");
   await indexRef.write((await indexRef.text()).replace(/ {4}\{\n {6}"type": "create",\n {6}"name": "static",[\s\S]*?\n {4}\},\n/, ""));
 
-  const refreshedInstructions = await load({ powerupRoot });
+  const refreshedInstructions = await loadInstructionsFromSource({ powerupRoot });
   const second = await materializePreview({
     powerupRoot,
     instructions: refreshedInstructions,
@@ -123,12 +132,11 @@ test.case("second run deletes stale generated files but preserves untracked ones
 test.case("reports outputChanged true on first render and false when nothing changed", async assert => {
   const powerupRoot = testRoot.append("/powerup3");
   await scaffoldPowerup({ powerupRoot });
-  const load = (await import("#utils/preview/load-instructions-from-source")).default;
   const config = { variables: { appName: "my-app" }, outputDir: "preview", watch: false };
 
   const first = await materializePreview({
     powerupRoot,
-    instructions: await load({ powerupRoot }),
+    instructions: await loadInstructionsFromSource({ powerupRoot }),
     config: config as never,
     isFirstMaterialize: true,
   });
@@ -136,7 +144,7 @@ test.case("reports outputChanged true on first render and false when nothing cha
 
   const second = await materializePreview({
     powerupRoot,
-    instructions: await load({ powerupRoot }),
+    instructions: await loadInstructionsFromSource({ powerupRoot }),
     config: config as never,
     isFirstMaterialize: false,
   });
@@ -148,17 +156,16 @@ test.case("reports outputChanged true on first render and false when nothing cha
 test.case("reports outputChanged true after a source template change", async assert => {
   const powerupRoot = testRoot.append("/powerup4");
   await scaffoldPowerup({ powerupRoot });
-  const load = (await import("#utils/preview/load-instructions-from-source")).default;
   const config = { variables: { appName: "my-app" }, outputDir: "preview", watch: false };
 
-  await materializePreview({ powerupRoot, instructions: await load({ powerupRoot }), config: config as never, isFirstMaterialize: true });
+  await materializePreview({ powerupRoot, instructions: await loadInstructionsFromSource({ powerupRoot }), config: config as never, isFirstMaterialize: true });
 
   const template = powerupRoot.append("/src/dynamic-create/dynamic.ts");
   await template.write(`export default function (_variables: Record<string, string>): string {\n  return \`app=\${_variables.appName}-v2\`;\n}\n`);
 
   const rerender = await materializePreview({
     powerupRoot,
-    instructions: await load({ powerupRoot }),
+    instructions: await loadInstructionsFromSource({ powerupRoot }),
     config: config as never,
     isFirstMaterialize: false,
   });

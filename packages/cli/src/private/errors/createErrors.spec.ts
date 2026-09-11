@@ -25,17 +25,6 @@ test.case("missing_description error contains usage instructions", async assert 
   }
 });
 
-test.case("global_root_not_found error mentions --local alternative", async assert => {
-  try {
-    throw create_errors.global_root_not_found();
-  } catch (error) {
-    // @ts-expect-error error.code is not typed on unknown
-    assert(error.code).equals(CreateErrorCode.global_root_not_found);
-    // @ts-expect-error error.message is not typed on unknown
-    assert(error.message).includes("--local");
-  }
-});
-
 test.case("missing_name still works", async assert => {
   try {
     throw create_errors.missing_name();

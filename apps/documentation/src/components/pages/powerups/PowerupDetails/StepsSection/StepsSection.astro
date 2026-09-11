@@ -64,14 +64,24 @@ function countPackages(step: InstallStepData): number {
     {steps.map((step, index) => {
       const stepNumber = index + 1;
 
-      if (step.type === "create" || step.type === "modify") {
+      if (
+        step.type === "create" ||
+        step.type === "modify" ||
+        step.type === "dynamic-create" ||
+        step.type === "dynamic-modify"
+      ) {
+        const sourcePath =
+          step.type === "dynamic-create" || step.type === "dynamic-modify"
+            ? step.template
+            : step.file;
+
         return (
           <CreateModifyStep
             stepNumber={stepNumber}
             stepType={step.type}
             filename={step.outputPath}
-            code={entry.templateFiles[step.template] ?? ""}
-            language={languageFromPath(step.template)}
+            code={entry.templateFiles[sourcePath] ?? ""}
+            language={languageFromPath(sourcePath)}
           />
         );
       }

@@ -30,7 +30,9 @@ const variables = entry.data?.instructions?.variables || {};
     <div class="flex gap-2 w-full items-center justify-start">
       <Badge variant="secondary">v{entry.data.version}</Badge>
       <Badge variant="note">{entry.data.license}</Badge>
-      <Badge variant="default" class="bg-purple-50 text-purple-800 dark:bg-purple-900 dark:text-purple-300">{entry.data.instructions.type}</Badge>
+      {entry.data.instructions && (
+        <Badge variant="default" class="bg-purple-50 text-purple-800 dark:bg-purple-900 dark:text-purple-300">{entry.data.instructions.type}</Badge>
+      )}
     </div>
 
     <CodeBlock

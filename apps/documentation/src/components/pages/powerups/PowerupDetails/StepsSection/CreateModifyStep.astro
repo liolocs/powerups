@@ -8,23 +8,25 @@ import type { BundledLanguage } from "shiki";
 
 interface Props {
   stepNumber: number;
-  stepType: "create" | "modify";
+  stepType: "create" | "modify" | "dynamic-create" | "dynamic-modify";
   filename: string;
   code: string;
   language: BundledLanguage;
 }
 
 const { stepNumber, stepType, filename, code, language } = Astro.props;
-const badgeVariant = stepType === "create" ? "success" : "note";
+const isCreateType = stepType.includes("create");
+const badgeVariant = isCreateType ? "secondary" : "default";
+const sourceLabel = stepType.startsWith("dynamic") ? "view template" : "view file";
 ---
 
 <AccordionItem class="flex flex-col gap-4">
   <AccordionTrigger class="flex w-full items-center gap-4 px-4 no-underline! hover:[&>.accordion-text]:underline! hover:bg-muted/10">
     <div class="flex items-center gap-4 w-full">
       <span class="border border-muted text-muted-foreground size-10 flex items-center justify-center text-lg rounded-md">{stepNumber}</span>
-      <span class="accordion-text"><Badge variant={badgeVariant}>{stepType === "create" ? "Create" : "Modify"}</Badge> {filename}</span>
+      <span class="accordion-text"><Badge variant={badgeVariant}>{stepType}</Badge> {filename}</span>
     </div>
-    <span class="text-xs shrink-0 text-muted-foreground">view template</span>
+    <span class="text-xs shrink-0 text-muted-foreground">{sourceLabel}</span>
   </AccordionTrigger>
   <AccordionContent class="pl-8">
     <CodeBlock filename={filename} code={code} language={language} class="w-full" autoHeight />

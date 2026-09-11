@@ -22,7 +22,7 @@ const hasAny = (required?.length ?? 0) > 0 || (optional?.length ?? 0) > 0;
   <DetailHeader>Variables</DetailHeader>
 
   {hasAny ? (
-    <ul>
+    <ul class="flex flex-col gap-3">
       {required.map((requiredVariable) => (
         <li class="flex gap-2 items-center p-0">
           <span class="bg-muted px-2 py-1 rounded-lg font-light text-foreground">{requiredVariable}</span>

@@ -31,7 +31,7 @@ export interface PowerupsPackageData {
 	};
 	/** Full authoring instructions, validated against the SDK `instructionsSchema`. `null` when the package publishes none. */
 	instructions: Instructions | null;
-	/** Template-file contents keyed by their path, fetched via the unpkg CDN. */
+	/** Contents of the files referenced by create/modify steps (static `file` and dynamic `template`), keyed by their path, fetched via the unpkg CDN. */
 	templateFiles: Record<string, string>;
 }
 
@@ -142,11 +142,16 @@ function parseInstructions(raw: string | null): Instructions | null {
 	return result.success ? result.data : null;
 }
 
-/** Collect the unique `template` paths referenced by create/modify steps, preserving order. */
+/** Collect the unique `file`/`template` paths referenced by create/modify steps, preserving order. */
 function collectTemplatePaths(instructions: Instructions): string[] {
 	const paths = new Set<string>();
 	for (const step of instructions.steps) {
-		if ((step.type === "create" || step.type === "modify") && step.template !== "") {
+		if ((step.type === "create" || step.type === "modify") && step.file !== "") {
+			paths.add(step.file);
+		} else if (
+			(step.type === "dynamic-create" || step.type === "dynamic-modify") &&
+			step.template !== ""
+		) {
 			paths.add(step.template);
 		}
 	}

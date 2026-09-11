@@ -1,12 +1,20 @@
 import fs from "@rcompat/fs";
 import cli from "@rcompat/cli";
-import { Command } from "@liolocs/program";
+import { Command, type Flag } from "@liolocs/program";
 
 import { globalSkillsDir } from "#constants";
 import resolveOutputPath from "#utils/use/run-powerup/steps/shared/resolve-output-path";
+import buildSkillVariables from "#utils/harness/build-skill-variables";
+import loadHarnessSkills from "#utils/harness/load-harness-skills";
+import parseHarness from "#utils/harness/parse-harness";
 
-import { buildSkillVariables, dryRunFlag, loadHarnessSkills, parseHarness }
-  from "#commands/harness/shared";
+const dryRunFlag = {
+  name: "dryRun",
+  long: "dry-run",
+  short: "dr",
+  description: "Print output to stdout instead of writing files",
+  type: "boolean",
+} as const satisfies Flag;
 
 const remove = new Command({
   name: "remove",

@@ -1,10 +1,10 @@
 import { type Instructions, type PowerupProperty } from "@liolocs/powerups-sdk";
 import type { FileRef } from "@rcompat/fs";
 import is from "@rcompat/is";
-import tsup from "tsup";
 import path from "node:path";
 import build_errors from "#errors/buildErrors";
 import getValidatedPowerupProperty from "#utils/validate/get-validated-powerup-property";
+import esbuild from "esbuild";
 
 type CompiledInstructionsFile = {
   default: {
@@ -35,19 +35,20 @@ export default async function compileIndexFile({
   const entryPath = path.resolve(root.path, validatedPowerup.instructions);
   const outDirPath = path.resolve(root.path, "dist");
 
-  await tsup.build({
-    entry: [entryPath],
-    outDir: outDirPath,
-    format: ["esm"],
-    // dts emission deferred — TS 6.0 baseUrl deprecation in tsup's dts pipeline;
-    // re-enable once the dts/tsconfig friction is resolved (type-safety across packages).
-    dts: false,
-    external: getAllDependenciesWeWantToExcludeFromBuild(pkgJson),
-    splitting: false,
-    clean: false,
-    silent: true,
-  });
+  const noExternal = ["@liolocs/program", "@liolocs/powerups-sdk"];
 
+await esbuild.build({
+    entryPoints: [entryPath],
+    outdir: outDirPath,
+    bundle: true,
+    format: "esm",
+    platform: "node",
+    external: getAllDependenciesWeWantToExcludeFromBuild(pkgJson).filter(
+      (dep) => !noExternal.includes(dep),
+    ),
+    allowOverwrite: true,
+    logLevel: "silent",
+  });
 
   // Node's ESM loader caches dynamic imports by URL and does NOT re-read the
   // file on subsequent imports of the same path (no mtime check). Without a

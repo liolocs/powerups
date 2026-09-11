@@ -178,6 +178,9 @@ importers:
       '@rcompat/type':
         specifier: ^0.18.0
         version: 0.18.0
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
       nunjucks:
         specifier: ^3.2.4
         version: 3.2.4(chokidar@3.6.0)

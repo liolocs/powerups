@@ -14,7 +14,7 @@
   },
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "build": "npm run clean && tsgo && tsup && cp src/app.tsconfig.json lib && mkdir -p lib/private/scaffold/templates && cp src/private/scaffold/templates/*.njk lib/private/scaffold/templates/ && npm run build:builtins",
+    "build": "npm run clean && tsgo && node esbuild.js && cp src/app.tsconfig.json lib && mkdir -p lib/private/scaffold/templates && cp src/private/scaffold/templates/*.njk lib/private/scaffold/templates/ && npm run build:builtins",
     "clean": "rm -rf ./lib",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -50,9 +50,9 @@
     "@rcompat/runtime": "^0.17.0",
     "@rcompat/string": "^0.22.0",
     "@rcompat/type": "^0.18.0",
+    "esbuild": "^0.28.2",
     "nunjucks": "^3.2.4",
-    "pema": "^0.8.2",
-    "tsup": "^8.5.1"
+    "pema": "^0.8.2"
   },
   "devDependencies": {
     "@liolocs/powerups-sdk": "workspace:^",
